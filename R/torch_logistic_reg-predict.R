@@ -1,4 +1,4 @@
-torch_linear_reg_fit_imp <-
+torch_mn_reg_fit_imp <-
  function(x, y,
           epochs = 10L,
           batch_size = NULL,
@@ -25,9 +25,10 @@ torch_linear_reg_fit_imp <-
   if (length(nms) != ncol(x)) {
    rlang::abort("Every column of 'x' should have a name.")
   }
-  if (!is.vector(y)) {
-   rlang::abort("'y' should be a vector.")
+  if (!is.factor(y) || length(levels(y)) != 2) {
+   rlang::abort("'y' should be a factor vector.")
   }
+  lvls <- levels(y)
 
   ## ---------------------------------------------------------------------------
   # Check missing values
@@ -50,7 +51,7 @@ torch_linear_reg_fit_imp <-
 
   ## ---------------------------------------------------------------------------
   # Initialize model and optimizer
-  model <- linear_reg_module(ncol(x))
+  model <- multinomial_reg_module(ncol(x), length(lvls))
   # Write a optim wrapper
   optimizer <- torch::optim_sgd(model$parameters, lr = learning_rate)
 
@@ -61,12 +62,14 @@ torch_linear_reg_fit_imp <-
    for (b in enumerate(dl)) {
     optimizer$zero_grad()
     output <- model(b[[1]])
-    loss <- torch::nnf_mse_loss(output, b[[2]])
+    loss <- torch::nn_bce_loss(output, b[[2]])
     loss$backward()
     optimizer$step()
+    print(loss$item())
    }
   }
 
+  print(model$parameters)
   ## ---------------------------------------------------------------------------
   # convert results to R objects
   beta <-
@@ -80,22 +83,15 @@ torch_linear_reg_fit_imp <-
  }
 
 ## -----------------------------------------------------------------------------
-
-linear_reg_module <-
+multinomial_reg_module <-
  torch::nn_module(
-  "linear_reg",
-  initialize = function(num_pred) {
-   self$fc1 <- nn_linear(num_pred, 1)
+  "multinomia_reg",
+  initialize = function(num_pred, num_class) {
+   self$fc1 <- torch::nn_linear(num_pred, 1)
   },
   forward = function(x) {
-   x %>% self$fc1()
+   lp_to_prob <- nn_sigmoid()
+   # returns a single probability value from the linear predictor
+   x %>% self$fc1() %>% lp_to_prob()
   }
  )
-
-# Features:
-#
-# - validation set/early stopping/convergence criteria
-# - fix seed
-# - starting values
-# - no intercept
-# -
