@@ -30,13 +30,13 @@ matrix_to_dataset <- torch::dataset(
  },
 
  prepare_training_set = function(x, y) {
-  # check missing, check matrix, check numeric/factor/binary
-
-  # make indicators for y if factor
   if (is.factor(y)) {
    y <- as.numeric(y)
+   y <- torch::torch_tensor(y)$to(torch_long())
+  } else {
+    y <- torch::torch_tensor(y)
   }
 
-  list(x = torch::torch_tensor(x), y = torch::torch_tensor(y))
+  list(x = torch::torch_tensor(x), y = y)
  }
 )
