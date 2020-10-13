@@ -7,19 +7,51 @@
 \alias{torch_linear_reg.matrix}
 \alias{torch_linear_reg.formula}
 \alias{torch_linear_reg.recipe}
-\title{Fit a \code{torch_linear_reg}}
+\title{Fit a linear regression using torch}
 \usage{
 torch_linear_reg(x, ...)
 
 \method{torch_linear_reg}{default}(x, ...)
 
-\method{torch_linear_reg}{data.frame}(x, y, ...)
+\method{torch_linear_reg}{data.frame}(
+  x,
+  y,
+  epochs = 100L,
+  learning_rate = 0.01,
+  conv_crit = 0,
+  verbose = FALSE,
+  ...
+)
 
-\method{torch_linear_reg}{matrix}(x, y, ...)
+\method{torch_linear_reg}{matrix}(
+  x,
+  y,
+  epochs = 100L,
+  learning_rate = 0.01,
+  conv_crit = 0,
+  verbose = FALSE,
+  ...
+)
 
-\method{torch_linear_reg}{formula}(formula, data, ...)
+\method{torch_linear_reg}{formula}(
+  formula,
+  data,
+  epochs = 100L,
+  learning_rate = 0.01,
+  conv_crit = 0,
+  verbose = FALSE,
+  ...
+)
 
-\method{torch_linear_reg}{recipe}(x, data, ...)
+\method{torch_linear_reg}{recipe}(
+  x,
+  data,
+  epochs = 100L,
+  learning_rate = 0.01,
+  conv_crit = 0,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{Depending on the context:
@@ -28,7 +60,9 @@ torch_linear_reg(x, ...)
 \item A \strong{matrix} of predictors.
 \item A \strong{recipe} specifying a set of preprocessing steps
 created from \code{\link[recipes:recipe]{recipes::recipe()}}.
-}}
+}
+
+The predictor data should be standardized (e.g. centered or scaled).}
 
 \item{...}{Not currently used, but required for extensibility.}
 
@@ -39,6 +73,14 @@ specified as:
 \item A \strong{matrix} with 1 numeric column.
 \item A numeric \strong{vector}.
 }}
+
+\item{epochs}{An integer for the number of epochs of training.}
+
+\item{learning_rate}{A positive number (usually less than 0.1).}
+
+\item{conv_crit}{A non-negative number for convergence.}
+
+\item{verbose}{A logical that prints out the iteration history.}
 
 \item{formula}{A formula specifying the outcome terms on the left-hand side,
 and the predictor terms on the right-hand side.}
