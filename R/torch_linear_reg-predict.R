@@ -41,7 +41,10 @@ valid_predict_types <- function() {
 # Bridge
 
 predict_torch_linear_reg_bridge <- function(type, model, predictors) {
-  predictors <- as.matrix(predictors)
+
+  if (is.data.frame(predictors)) {
+    predictors <- stats::model.matrix(model$terms, predictors)
+  }
 
   predict_function <- get_predict_function(type)
   predictions <- predict_function(model, predictors)
@@ -62,6 +65,6 @@ get_predict_function <- function(type) {
 # Implementation
 
 predict_torch_linear_reg_numeric <- function(model, predictors) {
-  predictions <- rep(1L, times = nrow(predictors))
-  hardhat::spruce_numeric(predictions)
+  predictions <- predictors %*% model$coefs
+  hardhat::spruce_numeric(unname(predictions[,1]))
 }
