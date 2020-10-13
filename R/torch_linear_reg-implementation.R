@@ -1,9 +1,9 @@
 torch_linear_reg_fit_imp <-
  function(x, y,
-          epochs = 10L,
-          batch_size = NULL,
+          epochs = 100L,
           learning_rate = 0.01,
           penalty = 0,
+          conv_crit = 0,
           optimizer = "SGD",
           loss_function = "mse",
           verbose = FALSE,
@@ -35,40 +35,52 @@ torch_linear_reg_fit_imp <-
   x <- compl_data$x
   y <- compl_data$y
 
-  # Set and check batch size
-  if (is.null(batch_size)) {
-   batch_size <- nrow(x)
-  } else {
-   batch_size <- min(batch_size, nrow(x))
-  }
-  check_integer(batch_size, single = TRUE, 2, nrow(x), incl = c(TRUE, TRUE), fn = f_nm)
-
   ## ---------------------------------------------------------------------------
   # Convert to index sampler and data loader
   ds <- matrix_to_dataset(x, y)
-  dl <- dataloader(ds, batch_size = batch_size, shuffle = TRUE)
+  dl <- torch::dataloader(ds)
 
   ## ---------------------------------------------------------------------------
   # Initialize model and optimizer
   model <- linear_reg_module(ncol(x))
+  model$parameters$fc1.bias$set_data(torch::torch_tensor(mean(y)))
+
   # Write a optim wrapper
   optimizer <- torch::optim_sgd(model$parameters, lr = learning_rate)
 
   ## ---------------------------------------------------------------------------
+
+  loss_prev <- 10^38
+  loss_vec <- rep(NA_real_, epochs)
+  epoch_chr <- format(1:epochs)
+
   # Optimize parameters
   for (epoch in 1:epochs) {
-   # Over batches
-   for (b in enumerate(dl)) {
+
+    pred <- model(dl$dataset$data$x)[,1]
+    loss <- torch::nnf_mse_loss(pred, dl$dataset$data$y)
+
+    loss_curr <- as.array(loss)
+    loss_vec[epoch] <- loss_curr
+    loss_diff <- (loss_prev - loss_curr)/loss_prev
+    loss_prev <- loss_curr
+
+    if (loss_diff <= conv_crit) {
+      break()
+    }
+
+    if (verbose) {
+      message("epoch:", epoch_chr[epoch], "\tRMSE:", signif(sqrt(loss_curr), 5))
+    }
+
     optimizer$zero_grad()
-    output <- model(b[[1]])
-    loss <- torch::nnf_mse_loss(output, b[[2]])
     loss$backward()
     optimizer$step()
-   }
   }
 
   ## ---------------------------------------------------------------------------
   # convert results to R objects
+
   beta <-
    c(
     as.array(model$parameters$fc1.bias),
@@ -76,7 +88,7 @@ torch_linear_reg_fit_imp <-
    )
   names(beta) <- c("(Intercept)", colnames(x))
 
-  list(coefficients = beta, loss = numeric(0))
+  list(coefficients = beta, loss = sqrt(loss_vec[!is.na(loss_vec)]))
  }
 
 ## -----------------------------------------------------------------------------
@@ -85,17 +97,10 @@ linear_reg_module <-
  torch::nn_module(
   "linear_reg",
   initialize = function(num_pred) {
-   self$fc1 <- nn_linear(num_pred, 1)
+   self$fc1 <- torch::nn_linear(num_pred, 1)
   },
   forward = function(x) {
    x %>% self$fc1()
   }
  )
 
-# Features:
-#
-# - validation set/early stopping/convergence criteria
-# - fix seed
-# - starting values
-# - no intercept
-# -
