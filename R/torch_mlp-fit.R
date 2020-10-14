@@ -42,8 +42,6 @@
 #' @return
 #'
 #' A `torch_mlp` object.
-#'
-#'
 #' @export
 torch_mlp <- function(x, ...) {
  UseMethod("torch_mlp")
@@ -202,20 +200,32 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  if (is.numeric(epochs) & !is.integer(epochs)) {
   epochs <- as.integer(epochs)
  }
+ if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+  hidden_units <- as.integer(hidden_units)
+ }
  check_integer(epochs, single = TRUE, 2, fn = f_nm)
+ check_integer(hidden_units, single = TRUE, 1, fn = f_nm)
+ check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+ check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+ check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
  check_double(learning_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
  check_logical(verbose, single = TRUE, fn = f_nm)
+ check_character(activation, single = TRUE, fn = f_nm)
 
  ## -----------------------------------------------------------------------------
 
  predictors <- processed$predictors
 
- if (is.data.frame(predictors)) {
-  trms <- stats::terms(~ ., data = processed$predictors)
-  predictors <- stats::model.matrix(trms, processed$predictors)
-  predictors <- predictors[, -1]
- } else {
-  trms <- NULL
+ if (!is.matrix(predictors)) {
+  predictors <- as.matrix(predictors)
+  if (is.character(predictors)) {
+   rlang::abort(
+    paste(
+    "There were some non-numeric columns in the predictors.",
+    "Please use a formula or recipe to encode all of the predictors as numeric."
+    )
+   )
+  }
  }
 
  ## -----------------------------------------------------------------------------
@@ -224,28 +234,28 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
  ## -----------------------------------------------------------------------------
 
- fit <- torch_mlp_reg_fit_imp(x = predictors, y = outcome, epochs = epochs,
-                              hidden_units = hidden_units,
-                              activation = activation,
-                              learning_rate = learning_rate,
-                              penalty = penalty, dropout = dropout,
-                              validation = validation, conv_crit = conv_crit,
-                              verbose = verbose)
+ if (is.factor(outcome)) {
+  # fn <- torch_mlp_cls_fit_imp
+ } else {
+  fn <- torch_mlp_reg_fit_imp
+ }
+ fit <- fn(x = predictors, y = outcome, epochs = epochs, hidden_units = hidden_units,
+           activation = activation, learning_rate = learning_rate,
+           penalty = penalty, dropout = dropout, validation = validation,
+           conv_crit = conv_crit, verbose = verbose)
 
  new_torch_mlp(
   coefs = fit$coefficients,
   loss = fit$loss,
   blueprint = processed$blueprint,
-  terms = trms,
   param = fit$param
  )
 }
 
-new_torch_mlp <- function(coefs, loss, blueprint, terms, param) {
+new_torch_mlp <- function(coefs, loss, blueprint, param) {
  hardhat::new_model(coefs = coefs,
                     loss = loss,
                     blueprint = blueprint,
-                    terms = terms,
                     param = param,
                     class = "torch_mlp")
 }
@@ -394,6 +404,7 @@ print.torch_mlp <- function(x, ...) {
  num_coef <- sum(purrr::map_dbl(x$coefs, ~ prod(dim(.x))))
  cat(x$param$activation, "activation\n")
  cat(
+  ncol(x$coefs$x_to_h.weight), "features,",
   nrow(x$coefs$x_to_h.weight), "hidden units,",
   format(num_coef, big.mark = ","), "model coefficients\n"
   )
