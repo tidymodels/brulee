@@ -98,6 +98,16 @@ specified as:
 
 \item{hidden_units}{An integer for the number of hidden units.}
 
+\item{activation}{A string for the activation function. Possible values are
+"relu", and "elu".}
+
+\item{penalty}{The amount of weight decay (i.e., L2 regularization).}
+
+\item{dropout}{The proportion of parameters set to zero.}
+
+\item{validation}{The proportion of the data randomly assigned to a
+validation set.}
+
 \item{learning_rate}{A positive number (usually less than 0.1).}
 
 \item{conv_crit}{A non-negative number for convergence.}

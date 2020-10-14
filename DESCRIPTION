@@ -7,8 +7,8 @@ Authors@R:
              role = c("aut", "cre"),
              email = "max@rstudio.com",
              comment = c(ORCID = "0000-0003-2402-136X")),
-      person(given = "RStudio",
-             role = "cph"))
+      person(given = "RStudio", role = "cph")
+      )
 Description: High-level modeling functions with 'torch'.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -18,7 +18,14 @@ RoxygenNote: 7.1.1.9000
 Imports: 
     torch,
     recipes,
-    dplyr
+    dplyr,
+    hardhat,
+    purrr,
+    rlang,
+    tibble,
+    utils
 Suggests: 
-    spelling
+    spelling,
+    modeldata,
+    testthat
 Language: en-US

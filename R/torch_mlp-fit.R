@@ -27,7 +27,13 @@
 #'
 #' @param epochs An integer for the number of epochs of training.
 #' @param hidden_units An integer for the number of hidden units.
+#' @param activation A string for the activation function. Possible values are
+#'  "relu", and "elu".
+#' @param penalty The amount of weight decay (i.e., L2 regularization).
+#' @param dropout The proportion of parameters set to zero.
 #' @param learning_rate A positive number (usually less than 0.1).
+#' @param validation The proportion of the data randomly assigned to a
+#'  validation set.
 #' @param conv_crit A non-negative number for convergence.
 #' @param verbose A logical that prints out the iteration history.
 #'
@@ -265,10 +271,10 @@ torch_mlp_reg_fit_imp <-
   ## ---------------------------------------------------------------------------
   # General data checks:
 
-  lantern:::check_data_att(x, y)
+  check_data_att(x, y)
 
   # Check missing values
-  compl_data <- lantern:::check_missing_data(x, y, "torch_mlp", verbose)
+  compl_data <- check_missing_data(x, y, "torch_mlp", verbose)
   x <- compl_data$x
   y <- compl_data$y
   n <- length(y)
