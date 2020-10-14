@@ -13,6 +13,21 @@ check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
  list(x = x, y = y)
 }
 
+check_data_att <- function(x, y) {
+  # check matrices/vectors, matrix type, matrix column names
+  if (!is.matrix(x) || !is.numeric(x)) {
+    rlang::abort("'x' should be a numeric matrix.")
+  }
+  nms <- colnames(x)
+  if (length(nms) != ncol(x)) {
+    rlang::abort("Every column of 'x' should have a name.")
+  }
+  if (!is.vector(y)) {
+    rlang::abort("'y' should be a vector.")
+  }
+  invisible(NULL)
+}
+
 
 format_msg <- function(fn, arg) {
  if (is.null(fn)) {

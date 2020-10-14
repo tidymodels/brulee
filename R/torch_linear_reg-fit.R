@@ -179,20 +179,10 @@ torch_linear_reg_fit_imp <-
            ...) {
 
     ## ---------------------------------------------------------------------------
+    # General data checks:
 
-    # check matrices/vectors, matrix type, matrix column names
-    if (!is.matrix(x) || !is.numeric(x)) {
-      rlang::abort("'x' should be a numeric matrix.")
-    }
-    nms <- colnames(x)
-    if (length(nms) != ncol(x)) {
-      rlang::abort("Every column of 'x' should have a name.")
-    }
-    if (!is.vector(y)) {
-      rlang::abort("'y' should be a vector.")
-    }
+    check_data_att(x, y)
 
-    ## ---------------------------------------------------------------------------
     # Check missing values
     compl_data <- check_missing_data(x, y, "torch_linear_reg", verbose)
     x <- compl_data$x
