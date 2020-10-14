@@ -39,17 +39,17 @@ format_msg <- function(fn, arg) {
 }
 
 check_rng <- function(x, x_min, x_max, incl = c(TRUE, TRUE)) {
- if (incl[[1]]) {
-  lo <- x <= x_min
- } else {
-  lo <- x <  x_min
- }
- if (incl[[2]]) {
-  hi <- x >= x_max
- } else {
-  hi <- x >  x_max
- }
- lo | hi
+  if (incl[[1]]) {
+    pass_low <- x >= x_min
+  } else {
+    pass_low <- x >  x_min
+  }
+  if (incl[[2]]) {
+    pass_high <- x <= x_max
+  } else {
+    pass_high <- x <  x_max
+  }
+  any(!pass_low | !pass_high)
 }
 
 numeric_loss_values <- c("mse", "poisson", "smooth_l1", "l1")
@@ -148,10 +148,11 @@ check_character <- function(x, single = TRUE, vals = NULL, fn = NULL) {
   rlang::abort(msg)
  }
 
- if (any(!(x %in% vals))) {
-  msg <- paste0(format_msg(fn, arg),
-                "  contains an incorrect value.")
-  rlang::abort(msg)
+ if (!is.null(vals)) {
+   if (any(!(x %in% vals))) {
+     msg <- paste0(format_msg(fn, arg), "  contains an incorrect value.")
+     rlang::abort(msg)
+   }
  }
 
  invisible(TRUE)
