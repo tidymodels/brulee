@@ -128,3 +128,48 @@ A \code{torch_mlp} object.
 \description{
 \code{torch_mlp()} fits a model.
 }
+\details{
+This function fits single layer, feed-forward neural network models for
+regression (when the outcome is a number) or classification (a factor). For
+regression, the mean squared error is optimized and cross-entropy is the loss
+function for classification.
+
+The predictors data should all be numeric and encoded in the same units (e.g.
+standardized to the same range or distribution). If there are factor
+predictors, use a recipe or formula to create indicator variables (or some
+other method) to make them numeric.
+
+If \code{conv_crit} is used, it stops training when the difference in the loss
+function is below \code{conv_crit} or if it gets worse. The default trains the
+model over the specified number of epochs.
+}
+\examples{
+library(torch)
+
+if (torch_is_installed()) {
+
+ ## -----------------------------------------------------------------------------
+ # regression examples (increase # epochs to get better results)
+
+ data(ames, package = "modeldata")
+
+ ames$Sale_Price <- log10(ames$Sale_Price)
+
+ # Using matrices
+ set.seed(1)
+ torch_mlp(x = as.matrix(ames[, c("Longitude", "Latitude")]),
+           y = ames$Sale_Price, penalty = 0.10, epochs = 10)
+
+ # Using recipe
+ library(recipes)
+
+ ames_rec <-
+  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) \%>\%
+  step_dummy(Alley) \%>\%
+  step_normalize(all_predictors())
+
+ set.seed(1)
+ torch_mlp(ames_rec, data = ames, dropout = 0.25, epochs = 10)
+
+}
+}
