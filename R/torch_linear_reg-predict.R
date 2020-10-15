@@ -29,11 +29,11 @@
 #' @export
 predict.torch_linear_reg <- function(object, new_data, type = "numeric", ...) {
   forged <- hardhat::forge(new_data, object$blueprint)
-  rlang::arg_match(type, valid_predict_types())
+  rlang::arg_match(type, linear_reg_valid_predict_types())
   predict_torch_linear_reg_bridge(type, object, forged$predictors)
 }
 
-valid_predict_types <- function() {
+linear_reg_valid_predict_types <- function() {
   c("numeric")
 }
 
@@ -46,7 +46,7 @@ predict_torch_linear_reg_bridge <- function(type, model, predictors) {
     predictors <- stats::model.matrix(model$terms, predictors)
   }
 
-  predict_function <- get_predict_function(type)
+  predict_function <- get_linear_reg_predict_function(type)
   predictions <- predict_function(model, predictors)
 
   hardhat::validate_prediction_size(predictions, predictors)
@@ -54,7 +54,7 @@ predict_torch_linear_reg_bridge <- function(type, model, predictors) {
   predictions
 }
 
-get_predict_function <- function(type) {
+get_linear_reg_predict_function <- function(type) {
   switch(
     type,
     numeric = predict_torch_linear_reg_numeric

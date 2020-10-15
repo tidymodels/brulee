@@ -123,7 +123,15 @@ and the predictor terms on the right-hand side.}
 }}
 }
 \value{
-A \code{torch_mlp} object.
+A \code{torch_mlp} object with elements:
+\itemize{
+\item \code{coefs}: A matrix of all model parameters for each epoch.
+\item \code{loss}: A vector of loss values (MSE for regression, negative log-
+likelihood for classification) at each epoch.
+\item \code{dim}: A list of data dimensions.
+\item \code{parameters}: A list of some tuning parameter values.
+\item \code{blueprint}: The \code{hardhat} blueprint data.
+}
 }
 \description{
 \code{torch_mlp()} fits a model.
