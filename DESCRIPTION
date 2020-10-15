@@ -22,7 +22,8 @@ Imports:
     hardhat,
     rlang,
     tibble,
-    utils
+    utils,
+    ggplot2
 Suggests: 
     spelling,
     modeldata,

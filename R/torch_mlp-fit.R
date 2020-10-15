@@ -580,3 +580,12 @@ get_activation_fn <- function(arg, ...) {
   }
   res
 }
+
+## -----------------------------------------------------------------------------
+
+#' @export
+autoplot.torch_mlp <- function(object, ...) {
+  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
+  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
+    ggplot2::geom_line()
+}
