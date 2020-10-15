@@ -182,11 +182,15 @@ if (torch_is_installed()) {
   step_dummy(Alley) \%>\%
   step_normalize(all_predictors())
 
+\donttest{
  set.seed(1)
- fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 10)
+ fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
  fit
 
+ autoplot(fit)
+
  predict(fit, ames_test)
+ }
 
 }
 }

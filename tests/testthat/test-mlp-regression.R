@@ -191,4 +191,75 @@ test_that('bad args', {
   "expected 'verbose' to be a single logical"
  )
 
+ # ------------------------------------------------------------------------------
+
+ fit_mat <- torch_mlp(ames_x_mat, ames_y, epochs = 10L)
+
+ bad_coefs <- fit_mat
+ bad_coefs$coefs <- as.data.frame(bad_coefs$coefs)
+ expect_error(
+   lantern:::new_torch_mlp(
+     bad_coefs$coefs,
+     bad_coefs$loss,
+     bad_coefs$dims,
+     bad_coefs$parameters,
+     bad_coefs$blueprint
+   ),
+   "should be a numeric array"
+ )
+
+ bad_loss <- fit_mat
+ bad_loss$loss <- "potato!"
+ expect_error(
+   lantern:::new_torch_mlp(
+     bad_loss$coefs,
+     bad_loss$loss,
+     bad_loss$dims,
+     bad_loss$parameters,
+     bad_loss$blueprint
+   ),
+   "should be a numeric vector"
+ )
+
+ bad_dims <- fit_mat
+ bad_dims$dims <- "mountainous"
+ expect_error(
+   lantern:::new_torch_mlp(
+     bad_dims$coefs,
+     bad_dims$loss,
+     bad_dims$dims,
+     bad_dims$parameters,
+     bad_dims$blueprint
+   ),
+   "should be a list"
+ )
+
+
+ bad_parameters <- fit_mat
+ bad_parameters$dims <- "mitten"
+ expect_error(
+   lantern:::new_torch_mlp(
+     bad_parameters$coefs,
+     bad_parameters$loss,
+     bad_parameters$dims,
+     bad_parameters$parameters,
+     bad_parameters$blueprint
+   ),
+   "should be a list"
+ )
+
+
+ bad_blueprint <- fit_mat
+ bad_blueprint$blueprint <- "adorable"
+ expect_error(
+   lantern:::new_torch_mlp(
+     bad_blueprint$coefs,
+     bad_blueprint$loss,
+     bad_blueprint$dims,
+     bad_blueprint$parameters,
+     bad_blueprint$blueprint
+   ),
+   "should be a hardhat blueprint"
+ )
+
 })

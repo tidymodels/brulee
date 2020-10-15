@@ -27,5 +27,6 @@ Imports:
 Suggests: 
     spelling,
     modeldata,
-    testthat
+    testthat,
+    covr
 Language: en-US

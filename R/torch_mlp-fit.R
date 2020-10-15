@@ -97,12 +97,15 @@
 #'   step_dummy(Alley) %>%
 #'   step_normalize(all_predictors())
 #'
+#' \donttest{
 #'  set.seed(1)
-#'  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 10)
+#'  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
 #'  fit
 #'
-#'  # use epochs > 600 to get good results
+#'  autoplot(fit)
+#'
 #'  predict(fit, ames_test)
+#'  }
 #'
 #' }
 #' @export
@@ -322,7 +325,22 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 }
 
 new_torch_mlp <- function(coefs, loss, dims, parameters, blueprint) {
-  # TODO validate these objects
+
+  if (!is.array(coefs) || !is.numeric(coefs)) {
+    rlang::abort("'coefs' should be a numeric array.")
+  }
+  if (!is.vector(loss) || !is.numeric(loss)) {
+    rlang::abort("'loss' should be a numeric vector")
+  }
+  if (!is.list(dims)) {
+    rlang::abort("'dims' should be a list")
+  }
+  if (!is.list(parameters)) {
+    rlang::abort("'parameters' should be a list")
+  }
+  if (!inherits(blueprint, "hardhat_blueprint")) {
+    rlang::abort("'blueprint' should be a hardhat blueprint")
+  }
  hardhat::new_model(coefs = coefs,
                     loss = loss,
                     dims = dims,
@@ -583,9 +601,23 @@ get_activation_fn <- function(arg, ...) {
 
 ## -----------------------------------------------------------------------------
 
+#' Plot model loss over epochs
+#'
+#' @param object A `torch_mlp` object.
+#' @param ... Not currently used
+#' @return A `ggplot` object.
+#' @details This function plots the loss function across the available epochs.
 #' @export
 autoplot.torch_mlp <- function(object, ...) {
   x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
+
+  if(object$parameters$validation > 0) {
+    lab <- "loss (validation set)"
+  } else {
+    lab <- "loss (training set)"
+  }
+
   ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-    ggplot2::geom_line()
+    ggplot2::geom_line() +
+    ggplot2::labs(y = lab)
 }

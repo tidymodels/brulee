@@ -4,6 +4,7 @@
 \name{reexports}
 \alias{reexports}
 \alias{\%>\%}
+\alias{autoplot}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -12,5 +13,7 @@ below to see their documentation.
 
 \describe{
   \item{dplyr}{\code{\link[dplyr:reexports]{\%>\%}}}
+
+  \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
 }}
 

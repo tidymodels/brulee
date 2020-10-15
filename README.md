@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![Codecov test
+coverage](https://codecov.io/gh/topepo/lantern/branch/master/graph/badge.svg)](https://codecov.io/gh/topepo/lantern?branch=master)
 <!-- badges: end -->
 
 lantern packages several modeling functions that use the torch package.
