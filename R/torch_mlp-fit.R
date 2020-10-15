@@ -382,10 +382,20 @@ torch_mlp_reg_fit_imp <-
 
   if (is.factor(y)) {
    y_dim <- length(levels(y))
-   loss_fn <- torch::nnf_cross_entropy
+   # the model will output softmax values.
+   # so we need to use negative likelihood loss and
+   # pass the log of softmax.
+   loss_fn <- function(input, target) {
+     nnf_nll_loss(
+       input = torch::torch_log(input),
+       target = target
+     )
+   }
   } else {
    y_dim <- 1
-   loss_fn <- torch::nnf_mse_loss
+   loss_fn <- function(input, target) {
+     nnf_mse_loss(input, target$view(c(-1,1)))
+   }
   }
 
   if (validation > 0) {
@@ -430,11 +440,12 @@ torch_mlp_reg_fit_imp <-
 
     param_values[epoch,] <- flatten_param(model$parameters)
 
+
    if (validation > 0) {
-    pred <- model(dl_val$dataset$data$x)[,1]
+    pred <- model(dl_val$dataset$data$x)
     loss <- loss_fn(pred, dl_val$dataset$data$y)
    } else {
-    pred <- model(dl$dataset$data$x)[,1]
+    pred <- model(dl$dataset$data$x)
     loss <- loss_fn(pred, dl$dataset$data$y)
    }
 
@@ -484,7 +495,7 @@ mlp_module <-
    self$activation <- get_activation_fn(act_type)
 
    if (y_dim > 1) {
-     self$transform <- torch::nn_softmax(dim = 1)
+     self$transform <- torch::nn_softmax(dim = 2)
    } else {
      self$transform <- identity
    }
