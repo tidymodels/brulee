@@ -152,9 +152,7 @@ function is below \code{conv_crit} or if it gets worse. The default trains the
 model over the specified number of epochs.
 }
 \examples{
-library(torch)
-
-if (torch_is_installed()) {
+if (torch::torch_is_installed()) {
 
  ## -----------------------------------------------------------------------------
  # regression examples (increase # epochs to get better results)

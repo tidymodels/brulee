@@ -67,9 +67,7 @@
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
-#' library(torch)
-#'
-#' if (torch_is_installed()) {
+#' if (torch::torch_is_installed()) {
 #'
 #'  ## -----------------------------------------------------------------------------
 #'  # regression examples (increase # epochs to get better results)
@@ -260,6 +258,9 @@ torch_mlp.recipe <-
 torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                              learning_rate, penalty, dropout, validation,
                              conv_crit, verbose, ...) {
+  if(!torch::torch_is_installed()) {
+    rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
+  }
 
  f_nm <- "torch_mlp"
  # check values of various argument values
