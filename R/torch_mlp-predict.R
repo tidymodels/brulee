@@ -88,8 +88,8 @@ predict_torch_mlp_numeric <- function(model, predictors, epoch) {
  predictors <- add_intercept(predictors)
 
  hidden_units <- predictors %*% t(betas$x_to_h)
- # TODO switch off of activation parameter
- hidden_units <- torch::nnf_relu(hidden_units)
+
+ hidden_units <- get_activation_fn(model$parameters$activation)(hidden_units)
  hidden_units <- add_intercept(hidden_units)
 
  predictions <- hidden_units %*% t(betas$h_to_y)

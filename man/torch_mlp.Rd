@@ -163,21 +163,30 @@ if (torch_is_installed()) {
 
  ames$Sale_Price <- log10(ames$Sale_Price)
 
+ set.seed(122)
+ in_train <- sample(1:nrow(ames), 2000)
+ ames_train <- ames[ in_train,]
+ ames_test  <- ames[-in_train,]
+
+
  # Using matrices
  set.seed(1)
- torch_mlp(x = as.matrix(ames[, c("Longitude", "Latitude")]),
-           y = ames$Sale_Price, penalty = 0.10, epochs = 10)
+ torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+           y = ames_train$Sale_Price, penalty = 0.10, epochs = 10)
 
  # Using recipe
  library(recipes)
 
  ames_rec <-
-  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) \%>\%
+  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames_train) \%>\%
   step_dummy(Alley) \%>\%
   step_normalize(all_predictors())
 
  set.seed(1)
- torch_mlp(ames_rec, data = ames, dropout = 0.25, epochs = 10)
+ fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 10)
+ fit
+
+ predict(fit, ames_test)
 
 }
 }

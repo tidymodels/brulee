@@ -78,21 +78,31 @@
 #'
 #'  ames$Sale_Price <- log10(ames$Sale_Price)
 #'
+#'  set.seed(122)
+#'  in_train <- sample(1:nrow(ames), 2000)
+#'  ames_train <- ames[ in_train,]
+#'  ames_test  <- ames[-in_train,]
+#'
+#'
 #'  # Using matrices
 #'  set.seed(1)
-#'  torch_mlp(x = as.matrix(ames[, c("Longitude", "Latitude")]),
-#'            y = ames$Sale_Price, penalty = 0.10, epochs = 10)
+#'  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+#'            y = ames_train$Sale_Price, penalty = 0.10, epochs = 10)
 #'
 #'  # Using recipe
 #'  library(recipes)
 #'
 #'  ames_rec <-
-#'   recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) %>%
+#'   recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames_train) %>%
 #'   step_dummy(Alley) %>%
 #'   step_normalize(all_predictors())
 #'
 #'  set.seed(1)
-#'  torch_mlp(ames_rec, data = ames, dropout = 0.25, epochs = 10)
+#'  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 10)
+#'  fit
+#'
+#'  # use epochs > 600 to get good results
+#'  predict(fit, ames_test)
 #'
 #' }
 #' @export
@@ -452,13 +462,7 @@ mlp_module <-
     self$dropout <- identity
    }
 
-   if (act_type == "relu") {
-     self$activation <- torch::nn_relu()
-   } else if (act_type == "elu") {
-     self$activation <- torch::nn_elu()
-   } else if (act_type == "tanh") {
-     self$activation <- torch::nn_tanh()
-   }
+   self$activation <- get_activation_fn(act_type)
 
    if (y_dim > 1) {
      self$transform <- torch::nn_softmax(dim = 1)
@@ -562,3 +566,17 @@ unflatten_param <- function(x, epoch) {
   list(x_to_h = x_to_h, h_to_y = h_to_y)
 }
 
+## -----------------------------------------------------------------------------
+
+get_activation_fn <- function(arg, ...) {
+  if (arg == "relu") {
+    res <- torch::nn_relu(...)
+  } else if (arg == "elu") {
+    res <- torch::nn_elu(...)
+  } else if (arg == "tanh") {
+    res <- torch::nn_tanh(...)
+  } else {
+    res <- identity
+  }
+  res
+}
