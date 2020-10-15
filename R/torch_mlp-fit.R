@@ -57,7 +57,14 @@
 #'
 #' @return
 #'
-#' A `torch_mlp` object.
+#' A `torch_mlp` object with elements:
+#'
+#'  * `coefs`: A matrix of all model parameters for each epoch.
+#'  * `loss`: A vector of loss values (MSE for regression, negative log-
+#'            likelihood for classification) at each epoch.
+#'  * `dim`: A list of data dimensions.
+#'  * `parameters`: A list of some tuning parameter values.
+#'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
 #' library(torch)
@@ -280,29 +287,37 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
  ## -----------------------------------------------------------------------------
 
- if (is.factor(outcome)) {
-  # fn <- torch_mlp_cls_fit_imp
- } else {
-  fn <- torch_mlp_reg_fit_imp
- }
- fit <- fn(x = predictors, y = outcome, epochs = epochs, hidden_units = hidden_units,
-           activation = activation, learning_rate = learning_rate,
-           penalty = penalty, dropout = dropout, validation = validation,
-           conv_crit = conv_crit, verbose = verbose)
+ fit <-
+  torch_mlp_reg_fit_imp(
+   x = predictors,
+   y = outcome,
+   epochs = epochs,
+   hidden_units = hidden_units,
+   activation = activation,
+   learning_rate = learning_rate,
+   penalty = penalty,
+   dropout = dropout,
+   validation = validation,
+   conv_crit = conv_crit,
+   verbose = verbose
+  )
 
  new_torch_mlp(
   coefs = fit$coefficients,
   loss = fit$loss,
-  blueprint = processed$blueprint,
-  param = fit$param
+  dims = fit$dims,
+  parameters = fit$parameters,
+  blueprint = processed$blueprint
  )
 }
 
-new_torch_mlp <- function(coefs, loss, blueprint, param) {
+new_torch_mlp <- function(coefs, loss, dims, parameters, blueprint) {
+  # TODO validate these objects
  hardhat::new_model(coefs = coefs,
                     loss = loss,
+                    dims = dims,
+                    parameters = parameters,
                     blueprint = blueprint,
-                    param = param,
                     class = "torch_mlp")
 }
 
@@ -334,6 +349,15 @@ torch_mlp_reg_fit_imp <-
   x <- compl_data$x
   y <- compl_data$y
   n <- length(y)
+  p <- ncol(x)
+
+  if (is.factor(y)) {
+   y_dim <- length(levels(y))
+   loss_fn <- torch::nnf_cross_entropy
+  } else {
+   y_dim <- 1
+   loss_fn <- torch::nnf_mse_loss
+  }
 
   if (validation > 0) {
    in_val <- sample(seq_along(y), floor(n * validation))
@@ -355,7 +379,7 @@ torch_mlp_reg_fit_imp <-
 
   ## ---------------------------------------------------------------------------
   # Initialize model and optimizer
-  model <- mlp_reg_module(ncol(x), hidden_units, activation, dropout)
+  model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
 
   # Write a optim wrapper
   optimizer <-
@@ -369,15 +393,20 @@ torch_mlp_reg_fit_imp <-
    epoch_chr <- format(1:epochs)
   }
 
+  ## -----------------------------------------------------------------------------
+
+  param_values <- init_param_matrix(epochs, p, hidden_units, y_dim)
   # Optimize parameters
   for (epoch in 1:epochs) {
 
+    param_values[epoch,] <- flatten_param(model$parameters)
+
    if (validation > 0) {
     pred <- model(dl_val$dataset$data$x)[,1]
-    loss <- torch::nnf_mse_loss(pred, dl_val$dataset$data$y)
+    loss <- loss_fn(pred, dl_val$dataset$data$y)
    } else {
     pred <- model(dl$dataset$data$x)[,1]
-    loss <- torch::nnf_mse_loss(pred, dl$dataset$data$y)
+    loss <- loss_fn(pred, dl$dataset$data$y)
    }
 
    loss_curr <- as.array(loss)
@@ -386,7 +415,7 @@ torch_mlp_reg_fit_imp <-
    loss_prev <- loss_curr
 
    if (verbose) {
-    message("epoch:", epoch_chr[epoch], "\tRMSE:", signif(sqrt(loss_curr), 5))
+    message("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
    }
 
    if (epoch > 1 & loss_diff <= conv_crit) {
@@ -399,45 +428,52 @@ torch_mlp_reg_fit_imp <-
   }
 
   ## ---------------------------------------------------------------------------
-  # convert results to R objects
-
-  # Convert each element to an array and convert back for prediction
-  beta <- lapply(model$parameters, as.array)
 
   list(
-   coefficients = beta,
-   loss = sqrt(loss_vec[!is.na(loss_vec)]),
-   activation = activation,
-   param = list(activation = activation, learning_rate = learning_rate,
-                penalty = penalty, dropout = dropout, validation = validation)
+   coefficients = param_values[complete.cases(param_values),, drop = FALSE],
+   loss = loss_vec[!is.na(loss_vec)],
+   dims = list(p = p, n = n, h = hidden_units, y = y_dim),
+   parameters = list(activation = activation, learning_rate = learning_rate,
+                     penalty = penalty, dropout = dropout, validation = validation)
   )
  }
 
 
-mlp_reg_module <-
+mlp_module <-
  torch::nn_module(
-  "mlp_reg",
-  initialize = function(num_pred, hidden_units, act_type, dropout) {
+  "mlp_module",
+  initialize = function(num_pred, hidden_units, act_type, dropout, y_dim) {
    self$x_to_h <- torch::nn_linear(num_pred, hidden_units)
-   self$h_to_y <- torch::nn_linear(hidden_units, 1)
+   self$h_to_y <- torch::nn_linear(hidden_units, y_dim)
+
    if (dropout > 0) {
-    self$dropout <- nn_dropout(p = dropout)
+    self$dropout <- torch::nn_dropout(p = dropout)
    } else {
-    self$dropout = identity
+    self$dropout <- identity
    }
-   if (act_type == "relu")
-    self$activation <- torch::nn_relu()
-   else if (act_type == "elu")
-    self$activation <- torch::nn_elu()
-   else if (act_type == "tanh")
-    self$activation <- torch::nn_tanh()
+
+   if (act_type == "relu") {
+     self$activation <- torch::nn_relu()
+   } else if (act_type == "elu") {
+     self$activation <- torch::nn_elu()
+   } else if (act_type == "tanh") {
+     self$activation <- torch::nn_tanh()
+   }
+
+   if (y_dim > 1) {
+     self$transform <- torch::nn_softmax(dim = 1)
+   } else {
+     self$transform <- identity
+   }
+
   },
   forward = function(x) {
-   x %>%
-    self$x_to_h() %>%
-    self$activation() %>%
-    self$dropout() %>%
-    self$h_to_y()
+    x %>%
+      self$x_to_h() %>%
+      self$activation() %>%
+      self$dropout() %>%
+      self$h_to_y() %>%
+      self$transform()
   }
  )
 
@@ -445,32 +481,32 @@ mlp_reg_module <-
 
 #' @export
 print.torch_mlp <- function(x, ...) {
- cat("Multilayer perceptron via torch\n\n")
- num_coef <- sum(purrr::map_dbl(x$coefs, ~ prod(dim(.x))))
- cat(x$param$activation, "activation\n")
- cat(
-  ncol(x$coefs$x_to_h.weight), "features,",
-  nrow(x$coefs$x_to_h.weight), "hidden units,",
-  format(num_coef, big.mark = ","), "model coefficients\n"
+  cat("Multilayer perceptron via torch\n\n")
+  cat(x$param$activation, "activation\n")
+  cat(
+    format(x$dims$n, big.mark = ","), "samples,",
+    format(x$dims$p, big.mark = ","), "features,",
+    x$dims$h, "hidden units,",
+    format(ncol(x$coefs), big.mark = ","), "model coefficients\n"
   )
- if (x$param$penalty > 0) {
-  cat("weight decay:", x$param$penalty, "\n")
- }
- if (x$param$dropout > 0) {
-  cat("dropout proportion:", x$param$dropout, "\n")
- }
-
- if (!is.null(x$loss)) {
-  if (x$param$validation > 0) {
-   cat("final validation RMSE after", length(x$loss), "epochs:",
-       signif(x$loss[length(x$loss)]), "\n")
-  } else {
-   cat("final training set RMSE after", length(x$loss), "epochs:",
-       signif(x$loss[length(x$loss)]), "\n")
+  if (x$parameters$penalty > 0) {
+    cat("weight decay:", x$parameters$penalty, "\n")
+  }
+  if (x$parameters$dropout > 0) {
+    cat("dropout proportion:", x$parameters$dropout, "\n")
   }
 
- }
- invisible(x)
+  if (!is.null(x$loss)) {
+    if (x$parameters$validation > 0) {
+      cat("final validation loss after", length(x$loss), "epochs:",
+          signif(x$loss[length(x$loss)]), "\n")
+    } else {
+      cat("final training set loss after", length(x$loss), "epochs:",
+          signif(x$loss[length(x$loss)]), "\n")
+    }
+
+  }
+  invisible(x)
 }
 
 # coef.torch_mlp <- function(object, ...) {
@@ -481,4 +517,48 @@ print.torch_mlp <- function(x, ...) {
 # tidy.torch_mlp <- function(x, ...) {
 #  tibble::tibble(term = names(object$coef), estimate = unname(object$coef))
 # }
+
+
+flatten_param <- function(x) {
+  param <- lapply(x, as.array)
+  param <- lapply(param, as.vector)
+  unlist(param)
+}
+
+init_param_matrix <- function(epochs, p, h, y_dim) {
+  x_to_h <- (h * p) + h
+  x_to_y <- (y_dim * h) + y_dim
+  num_param <- x_to_h + x_to_y
+  matrix(NA, nrow = epochs, ncol = num_param)
+}
+
+
+unflatten_param <- function(x, epoch) {
+  epoch <- min(epoch, nrow(x$coefs))
+  p <- x$dims$p
+  h <- x$dims$h
+  y_dim <- x$dims$y
+  param <- x$coefs[epoch,]
+
+  x_to_h_slopes <- 1:(h * p)
+  ind <- max(x_to_h_slopes) + 1
+  x_to_h_int <- ind:(ind + h - 1)
+  ind <- max(x_to_h_int) + 1
+
+  h_to_y_slopes <- ind:(ind + h - 1)
+  ind <- max(h_to_y_slopes) + 1
+  h_to_y_int <- ind:length(param)
+
+  x_to_h <-
+    cbind(
+      matrix(param[x_to_h_int],    ncol = 1, nrow = h),
+      matrix(param[x_to_h_slopes], ncol = p, nrow = h)
+    )
+  h_to_y <-
+    cbind(
+      matrix(param[h_to_y_int],    ncol = 1, nrow = y_dim),
+      matrix(param[h_to_y_slopes], ncol = h, nrow = y_dim)
+    )
+  list(x_to_h = x_to_h, h_to_y = h_to_y)
+}
 

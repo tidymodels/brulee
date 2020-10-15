@@ -22,7 +22,7 @@ check_data_att <- function(x, y) {
   if (length(nms) != ncol(x)) {
     rlang::abort("Every column of 'x' should have a name.")
   }
-  if (!is.vector(y)) {
+  if (!is.vector(y) & !is.factor(y)) {
     rlang::abort("'y' should be a vector.")
   }
   invisible(NULL)
