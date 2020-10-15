@@ -393,7 +393,9 @@ torch_mlp_reg_fit_imp <-
    }
   } else {
    y_dim <- 1
-   loss_fn <- torch::nn_mse_loss()
+   loss_fn <- function(input, target) {
+     nnf_mse_loss(input, target$view(c(-1,1)))
+   }
   }
 
   if (validation > 0) {
@@ -436,8 +438,8 @@ torch_mlp_reg_fit_imp <-
   # Optimize parameters
   for (epoch in 1:epochs) {
 
-
     param_values[epoch,] <- flatten_param(model$parameters)
+
 
    if (validation > 0) {
     pred <- model(dl_val$dataset$data$x)
