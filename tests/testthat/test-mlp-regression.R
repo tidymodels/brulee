@@ -67,6 +67,28 @@ test_that('different fit interfaces', {
  }
 })
 
+
+test_that('predictions', {
+  skip_if(!torch::torch_is_installed())
+
+  set.seed(1)
+  fit_df <- torch_mlp(ames_x_df, ames_y, epochs = 10L)
+
+  complete_pred <- predict(fit_df, head(ames_x_df))
+  expect_true(tibble::is_tibble(complete_pred))
+  expect_true(all(names(complete_pred) == ".pred"))
+  expect_true(nrow(complete_pred) == nrow(head(ames_x_df)))
+
+  has_missing <- head(ames_x_df)
+  has_missing$Longitude[1] <- NA
+  incomplete_pred <- predict(fit_df, has_missing)
+  expect_true(tibble::is_tibble(incomplete_pred))
+  expect_true(all(names(incomplete_pred) == ".pred"))
+  expect_true(nrow(incomplete_pred) == nrow(has_missing))
+  expect_true(sum(is.na(incomplete_pred)) == 1)
+
+})
+
 test_that('bad args', {
  skip_if(!torch::torch_is_installed())
 
