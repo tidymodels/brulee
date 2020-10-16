@@ -318,6 +318,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
  new_torch_mlp(
   coefs = fit$coefficients,
+  models = fit$models,
   loss = fit$loss,
   dims = fit$dims,
   parameters = fit$parameters,
@@ -325,10 +326,13 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  )
 }
 
-new_torch_mlp <- function(coefs, loss, dims, parameters, blueprint) {
+new_torch_mlp <- function(coefs, models, loss, dims, parameters, blueprint) {
 
   if (!is.array(coefs) || !is.numeric(coefs)) {
     rlang::abort("'coefs' should be a numeric array.")
+  }
+  if (!is.list(models)) {
+    rlang::abort("'models' should be a list.")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
     rlang::abort("'loss' should be a numeric vector")
@@ -343,6 +347,7 @@ new_torch_mlp <- function(coefs, loss, dims, parameters, blueprint) {
     rlang::abort("'blueprint' should be a hardhat blueprint")
   }
  hardhat::new_model(coefs = coefs,
+                    models = models,
                     loss = loss,
                     dims = dims,
                     parameters = parameters,
@@ -434,12 +439,10 @@ torch_mlp_reg_fit_imp <-
 
   ## -----------------------------------------------------------------------------
 
+  model_per_epoch <- list()
   param_values <- init_param_matrix(epochs, p, hidden_units, y_dim)
   # Optimize parameters
   for (epoch in 1:epochs) {
-
-    param_values[epoch,] <- flatten_param(model$parameters)
-
 
    if (validation > 0) {
     pred <- model(dl_val$dataset$data$x)
@@ -465,12 +468,17 @@ torch_mlp_reg_fit_imp <-
    optimizer$zero_grad()
    loss$backward()
    optimizer$step()
+
+   param_values[epoch,] <- flatten_param(model$parameters)
+   model_per_epoch[[epoch]] <- model_to_raw(model)
+
   }
 
   ## ---------------------------------------------------------------------------
 
   list(
    coefficients = param_values[complete.cases(param_values),, drop = FALSE],
+   models = model_per_epoch,
    loss = loss_vec[!is.na(loss_vec)],
    dims = list(p = p, n = n, h = hidden_units, y = y_dim),
    parameters = list(activation = activation, learning_rate = learning_rate,
@@ -632,4 +640,12 @@ autoplot.torch_mlp <- function(object, ...) {
   ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
     ggplot2::geom_line() +
     ggplot2::labs(y = lab)
+}
+
+model_to_raw <- function(model) {
+  con <- rawConnection(raw(), open = "wr")
+  torch::torch_save(model, con)
+  on.exit({close(con)}, add = TRUE)
+  r <- rawConnectionValue(con)
+  r
 }
