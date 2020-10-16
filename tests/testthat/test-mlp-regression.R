@@ -222,6 +222,7 @@ test_that('bad args', {
  expect_error(
    lantern:::new_torch_mlp(
      bad_coefs$coefs,
+     bad_coefs$models,
      bad_coefs$loss,
      bad_coefs$dims,
      bad_coefs$parameters,
@@ -230,11 +231,26 @@ test_that('bad args', {
    "should be a numeric array"
  )
 
+ bad_models <- fit_mat
+ bad_models$models <- "potato!"
+ expect_error(
+   lantern:::new_torch_mlp(
+     bad_models$coefs,
+     bad_models$models,
+     bad_models$models,
+     bad_models$dims,
+     bad_models$parameters,
+     bad_models$blueprint
+   ),
+   "should be a list"
+ )
+
  bad_loss <- fit_mat
  bad_loss$loss <- "potato!"
  expect_error(
    lantern:::new_torch_mlp(
      bad_loss$coefs,
+     bad_loss$models,
      bad_loss$loss,
      bad_loss$dims,
      bad_loss$parameters,
@@ -248,6 +264,7 @@ test_that('bad args', {
  expect_error(
    lantern:::new_torch_mlp(
      bad_dims$coefs,
+     bad_dims$models,
      bad_dims$loss,
      bad_dims$dims,
      bad_dims$parameters,
@@ -262,6 +279,7 @@ test_that('bad args', {
  expect_error(
    lantern:::new_torch_mlp(
      bad_parameters$coefs,
+     bad_parameters$models,
      bad_parameters$loss,
      bad_parameters$dims,
      bad_parameters$parameters,
@@ -276,6 +294,7 @@ test_that('bad args', {
  expect_error(
    lantern:::new_torch_mlp(
      bad_blueprint$coefs,
+     bad_blueprint$models,
      bad_blueprint$loss,
      bad_blueprint$dims,
      bad_blueprint$parameters,
