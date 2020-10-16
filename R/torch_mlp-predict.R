@@ -24,7 +24,7 @@ predict.torch_mlp <- function(object, new_data, type = "numeric", epoch = NULL, 
  forged <- hardhat::forge(new_data, object$blueprint)
  rlang::arg_match(type, mlp_valid_predict_types())
  if (is.null(epoch)) {
-  epoch <- nrow(object$coefs)
+  epoch <- length(object$models)
  }
  predict_torch_mlp_bridge(type, object, forged$predictors, epoch = epoch)
 }
@@ -58,6 +58,7 @@ predict_torch_mlp_bridge <- function(type, model, predictors, epoch) {
                "be made at epoch", epoch, "so last epoch is used.")
   rlang::warn(msg)
  }
+
  predictions <- predict_function(model, predictors, epoch)
 
  hardhat::validate_prediction_size(predictions, predictors)
@@ -83,15 +84,10 @@ add_intercept <- function(x) {
 }
 
 predict_torch_mlp_numeric <- function(model, predictors, epoch) {
- betas <- unflatten_param(model, epoch)
-
- predictors <- add_intercept(predictors)
-
- hidden_units <- predictors %*% t(betas$x_to_h)
-
- hidden_units <- get_activation_fn(model$parameters$activation)(hidden_units)
- hidden_units <- add_intercept(hidden_units)
-
- predictions <- hidden_units %*% t(betas$h_to_y)
- hardhat::spruce_numeric(unname(predictions[,1]))
+  con <- rawConnection(model$models[[epoch]])
+  on.exit({close(con)}, add = TRUE)
+  module <- torch::torch_load(con)
+  module$eval() # put the model in evaluation mode
+  predictions <- as.array(module(torch::torch_tensor(predictors)))
+  hardhat::spruce_numeric(unname(predictions[,1]))
 }
