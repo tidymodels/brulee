@@ -89,30 +89,47 @@ predict_torch_mlp_raw <- function(model, predictors, epoch) {
   module <- torch::torch_load(con)
   module$eval() # put the model in evaluation mode
   predictions <- module(torch::torch_tensor(predictors))
+  predictions <- as.array(predictions)
+  # torch doesn't have a NA type so it returns NaN
+  predictions[is.nan(predictions)] <- NA
+  predictions
 }
 
 predict_torch_mlp_numeric <- function(model, predictors, epoch) {
   predictions <- predict_torch_mlp_raw(model, predictors, epoch)
-  hardhat::spruce_numeric(unname(as.array(predictions)[,1]))
+  hardhat::spruce_numeric(predictions[,1])
 }
 
 predict_torch_mlp_prob <- function(model, predictors, epoch) {
   predictions <- predict_torch_mlp_raw(model, predictors, epoch)
-  lvs <- levels(fit_df$blueprint$ptypes$outcomes$.outcome) # is this the correct way?
-  hardhat::spruce_prob(pred_levels = lvs, as.array(predictions))
+  lvs <- get_levels(model)
+  hardhat::spruce_prob(pred_levels = lvs, predictions)
 }
 
 predict_torch_mlp_class <- function(model, predictors, epoch) {
   predictions <- predict_torch_mlp_raw(model, predictors, epoch)
-  predictions <- torch_max(predictions, dim = 2)
-  predictions <- as.integer(predictions[[2]]) # ids of higher values
-  lvs <- levels(fit_df$blueprint$ptypes$outcomes$.outcome)
+  predictions <- apply(predictions, 1, which.max2) # take the maximum value
+  lvs <- get_levels(model)
   hardhat::spruce_class(factor(lvs[predictions], levels = lvs))
+}
+
+# a which max alternative that returns NA if any
+# value is NA
+which.max2 <- function(x) {
+  if (any(is.na(x)))
+    NA
+  else
+    which.max(x)
+}
+
+# get levels from a model object
+get_levels <- function(model) {
+  levels(model$blueprint$ptypes$outcomes$.outcome)
 }
 
 check_type <- function(model, type) {
 
-  outcome_ptype <- fit_df$blueprint$ptypes$outcomes$.outcome
+  outcome_ptype <- model$blueprint$ptypes$outcomes$.outcome
 
   if (is.null(type)) {
     if (is.factor(outcome_ptype))
