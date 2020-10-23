@@ -129,7 +129,7 @@ get_levels <- function(model) {
 
 check_type <- function(model, type) {
 
-  outcome_ptype <- model$blueprint$ptypes$outcomes$.outcome
+  outcome_ptype <- model$blueprint$ptypes$outcomes[[1]]
 
   if (is.null(type)) {
     if (is.factor(outcome_ptype))
