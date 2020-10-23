@@ -270,7 +270,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
   hidden_units <- as.integer(hidden_units)
  }
- check_integer(epochs, single = TRUE, 2, fn = f_nm)
+ check_integer(epochs, single = TRUE, 1, fn = f_nm)
  check_integer(hidden_units, single = TRUE, 1, fn = f_nm)
  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
@@ -361,7 +361,7 @@ new_torch_mlp <- function(coefs, models, loss, dims, parameters, blueprint) {
 torch_mlp_reg_fit_imp <-
  function(x, y,
           epochs = 100L,
-          batch_size = 128L,
+          batch_size = 32,
           hidden_units = 3L,
           penalty = 0,
           dropout = 0,
