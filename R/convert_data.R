@@ -22,7 +22,7 @@ matrix_to_dataset <- torch::dataset(
  .getitem = function(index) {
   x <- self$data$x[index,]
   y <- self$data$y[index]
-  list(x, y)
+  list(x = x, y = y)
  },
 
  .length = function() {

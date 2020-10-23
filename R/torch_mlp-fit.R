@@ -361,6 +361,7 @@ new_torch_mlp <- function(coefs, models, loss, dims, parameters, blueprint) {
 torch_mlp_reg_fit_imp <-
  function(x, y,
           epochs = 100L,
+          batch_size = 128L,
           hidden_units = 3L,
           penalty = 0,
           dropout = 0,
@@ -414,7 +415,7 @@ torch_mlp_reg_fit_imp <-
   ## ---------------------------------------------------------------------------
   # Convert to index sampler and data loader
   ds <- lantern::matrix_to_dataset(x, y)
-  dl <- torch::dataloader(ds)
+  dl <- torch::dataloader(ds, batch_size = batch_size)
 
   if (validation > 0) {
    ds_val <- lantern::matrix_to_dataset(x_val, y_val)
@@ -441,36 +442,47 @@ torch_mlp_reg_fit_imp <-
 
   model_per_epoch <- list()
   param_values <- init_param_matrix(epochs, p, hidden_units, y_dim)
+
   # Optimize parameters
   for (epoch in 1:epochs) {
 
-   if (validation > 0) {
-    pred <- model(dl_val$dataset$data$x)
-    loss <- loss_fn(pred, dl_val$dataset$data$y)
-   } else {
-    pred <- model(dl$dataset$data$x)
-    loss <- loss_fn(pred, dl$dataset$data$y)
-   }
+    # training loop
+    for (batch in torch::enumerate(dl)) {
 
-   loss_curr <- as.array(loss)
-   loss_vec[epoch] <- loss_curr
-   loss_diff <- (loss_prev - loss_curr)/loss_prev
-   loss_prev <- loss_curr
+      pred <- model(batch$x)
+      loss <- loss_fn(pred, batch$y)
 
-   if (verbose) {
-    message("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
-   }
+      optimizer$zero_grad()
+      loss$backward()
+      optimizer$step()
+    }
 
-   if (epoch > 1 & loss_diff <= conv_crit) {
-    break()
-   }
+    # calculate loss on the full datasets
+    if (validation > 0) {
+      pred <- model(dl_val$dataset$data$x)
+      loss <- loss_fn(pred, dl_val$dataset$data$y)
+    } else {
+      pred <- model(dl$dataset$data$x)
+      loss <- loss_fn(pred, dl$dataset$data$y)
+    }
 
-   optimizer$zero_grad()
-   loss$backward()
-   optimizer$step()
+    # calculate losses
+    loss_curr <- loss$item()
+    loss_vec[epoch] <- loss_curr
+    loss_diff <- (loss_prev - loss_curr)/loss_prev
+    loss_prev <- loss_curr
 
-   param_values[epoch,] <- flatten_param(model$parameters)
-   model_per_epoch[[epoch]] <- model_to_raw(model)
+    # persists models and cofficients
+    param_values[epoch,] <- flatten_param(model$parameters)
+    model_per_epoch[[epoch]] <- model_to_raw(model)
+
+    if (verbose) {
+      message("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
+    }
+
+    if (loss_diff <= conv_crit) {
+      break()
+    }
 
   }
 
