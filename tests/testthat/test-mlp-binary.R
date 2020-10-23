@@ -9,6 +9,7 @@ suppressPackageStartupMessages(library(recipes))
 ## -----------------------------------------------------------------------------
 
 data("lending_club", package = "modeldata")
+lending_club <- head(lending_club, 1000)
 
 x_df <- lending_club[, c("revol_util", "open_il_24m")]
 x_df_mixed <- lending_club[, c("revol_util", "open_il_24m", "emp_length")]
@@ -86,8 +87,8 @@ test_that('predictions', {
 
   pred_prob <- predict(fit_df, head(x_df), type = "prob")
   expect_true(tibble::is_tibble(complete_pred))
-  expect_true(all(names(complete_pred) == c(".pred_bad", ".pred_good")))
-  expect_true(nrow(complete_pred) == nrow(head(x_df)))
+  expect_true(all(names(pred_prob) == c(".pred_bad", ".pred_good")))
+  expect_true(nrow(pred_prob) == nrow(head(x_df)))
   expect_equal(apply(pred_prob, 1, sum), rep(1, nrow(pred_prob)), tolerance = 1e6)
 
 })

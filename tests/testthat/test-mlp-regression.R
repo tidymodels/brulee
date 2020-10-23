@@ -101,7 +101,7 @@ test_that('bad args', {
   "expected 'epochs' to be a single integer."
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 1L),
+  torch_mlp(ames_x_mat, ames_y, epochs = 0L),
   "expected 'epochs' to be an integer on"
  )
  expect_error(
@@ -302,5 +302,20 @@ test_that('bad args', {
    ),
    "should be a hardhat blueprint"
  )
+
+})
+
+test_that("learning happens", {
+
+  set.seed(1)
+  x <- data.frame(x = runif(1000))
+  y <- 2 * x$x
+
+  model <- torch_mlp(x, y,
+                     epochs = 100L,
+                     activation = "relu",
+                     hidden_units = 10L,
+                     learning_rate = 0.01)
+  expect_true(tail(model$loss, 1) < 0.0005)
 
 })
