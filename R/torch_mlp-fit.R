@@ -67,6 +67,7 @@
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
+#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
 #'  ## -----------------------------------------------------------------------------
@@ -85,7 +86,7 @@
 #'  # Using matrices
 #'  set.seed(1)
 #'  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'            y = ames_train$Sale_Price, penalty = 0.10, epochs = 10)
+#'            y = ames_train$Sale_Price, penalty = 0.10, epochs = 600)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -95,7 +96,6 @@
 #'   step_dummy(Alley) %>%
 #'   step_normalize(all_predictors())
 #'
-#' \donttest{
 #'  set.seed(1)
 #'  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
 #'  fit

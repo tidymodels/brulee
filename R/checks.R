@@ -14,6 +14,8 @@ check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
 }
 
 check_data_att <- function(x, y) {
+  hardhat::validate_outcomes_are_univariate(y)
+
   # check matrices/vectors, matrix type, matrix column names
   if (!is.matrix(x) || !is.numeric(x)) {
     rlang::abort("'x' should be a numeric matrix.")
