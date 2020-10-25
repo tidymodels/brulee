@@ -52,7 +52,7 @@ predict_torch_mlp_bridge <- function(type, model, predictors, epoch) {
 
  predict_function <- get_mlp_predict_function(type)
 
- max_epoch <- nrow(model$coefs)
+ max_epoch <- length(model$models)
  if (epoch > max_epoch) {
   msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
                "be made at epoch", epoch, "so last epoch is used.")
@@ -83,10 +83,15 @@ add_intercept <- function(x) {
  cbind(rep(1, nrow(x)), x)
 }
 
-predict_torch_mlp_raw <- function(model, predictors, epoch) {
+revive_model <- function(model, epoch) {
   con <- rawConnection(model$models[[epoch]])
   on.exit({close(con)}, add = TRUE)
   module <- torch::torch_load(con)
+  module
+}
+
+predict_torch_mlp_raw <- function(model, predictors, epoch) {
+  module <- revive_model(model, epoch)
   module$eval() # put the model in evaluation mode
   predictions <- module(torch::torch_tensor(predictors))
   predictions <- as.array(predictions)

@@ -57,14 +57,6 @@ test_that('different fit interfaces', {
   fit_rec <- torch_mlp(ames_rec, ames, epochs = 10L),
   regex = NA
  )
-
- # Check coefs:
- for (i in 1:4) {
-  expect_true(is.numeric(fit_mat$coefs[[i]]))
-  expect_true(is.numeric(fit_df$coefs[[i]]))
-  expect_true(is.numeric(fit_f$coefs[[i]]))
-  expect_true(is.numeric(fit_rec$coefs[[i]]))
- }
 })
 
 
@@ -217,25 +209,10 @@ test_that('bad args', {
 
  fit_mat <- torch_mlp(ames_x_mat, ames_y, epochs = 10L)
 
- bad_coefs <- fit_mat
- bad_coefs$coefs <- as.data.frame(bad_coefs$coefs)
- expect_error(
-   lantern:::new_torch_mlp(
-     bad_coefs$coefs,
-     bad_coefs$models,
-     bad_coefs$loss,
-     bad_coefs$dims,
-     bad_coefs$parameters,
-     bad_coefs$blueprint
-   ),
-   "should be a numeric array"
- )
-
  bad_models <- fit_mat
  bad_models$models <- "potato!"
  expect_error(
    lantern:::new_torch_mlp(
-     bad_models$coefs,
      bad_models$models,
      bad_models$models,
      bad_models$dims,
@@ -249,7 +226,6 @@ test_that('bad args', {
  bad_loss$loss <- "potato!"
  expect_error(
    lantern:::new_torch_mlp(
-     bad_loss$coefs,
      bad_loss$models,
      bad_loss$loss,
      bad_loss$dims,
@@ -263,7 +239,6 @@ test_that('bad args', {
  bad_dims$dims <- "mountainous"
  expect_error(
    lantern:::new_torch_mlp(
-     bad_dims$coefs,
      bad_dims$models,
      bad_dims$loss,
      bad_dims$dims,
@@ -278,7 +253,6 @@ test_that('bad args', {
  bad_parameters$dims <- "mitten"
  expect_error(
    lantern:::new_torch_mlp(
-     bad_parameters$coefs,
      bad_parameters$models,
      bad_parameters$loss,
      bad_parameters$dims,
@@ -293,7 +267,6 @@ test_that('bad args', {
  bad_blueprint$blueprint <- "adorable"
  expect_error(
    lantern:::new_torch_mlp(
-     bad_blueprint$coefs,
      bad_blueprint$models,
      bad_blueprint$loss,
      bad_blueprint$dims,

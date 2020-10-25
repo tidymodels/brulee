@@ -125,7 +125,7 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{torch_mlp} object with elements:
 \itemize{
-\item \code{coefs}: A matrix of all model parameters for each epoch.
+\item \code{models}: a list object of serialized models for each epoch.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.

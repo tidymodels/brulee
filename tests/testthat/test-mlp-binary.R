@@ -56,13 +56,6 @@ test_that('different fit interfaces', {
   regex = NA
  )
 
- # Check coefs:
- for (i in 1:4) {
-  expect_true(is.numeric(fit_mat$coefs[[i]]))
-  expect_true(is.numeric(fit_df$coefs[[i]]))
-  expect_true(is.numeric(fit_f$coefs[[i]]))
-  expect_true(is.numeric(fit_rec$coefs[[i]]))
- }
 })
 
 test_that('predictions', {
