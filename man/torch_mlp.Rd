@@ -125,7 +125,7 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{torch_mlp} object with elements:
 \itemize{
-\item \code{coefs}: A matrix of all model parameters for each epoch.
+\item \code{models}: a list object of serialized models for each epoch.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.
@@ -152,6 +152,7 @@ function is below \code{conv_crit} or if it gets worse. The default trains the
 model over the specified number of epochs.
 }
 \examples{
+\donttest{
 if (torch::torch_is_installed()) {
 
  ## -----------------------------------------------------------------------------
@@ -170,7 +171,7 @@ if (torch::torch_is_installed()) {
  # Using matrices
  set.seed(1)
  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-           y = ames_train$Sale_Price, penalty = 0.10, epochs = 10)
+           y = ames_train$Sale_Price, penalty = 0.10, epochs = 600)
 
  # Using recipe
  library(recipes)
@@ -180,7 +181,6 @@ if (torch::torch_is_installed()) {
   step_dummy(Alley) \%>\%
   step_normalize(all_predictors())
 
-\donttest{
  set.seed(1)
  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
  fit

@@ -20,9 +20,9 @@
 #'
 #'
 #' @export
-predict.torch_mlp <- function(object, new_data, type = "numeric", epoch = NULL, ...) {
+predict.torch_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...) {
  forged <- hardhat::forge(new_data, object$blueprint)
- rlang::arg_match(type, mlp_valid_predict_types())
+ type <- check_type(object, type)
  if (is.null(epoch)) {
   epoch <- length(object$models)
  }
@@ -30,7 +30,7 @@ predict.torch_mlp <- function(object, new_data, type = "numeric", epoch = NULL, 
 }
 
 mlp_valid_predict_types <- function() {
- c("numeric")
+ c("numeric", "prob", "class")
 }
 
 # ------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ predict_torch_mlp_bridge <- function(type, model, predictors, epoch) {
 
  predict_function <- get_mlp_predict_function(type)
 
- max_epoch <- nrow(model$coefs)
+ max_epoch <- length(model$models)
  if (epoch > max_epoch) {
   msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
                "be made at epoch", epoch, "so last epoch is used.")
@@ -60,16 +60,16 @@ predict_torch_mlp_bridge <- function(type, model, predictors, epoch) {
  }
 
  predictions <- predict_function(model, predictors, epoch)
-
  hardhat::validate_prediction_size(predictions, predictors)
-
  predictions
 }
 
 get_mlp_predict_function <- function(type) {
  switch(
   type,
-  numeric = predict_torch_mlp_numeric
+  numeric = predict_torch_mlp_numeric,
+  prob    = predict_torch_mlp_prob,
+  class   = predict_torch_mlp_class
  )
 }
 
@@ -83,11 +83,78 @@ add_intercept <- function(x) {
  cbind(rep(1, nrow(x)), x)
 }
 
-predict_torch_mlp_numeric <- function(model, predictors, epoch) {
+revive_model <- function(model, epoch) {
   con <- rawConnection(model$models[[epoch]])
   on.exit({close(con)}, add = TRUE)
   module <- torch::torch_load(con)
+  module
+}
+
+predict_torch_mlp_raw <- function(model, predictors, epoch) {
+  module <- revive_model(model, epoch)
   module$eval() # put the model in evaluation mode
-  predictions <- as.array(module(torch::torch_tensor(predictors)))
-  hardhat::spruce_numeric(unname(predictions[,1]))
+  predictions <- module(torch::torch_tensor(predictors))
+  predictions <- as.array(predictions)
+  # torch doesn't have a NA type so it returns NaN
+  predictions[is.nan(predictions)] <- NA
+  predictions
+}
+
+predict_torch_mlp_numeric <- function(model, predictors, epoch) {
+  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+  hardhat::spruce_numeric(predictions[,1])
+}
+
+predict_torch_mlp_prob <- function(model, predictors, epoch) {
+  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+  lvs <- get_levels(model)
+  hardhat::spruce_prob(pred_levels = lvs, predictions)
+}
+
+predict_torch_mlp_class <- function(model, predictors, epoch) {
+  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+  predictions <- apply(predictions, 1, which.max2) # take the maximum value
+  lvs <- get_levels(model)
+  hardhat::spruce_class(factor(lvs[predictions], levels = lvs))
+}
+
+# a which max alternative that returns NA if any
+# value is NA
+which.max2 <- function(x) {
+  if (any(is.na(x)))
+    NA
+  else
+    which.max(x)
+}
+
+# get levels from a model object
+get_levels <- function(model) {
+  # Assumes univariate models
+  levels(model$blueprint$ptypes$outcomes[[1]])
+}
+
+check_type <- function(model, type) {
+
+  outcome_ptype <- model$blueprint$ptypes$outcomes[[1]]
+
+  if (is.null(type)) {
+    if (is.factor(outcome_ptype))
+      type <- "class"
+    else if (is.numeric(outcome_ptype))
+      type <- "numeric"
+    else
+      rlang::abort(glue::glue("Unknown outcome type '{class(outcome_ptype)}'"))
+  }
+
+  type <- rlang::arg_match(type, mlp_valid_predict_types())
+
+  if (is.factor(outcome_ptype)) {
+    if (!type %in% c("prob", "class"))
+      rlang::abort(glue::glue("Outcome is factor and the prediction type is '{type}'."))
+  } else if (is.numeric(outcome_ptype)) {
+    if (type != "numeric")
+      rlang::abort(glue::glue("Outcome is numeric and the prediction type is '{type}'."))
+  }
+
+  type
 }
