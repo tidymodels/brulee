@@ -525,9 +525,18 @@ mlp_module <-
 print.torch_mlp <- function(x, ...) {
   cat("Multilayer perceptron via torch\n\n")
   cat(x$param$activation, "activation\n")
+  lvl <- get_levels(x)
+  if (is.null(lvl)) {
+    chr_y <- "numeric outcome"
+  } else {
+    chr_y <- paste(length(lvl), "classes")
+  }
   cat(
     format(x$dims$n, big.mark = ","), "samples,",
     format(x$dims$p, big.mark = ","), "features,",
+    chr_y, "\n"
+  )
+  cat(
     x$dims$h, "hidden units,",
     format(ncol(x$coefs), big.mark = ","), "model coefficients\n"
   )
