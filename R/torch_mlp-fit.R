@@ -58,8 +58,7 @@
 #' @return
 #'
 #' A `torch_mlp` object with elements:
-#'
-#'  * `coefs`: A matrix of all model parameters for each epoch.
+#'  * `models`: a list object of serialized models for each epoch.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
@@ -67,6 +66,7 @@
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
+#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
 #'  ## -----------------------------------------------------------------------------
@@ -85,7 +85,7 @@
 #'  # Using matrices
 #'  set.seed(1)
 #'  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'            y = ames_train$Sale_Price, penalty = 0.10, epochs = 10)
+#'            y = ames_train$Sale_Price, penalty = 0.10, epochs = 600)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -95,7 +95,6 @@
 #'   step_dummy(Alley) %>%
 #'   step_normalize(all_predictors())
 #'
-#' \donttest{
 #'  set.seed(1)
 #'  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
 #'  fit
@@ -317,7 +316,6 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
 
  new_torch_mlp(
-  coefs = fit$coefficients,
   models = fit$models,
   loss = fit$loss,
   dims = fit$dims,
@@ -326,11 +324,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  )
 }
 
-new_torch_mlp <- function(coefs, models, loss, dims, parameters, blueprint) {
-
-  if (!is.array(coefs) || !is.numeric(coefs)) {
-    rlang::abort("'coefs' should be a numeric array.")
-  }
+new_torch_mlp <- function( models, loss, dims, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -346,8 +340,7 @@ new_torch_mlp <- function(coefs, models, loss, dims, parameters, blueprint) {
   if (!inherits(blueprint, "hardhat_blueprint")) {
     rlang::abort("'blueprint' should be a hardhat blueprint")
   }
- hardhat::new_model(coefs = coefs,
-                    models = models,
+ hardhat::new_model(models = models,
                     loss = loss,
                     dims = dims,
                     parameters = parameters,
@@ -441,7 +434,6 @@ torch_mlp_reg_fit_imp <-
   ## -----------------------------------------------------------------------------
 
   model_per_epoch <- list()
-  param_values <- init_param_matrix(epochs, p, hidden_units, y_dim)
 
   # Optimize parameters
   for (epoch in 1:epochs) {
@@ -473,7 +465,6 @@ torch_mlp_reg_fit_imp <-
     loss_prev <- loss_curr
 
     # persists models and cofficients
-    param_values[epoch,] <- flatten_param(model$parameters)
     model_per_epoch[[epoch]] <- model_to_raw(model)
 
     if (verbose) {
@@ -484,12 +475,13 @@ torch_mlp_reg_fit_imp <-
       break()
     }
 
+   model_per_epoch[[epoch]] <- model_to_raw(model)
+
   }
 
   ## ---------------------------------------------------------------------------
 
   list(
-   coefficients = param_values[complete.cases(param_values),, drop = FALSE],
    models = model_per_epoch,
    loss = loss_vec[!is.na(loss_vec)],
    dims = list(p = p, n = n, h = hidden_units, y = y_dim),
@@ -533,15 +525,30 @@ mlp_module <-
 
 ## -----------------------------------------------------------------------------
 
+get_num_mlp_coef <- function(x) {
+  model <- revive_model(x, 1)$parameters
+  param <- vapply(model, function(.x) prod(dim(.x)), double(1))
+  sum(unlist(param))
+}
+
 #' @export
 print.torch_mlp <- function(x, ...) {
   cat("Multilayer perceptron via torch\n\n")
   cat(x$param$activation, "activation\n")
+  lvl <- get_levels(x)
+  if (is.null(lvl)) {
+    chr_y <- "numeric outcome"
+  } else {
+    chr_y <- paste(length(lvl), "classes")
+  }
   cat(
     format(x$dims$n, big.mark = ","), "samples,",
     format(x$dims$p, big.mark = ","), "features,",
+    chr_y, "\n"
+  )
+  cat(
     x$dims$h, "hidden units,",
-    format(ncol(x$coefs), big.mark = ","), "model coefficients\n"
+    format(get_num_mlp_coef(x), big.mark = ","), "model parameters\n"
   )
   if (x$parameters$penalty > 0) {
     cat("weight decay:", x$parameters$penalty, "\n")
@@ -572,49 +579,6 @@ print.torch_mlp <- function(x, ...) {
 #  tibble::tibble(term = names(object$coef), estimate = unname(object$coef))
 # }
 
-
-flatten_param <- function(x) {
-  param <- lapply(x, as.array)
-  param <- lapply(param, as.vector)
-  unlist(param)
-}
-
-init_param_matrix <- function(epochs, p, h, y_dim) {
-  x_to_h <- (h * p) + h
-  x_to_y <- (y_dim * h) + y_dim
-  num_param <- x_to_h + x_to_y
-  matrix(NA, nrow = epochs, ncol = num_param)
-}
-
-
-unflatten_param <- function(x, epoch) {
-  epoch <- min(epoch, nrow(x$coefs))
-  p <- x$dims$p
-  h <- x$dims$h
-  y_dim <- x$dims$y
-  param <- x$coefs[epoch,]
-
-  x_to_h_slopes <- 1:(h * p)
-  ind <- max(x_to_h_slopes) + 1
-  x_to_h_int <- ind:(ind + h - 1)
-  ind <- max(x_to_h_int) + 1
-
-  h_to_y_slopes <- ind:(ind + h - 1)
-  ind <- max(h_to_y_slopes) + 1
-  h_to_y_int <- ind:length(param)
-
-  x_to_h <-
-    cbind(
-      matrix(param[x_to_h_int],    ncol = 1, nrow = h),
-      matrix(param[x_to_h_slopes], ncol = p, nrow = h)
-    )
-  h_to_y <-
-    cbind(
-      matrix(param[h_to_y_int],    ncol = 1, nrow = y_dim),
-      matrix(param[h_to_y_slopes], ncol = h, nrow = y_dim)
-    )
-  list(x_to_h = x_to_h, h_to_y = h_to_y)
-}
 
 ## -----------------------------------------------------------------------------
 

@@ -23,7 +23,8 @@ Imports:
     rlang,
     tibble,
     utils,
-    ggplot2
+    ggplot2,
+    glue
 Suggests: 
     spelling,
     modeldata,
