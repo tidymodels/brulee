@@ -4,7 +4,7 @@
 \alias{predict.torch_mlp}
 \title{Predict from a \code{torch_mlp}}
 \usage{
-\method{predict}{torch_mlp}(object, new_data, type = "numeric", epoch = NULL, ...)
+\method{predict}{torch_mlp}(object, new_data, type = NULL, epoch = NULL, ...)
 }
 \arguments{
 \item{object}{A \code{torch_mlp} object.}

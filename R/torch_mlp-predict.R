@@ -124,12 +124,13 @@ which.max2 <- function(x) {
 
 # get levels from a model object
 get_levels <- function(model) {
-  levels(model$blueprint$ptypes$outcomes$.outcome)
+  # Assumes univariate models
+  levels(model$blueprint$ptypes$outcomes[[1]])
 }
 
 check_type <- function(model, type) {
 
-  outcome_ptype <- model$blueprint$ptypes$outcomes$.outcome
+  outcome_ptype <- model$blueprint$ptypes$outcomes[[1]]
 
   if (is.null(type)) {
     if (is.factor(outcome_ptype))
