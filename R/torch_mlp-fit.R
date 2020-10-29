@@ -130,6 +130,7 @@ torch_mlp.data.frame <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          batch_size = NULL,
           conv_crit = -Inf,
           verbose = FALSE,
           ...) {
@@ -144,6 +145,7 @@ torch_mlp.data.frame <-
    penalty = penalty,
    dropout = dropout,
    validation = validation,
+   batch_size = batch_size,
    conv_crit = conv_crit,
    verbose = verbose,
    ...
@@ -163,6 +165,7 @@ torch_mlp.matrix <- function(x,
                              dropout = 0,
                              validation = 0.1,
                              learning_rate = 0.01,
+                             batch_size = NULL,
                              conv_crit = -Inf,
                              verbose = FALSE,
                              ...) {
@@ -177,6 +180,7 @@ torch_mlp.matrix <- function(x,
   penalty = penalty,
   dropout = dropout,
   validation = validation,
+  batch_size = batch_size,
   conv_crit = conv_crit,
   verbose = verbose,
   ...
@@ -197,6 +201,7 @@ torch_mlp.formula <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          batch_size = NULL,
           conv_crit = -Inf,
           verbose = FALSE,
           ...) {
@@ -211,6 +216,7 @@ torch_mlp.formula <-
    penalty = penalty,
    dropout = dropout,
    validation = validation,
+   batch_size = batch_size,
    conv_crit = conv_crit,
    verbose = verbose,
    ...
@@ -231,6 +237,7 @@ torch_mlp.recipe <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          batch_size = NULL,
           conv_crit = -Inf,
           verbose = FALSE,
           ...) {
@@ -245,6 +252,7 @@ torch_mlp.recipe <-
    penalty = penalty,
    dropout = dropout,
    validation = validation,
+   batch_size = batch_size,
    conv_crit = conv_crit,
    verbose = verbose,
    ...
@@ -256,7 +264,7 @@ torch_mlp.recipe <-
 
 torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                              learning_rate, penalty, dropout, validation,
-                             conv_crit, verbose, ...) {
+                             batch_size, conv_crit, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -270,6 +278,12 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   hidden_units <- as.integer(hidden_units)
  }
  check_integer(epochs, single = TRUE, 1, fn = f_nm)
+ if (!is.null(batch_size)) {
+   if (is.numeric(batch_size) & !is.integer(batch_size)) {
+     batch_size <- as.integer(batch_size)
+   }
+   check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+ }
  check_integer(hidden_units, single = TRUE, 1, fn = f_nm)
  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
@@ -311,6 +325,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
    penalty = penalty,
    dropout = dropout,
    validation = validation,
+   batch_size = batch_size,
    conv_crit = conv_crit,
    verbose = verbose
   )
@@ -405,6 +420,12 @@ torch_mlp_reg_fit_imp <-
    y <- y[-in_val]
   }
 
+  if (is.null(batch_size)) {
+    batch_size <- nrow(x)
+  } else {
+    batch_size <- min(batch_size, nrow(x))
+  }
+
   ## ---------------------------------------------------------------------------
   # Convert to index sampler and data loader
   ds <- lantern::matrix_to_dataset(x, y)
@@ -486,7 +507,8 @@ torch_mlp_reg_fit_imp <-
    loss = loss_vec[!is.na(loss_vec)],
    dims = list(p = p, n = n, h = hidden_units, y = y_dim),
    parameters = list(activation = activation, learning_rate = learning_rate,
-                     penalty = penalty, dropout = dropout, validation = validation)
+                     penalty = penalty, dropout = dropout, validation = validation,
+                     batch_size = batch_size)
   )
  }
 
@@ -556,7 +578,7 @@ print.torch_mlp <- function(x, ...) {
   if (x$parameters$dropout > 0) {
     cat("dropout proportion:", x$parameters$dropout, "\n")
   }
-
+  cat("batch size:", x$parameters$batch_size, "\n")
   if (!is.null(x$loss)) {
     if (x$parameters$validation > 0) {
       cat("final validation loss after", length(x$loss), "epochs:",

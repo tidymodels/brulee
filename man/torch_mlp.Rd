@@ -23,6 +23,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = 32L,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -38,6 +39,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = 32L,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -53,6 +55,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = 32L,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -68,6 +71,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = 32L,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
