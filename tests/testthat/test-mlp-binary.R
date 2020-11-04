@@ -86,3 +86,22 @@ test_that('predictions', {
 
 })
 
+test_that("mlp binary learns something", {
+
+  set.seed(1)
+  x <- data.frame(x = rnorm(1000))
+  y <- as.factor(x > 0)
+
+  model <- torch_mlp(x, y,
+                     batch_size = 50,
+                     epochs = 100L,
+                     activation = "relu",
+                     hidden_units = 5L,
+                     learning_rate = 0.1,
+                     dropout = 0)
+
+  y_ <- predict(model, x)$.pred_class
+  expect_true(sum(diag(table(y, y_))) > 950)
+
+})
+

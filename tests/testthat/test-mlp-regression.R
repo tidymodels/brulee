@@ -278,17 +278,39 @@ test_that('bad args', {
 
 })
 
-test_that("learning happens", {
+test_that("mlp learns something", {
 
   set.seed(1)
-  x <- data.frame(x = runif(1000))
+  x <- data.frame(x = rnorm(1000))
   y <- 2 * x$x
 
   model <- torch_mlp(x, y,
-                     epochs = 100L,
+                     batch_size = 25,
+                     epochs = 50,
                      activation = "relu",
-                     hidden_units = 10L,
-                     learning_rate = 0.01)
-  expect_true(tail(model$loss, 1) < 0.0005)
+                     hidden_units = 5L,
+                     learning_rate = 0.1,
+                     dropout = 0)
+
+  expect_true(tail(model$loss, 1) < 3e-5)
+
+})
+
+test_that("raise warning of bad loss", {
+
+  set.seed(2)
+  x <- data.frame(x = rnorm(1000))
+  y <- 2 * x$x
+
+  expect_warning(
+    model <- torch_mlp(x, y,
+                       batch_size = 25,
+                       epochs = 50,
+                       activation = "relu",
+                       hidden_units = 5L,
+                       learning_rate = 10, # large learnign rate leads to NaN
+                       dropout = 0),
+    regex = "NaN"
+  )
 
 })

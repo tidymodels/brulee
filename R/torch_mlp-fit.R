@@ -482,6 +482,12 @@ torch_mlp_reg_fit_imp <-
     # calculate losses
     loss_curr <- loss$item()
     loss_vec[epoch] <- loss_curr
+
+    if (is.nan(loss_curr)) {
+      rlang::warn("Current loss in NaN. Training wil be stopped.")
+      break()
+    }
+
     loss_diff <- (loss_prev - loss_curr)/loss_prev
     loss_prev <- loss_curr
 
@@ -592,11 +598,12 @@ print.torch_mlp <- function(x, ...) {
   invisible(x)
 }
 
-# coef.torch_mlp <- function(object, ...) {
-#  object$coef
-# }
-#
-#
+coef.torch_mlp <- function(object, ...) {
+  module <- revive_model(object, epoch = length(object$models))
+  parameters <- module$parameters
+  lapply(parameters, as.array)
+}
+
 # tidy.torch_mlp <- function(x, ...) {
 #  tibble::tibble(term = names(object$coef), estimate = unname(object$coef))
 # }
@@ -647,3 +654,4 @@ model_to_raw <- function(model) {
   r <- rawConnectionValue(con)
   r
 }
+
