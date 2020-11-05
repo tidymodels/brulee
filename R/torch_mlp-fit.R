@@ -466,8 +466,8 @@ torch_mlp_reg_fit_imp <-
     # training loop
     for (batch in torch::enumerate(dl)) {
 
-      pred <- model(batch[[1]])
-      loss <- loss_fn(pred, batch[[2]])
+      pred <- model(batch$x)
+      loss <- loss_fn(pred, batch$y)
 
       optimizer$zero_grad()
       loss$backward()
