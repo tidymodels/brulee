@@ -178,7 +178,8 @@ if (torch::torch_is_installed()) {
  # Using matrices
  set.seed(1)
  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-           y = ames_train$Sale_Price, penalty = 0.10, epochs = 600)
+           y = ames_train$Sale_Price,
+           penalty = 0.10, epochs = 20, batch_size = 32)
 
  # Using recipe
  library(recipes)
@@ -189,7 +190,8 @@ if (torch::torch_is_installed()) {
   step_normalize(all_predictors())
 
  set.seed(1)
- fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
+ fit <- torch_mlp(ames_rec, data = ames_train,
+                  dropout = 0.25, epochs = 20, batch_size = 32)
  fit
 
  autoplot(fit)

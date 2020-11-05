@@ -87,7 +87,8 @@
 #'  # Using matrices
 #'  set.seed(1)
 #'  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'            y = ames_train$Sale_Price, penalty = 0.10, epochs = 600)
+#'            y = ames_train$Sale_Price,
+#'            penalty = 0.10, epochs = 20, batch_size = 32)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -98,7 +99,8 @@
 #'   step_normalize(all_predictors())
 #'
 #'  set.seed(1)
-#'  fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
+#'  fit <- torch_mlp(ames_rec, data = ames_train,
+#'                   dropout = 0.25, epochs = 20, batch_size = 32)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -464,8 +466,8 @@ torch_mlp_reg_fit_imp <-
     # training loop
     for (batch in torch::enumerate(dl)) {
 
-      pred <- model(batch$x)
-      loss <- loss_fn(pred, batch$y)
+      pred <- model(batch[[1]])
+      loss <- loss_fn(pred, batch[[2]])
 
       optimizer$zero_grad()
       loss$backward()
@@ -497,7 +499,9 @@ torch_mlp_reg_fit_imp <-
     model_per_epoch[[epoch]] <- model_to_raw(model)
 
     if (verbose) {
-      rlang::inform("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
+      rlang::inform(
+        paste("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
+      )
     }
 
     if (loss_diff <= conv_crit) {
