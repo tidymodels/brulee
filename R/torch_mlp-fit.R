@@ -34,6 +34,8 @@
 #' @param learning_rate A positive number (usually less than 0.1).
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
+#' @param batch_size An integer for the number of training set points in each
+#'  batch.
 #' @param conv_crit A non-negative number for convergence.
 #' @param verbose A logical that prints out the iteration history.
 #'
@@ -491,11 +493,11 @@ torch_mlp_reg_fit_imp <-
     loss_diff <- (loss_prev - loss_curr)/loss_prev
     loss_prev <- loss_curr
 
-    # persists models and cofficients
+    # persists models and coefficients
     model_per_epoch[[epoch]] <- model_to_raw(model)
 
     if (verbose) {
-      message("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
+      rlang::inform("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
     }
 
     if (loss_diff <= conv_crit) {

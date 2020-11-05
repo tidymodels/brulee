@@ -223,7 +223,9 @@ torch_linear_reg_fit_imp <-
       }
 
       if (verbose) {
-        message("epoch:", epoch_chr[epoch], "\tRMSE:", signif(sqrt(loss_curr), 5))
+        rlang::inform(
+          paste("epoch:", epoch_chr[epoch], "\tRMSE:", signif(sqrt(loss_curr), 5))
+        )
       }
 
       optimizer$zero_grad()

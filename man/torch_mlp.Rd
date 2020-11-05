@@ -23,7 +23,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
-  batch_size = 32L,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -39,7 +39,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
-  batch_size = 32L,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -55,7 +55,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
-  batch_size = 32L,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -71,7 +71,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
-  batch_size = 32L,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -113,6 +113,9 @@ specified as:
 validation set.}
 
 \item{learning_rate}{A positive number (usually less than 0.1).}
+
+\item{batch_size}{An integer for the number of training set points in each
+batch.}
 
 \item{conv_crit}{A non-negative number for convergence.}
 
