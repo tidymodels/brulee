@@ -9,6 +9,7 @@ suppressPackageStartupMessages(library(recipes))
 ## -----------------------------------------------------------------------------
 
 data("lending_club", package = "modeldata")
+lending_club <- head(lending_club, 1000)
 
 x_df <- lending_club[, c("revol_util", "open_il_24m")]
 x_df_mixed <- lending_club[, c("revol_util", "open_il_24m", "emp_length")]
@@ -79,9 +80,28 @@ test_that('predictions', {
 
   pred_prob <- predict(fit_df, head(x_df), type = "prob")
   expect_true(tibble::is_tibble(complete_pred))
-  expect_true(all(names(complete_pred) == c(".pred_bad", ".pred_good")))
-  expect_true(nrow(complete_pred) == nrow(head(x_df)))
+  expect_true(all(names(pred_prob) == c(".pred_bad", ".pred_good")))
+  expect_true(nrow(pred_prob) == nrow(head(x_df)))
   expect_equal(apply(pred_prob, 1, sum), rep(1, nrow(pred_prob)), tolerance = 1e6)
+
+})
+
+test_that("mlp binary learns something", {
+
+  set.seed(1)
+  x <- data.frame(x = rnorm(1000))
+  y <- as.factor(x > 0)
+
+  model <- torch_mlp(x, y,
+                     batch_size = 50,
+                     epochs = 100L,
+                     activation = "relu",
+                     hidden_units = 5L,
+                     learning_rate = 0.1,
+                     dropout = 0)
+
+  y_ <- predict(model, x)$.pred_class
+  expect_true(sum(diag(table(y, y_))) > 950)
 
 })
 

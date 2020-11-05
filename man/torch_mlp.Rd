@@ -23,6 +23,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -38,6 +39,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -53,6 +55,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -68,6 +71,7 @@ torch_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learning_rate = 0.01,
+  batch_size = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -109,6 +113,9 @@ specified as:
 validation set.}
 
 \item{learning_rate}{A positive number (usually less than 0.1).}
+
+\item{batch_size}{An integer for the number of training set points in each
+batch.}
 
 \item{conv_crit}{A non-negative number for convergence.}
 
@@ -171,7 +178,8 @@ if (torch::torch_is_installed()) {
  # Using matrices
  set.seed(1)
  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-           y = ames_train$Sale_Price, penalty = 0.10, epochs = 600)
+           y = ames_train$Sale_Price,
+           penalty = 0.10, epochs = 20, batch_size = 32)
 
  # Using recipe
  library(recipes)
@@ -182,7 +190,8 @@ if (torch::torch_is_installed()) {
   step_normalize(all_predictors())
 
  set.seed(1)
- fit <- torch_mlp(ames_rec, data = ames_train, dropout = 0.25, epochs = 600)
+ fit <- torch_mlp(ames_rec, data = ames_train,
+                  dropout = 0.25, epochs = 20, batch_size = 32)
  fit
 
  autoplot(fit)

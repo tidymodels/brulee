@@ -93,7 +93,7 @@ test_that('bad args', {
   "expected 'epochs' to be a single integer."
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 1L),
+  torch_mlp(ames_x_mat, ames_y, epochs = 0L),
   "expected 'epochs' to be an integer on"
  )
  expect_error(
@@ -275,5 +275,42 @@ test_that('bad args', {
    ),
    "should be a hardhat blueprint"
  )
+
+})
+
+test_that("mlp learns something", {
+
+  set.seed(1)
+  x <- data.frame(x = rnorm(1000))
+  y <- 2 * x$x
+
+  model <- torch_mlp(x, y,
+                     batch_size = 25,
+                     epochs = 50,
+                     activation = "relu",
+                     hidden_units = 5L,
+                     learning_rate = 0.1,
+                     dropout = 0)
+
+  expect_true(tail(model$loss, 1) < 3e-5)
+
+})
+
+test_that("raise warning of bad loss", {
+
+  set.seed(2)
+  x <- data.frame(x = rnorm(1000))
+  y <- 2 * x$x
+
+  expect_warning(
+    model <- torch_mlp(x, y,
+                       batch_size = 25,
+                       epochs = 50,
+                       activation = "relu",
+                       hidden_units = 5L,
+                       learning_rate = 10, # large learnign rate leads to NaN
+                       dropout = 0),
+    regex = "NaN"
+  )
 
 })
