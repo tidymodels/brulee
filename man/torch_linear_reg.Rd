@@ -17,8 +17,11 @@ torch_linear_reg(x, ...)
   x,
   y,
   epochs = 100L,
-  learning_rate = 0.01,
-  conv_crit = 0,
+  penalty = 0,
+  validation = 0,
+  learning_rate = 0.1,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -27,8 +30,11 @@ torch_linear_reg(x, ...)
   x,
   y,
   epochs = 100L,
-  learning_rate = 0.01,
-  conv_crit = 0,
+  penalty = 0,
+  validation = 0,
+  learning_rate = 0.1,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -37,8 +43,11 @@ torch_linear_reg(x, ...)
   formula,
   data,
   epochs = 100L,
-  learning_rate = 0.01,
-  conv_crit = 0,
+  penalty = 0,
+  validation = 0,
+  learning_rate = 0.1,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -47,8 +56,11 @@ torch_linear_reg(x, ...)
   x,
   data,
   epochs = 100L,
-  learning_rate = 0.01,
-  conv_crit = 0,
+  penalty = 0,
+  validation = 0,
+  learning_rate = 0.1,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -76,7 +88,15 @@ specified as:
 
 \item{epochs}{An integer for the number of epochs of training.}
 
+\item{penalty}{The amount of weight decay (i.e., L2 regularization).}
+
+\item{validation}{The proportion of the data randomly assigned to a
+validation set.}
+
 \item{learning_rate}{A positive number (usually less than 0.1).}
+
+\item{batch_size}{An integer for the number of training set points in each
+batch.}
 
 \item{conv_crit}{A non-negative number for convergence.}
 
@@ -91,25 +111,62 @@ and the predictor terms on the right-hand side.}
 }}
 }
 \value{
-A \code{torch_linear_reg} object.
+A \code{torch_linear_reg} object with elements:
+\itemize{
+\item \code{models}: a list object of serialized models for each epoch.
+\item \code{loss}: A vector of loss values (MSE) at each epoch.
+\item \code{dim}: A list of data dimensions.
+\item \code{parameters}: A list of some tuning parameter values.
+\item \code{blueprint}: The \code{hardhat} blueprint data.
+}
 }
 \description{
 \code{torch_linear_reg()} fits a model.
 }
+\details{
+The predictors data should all be numeric and encoded in the same units (e.g.
+standardized to the same range or distribution). If there are factor
+predictors, use a recipe or formula to create indicator variables (or some
+other method) to make them numeric.
+
+If \code{conv_crit} is used, it stops training when the difference in the loss
+function is below \code{conv_crit} or if it gets worse. The default trains the
+model over the specified number of epochs.
+}
 \examples{
-predictors <- mtcars[, -1]
-outcome <- mtcars[, 1]
+\donttest{
+if (torch::torch_is_installed()) {
 
-# XY interface
-mod <- torch_linear_reg(predictors, outcome)
+ ## -----------------------------------------------------------------------------
 
-# Formula interface
-mod2 <- torch_linear_reg(mpg ~ ., mtcars)
+ set.seed(122)
+ in_train <- sample(1:nrow(mtcars), 25)
+ mtcars_train <- mtcars[ in_train,]
+ mtcars_test  <- mtcars[-in_train,]
 
-# Recipes interface
-library(recipes)
-rec <- recipe(mpg ~ ., mtcars)
-rec <- step_log(rec, disp)
-mod3 <- torch_linear_reg(rec, mtcars)
 
+ # Using matrices
+ set.seed(1)
+ torch_linear_reg(x = scale(as.matrix(mtcars_train[, -1])),
+                  y = mtcars_train$mpg,
+                  epochs = 100, batch_size = 10)
+
+ # Using recipe
+ library(recipes)
+
+ mtcars_rec <-
+  recipe(mpg ~ ., data = mtcars_train) \%>\%
+  step_normalize(all_predictors())
+
+ set.seed(1)
+ fit <- torch_linear_reg(mtcars_rec, data = mtcars_train,
+                         epochs = 100, batch_size = 20, penalty = 0.01)
+ fit
+
+ autoplot(fit)
+
+ predict(fit, mtcars_test)
+ }
+
+}
 }
