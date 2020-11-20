@@ -32,6 +32,8 @@
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param dropout The proportion of parameters set to zero.
 #' @param learning_rate A positive number (usually less than 0.1).
+#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
+#'  gradient decent.
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
@@ -134,6 +136,7 @@ torch_mlp.data.frame <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,
           verbose = FALSE,
@@ -149,6 +152,7 @@ torch_mlp.data.frame <-
    penalty = penalty,
    dropout = dropout,
    validation = validation,
+   momentum = momentum,
    batch_size = batch_size,
    conv_crit = conv_crit,
    verbose = verbose,
@@ -169,6 +173,7 @@ torch_mlp.matrix <- function(x,
                              dropout = 0,
                              validation = 0.1,
                              learning_rate = 0.01,
+                             momentum = 0.0,
                              batch_size = NULL,
                              conv_crit = -Inf,
                              verbose = FALSE,
@@ -181,6 +186,7 @@ torch_mlp.matrix <- function(x,
   hidden_units = hidden_units,
   activation = activation,
   learning_rate = learning_rate,
+  momentum = momentum,
   penalty = penalty,
   dropout = dropout,
   validation = validation,
@@ -205,6 +211,7 @@ torch_mlp.formula <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,
           verbose = FALSE,
@@ -217,6 +224,7 @@ torch_mlp.formula <-
    hidden_units = hidden_units,
    activation = activation,
    learning_rate = learning_rate,
+   momentum = momentum,
    penalty = penalty,
    dropout = dropout,
    validation = validation,
@@ -241,6 +249,7 @@ torch_mlp.recipe <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,
           verbose = FALSE,
@@ -253,6 +262,7 @@ torch_mlp.recipe <-
    hidden_units = hidden_units,
    activation = activation,
    learning_rate = learning_rate,
+   momentum = momentum,
    penalty = penalty,
    dropout = dropout,
    validation = validation,
@@ -267,8 +277,8 @@ torch_mlp.recipe <-
 # Bridge
 
 torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                             learning_rate, penalty, dropout, validation,
-                             batch_size, conv_crit, verbose, ...) {
+                             learning_rate, momentum, penalty, dropout,
+                             validation, batch_size, conv_crit, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -292,6 +302,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+ check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
  check_double(learning_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
  check_logical(verbose, single = TRUE, fn = f_nm)
  check_character(activation, single = TRUE, fn = f_nm)
@@ -326,6 +337,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
    hidden_units = hidden_units,
    activation = activation,
    learning_rate = learning_rate,
+   momentum = momentum,
    penalty = penalty,
    dropout = dropout,
    validation = validation,
@@ -379,6 +391,7 @@ torch_mlp_reg_fit_imp <-
           dropout = 0,
           validation = 0.1,
           learning_rate = 0.01,
+          momentum = 0.0,
           activation = "relu",
           conv_crit = -Inf,
           verbose = FALSE,
@@ -446,7 +459,8 @@ torch_mlp_reg_fit_imp <-
 
   # Write a optim wrapper
   optimizer <-
-   torch::optim_sgd(model$parameters, lr = learning_rate, weight_decay = penalty)
+   torch::optim_sgd(model$parameters, lr = learning_rate,
+                    weight_decay = penalty, momentum = momentum)
 
   ## ---------------------------------------------------------------------------
 
@@ -520,7 +534,7 @@ torch_mlp_reg_fit_imp <-
    dims = list(p = p, n = n, h = hidden_units, y = y_dim),
    parameters = list(activation = activation, learning_rate = learning_rate,
                      penalty = penalty, dropout = dropout, validation = validation,
-                     batch_size = batch_size)
+                     batch_size = batch_size, momentum = momentum)
   )
  }
 

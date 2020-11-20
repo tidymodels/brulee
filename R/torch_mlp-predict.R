@@ -10,6 +10,8 @@
 #' Valid options are:
 #'
 #' - `"numeric"` for numeric predictions.
+#' - `"class"` for hard class predictions
+#' - `"prob"` for soft class predictions (i.e., class probabilities)
 #'
 #' @param ... Not used, but required for extensibility.
 #'
