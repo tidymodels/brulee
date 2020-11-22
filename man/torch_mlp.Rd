@@ -22,7 +22,7 @@ torch_mlp(x, ...)
   penalty = 0,
   dropout = 0,
   validation = 0.1,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -39,7 +39,7 @@ torch_mlp(x, ...)
   penalty = 0,
   dropout = 0,
   validation = 0.1,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -56,7 +56,7 @@ torch_mlp(x, ...)
   penalty = 0,
   dropout = 0,
   validation = 0.1,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -73,7 +73,7 @@ torch_mlp(x, ...)
   penalty = 0,
   dropout = 0,
   validation = 0.1,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -116,7 +116,7 @@ specified as:
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
-\item{learning_rate}{A positive number (usually less than 0.1).}
+\item{learn_rate}{A positive number (usually less than 0.1).}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
 gradient decent.}
