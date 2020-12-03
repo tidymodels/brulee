@@ -1,6 +1,6 @@
-#' Predict from a `torch_mlp`
+#' Predict from a `lantern_mlp`
 #'
-#' @param object A `torch_mlp` object.
+#' @param object A `lantern_mlp` object.
 #'
 #' @param new_data A data frame or matrix of new predictors.
 #' @param epoch An integer for the epoch to make predictions from. If this value
@@ -20,67 +20,67 @@
 #'
 #'
 #' @export
-predict.torch_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...) {
- forged <- hardhat::forge(new_data, object$blueprint)
- type <- check_type(object, type)
- if (is.null(epoch)) {
-  epoch <- length(object$models)
- }
- predict_torch_mlp_bridge(type, object, forged$predictors, epoch = epoch)
+predict.lantern_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+  forged <- hardhat::forge(new_data, object$blueprint)
+  type <- check_type(object, type)
+  if (is.null(epoch)) {
+    epoch <- length(object$models)
+  }
+  predict_lantern_mlp_bridge(type, object, forged$predictors, epoch = epoch)
 }
 
 mlp_valid_predict_types <- function() {
- c("numeric", "prob", "class")
+  c("numeric", "prob", "class")
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_torch_mlp_bridge <- function(type, model, predictors, epoch) {
+predict_lantern_mlp_bridge <- function(type, model, predictors, epoch) {
 
- if (!is.matrix(predictors)) {
-  predictors <- as.matrix(predictors)
-  if (is.character(predictors)) {
-   rlang::abort(
-    paste(
-     "There were some non-numeric columns in the predictors.",
-     "Please use a formula or recipe to encode all of the predictors as numeric."
-    )
-   )
+  if (!is.matrix(predictors)) {
+    predictors <- as.matrix(predictors)
+    if (is.character(predictors)) {
+      rlang::abort(
+        paste(
+          "There were some non-numeric columns in the predictors.",
+          "Please use a formula or recipe to encode all of the predictors as numeric."
+        )
+      )
+    }
   }
- }
 
- predict_function <- get_mlp_predict_function(type)
+  predict_function <- get_mlp_predict_function(type)
 
- max_epoch <- length(model$models)
- if (epoch > max_epoch) {
-  msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
-               "be made at epoch", epoch, "so last epoch is used.")
-  rlang::warn(msg)
- }
+  max_epoch <- length(model$models)
+  if (epoch > max_epoch) {
+    msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
+                 "be made at epoch", epoch, "so last epoch is used.")
+    rlang::warn(msg)
+  }
 
- predictions <- predict_function(model, predictors, epoch)
- hardhat::validate_prediction_size(predictions, predictors)
- predictions
+  predictions <- predict_function(model, predictors, epoch)
+  hardhat::validate_prediction_size(predictions, predictors)
+  predictions
 }
 
 get_mlp_predict_function <- function(type) {
- switch(
-  type,
-  numeric = predict_torch_mlp_numeric,
-  prob    = predict_torch_mlp_prob,
-  class   = predict_torch_mlp_class
- )
+  switch(
+    type,
+    numeric = predict_lantern_mlp_numeric,
+    prob    = predict_lantern_mlp_prob,
+    class   = predict_lantern_mlp_class
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Implementation
 
 add_intercept <- function(x) {
- if (!is.array(x)) {
-  x <- as.array(x)
- }
- cbind(rep(1, nrow(x)), x)
+  if (!is.array(x)) {
+    x <- as.array(x)
+  }
+  cbind(rep(1, nrow(x)), x)
 }
 
 revive_model <- function(model, epoch) {
@@ -90,7 +90,7 @@ revive_model <- function(model, epoch) {
   module
 }
 
-predict_torch_mlp_raw <- function(model, predictors, epoch) {
+predict_lantern_mlp_raw <- function(model, predictors, epoch) {
   module <- revive_model(model, epoch)
   module$eval() # put the model in evaluation mode
   predictions <- module(torch::torch_tensor(predictors))
@@ -100,19 +100,19 @@ predict_torch_mlp_raw <- function(model, predictors, epoch) {
   predictions
 }
 
-predict_torch_mlp_numeric <- function(model, predictors, epoch) {
-  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+predict_lantern_mlp_numeric <- function(model, predictors, epoch) {
+  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   hardhat::spruce_numeric(predictions[,1])
 }
 
-predict_torch_mlp_prob <- function(model, predictors, epoch) {
-  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+predict_lantern_mlp_prob <- function(model, predictors, epoch) {
+  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   lvs <- get_levels(model)
   hardhat::spruce_prob(pred_levels = lvs, predictions)
 }
 
-predict_torch_mlp_class <- function(model, predictors, epoch) {
-  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+predict_lantern_mlp_class <- function(model, predictors, epoch) {
+  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   predictions <- apply(predictions, 1, which.max2) # take the maximum value
   lvs <- get_levels(model)
   hardhat::spruce_class(factor(lvs[predictions], levels = lvs))

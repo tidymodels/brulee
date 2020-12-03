@@ -30,31 +30,31 @@ test_that('different fit interfaces', {
 
  # matrix x
  expect_error(
-  fit_mat <- torch_mlp(ames_x_mat, ames_y, epochs = 10L),
+  fit_mat <- lantern_mlp(ames_x_mat, ames_y, epochs = 10L),
   regex = NA
  )
 
  # data frame x (all numeric)
  expect_error(
-  fit_df <- torch_mlp(ames_x_df, ames_y, epochs = 10L),
+  fit_df <- lantern_mlp(ames_x_df, ames_y, epochs = 10L),
   regex = NA
  )
 
  # data frame x (mixed)
  expect_error(
-  torch_mlp(ames_x_df_mixed, ames_y, epochs = 10L),
+  lantern_mlp(ames_x_df_mixed, ames_y, epochs = 10L),
   regex = "There were some non-numeric columns in the predictors"
  )
 
  # formula (mixed)
  expect_error(
-  fit_f <- torch_mlp(Sale_Price ~ ., ames_smol, epochs = 10L),
+  fit_f <- lantern_mlp(Sale_Price ~ ., ames_smol, epochs = 10L),
   regex = NA
  )
 
  # recipe (mixed)
  expect_error(
-  fit_rec <- torch_mlp(ames_rec, ames, epochs = 10L),
+  fit_rec <- lantern_mlp(ames_rec, ames, epochs = 10L),
   regex = NA
  )
 })
@@ -64,7 +64,7 @@ test_that('predictions', {
   skip_if(!torch::torch_is_installed())
 
   set.seed(1)
-  fit_df <- torch_mlp(ames_x_df, ames_y, epochs = 10L)
+  fit_df <- lantern_mlp(ames_x_df, ames_y, epochs = 10L)
 
   complete_pred <- predict(fit_df, head(ames_x_df))
   expect_true(tibble::is_tibble(complete_pred))
@@ -85,134 +85,134 @@ test_that('bad args', {
  skip_if(!torch::torch_is_installed())
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = NA),
   "expected 'epochs' to be integer."
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 1:2),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 1:2),
   "expected 'epochs' to be a single integer."
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 0L),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 0L),
   "expected 'epochs' to be an integer on"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2),
   regex = NA
  )
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
   "expected 'hidden_units' to be integer."
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 1:2),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 1:2),
   "expected 'hidden_units' to be a single integer."
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
   "expected 'hidden_units' to be an integer on"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 2),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 2),
   regex = NA
  )
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
   "expected 'activation' to be character"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, activation = letters),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, activation = letters),
   "expected 'activation' to be a single character string"
  )
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA),
   "expected 'penalty' to be a double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2)),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2)),
   "expected 'penalty' to be a single double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1),
   "expected 'penalty' to be a double on"
  )
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA),
   "expected 'dropout' to be a double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2)),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2)),
   "expected 'dropout' to be a single double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1),
   "expected 'dropout' to be a double on"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1.0),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1.0),
   "expected 'dropout' to be a double on"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 0),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 0),
   regex = NA
  )
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA),
   "expected 'validation' to be a double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2)),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2)),
   "expected 'validation' to be a single double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1),
   "expected 'validation' to be a double on"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1.0),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1.0),
   "expected 'validation' to be a double on"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, validation = 0),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = 0),
   regex = NA
  )
 
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = NA),
   "expected 'learning_rate' to be a double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = runif(2)),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = runif(2)),
   "expected 'learning_rate' to be a single double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = -1.1),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = -1.1),
   "expected 'learning_rate' to be a double on"
  )
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2),
   "expected 'verbose' to be logical"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10)),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10)),
   "expected 'verbose' to be a single logical"
  )
 
  # ------------------------------------------------------------------------------
 
- fit_mat <- torch_mlp(ames_x_mat, ames_y, epochs = 10L)
+ fit_mat <- lantern_mlp(ames_x_mat, ames_y, epochs = 10L)
 
  bad_models <- fit_mat
  bad_models$models <- "potato!"
  expect_error(
-   lantern:::new_torch_mlp(
+   lantern:::new_lantern_mlp(
      bad_models$models,
      bad_models$models,
      bad_models$dims,
@@ -225,7 +225,7 @@ test_that('bad args', {
  bad_loss <- fit_mat
  bad_loss$loss <- "potato!"
  expect_error(
-   lantern:::new_torch_mlp(
+   lantern:::new_lantern_mlp(
      bad_loss$models,
      bad_loss$loss,
      bad_loss$dims,
@@ -238,7 +238,7 @@ test_that('bad args', {
  bad_dims <- fit_mat
  bad_dims$dims <- "mountainous"
  expect_error(
-   lantern:::new_torch_mlp(
+   lantern:::new_lantern_mlp(
      bad_dims$models,
      bad_dims$loss,
      bad_dims$dims,
@@ -252,7 +252,7 @@ test_that('bad args', {
  bad_parameters <- fit_mat
  bad_parameters$dims <- "mitten"
  expect_error(
-   lantern:::new_torch_mlp(
+   lantern:::new_lantern_mlp(
      bad_parameters$models,
      bad_parameters$loss,
      bad_parameters$dims,
@@ -266,7 +266,7 @@ test_that('bad args', {
  bad_blueprint <- fit_mat
  bad_blueprint$blueprint <- "adorable"
  expect_error(
-   lantern:::new_torch_mlp(
+   lantern:::new_lantern_mlp(
      bad_blueprint$models,
      bad_blueprint$loss,
      bad_blueprint$dims,
@@ -284,7 +284,7 @@ test_that("mlp learns something", {
   x <- data.frame(x = rnorm(1000))
   y <- 2 * x$x
 
-  model <- torch_mlp(x, y,
+  model <- lantern_mlp(x, y,
                      batch_size = 25,
                      epochs = 50,
                      activation = "relu",
@@ -303,7 +303,7 @@ test_that("raise warning of bad loss", {
   y <- 2 * x$x
 
   expect_warning(
-    model <- torch_mlp(x, y,
+    model <- lantern_mlp(x, y,
                        batch_size = 25,
                        epochs = 50,
                        activation = "relu",

@@ -23,7 +23,7 @@ utils::globalVariables(
 
 # nocov start
 .onAttach <- function(libname, pkgname) {
- s3_register("ggplot2::autoplot", "torch_mlp")
+ s3_register("ggplot2::autoplot", "lantern_mlp")
  invisible()
 }
 
