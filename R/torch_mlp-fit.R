@@ -28,7 +28,7 @@
 #' @param epochs An integer for the number of epochs of training.
 #' @param hidden_units An integer for the number of hidden units.
 #' @param activation A string for the activation function. Possible values are
-#'  "relu", and "elu".
+#'  "relu", "elu", "tanh", and "linear".
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param dropout The proportion of parameters set to zero.
 #' @param learning_rate A positive number (usually less than 0.1).
@@ -48,10 +48,14 @@
 #' regression, the mean squared error is optimized and cross-entropy is the loss
 #' function for classification.
 #'
-#' The predictors data should all be numeric and encoded in the same units (e.g.
+#' The _predictors_ data should all be numeric and encoded in the same units (e.g.
 #' standardized to the same range or distribution). If there are factor
 #' predictors, use a recipe or formula to create indicator variables (or some
 #' other method) to make them numeric.
+#'
+#' When the outcome is a number, the function internally standardizes the
+#' outcome data to have mean zero and a standard deviation of one. The prediction
+#' function creates predictions on the original scale.
 #'
 #' If `conv_crit` is used, it stops training when the difference in the loss
 #' function is below `conv_crit` or if it gets worse. The default trains the
@@ -64,6 +68,7 @@
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
+#'  * `y_stats`: A list of summary statistics for numeric outcomes.
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
@@ -93,19 +98,42 @@
 #'  # Using recipe
 #'  library(recipes)
 #'
-#'  ames_rec <-
-#'   recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames_train) %>%
-#'   step_dummy(Alley) %>%
-#'   step_normalize(all_predictors())
+#' ames_rec <-
+#'  recipe(Sale_Price ~ Bldg_Type + Neighborhood + Year_Built + Gr_Liv_Area +
+#'          Full_Bath + Year_Sold + Lot_Area + Central_Air + Longitude + Latitude,
+#'         data = ames_train) %>%
+#'  # Transform some highly skewed predictors
+#'  step_BoxCox(Lot_Area, Gr_Liv_Area) %>%
+#'  # Lump some rarely occuring categories into "other"
+#'  step_other(Neighborhood, threshold = 0.05)  %>%
+#'  # Encode categorical predictors as binary.
+#'  step_dummy(all_nominal(), one_hot = TRUE) %>%
+#'  # Add an interaction effect:
+#'  step_interact(~ starts_with("Central_Air"):Year_Built) %>%
+#'  step_zv(all_predictors()) %>%
+#'  step_normalize(all_predictors())
 #'
-#'  set.seed(1)
-#'  fit <- torch_mlp(ames_rec, data = ames_train,
-#'                   dropout = 0.25, epochs = 20, batch_size = 32)
-#'  fit
+#' set.seed(2)
+#' fit <- torch_mlp(ames_rec, data = ames_train, hidden_units = 20,
+#'                  dropout = 0.05, epochs = 20, batch_size = 32)
+#' fit
 #'
-#'  autoplot(fit)
+#' autoplot(fit)
 #'
-#'  predict(fit, ames_test)
+#' library(ggplot2)
+#'
+#' predict(fit, ames_test) %>%
+#'  bind_cols(ames_test) %>%
+#'  ggplot(aes(x = .pred, y = Sale_Price)) +
+#'  geom_abline(col = "green") +
+#'  geom_point(alpha = .3) +
+#'  lims(x = c(4, 6), y = c(4, 6)) +
+#'  coord_fixed(ratio = 1)
+#'
+#' library(yardstick)
+#' predict(fit, ames_test) %>%
+#'  bind_cols(ames_test) %>%
+#'  rmse(Sale_Price, .pred)
 #'  }
 #'
 #' }
@@ -426,13 +454,17 @@ torch_mlp_reg_fit_imp <-
    y <- y[-in_val]
   }
 
-  y_stats <- scale_stats(y)
-  y <- scale_y(y, y_stats)
-  if (validation > 0) {
-    y_val <- scale_y(y_val, y_stats)
+  if (!is.factor(y)) {
+    y_stats <- scale_stats(y)
+    y <- scale_y(y, y_stats)
+    if (validation > 0) {
+      y_val <- scale_y(y_val, y_stats)
+    }
+    loss_label <- "\tLoss (scaled):"
+  } else {
+    y_stats <- list(mean = NA_real_, sd = NA_real_)
+    loss_label <- "\tLoss:"
   }
-  # y_stats <- list(mean = 0)
-
 
   if (is.null(batch_size)) {
     batch_size <- nrow(x)
@@ -510,7 +542,7 @@ torch_mlp_reg_fit_imp <-
 
     if (verbose) {
       rlang::inform(
-        paste("epoch:", epoch_chr[epoch], "\tLoss:", signif(loss_curr, 5))
+        paste("epoch:", epoch_chr[epoch], loss_label, signif(loss_curr, 5))
       )
     }
 
@@ -604,14 +636,24 @@ print.torch_mlp <- function(x, ...) {
   }
   cat("batch size:", x$parameters$batch_size, "\n")
   if (!is.null(x$loss)) {
-    if (x$parameters$validation > 0) {
-      cat("final validation loss after", length(x$loss), "epochs:",
-          signif(x$loss[length(x$loss)]), "\n")
-    } else {
-      cat("final training set loss after", length(x$loss), "epochs:",
-          signif(x$loss[length(x$loss)]), "\n")
-    }
 
+    if(x$parameters$validation > 0) {
+      if (is.na(x$y_stats$mean)) {
+        cat("final validation loss after", length(x$loss), "epochs:",
+            signif(x$loss[length(x$loss)]), "\n")
+      } else {
+        cat("final scaled validation loss after", length(x$loss), "epochs:",
+            signif(x$loss[length(x$loss)]), "\n")
+      }
+    } else {
+      if (is.na(x$y_stats$mean)) {
+        cat("final training set loss after", length(x$loss), "epochs:",
+            signif(x$loss[length(x$loss)]), "\n")
+      } else {
+        cat("final scaled training set loss after", length(x$loss), "epochs:",
+            signif(x$loss[length(x$loss)]), "\n")
+      }
+    }
   }
   invisible(x)
 }
@@ -621,11 +663,6 @@ coef.torch_mlp <- function(object, ...) {
   parameters <- module$parameters
   lapply(parameters, as.array)
 }
-
-# tidy.torch_mlp <- function(x, ...) {
-#  tibble::tibble(term = names(object$coef), estimate = unname(object$coef))
-# }
-
 
 ## -----------------------------------------------------------------------------
 
@@ -655,9 +692,17 @@ autoplot.torch_mlp <- function(object, ...) {
   x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
 
   if(object$parameters$validation > 0) {
-    lab <- "loss (validation set)"
+    if (is.na(object$y_stats$mean)) {
+      lab <- "loss (validation set)"
+    } else {
+      lab <- "loss (validation set, scaled)"
+    }
   } else {
-    lab <- "loss (training set)"
+    if (is.na(object$y_stats$mean)) {
+      lab <- "loss (training set)"
+    } else {
+      lab <- "loss (training set, scaled)"
+    }
   }
 
   ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +

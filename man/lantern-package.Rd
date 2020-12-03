@@ -11,6 +11,11 @@ High-level modeling functions with 'torch'.
 \author{
 \strong{Maintainer}: Max Kuhn \email{max@rstudio.com} (\href{https://orcid.org/0000-0003-2402-136X}{ORCID})
 
+Authors:
+\itemize{
+  \item Daniel Falbel \email{daniel@rstudio.com}
+}
+
 Other contributors:
 \itemize{
   \item RStudio [copyright holder]
