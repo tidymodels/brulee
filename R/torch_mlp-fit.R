@@ -338,12 +338,13 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   models = fit$models,
   loss = fit$loss,
   dims = fit$dims,
+  y_stats = fit$y_stats,
   parameters = fit$parameters,
   blueprint = processed$blueprint
  )
 }
 
-new_torch_mlp <- function( models, loss, dims, parameters, blueprint) {
+new_torch_mlp <- function( models, loss, dims, y_stats, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -362,6 +363,7 @@ new_torch_mlp <- function( models, loss, dims, parameters, blueprint) {
  hardhat::new_model(models = models,
                     loss = loss,
                     dims = dims,
+                    y_stats = y_stats,
                     parameters = parameters,
                     blueprint = blueprint,
                     class = "torch_mlp")
@@ -423,6 +425,14 @@ torch_mlp_reg_fit_imp <-
    x <- x[-in_val,, drop = FALSE]
    y <- y[-in_val]
   }
+
+  y_stats <- scale_stats(y)
+  y <- scale_y(y, y_stats)
+  if (validation > 0) {
+    y_val <- scale_y(y_val, y_stats)
+  }
+  # y_stats <- list(mean = 0)
+
 
   if (is.null(batch_size)) {
     batch_size <- nrow(x)
@@ -518,6 +528,8 @@ torch_mlp_reg_fit_imp <-
    models = model_per_epoch,
    loss = loss_vec[!is.na(loss_vec)],
    dims = list(p = p, n = n, h = hidden_units, y = y_dim),
+   y_stats = y_stats,
+   stats = y_stats,
    parameters = list(activation = activation, learning_rate = learning_rate,
                      penalty = penalty, dropout = dropout, validation = validation,
                      batch_size = batch_size)
