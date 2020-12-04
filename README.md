@@ -7,10 +7,14 @@
 
 [![Codecov test
 coverage](https://codecov.io/gh/topepo/lantern/branch/master/graph/badge.svg)](https://codecov.io/gh/topepo/lantern?branch=master)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
 `lantern` packages several basic modeling functions that use the `torch`
 package.
+
+The package is currently experimental; the user interface and other
+details may change before release.
 
 ## Installation
 
