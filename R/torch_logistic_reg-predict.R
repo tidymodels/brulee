@@ -1,4 +1,4 @@
-torch_mn_reg_fit_imp <-
+lantern_mn_reg_fit_imp <-
  function(x, y,
           epochs = 10L,
           batch_size = NULL,
@@ -10,7 +10,7 @@ torch_mn_reg_fit_imp <-
           ...) {
 
   ## ---------------------------------------------------------------------------
-  f_nm <- "torch_linear_reg"
+  f_nm <- "lantern_linear_reg"
   # check values of various argument values
   check_integer(epochs, single = TRUE, 2, fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
@@ -32,7 +32,7 @@ torch_mn_reg_fit_imp <-
 
   ## ---------------------------------------------------------------------------
   # Check missing values
-  compl_data <- check_missing_data(x, y, "torch_linear_reg", verbose)
+  compl_data <- check_missing_data(x, y, "lantern_linear_reg", verbose)
   x <- compl_data$x
   y <- compl_data$y
 

@@ -2,7 +2,7 @@ lantern_mn_reg_fit_imp <-
   function(x, y,
            epochs = 10L,
            batch_size = NULL,
-           learning_rate = 0.01,
+           learn_rate = 0.01,
            penalty = 0,
            loss_function = "mse",
            verbose = FALSE,
@@ -12,7 +12,7 @@ lantern_mn_reg_fit_imp <-
     f_nm <- "lantern_linear_reg"
     # check values of various argument values
     check_integer(epochs, single = TRUE, 2, fn = f_nm)
-    check_double(learning_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+    check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
     check_double(penalty, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
     check_logical(verbose, single = TRUE, fn = f_nm)
 
@@ -52,7 +52,7 @@ lantern_mn_reg_fit_imp <-
     # Initialize model and optimizer
     model <- multinomial_reg_module(ncol(x), length(lvls))
     # Write a optim wrapper
-    optimizer <- torch::optim_sgd(model$parameters, lr = learning_rate)
+    optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate)
 
     ## ---------------------------------------------------------------------------
     # Optimize parameters

@@ -104,7 +104,7 @@ predict_lantern_mlp_raw <- function(model, predictors, epoch) {
 
 predict_lantern_mlp_numeric <- function(model, predictors, epoch) {
   predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
-  predictions <- predict_torch_mlp_raw(model, predictors, epoch)
+  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
   hardhat::spruce_numeric(predictions[,1])
 }

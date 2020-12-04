@@ -184,15 +184,15 @@ test_that('bad args', {
 
 
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
   "expected 'learn_rate' to be a double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
   "expected 'learn_rate' to be a single double"
  )
  expect_error(
-  torch_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
+  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
   "expected 'learn_rate' to be a double on"
  )
 
