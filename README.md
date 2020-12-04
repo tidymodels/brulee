@@ -10,8 +10,8 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-`lantern` packages several basic modeling functions that use the `torch`
-package.
+The R `lantern` package contains several basic modeling functions 
+that use the `torch` R package (and is unrelated to the python script).  
 
 The package is currently experimental; the user interface and other
 details may change before release.

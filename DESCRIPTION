@@ -34,3 +34,5 @@ Suggests:
     covr,
     yardstick
 Language: en-US
+Remotes: mlverse/torch
+
