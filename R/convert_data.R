@@ -32,7 +32,7 @@ matrix_to_dataset <- torch::dataset(
   prepare_training_set = function(x, y) {
     if (is.factor(y)) {
       y <- as.numeric(y)
-      y <- torch::torch_tensor(y)$to(lantern_long())
+      y <- torch::torch_tensor(y)$to(torch_long())
     } else {
       y <- torch::torch_tensor(y)
     }
