@@ -17,7 +17,7 @@ torch_linear_reg(x, ...)
   x,
   y,
   epochs = 100L,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   conv_crit = 0,
   verbose = FALSE,
   ...
@@ -27,7 +27,7 @@ torch_linear_reg(x, ...)
   x,
   y,
   epochs = 100L,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   conv_crit = 0,
   verbose = FALSE,
   ...
@@ -37,7 +37,7 @@ torch_linear_reg(x, ...)
   formula,
   data,
   epochs = 100L,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   conv_crit = 0,
   verbose = FALSE,
   ...
@@ -47,7 +47,7 @@ torch_linear_reg(x, ...)
   x,
   data,
   epochs = 100L,
-  learning_rate = 0.01,
+  learn_rate = 0.01,
   conv_crit = 0,
   verbose = FALSE,
   ...
@@ -76,7 +76,7 @@ specified as:
 
 \item{epochs}{An integer for the number of epochs of training.}
 
-\item{learning_rate}{A positive number (usually less than 0.1).}
+\item{learn_rate}{A positive number (usually less than 0.1).}
 
 \item{conv_crit}{A non-negative number for convergence.}
 
