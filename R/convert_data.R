@@ -13,32 +13,32 @@
 #' matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
 #' @export
 matrix_to_dataset <- torch::dataset(
- name = "torch_training_set",
+  name = "lantern_training_set",
 
- initialize = function(x, y) {
-  self$data <- self$prepare_training_set(x, y)
- },
+  initialize = function(x, y) {
+    self$data <- self$prepare_training_set(x, y)
+  },
 
- .getitem = function(index) {
-  x <- self$data$x[index,]
-  y <- self$data$y[index]
-  list(x = x, y = y)
- },
+  .getitem = function(index) {
+    x <- self$data$x[index,]
+    y <- self$data$y[index]
+    list(x = x, y = y)
+  },
 
- .length = function() {
-  self$data$x$size()[[1]]
- },
+  .length = function() {
+    self$data$x$size()[[1]]
+  },
 
- prepare_training_set = function(x, y) {
-  if (is.factor(y)) {
-   y <- as.numeric(y)
-   y <- torch::torch_tensor(y)$to(torch_long())
-  } else {
-    y <- torch::torch_tensor(y)
+  prepare_training_set = function(x, y) {
+    if (is.factor(y)) {
+      y <- as.numeric(y)
+      y <- torch::torch_tensor(y)$to(torch_long())
+    } else {
+      y <- torch::torch_tensor(y)
+    }
+
+    list(x = torch::torch_tensor(x), y = y)
   }
-
-  list(x = torch::torch_tensor(x), y = y)
- }
 )
 
 

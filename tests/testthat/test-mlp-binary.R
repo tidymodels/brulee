@@ -18,44 +18,44 @@ y <- lending_club$Class
 smol <- lending_club[, c("revol_util", "open_il_24m", "emp_length", "Class")]
 
 rec <-
- recipe(Class ~ revol_util + open_il_24m + emp_length, data = lending_club) %>%
- step_dummy(emp_length) %>%
- step_normalize(all_predictors())
+  recipe(Class ~ revol_util + open_il_24m + emp_length, data = lending_club) %>%
+  step_dummy(emp_length) %>%
+  step_normalize(all_predictors())
 
 ## -----------------------------------------------------------------------------
 
 test_that('different fit interfaces', {
- skip_if(!torch::torch_is_installed())
+  skip_if(!torch::torch_is_installed())
 
- # matrix x
- expect_error(
-  fit_mat <- torch_mlp(x_mat, y, epochs = 10L),
-  regex = NA
- )
+  # matrix x
+  expect_error(
+    fit_mat <- lantern_mlp(x_mat, y, epochs = 10L),
+    regex = NA
+  )
 
- # data frame x (all numeric)
- expect_error(
-  fit_df <- torch_mlp(x_df, y, epochs = 10L),
-  regex = NA
+  # data frame x (all numeric)
+  expect_error(
+    fit_df <- lantern_mlp(x_df, y, epochs = 10L),
+    regex = NA
 
- # data frame x (mixed)
- )
- expect_error(
-  torch_mlp(x_df_mixed, y, epochs = 10L),
-  regex = "There were some non-numeric columns in the predictors"
- )
+    # data frame x (mixed)
+  )
+  expect_error(
+    lantern_mlp(x_df_mixed, y, epochs = 10L),
+    regex = "There were some non-numeric columns in the predictors"
+  )
 
- # formula (mixed)
- expect_error(
-  fit_f <- torch_mlp(Class ~ ., smol, epochs = 10L),
-  regex = NA
- )
+  # formula (mixed)
+  expect_error(
+    fit_f <- lantern_mlp(Class ~ ., smol, epochs = 10L),
+    regex = NA
+  )
 
- # recipe (mixed)
- expect_error(
-  fit_rec <- torch_mlp(rec, lending_club, epochs = 10L),
-  regex = NA
- )
+  # recipe (mixed)
+  expect_error(
+    fit_rec <- lantern_mlp(rec, lending_club, epochs = 10L),
+    regex = NA
+  )
 
 })
 
@@ -63,7 +63,7 @@ test_that('predictions', {
   skip_if(!torch::torch_is_installed())
 
   set.seed(1)
-  fit_df <- torch_mlp(x_df, y, epochs = 10L)
+  fit_df <- lantern_mlp(x_df, y, epochs = 10L)
 
   complete_pred <- predict(fit_df, head(x_df))
   expect_true(tibble::is_tibble(complete_pred))
@@ -92,7 +92,7 @@ test_that("mlp binary learns something", {
   x <- data.frame(x = rnorm(1000))
   y <- as.factor(x > 0)
 
-  model <- torch_mlp(x, y,
+  model <- lantern_mlp(x, y,
                      batch_size = 50,
                      epochs = 100L,
                      activation = "relu",

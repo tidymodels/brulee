@@ -1,6 +1,6 @@
-#' Predict from a `torch_linear_reg`
+#' Predict from a `lantern_linear_reg`
 #'
-#' @param object A `torch_linear_reg` object.
+#' @param object A `lantern_linear_reg` object.
 #'
 #' @param new_data A data frame or matrix of new predictors.
 #'
@@ -21,16 +21,16 @@
 #' test <- mtcars[21:32, -1]
 #'
 #' # Fit
-#' mod <- torch_linear_reg(mpg ~ cyl + log(drat), train)
+#' mod <- lantern_linear_reg(mpg ~ cyl + log(drat), train)
 #'
 #' # Predict, with preprocessing
 #' predict(mod, test)
 #'
 #' @export
-predict.torch_linear_reg <- function(object, new_data, type = "numeric", ...) {
+predict.lantern_linear_reg <- function(object, new_data, type = "numeric", ...) {
   forged <- hardhat::forge(new_data, object$blueprint)
   rlang::arg_match(type, linear_reg_valid_predict_types())
-  predict_torch_linear_reg_bridge(type, object, forged$predictors)
+  predict_lantern_linear_reg_bridge(type, object, forged$predictors)
 }
 
 linear_reg_valid_predict_types <- function() {
@@ -40,7 +40,7 @@ linear_reg_valid_predict_types <- function() {
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_torch_linear_reg_bridge <- function(type, model, predictors) {
+predict_lantern_linear_reg_bridge <- function(type, model, predictors) {
 
   if (is.data.frame(predictors)) {
     predictors <- stats::model.matrix(model$terms, predictors)
@@ -57,14 +57,14 @@ predict_torch_linear_reg_bridge <- function(type, model, predictors) {
 get_linear_reg_predict_function <- function(type) {
   switch(
     type,
-    numeric = predict_torch_linear_reg_numeric
+    numeric = predict_lantern_linear_reg_numeric
   )
 }
 
 # ------------------------------------------------------------------------------
 # Implementation
 
-predict_torch_linear_reg_numeric <- function(model, predictors) {
+predict_lantern_linear_reg_numeric <- function(model, predictors) {
   predictions <- predictors %*% model$coefs
   hardhat::spruce_numeric(unname(predictions[,1]))
 }

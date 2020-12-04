@@ -1,6 +1,6 @@
 #' Fit a single layer neural network using torch
 #'
-#' `torch_mlp()` fits a model.
+#' `lantern_mlp()` fits a model.
 #'
 #' @param x Depending on the context:
 #'
@@ -65,7 +65,7 @@
 #'
 #' @return
 #'
-#' A `torch_mlp` object with elements:
+#' A `lantern_mlp` object with elements:
 #'  * `models`: a list object of serialized models for each epoch.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
@@ -93,7 +93,7 @@
 #'
 #'  # Using matrices
 #'  set.seed(1)
-#'  torch_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+#'  lantern_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
 #'            y = ames_train$Sale_Price,
 #'            penalty = 0.10, epochs = 20, batch_size = 32)
 #'
@@ -116,7 +116,7 @@
 #'  step_normalize(all_predictors())
 #'
 #' set.seed(2)
-#' fit <- torch_mlp(ames_rec, data = ames_train, hidden_units = 20,
+#' fit <- lantern_mlp(ames_rec, data = ames_train, hidden_units = 20,
 #'                  dropout = 0.05, epochs = 20, batch_size = 32)
 #' fit
 #'
@@ -140,21 +140,21 @@
 #'
 #' }
 #' @export
-torch_mlp <- function(x, ...) {
- UseMethod("torch_mlp")
+lantern_mlp <- function(x, ...) {
+ UseMethod("lantern_mlp")
 }
 
 #' @export
-#' @rdname torch_mlp
-torch_mlp.default <- function(x, ...) {
- stop("`torch_mlp()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+#' @rdname lantern_mlp
+lantern_mlp.default <- function(x, ...) {
+ stop("`lantern_mlp()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
 
 #' @export
-#' @rdname torch_mlp
-torch_mlp.data.frame <-
+#' @rdname lantern_mlp
+lantern_mlp.data.frame <-
  function(x,
           y,
           epochs = 100L,
@@ -171,7 +171,7 @@ torch_mlp.data.frame <-
           ...) {
   processed <- hardhat::mold(x, y)
 
-  torch_mlp_bridge(
+  lantern_mlp_bridge(
    processed,
    epochs = epochs,
    hidden_units = hidden_units,
@@ -191,8 +191,8 @@ torch_mlp.data.frame <-
 # XY method - matrix
 
 #' @export
-#' @rdname torch_mlp
-torch_mlp.matrix <- function(x,
+#' @rdname lantern_mlp
+lantern_mlp.matrix <- function(x,
                              y,
                              epochs = 100L,
                              hidden_units = 3L,
@@ -208,7 +208,7 @@ torch_mlp.matrix <- function(x,
                              ...) {
  processed <- hardhat::mold(x, y)
 
- torch_mlp_bridge(
+ lantern_mlp_bridge(
   processed,
   epochs = epochs,
   hidden_units = hidden_units,
@@ -228,8 +228,8 @@ torch_mlp.matrix <- function(x,
 # Formula method
 
 #' @export
-#' @rdname torch_mlp
-torch_mlp.formula <-
+#' @rdname lantern_mlp
+lantern_mlp.formula <-
  function(formula,
           data,
           epochs = 100L,
@@ -246,7 +246,7 @@ torch_mlp.formula <-
           ...) {
   processed <- hardhat::mold(formula, data)
 
-  torch_mlp_bridge(
+  lantern_mlp_bridge(
    processed,
    epochs = epochs,
    hidden_units = hidden_units,
@@ -266,8 +266,8 @@ torch_mlp.formula <-
 # Recipe method
 
 #' @export
-#' @rdname torch_mlp
-torch_mlp.recipe <-
+#' @rdname lantern_mlp
+lantern_mlp.recipe <-
  function(x,
           data,
           epochs = 100L,
@@ -284,7 +284,7 @@ torch_mlp.recipe <-
           ...) {
   processed <- hardhat::mold(x, data)
 
-  torch_mlp_bridge(
+  lantern_mlp_bridge(
    processed,
    epochs = epochs,
    hidden_units = hidden_units,
@@ -304,14 +304,14 @@ torch_mlp.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
+lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                              learn_rate, momentum, penalty, dropout,
                              validation, batch_size, conv_crit, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
- f_nm <- "torch_mlp"
+ f_nm <- "lantern_mlp"
  # check values of various argument values
  if (is.numeric(epochs) & !is.integer(epochs)) {
   epochs <- as.integer(epochs)
@@ -358,7 +358,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  ## -----------------------------------------------------------------------------
 
  fit <-
-  torch_mlp_reg_fit_imp(
+  lantern_mlp_reg_fit_imp(
    x = predictors,
    y = outcome,
    epochs = epochs,
@@ -374,7 +374,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
    verbose = verbose
   )
 
- new_torch_mlp(
+ new_lantern_mlp(
   models = fit$models,
   loss = fit$loss,
   dims = fit$dims,
@@ -384,7 +384,7 @@ torch_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  )
 }
 
-new_torch_mlp <- function( models, loss, dims, y_stats, parameters, blueprint) {
+new_lantern_mlp <- function( models, loss, dims, y_stats, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -406,13 +406,13 @@ new_torch_mlp <- function( models, loss, dims, y_stats, parameters, blueprint) {
                     y_stats = y_stats,
                     parameters = parameters,
                     blueprint = blueprint,
-                    class = "torch_mlp")
+                    class = "lantern_mlp")
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
-torch_mlp_reg_fit_imp <-
+lantern_mlp_reg_fit_imp <-
  function(x, y,
           epochs = 100L,
           batch_size = 32,
@@ -435,7 +435,7 @@ torch_mlp_reg_fit_imp <-
   check_data_att(x, y)
 
   # Check missing values
-  compl_data <- check_missing_data(x, y, "torch_mlp", verbose)
+  compl_data <- check_missing_data(x, y, "lantern_mlp", verbose)
   x <- compl_data$x
   y <- compl_data$y
   n <- length(y)
@@ -625,7 +625,7 @@ get_num_mlp_coef <- function(x) {
 }
 
 #' @export
-print.torch_mlp <- function(x, ...) {
+print.lantern_mlp <- function(x, ...) {
   cat("Multilayer perceptron via torch\n\n")
   cat(x$param$activation, "activation\n")
   lvl <- get_levels(x)
@@ -673,7 +673,7 @@ print.torch_mlp <- function(x, ...) {
   invisible(x)
 }
 
-coef.torch_mlp <- function(object, ...) {
+coef.lantern_mlp <- function(object, ...) {
   module <- revive_model(object, epoch = length(object$models))
   parameters <- module$parameters
   lapply(parameters, as.array)
@@ -698,12 +698,12 @@ get_activation_fn <- function(arg, ...) {
 
 #' Plot model loss over epochs
 #'
-#' @param object A `torch_mlp` object.
+#' @param object A `lantern_mlp` object.
 #' @param ... Not currently used
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.torch_mlp <- function(object, ...) {
+autoplot.lantern_mlp <- function(object, ...) {
   x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
 
   if(object$parameters$validation > 0) {

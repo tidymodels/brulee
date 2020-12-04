@@ -1,6 +1,6 @@
 #' Fit a linear regression using torch
 #'
-#' `torch_linear_reg()` fits a model.
+#' `lantern_linear_reg()` fits a model.
 #'
 #' @param x Depending on the context:
 #'
@@ -34,93 +34,94 @@
 #'
 #' @return
 #'
-#' A `torch_linear_reg` object.
+#' A `lantern_linear_reg` object.
 #'
 #' @examples
 #' predictors <- mtcars[, -1]
 #' outcome <- mtcars[, 1]
 #'
 #' # XY interface
-#' mod <- torch_linear_reg(predictors, outcome)
+#' mod <- lantern_linear_reg(predictors, outcome)
 #'
 #' # Formula interface
-#' mod2 <- torch_linear_reg(mpg ~ ., mtcars)
+#' mod2 <- lantern_linear_reg(mpg ~ ., mtcars)
 #'
 #' # Recipes interface
 #' library(recipes)
 #' rec <- recipe(mpg ~ ., mtcars)
 #' rec <- step_log(rec, disp)
-#' mod3 <- torch_linear_reg(rec, mtcars)
+#' mod3 <- lantern_linear_reg(rec, mtcars)
 #'
 #' @export
-torch_linear_reg <- function(x, ...) {
-  UseMethod("torch_linear_reg")
+lantern_linear_reg <- function(x, ...) {
+  UseMethod("lantern_linear_reg")
 }
 
 #' @export
-#' @rdname torch_linear_reg
-torch_linear_reg.default <- function(x, ...) {
-  stop("`torch_linear_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+#' @rdname lantern_linear_reg
+lantern_linear_reg.default <- function(x, ...) {
+  stop("`lantern_linear_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
 
 #' @export
-#' @rdname torch_linear_reg
-torch_linear_reg.data.frame <- function(x, y, epochs = 100L,
-                                        learn_rate = 0.01, conv_crit = 0,
-                                        verbose = FALSE, ...) {
+#' @rdname lantern_linear_reg
+lantern_linear_reg.data.frame <- function(x, y, epochs = 100L,
+                                          learn_rate = 0.01, conv_crit = 0,
+                                          verbose = FALSE, ...) {
   processed <- hardhat::mold(x, y)
-  torch_linear_reg_bridge(processed, epochs = epochs, learn_rate = learn_rate,
-                          conv_crit = conv_crit, verbose = verbose, ...)
+  lantern_linear_reg_bridge(processed, epochs = epochs, learn_rate = learn_rate,
+                            conv_crit = conv_crit, verbose = verbose, ...)
 }
 
 # XY method - matrix
 
 #' @export
-#' @rdname torch_linear_reg
-torch_linear_reg.matrix <- function(x, y, epochs = 100L,
-                                    learn_rate = 0.01, conv_crit = 0,
-                                    verbose = FALSE, ...) {
+#' @rdname lantern_linear_reg
+lantern_linear_reg.matrix <- function(x, y, epochs = 100L,
+                                      learn_rate = 0.01, conv_crit = 0,
+                                      verbose = FALSE, ...) {
   processed <- hardhat::mold(x, y)
-  torch_linear_reg_bridge(processed, epochs = epochs,
-                          learn_rate = learn_rate, conv_crit = conv_crit,
-                          verbose = verbose, ...)
+  lantern_linear_reg_bridge(processed, epochs = epochs,
+                            learn_rate = learn_rate, conv_crit = conv_crit,
+                            verbose = verbose, ...)
 }
 
 # Formula method
 
 #' @export
-#' @rdname torch_linear_reg
-torch_linear_reg.formula <- function(formula, data, epochs = 100L,
-                                     learn_rate = 0.01, conv_crit = 0,
-                                     verbose = FALSE, ...) {
+#' @rdname lantern_linear_reg
+lantern_linear_reg.formula <- function(formula, data, epochs = 100L,
+                                       learn_rate = 0.01, conv_crit = 0,
+                                       verbose = FALSE, ...) {
   processed <- hardhat::mold(formula, data)
-  torch_linear_reg_bridge(processed, epochs = epochs,
-                          learn_rate = learn_rate, conv_crit = conv_crit,
-                          verbose = verbose, ...)
+  lantern_linear_reg_bridge(processed, epochs = epochs,
+                            learn_rate = learn_rate, conv_crit = conv_crit,
+                            verbose = verbose, ...)
 }
 
 # Recipe method
 
 #' @export
-#' @rdname torch_linear_reg
-torch_linear_reg.recipe <- function(x, data, epochs = 100L,
-                                    learn_rate = 0.01, conv_crit = 0,
-                                    verbose = FALSE, ...) {
+#' @rdname lantern_linear_reg
+lantern_linear_reg.recipe <- function(x, data, epochs = 100L,
+                                      learn_rate = 0.01, conv_crit = 0,
+                                      verbose = FALSE, ...) {
   processed <- hardhat::mold(x, data)
-  torch_linear_reg_bridge(processed, epochs = epochs,
-                          learn_rate = learn_rate, conv_crit = conv_crit,
-                          verbose = verbose, ...)
+  lantern_linear_reg_bridge(processed, epochs = epochs,
+                            learn_rate = learn_rate, conv_crit = conv_crit,
+                            verbose = verbose, ...)
+
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-torch_linear_reg_bridge <- function(processed, epochs, learn_rate,
-                                    conv_crit, verbose, ...) {
+lantern_linear_reg_bridge <- function(processed, epochs, learn_rate,
+                                      conv_crit, verbose, ...) {
 
-  f_nm <- "torch_linear_reg"
+  f_nm <- "lantern_linear_reg"
   # check values of various argument values
   if (is.numeric(epochs) & !is.integer(epochs)) {
     epochs <- as.integer(epochs)
@@ -147,11 +148,11 @@ torch_linear_reg_bridge <- function(processed, epochs, learn_rate,
 
   ## -----------------------------------------------------------------------------
 
-  fit <- torch_linear_reg_fit_imp(x = predictors, y = outcome, epochs = epochs,
-                                  learn_rate = learn_rate,
-                                  conv_crit = conv_crit, verbose = verbose)
+  fit <- lantern_linear_reg_fit_imp(x = predictors, y = outcome, epochs = epochs,
+                                    learn_rate = learn_rate,
+                                    conv_crit = conv_crit, verbose = verbose)
 
-  new_torch_linear_reg(
+  new_lantern_linear_reg(
     coefs = fit$coefficients,
     loss = fit$loss,
     blueprint = processed$blueprint,
@@ -159,18 +160,18 @@ torch_linear_reg_bridge <- function(processed, epochs, learn_rate,
   )
 }
 
-new_torch_linear_reg <- function(coefs, loss, blueprint, terms) {
+new_lantern_linear_reg <- function(coefs, loss, blueprint, terms) {
   hardhat::new_model(coefs = coefs,
                      loss = loss,
                      blueprint = blueprint,
                      terms = terms,
-                     class = "torch_linear_reg")
+                     class = "lantern_linear_reg")
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
-torch_linear_reg_fit_imp <-
+lantern_linear_reg_fit_imp <-
   function(x, y,
            epochs = 100L,
            learn_rate = 0.01,
@@ -184,7 +185,7 @@ torch_linear_reg_fit_imp <-
     check_data_att(x, y)
 
     # Check missing values
-    compl_data <- check_missing_data(x, y, "torch_linear_reg", verbose)
+    compl_data <- check_missing_data(x, y, "lantern_linear_reg", verbose)
     x <- compl_data$x
     y <- compl_data$y
 
@@ -261,7 +262,7 @@ linear_reg_module <-
 
 ## -----------------------------------------------------------------------------
 
-print.torch_linear_reg <- function(x, ...) {
+print.lantern_linear_reg <- function(x, ...) {
   cat("Linear regression via torch\n")
   cat(length(x$coefs), "model coefficients\n")
   if (!is.null(x$loss)) {
@@ -271,12 +272,12 @@ print.torch_linear_reg <- function(x, ...) {
   invisible(x)
 }
 
-coef.torch_linear_reg <- function(object, ...) {
+coef.lantern_linear_reg <- function(object, ...) {
   object$coef
 }
 
 
-tidy.torch_linear_reg <- function(x, ...) {
+tidy.lantern_linear_reg <- function(x, ...) {
   tibble::tibble(term = names(object$coef), estimate = unname(object$coef))
 }
 
