@@ -107,7 +107,7 @@ specified as:
 \item{hidden_units}{An integer for the number of hidden units.}
 
 \item{activation}{A string for the activation function. Possible values are
-"relu", and "elu".}
+"relu", "elu", "tanh", and "linear".}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
 
@@ -143,6 +143,7 @@ A \code{torch_mlp} object with elements:
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.
+\item \code{y_stats}: A list of summary statistics for numeric outcomes.
 \item \code{parameters}: A list of some tuning parameter values.
 \item \code{blueprint}: The \code{hardhat} blueprint data.
 }
@@ -156,10 +157,14 @@ regression (when the outcome is a number) or classification (a factor). For
 regression, the mean squared error is optimized and cross-entropy is the loss
 function for classification.
 
-The predictors data should all be numeric and encoded in the same units (e.g.
+The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric.
+
+When the outcome is a number, the function internally standardizes the
+outcome data to have mean zero and a standard deviation of one. The prediction
+function creates predictions on the original scale.
 
 If \code{conv_crit} is used, it stops training when the difference in the loss
 function is below \code{conv_crit} or if it gets worse. The default trains the
@@ -191,19 +196,42 @@ if (torch::torch_is_installed()) {
  # Using recipe
  library(recipes)
 
- ames_rec <-
-  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames_train) \%>\%
-  step_dummy(Alley) \%>\%
-  step_normalize(all_predictors())
+ames_rec <-
+ recipe(Sale_Price ~ Bldg_Type + Neighborhood + Year_Built + Gr_Liv_Area +
+         Full_Bath + Year_Sold + Lot_Area + Central_Air + Longitude + Latitude,
+        data = ames_train) \%>\%
+ # Transform some highly skewed predictors
+ step_BoxCox(Lot_Area, Gr_Liv_Area) \%>\%
+ # Lump some rarely occuring categories into "other"
+ step_other(Neighborhood, threshold = 0.05)  \%>\%
+ # Encode categorical predictors as binary.
+ step_dummy(all_nominal(), one_hot = TRUE) \%>\%
+ # Add an interaction effect:
+ step_interact(~ starts_with("Central_Air"):Year_Built) \%>\%
+ step_zv(all_predictors()) \%>\%
+ step_normalize(all_predictors())
 
- set.seed(1)
- fit <- torch_mlp(ames_rec, data = ames_train,
-                  dropout = 0.25, epochs = 20, batch_size = 32)
- fit
+set.seed(2)
+fit <- torch_mlp(ames_rec, data = ames_train, hidden_units = 20,
+                 dropout = 0.05, epochs = 20, batch_size = 32)
+fit
 
- autoplot(fit)
+autoplot(fit)
 
- predict(fit, ames_test)
+library(ggplot2)
+
+predict(fit, ames_test) \%>\%
+ bind_cols(ames_test) \%>\%
+ ggplot(aes(x = .pred, y = Sale_Price)) +
+ geom_abline(col = "green") +
+ geom_point(alpha = .3) +
+ lims(x = c(4, 6), y = c(4, 6)) +
+ coord_fixed(ratio = 1)
+
+library(yardstick)
+predict(fit, ames_test) \%>\%
+ bind_cols(ames_test) \%>\%
+ rmse(Sale_Price, .pred)
  }
 
 }
