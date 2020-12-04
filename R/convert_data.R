@@ -40,3 +40,18 @@ matrix_to_dataset <- torch::dataset(
     list(x = torch::torch_tensor(x), y = y)
   }
 )
+
+
+# ------------------------------------------------------------------------------
+
+scale_stats <- function(x) {
+  res <- list(mean = mean(x, na.rm = TRUE), sd = stats::sd(x, na.rm = TRUE))
+  if (res$sd == 0) {
+    rlang::abort("There is no variation in `y`.")
+  }
+  res
+}
+
+scale_y <- function(y, stats) {
+  (y - stats$mean)/stats$sd
+}

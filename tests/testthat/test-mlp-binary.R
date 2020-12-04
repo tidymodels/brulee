@@ -97,7 +97,7 @@ test_that("mlp binary learns something", {
                      epochs = 100L,
                      activation = "relu",
                      hidden_units = 5L,
-                     learning_rate = 0.1,
+                     learn_rate = 0.1,
                      dropout = 0)
 
   y_ <- predict(model, x)$.pred_class

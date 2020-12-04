@@ -15,6 +15,8 @@
 Valid options are:
 \itemize{
 \item \code{"numeric"} for numeric predictions.
+\item \code{"class"} for hard class predictions
+\item \code{"prob"} for soft class predictions (i.e., class probabilities)
 }}
 
 \item{epoch}{An integer for the epoch to make predictions from. If this value

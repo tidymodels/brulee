@@ -184,16 +184,16 @@ test_that('bad args', {
 
 
  expect_error(
-  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = NA),
-  "expected 'learning_rate' to be a double"
+  torch_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
+  "expected 'learn_rate' to be a double"
  )
  expect_error(
-  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = runif(2)),
-  "expected 'learning_rate' to be a single double"
+  torch_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
+  "expected 'learn_rate' to be a single double"
  )
  expect_error(
-  lantern_mlp(ames_x_mat, ames_y, epochs = 2, learning_rate = -1.1),
-  "expected 'learning_rate' to be a double on"
+  torch_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
+  "expected 'learn_rate' to be a double on"
  )
 
  expect_error(
@@ -289,7 +289,7 @@ test_that("mlp learns something", {
                      epochs = 50,
                      activation = "relu",
                      hidden_units = 5L,
-                     learning_rate = 0.1,
+                     learn_rate = 0.1,
                      dropout = 0)
 
   expect_true(tail(model$loss, 1) < 3e-5)
@@ -308,7 +308,7 @@ test_that("raise warning of bad loss", {
                        epochs = 50,
                        activation = "relu",
                        hidden_units = 5L,
-                       learning_rate = 10, # large learnign rate leads to NaN
+                       learn_rate = 10, # large learnign rate leads to NaN
                        dropout = 0),
     regex = "NaN"
   )

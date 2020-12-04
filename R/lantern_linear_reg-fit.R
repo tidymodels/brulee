@@ -26,7 +26,7 @@
 #' and the predictor terms on the right-hand side.
 #'
 #' @param epochs An integer for the number of epochs of training.
-#' @param learning_rate A positive number (usually less than 0.1).
+#' @param learn_rate A positive number (usually less than 0.1).
 #' @param conv_crit A non-negative number for convergence.
 #' @param verbose A logical that prints out the iteration history.
 #'
@@ -68,10 +68,10 @@ lantern_linear_reg.default <- function(x, ...) {
 #' @export
 #' @rdname lantern_linear_reg
 lantern_linear_reg.data.frame <- function(x, y, epochs = 100L,
-                                          learning_rate = 0.01, conv_crit = 0,
+                                          learn_rate = 0.01, conv_crit = 0,
                                           verbose = FALSE, ...) {
   processed <- hardhat::mold(x, y)
-  lantern_linear_reg_bridge(processed, epochs = epochs, learning_rate = learning_rate,
+  lantern_linear_reg_bridge(processed, epochs = epochs, learn_rate = learn_rate,
                             conv_crit = conv_crit, verbose = verbose, ...)
 }
 
@@ -80,11 +80,11 @@ lantern_linear_reg.data.frame <- function(x, y, epochs = 100L,
 #' @export
 #' @rdname lantern_linear_reg
 lantern_linear_reg.matrix <- function(x, y, epochs = 100L,
-                                      learning_rate = 0.01, conv_crit = 0,
+                                      learn_rate = 0.01, conv_crit = 0,
                                       verbose = FALSE, ...) {
   processed <- hardhat::mold(x, y)
   lantern_linear_reg_bridge(processed, epochs = epochs,
-                            learning_rate = learning_rate, conv_crit = conv_crit,
+                            learn_rate = learn_rate, conv_crit = conv_crit,
                             verbose = verbose, ...)
 }
 
@@ -93,11 +93,11 @@ lantern_linear_reg.matrix <- function(x, y, epochs = 100L,
 #' @export
 #' @rdname lantern_linear_reg
 lantern_linear_reg.formula <- function(formula, data, epochs = 100L,
-                                       learning_rate = 0.01, conv_crit = 0,
+                                       learn_rate = 0.01, conv_crit = 0,
                                        verbose = FALSE, ...) {
   processed <- hardhat::mold(formula, data)
   lantern_linear_reg_bridge(processed, epochs = epochs,
-                            learning_rate = learning_rate, conv_crit = conv_crit,
+                            learn_rate = learn_rate, conv_crit = conv_crit,
                             verbose = verbose, ...)
 }
 
@@ -106,18 +106,19 @@ lantern_linear_reg.formula <- function(formula, data, epochs = 100L,
 #' @export
 #' @rdname lantern_linear_reg
 lantern_linear_reg.recipe <- function(x, data, epochs = 100L,
-                                      learning_rate = 0.01, conv_crit = 0,
+                                      learn_rate = 0.01, conv_crit = 0,
                                       verbose = FALSE, ...) {
   processed <- hardhat::mold(x, data)
   lantern_linear_reg_bridge(processed, epochs = epochs,
-                            learning_rate = learning_rate, conv_crit = conv_crit,
+                            learn_rate = learn_rate, conv_crit = conv_crit,
                             verbose = verbose, ...)
+
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_linear_reg_bridge <- function(processed, epochs, learning_rate,
+lantern_linear_reg_bridge <- function(processed, epochs, learn_rate,
                                       conv_crit, verbose, ...) {
 
   f_nm <- "lantern_linear_reg"
@@ -126,7 +127,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, learning_rate,
     epochs <- as.integer(epochs)
   }
   check_integer(epochs, single = TRUE, 2, fn = f_nm)
-  check_double(learning_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
@@ -148,7 +149,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, learning_rate,
   ## -----------------------------------------------------------------------------
 
   fit <- lantern_linear_reg_fit_imp(x = predictors, y = outcome, epochs = epochs,
-                                    learning_rate = learning_rate,
+                                    learn_rate = learn_rate,
                                     conv_crit = conv_crit, verbose = verbose)
 
   new_lantern_linear_reg(
@@ -173,7 +174,7 @@ new_lantern_linear_reg <- function(coefs, loss, blueprint, terms) {
 lantern_linear_reg_fit_imp <-
   function(x, y,
            epochs = 100L,
-           learning_rate = 0.01,
+           learn_rate = 0.01,
            conv_crit = 0,
            verbose = FALSE,
            ...) {
@@ -199,7 +200,7 @@ lantern_linear_reg_fit_imp <-
     model$parameters$fc1.bias$set_data(torch::torch_tensor(mean(y)))
 
     # Write a optim wrapper
-    optimizer <- torch::optim_sgd(model$parameters, lr = learning_rate)
+    optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate)
 
     ## ---------------------------------------------------------------------------
 
