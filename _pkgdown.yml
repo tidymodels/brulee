@@ -1,3 +1,11 @@
+
+template:
+  package: tidytemplate
+  params:
+    theme: tidymodels
+    part_of: <a href="https://tidymodels.org">tidymodels</a>
+    footer: lantern is a part of the <strong>tidymodels</strong> ecosystem, a collection of modeling packages designed with common APIs and a shared philosophy.
+
 development:
   mode: auto
 
@@ -7,4 +15,3 @@ home:
 figures:
   fig.width: 8
   fig.height: 5.75
-
