@@ -538,7 +538,7 @@ linear_reg_module <-
 
 #' @export
 print.lantern_linear_reg <- function(x, ...) {
-  cat("Linear regression via torch\n\n")
+  cat("Linear regression\n\n")
   cat(
     format(x$dims$n, big.mark = ","), "samples,",
     format(x$dims$p, big.mark = ","), "features\n"

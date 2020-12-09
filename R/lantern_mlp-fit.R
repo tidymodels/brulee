@@ -626,7 +626,7 @@ get_num_mlp_coef <- function(x) {
 
 #' @export
 print.lantern_mlp <- function(x, ...) {
-  cat("Multilayer perceptron via torch\n\n")
+  cat("Multilayer perceptron\n\n")
   cat(x$param$activation, "activation\n")
   lvl <- get_levels(x)
   if (is.null(lvl)) {
