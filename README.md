@@ -5,13 +5,15 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/topepo/lantern/workflows/R-CMD-check/badge.svg)](https://github.com/topepo/lantern/actions)
-[![Codecov test coverage](https://codecov.io/gh/topepo/lantern/branch/master/graph/badge.svg)](https://codecov.io/gh/topepo/lantern?branch=master)
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![R-CMD-check](https://github.com/tidymodels/lantern/workflows/R-CMD-check/badge.svg)](https://github.com/tidymodels/lantern/actions)
+[![Codecov test
+coverage](https://codecov.io/gh/tidymodels/lantern/branch/master/graph/badge.svg)](https://codecov.io/gh/tidymodels/lantern?branch=master)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-The R `lantern` package contains several basic modeling functions 
-that use the `torch` R package (and is unrelated to the python script).  
+The R `lantern` package contains several basic modeling functions that
+use the `torch` package (and is unrelated to the python script).
 
 The package is currently experimental; the user interface and other
 details may change before release.
@@ -22,14 +24,15 @@ You can install the released version of lantern from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
-install.packages("lantern")
+# not yet!
+# install.packages("lantern")
 ```
 
 And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("topepo/lantern")
+devtools::install_github("tidymodels/lantern")
 ```
 
 ## Example
