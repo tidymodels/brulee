@@ -1,0 +1,10 @@
+development:
+  mode: auto
+
+home:
+  strip_header: true
+
+figures:
+  fig.width: 8
+  fig.height: 5.75
+
