@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Predict from a lantern_mlp — predict.lantern_mlp • lantern</title>
+<title>Predict from a lantern_logistic_reg — predict.lantern_logistic_reg • lantern</title>
 
 
 <!-- jquery -->
@@ -42,8 +42,8 @@
 
 
 
-<meta property="og:title" content="Predict from a lantern_mlp — predict.lantern_mlp" />
-<meta property="og:description" content="Predict from a lantern_mlp" />
+<meta property="og:title" content="Predict from a lantern_logistic_reg — predict.lantern_logistic_reg" />
+<meta property="og:description" content="Predict from a lantern_logistic_reg" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -116,16 +116,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Predict from a <code>lantern_mlp</code></h1>
+    <h1>Predict from a <code>lantern_logistic_reg</code></h1>
     
-    <div class="hidden name"><code>predict.lantern_mlp.Rd</code></div>
+    <div class="hidden name"><code>predict.lantern_logistic_reg.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Predict from a <code>lantern_mlp</code></p>
+    <p>Predict from a <code>lantern_logistic_reg</code></p>
     </div>
 
-    <pre class="usage"><span class='co'># S3 method for lantern_mlp</span>
+    <pre class="usage"><span class='co'># S3 method for lantern_logistic_reg</span>
 <span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span><span class='op'>(</span><span class='va'>object</span>, <span class='va'>new_data</span>, type <span class='op'>=</span> <span class='cn'>NULL</span>, epoch <span class='op'>=</span> <span class='cn'>NULL</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -133,7 +133,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>object</th>
-      <td><p>A <code>lantern_mlp</code> object.</p></td>
+      <td><p>A <code>lantern_logistic_reg</code> object.</p></td>
     </tr>
     <tr>
       <th>new_data</th>
@@ -143,7 +143,6 @@
       <th>type</th>
       <td><p>A single character. The type of predictions to generate.
 Valid options are:</p><ul>
-<li><p><code>"numeric"</code> for numeric predictions.</p></li>
 <li><p><code>"class"</code> for hard class predictions</p></li>
 <li><p><code>"prob"</code> for soft class predictions (i.e., class probabilities)</p></li>
 </ul></td>

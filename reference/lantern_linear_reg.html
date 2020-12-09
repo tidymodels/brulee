@@ -6,15 +6,14 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fit a linear regression using torch — lantern_linear_reg • lantern</title>
+<title>Fit a linear regression model — lantern_linear_reg • lantern</title>
 
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
 <!-- Bootstrap -->
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
-
+<link href="../tidyverse.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
 <!-- bootstrap-toc -->
@@ -26,7 +25,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
@@ -35,12 +34,17 @@
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script>
+<link href="../tidyverse-2.css" rel="stylesheet">
+
+<!--optional theme-->
+<link href="../tidymodels.css" rel="stylesheet">
 
 
 
 
-<meta property="og:title" content="Fit a linear regression using torch — lantern_linear_reg" />
+<meta property="og:title" content="Fit a linear regression model — lantern_linear_reg" />
 <meta property="og:description" content="lantern_linear_reg() fits a model." />
+<meta name="twitter:card" content="summary" />
 
 
 
@@ -54,7 +58,15 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115082821-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'UA-115082821-1');
+</script>
 
   </head>
 
@@ -70,14 +82,17 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">lantern</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
-      </span>
-    </div>
 
+      <div class="navbar-brand-container">
+        <a class="navbar-brand" href="../index.html">lantern</a>
+        <div class="info hidden-xs hidden-sm">
+          <span class="partof">part of <a href="https://tidymodels.org">tidymodels</a></span>
+          <span class="version version-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
+        </div>
+      </div>
+    </div>
     <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
+      <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="../index.html">
     <span class="fas fa fas fa-home fa-lg"></span>
@@ -87,8 +102,6 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
         
       </ul>
       
@@ -103,7 +116,7 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Fit a linear regression using torch</h1>
+    <h1>Fit a linear regression model</h1>
     
     <div class="hidden name"><code>lantern_linear_reg.Rd</code></div>
     </div>
@@ -121,9 +134,13 @@
 <span class='fu'>lantern_linear_reg</span><span class='op'>(</span>
   <span class='va'>x</span>,
   <span class='va'>y</span>,
-  epochs <span class='op'>=</span> <span class='fl'>100L</span>,
+  epochs <span class='op'>=</span> <span class='fl'>20L</span>,
+  penalty <span class='op'>=</span> <span class='fl'>0.001</span>,
+  validation <span class='op'>=</span> <span class='fl'>0</span>,
   learn_rate <span class='op'>=</span> <span class='fl'>0.01</span>,
-  conv_crit <span class='op'>=</span> <span class='fl'>0</span>,
+  momentum <span class='op'>=</span> <span class='fl'>0</span>,
+  batch_size <span class='op'>=</span> <span class='cn'>NULL</span>,
+  conv_crit <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>,
   verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
   <span class='va'>...</span>
 <span class='op'>)</span>
@@ -132,9 +149,13 @@
 <span class='fu'>lantern_linear_reg</span><span class='op'>(</span>
   <span class='va'>x</span>,
   <span class='va'>y</span>,
-  epochs <span class='op'>=</span> <span class='fl'>100L</span>,
+  epochs <span class='op'>=</span> <span class='fl'>20L</span>,
+  penalty <span class='op'>=</span> <span class='fl'>0.001</span>,
+  validation <span class='op'>=</span> <span class='fl'>0</span>,
   learn_rate <span class='op'>=</span> <span class='fl'>0.01</span>,
-  conv_crit <span class='op'>=</span> <span class='fl'>0</span>,
+  momentum <span class='op'>=</span> <span class='fl'>0</span>,
+  batch_size <span class='op'>=</span> <span class='cn'>NULL</span>,
+  conv_crit <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>,
   verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
   <span class='va'>...</span>
 <span class='op'>)</span>
@@ -143,9 +164,13 @@
 <span class='fu'>lantern_linear_reg</span><span class='op'>(</span>
   <span class='va'>formula</span>,
   <span class='va'>data</span>,
-  epochs <span class='op'>=</span> <span class='fl'>100L</span>,
+  epochs <span class='op'>=</span> <span class='fl'>20L</span>,
+  penalty <span class='op'>=</span> <span class='fl'>0.001</span>,
+  validation <span class='op'>=</span> <span class='fl'>0</span>,
   learn_rate <span class='op'>=</span> <span class='fl'>0.01</span>,
-  conv_crit <span class='op'>=</span> <span class='fl'>0</span>,
+  momentum <span class='op'>=</span> <span class='fl'>0</span>,
+  batch_size <span class='op'>=</span> <span class='cn'>NULL</span>,
+  conv_crit <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>,
   verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
   <span class='va'>...</span>
 <span class='op'>)</span>
@@ -154,9 +179,13 @@
 <span class='fu'>lantern_linear_reg</span><span class='op'>(</span>
   <span class='va'>x</span>,
   <span class='va'>data</span>,
-  epochs <span class='op'>=</span> <span class='fl'>100L</span>,
+  epochs <span class='op'>=</span> <span class='fl'>20L</span>,
+  penalty <span class='op'>=</span> <span class='fl'>0.001</span>,
+  validation <span class='op'>=</span> <span class='fl'>0</span>,
   learn_rate <span class='op'>=</span> <span class='fl'>0.01</span>,
-  conv_crit <span class='op'>=</span> <span class='fl'>0</span>,
+  momentum <span class='op'>=</span> <span class='fl'>0</span>,
+  batch_size <span class='op'>=</span> <span class='cn'>NULL</span>,
+  conv_crit <span class='op'>=</span> <span class='op'>-</span><span class='cn'>Inf</span>,
   verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
@@ -193,8 +222,27 @@ specified as:</p><ul>
       <td><p>An integer for the number of epochs of training.</p></td>
     </tr>
     <tr>
+      <th>penalty</th>
+      <td><p>The amount of weight decay (i.e., L2 regularization).</p></td>
+    </tr>
+    <tr>
+      <th>validation</th>
+      <td><p>The proportion of the data randomly assigned to a
+validation set.</p></td>
+    </tr>
+    <tr>
       <th>learn_rate</th>
       <td><p>A positive number (usually less than 0.1).</p></td>
+    </tr>
+    <tr>
+      <th>momentum</th>
+      <td><p>A positive number on <code>[0, 1]</code> for the momentum parameter in
+gradient decent.</p></td>
+    </tr>
+    <tr>
+      <th>batch_size</th>
+      <td><p>An integer for the number of training set points in each
+batch.</p></td>
     </tr>
     <tr>
       <th>conv_crit</th>
@@ -219,21 +267,92 @@ and the predictor terms on the right-hand side.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>lantern_linear_reg</code> object.</p>
+    <p>A <code>lantern_linear_reg</code> object with elements:</p><ul>
+<li><p><code>models</code>: a list object of serialized models for each epoch.</p></li>
+<li><p><code>loss</code>: A vector of loss values (MSE) at each epoch.</p></li>
+<li><p><code>dim</code>: A list of data dimensions.</p></li>
+<li><p><code>y_stats</code>: A list of summary statistics for numeric outcomes.</p></li>
+<li><p><code>parameters</code>: A list of some tuning parameter values.</p></li>
+<li><p><code>blueprint</code>: The <code>hardhat</code> blueprint data.</p></li>
+</ul>
+
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The <em>predictors</em> data should all be numeric and encoded in the same units (e.g.
+standardized to the same range or distribution). If there are factor
+predictors, use a recipe or formula to create indicator variables (or some
+other method) to make them numeric.</p>
+<p>The function internally standardizes the
+outcome data to have mean zero and a standard deviation of one. The prediction
+function creates predictions on the original scale.</p>
+<p>If <code>conv_crit</code> is used, it stops training when the difference in the loss
+function is below <code>conv_crit</code> or if it gets worse. The default trains the
+model over the specified number of epochs.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>predictors</span> <span class='op'>&lt;-</span> <span class='va'>mtcars</span><span class='op'>[</span>, <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span>
-<span class='va'>outcome</span> <span class='op'>&lt;-</span> <span class='va'>mtcars</span><span class='op'>[</span>, <span class='fl'>1</span><span class='op'>]</span>
+    <pre class="examples"><div class='input'><span class='co'># \donttest{</span>
+<span class='kw'>if</span> <span class='op'>(</span><span class='fu'>torch</span><span class='fu'>::</span><span class='fu'><a href='https://torch.mlverse.org/docs/reference/torch_is_installed.html'>torch_is_installed</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
 
-<span class='co'># XY interface</span>
-<span class='va'>mod</span> <span class='op'>&lt;-</span> <span class='fu'>lantern_linear_reg</span><span class='op'>(</span><span class='va'>predictors</span>, <span class='va'>outcome</span><span class='op'>)</span>
+ <span class='co'>## -----------------------------------------------------------------------------</span>
 
-<span class='co'># Formula interface</span>
-<span class='va'>mod2</span> <span class='op'>&lt;-</span> <span class='fu'>lantern_linear_reg</span><span class='op'>(</span><span class='va'>mpg</span> <span class='op'>~</span> <span class='va'>.</span>, <span class='va'>mtcars</span><span class='op'>)</span>
+ <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>ames</span>, package <span class='op'>=</span> <span class='st'>"modeldata"</span><span class='op'>)</span>
 
-<span class='co'># Recipes interface</span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/tidymodels/recipes'>recipes</a></span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading required package: dplyr</span></div><div class='output co'>#&gt; <span class='message'></span>
+ <span class='va'>ames</span><span class='op'>$</span><span class='va'>Sale_Price</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Log.html'>log10</a></span><span class='op'>(</span><span class='va'>ames</span><span class='op'>$</span><span class='va'>Sale_Price</span><span class='op'>)</span>
+
+ <span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>122</span><span class='op'>)</span>
+ <span class='va'>in_train</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span><span class='op'>(</span><span class='va'>ames</span><span class='op'>)</span>, <span class='fl'>2000</span><span class='op'>)</span>
+ <span class='va'>ames_train</span> <span class='op'>&lt;-</span> <span class='va'>ames</span><span class='op'>[</span> <span class='va'>in_train</span>,<span class='op'>]</span>
+ <span class='va'>ames_test</span>  <span class='op'>&lt;-</span> <span class='va'>ames</span><span class='op'>[</span><span class='op'>-</span><span class='va'>in_train</span>,<span class='op'>]</span>
+
+
+ <span class='co'># Using matrices</span>
+ <span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>)</span>
+ <span class='fu'>lantern_linear_reg</span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>as.matrix</a></span><span class='op'>(</span><span class='va'>ames_train</span><span class='op'>[</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Longitude"</span>, <span class='st'>"Latitude"</span><span class='op'>)</span><span class='op'>]</span><span class='op'>)</span>,
+                    y <span class='op'>=</span> <span class='va'>ames_train</span><span class='op'>$</span><span class='va'>Sale_Price</span>,
+                    penalty <span class='op'>=</span> <span class='fl'>0.10</span>, epochs <span class='op'>=</span> <span class='fl'>20</span>, batch_size <span class='op'>=</span> <span class='fl'>32</span><span class='op'>)</span>
+
+ <span class='co'># Using recipe</span>
+ <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/tidymodels/recipes'>recipes</a></span><span class='op'>)</span>
+
+ <span class='va'>ames_rec</span> <span class='op'>&lt;-</span>
+  <span class='fu'><a href='https://recipes.tidymodels.org/reference/recipe.html'>recipe</a></span><span class='op'>(</span><span class='va'>Sale_Price</span> <span class='op'>~</span> <span class='va'>Bldg_Type</span> <span class='op'>+</span> <span class='va'>Neighborhood</span> <span class='op'>+</span> <span class='va'>Year_Built</span> <span class='op'>+</span> <span class='va'>Gr_Liv_Area</span> <span class='op'>+</span>
+         <span class='va'>Full_Bath</span> <span class='op'>+</span> <span class='va'>Year_Sold</span> <span class='op'>+</span> <span class='va'>Lot_Area</span> <span class='op'>+</span> <span class='va'>Central_Air</span> <span class='op'>+</span> <span class='va'>Longitude</span> <span class='op'>+</span> <span class='va'>Latitude</span>,
+         data <span class='op'>=</span> <span class='va'>ames_train</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+    <span class='co'># Transform some highly skewed predictors</span>
+    <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_BoxCox.html'>step_BoxCox</a></span><span class='op'>(</span><span class='va'>Lot_Area</span>, <span class='va'>Gr_Liv_Area</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+    <span class='co'># Lump some rarely occuring categories into "other"</span>
+    <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_other.html'>step_other</a></span><span class='op'>(</span><span class='va'>Neighborhood</span>, threshold <span class='op'>=</span> <span class='fl'>0.05</span><span class='op'>)</span>  <span class='op'>%&gt;%</span>
+    <span class='co'># Encode categorical predictors as binary.</span>
+    <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_dummy.html'>step_dummy</a></span><span class='op'>(</span><span class='fu'><a href='https://recipes.tidymodels.org/reference/has_role.html'>all_nominal</a></span><span class='op'>(</span><span class='op'>)</span>, one_hot <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+    <span class='co'># Add an interaction effect:</span>
+    <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_interact.html'>step_interact</a></span><span class='op'>(</span><span class='op'>~</span> <span class='fu'>starts_with</span><span class='op'>(</span><span class='st'>"Central_Air"</span><span class='op'>)</span><span class='op'>:</span><span class='va'>Year_Built</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+    <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_zv.html'>step_zv</a></span><span class='op'>(</span><span class='fu'><a href='https://recipes.tidymodels.org/reference/has_role.html'>all_predictors</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+    <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_normalize.html'>step_normalize</a></span><span class='op'>(</span><span class='fu'><a href='https://recipes.tidymodels.org/reference/has_role.html'>all_predictors</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
+
+ <span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>2</span><span class='op'>)</span>
+ <span class='va'>fit</span> <span class='op'>&lt;-</span> <span class='fu'>lantern_linear_reg</span><span class='op'>(</span><span class='va'>ames_rec</span>, data <span class='op'>=</span> <span class='va'>ames_train</span>,
+                           epochs <span class='op'>=</span> <span class='fl'>20</span>, batch_size <span class='op'>=</span> <span class='fl'>32</span><span class='op'>)</span>
+ <span class='va'>fit</span>
+
+ <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/autoplot.html'>autoplot</a></span><span class='op'>(</span><span class='va'>fit</span><span class='op'>)</span>
+
+ <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://ggplot2.tidyverse.org'>ggplot2</a></span><span class='op'>)</span>
+
+ <span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span><span class='op'>(</span><span class='va'>fit</span>, <span class='va'>ames_test</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+   <span class='fu'>bind_cols</span><span class='op'>(</span><span class='va'>ames_test</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>.pred</span>, y <span class='op'>=</span> <span class='va'>Sale_Price</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_abline.html'>geom_abline</a></span><span class='op'>(</span>col <span class='op'>=</span> <span class='st'>"green"</span><span class='op'>)</span> <span class='op'>+</span>
+   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span>alpha <span class='op'>=</span> <span class='fl'>.3</span><span class='op'>)</span> <span class='op'>+</span>
+   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/lims.html'>lims</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>, <span class='fl'>6</span><span class='op'>)</span>, y <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>4</span>, <span class='fl'>6</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/coord_fixed.html'>coord_fixed</a></span><span class='op'>(</span>ratio <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+
+ <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/tidymodels/yardstick'>yardstick</a></span><span class='op'>)</span>
+ <span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span><span class='op'>(</span><span class='va'>fit</span>, <span class='va'>ames_test</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+   <span class='fu'>bind_cols</span><span class='op'>(</span><span class='va'>ames_test</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+   <span class='fu'><a href='https://yardstick.tidymodels.org/reference/rmse.html'>rmse</a></span><span class='op'>(</span><span class='va'>Sale_Price</span>, <span class='va'>.pred</span><span class='op'>)</span>
+
+ <span class='op'>}</span>
+</div><div class='output co'>#&gt; <span class='warning'>Warning: Current loss in NaN. Training wil be stopped.</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: dplyr</span></div><div class='output co'>#&gt; <span class='message'></span>
 #&gt; <span class='message'>Attaching package: ‘dplyr’</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:stats’:</span>
 #&gt; <span class='message'></span>
 #&gt; <span class='message'>    filter, lag</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:base’:</span>
@@ -241,11 +360,13 @@ and the predictor terms on the right-hand side.</p></td>
 #&gt; <span class='message'>    intersect, setdiff, setequal, union</span></div><div class='output co'>#&gt; <span class='message'></span>
 #&gt; <span class='message'>Attaching package: ‘recipes’</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:stats’:</span>
 #&gt; <span class='message'></span>
-#&gt; <span class='message'>    step</span></div><div class='input'><span class='va'>rec</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://recipes.tidymodels.org/reference/recipe.html'>recipe</a></span><span class='op'>(</span><span class='va'>mpg</span> <span class='op'>~</span> <span class='va'>.</span>, <span class='va'>mtcars</span><span class='op'>)</span>
-<span class='va'>rec</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://recipes.tidymodels.org/reference/step_log.html'>step_log</a></span><span class='op'>(</span><span class='va'>rec</span>, <span class='va'>disp</span><span class='op'>)</span>
-<span class='va'>mod3</span> <span class='op'>&lt;-</span> <span class='fu'>lantern_linear_reg</span><span class='op'>(</span><span class='va'>rec</span>, <span class='va'>mtcars</span><span class='op'>)</span>
-
-</div></pre>
+#&gt; <span class='message'>    step</span></div><div class='output co'>#&gt; <span class='message'>For binary classification, the first factor level is assumed to be the event.</span>
+#&gt; <span class='message'>Use the argument `event_level = "second"` to alter this as needed.</span></div><div class='output co'>#&gt; <span style='color: #555555;'># A tibble: 1 x 3</span><span>
+#&gt;   .metric .estimator .estimate
+#&gt;   </span><span style='color: #555555;font-style: italic;'>&lt;chr&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;chr&gt;</span><span>          </span><span style='color: #555555;font-style: italic;'>&lt;dbl&gt;</span><span>
+#&gt; </span><span style='color: #555555;'>1</span><span> rmse    standard      0.082</span><span style='text-decoration: underline;'>2</span><span></div><div class='input'>
+<span class='co'># }</span>
+</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -256,12 +377,15 @@ and the predictor terms on the right-hand side.</p></td>
 
 
       <footer>
-      <div class="copyright">
-  <p>Developed by Max Kuhn, Daniel Falbel.</p>
+      <div class="tidyverse">
+  <p>lantern is a part of the <strong>tidymodels</strong> ecosystem, a collection of modeling packages designed with common APIs and a shared philosophy.</p>
 </div>
 
-<div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+<div class="author">
+  <p>
+    Developed by Max Kuhn, Daniel Falbel.
+    Site built by <a href="https://pkgdown.r-lib.org">pkgdown</a>.
+  </p>
 </div>
 
       </footer>
