@@ -4,7 +4,7 @@
 \alias{predict.lantern_linear_reg}
 \title{Predict from a \code{lantern_linear_reg}}
 \usage{
-\method{predict}{lantern_linear_reg}(object, new_data, type = "numeric", ...)
+\method{predict}{lantern_linear_reg}(object, new_data, type = NULL, epoch = NULL, ...)
 }
 \arguments{
 \item{object}{A \code{lantern_linear_reg} object.}
@@ -17,6 +17,10 @@ Valid options are:
 \item \code{"numeric"} for numeric predictions.
 }}
 
+\item{epoch}{An integer for the epoch to make predictions from. If this value
+is larger than the maximum number that was fit, a warning is issued and the
+parameters from the last epoch are used.}
+
 \item{...}{Not used, but required for extensibility.}
 }
 \value{
@@ -25,15 +29,4 @@ to be the same as the number of rows in \code{new_data}.
 }
 \description{
 Predict from a \code{lantern_linear_reg}
-}
-\examples{
-train <- mtcars[1:20,]
-test <- mtcars[21:32, -1]
-
-# Fit
-mod <- lantern_linear_reg(mpg ~ cyl + log(drat), train)
-
-# Predict, with preprocessing
-predict(mod, test)
-
 }

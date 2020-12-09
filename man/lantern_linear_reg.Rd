@@ -7,7 +7,7 @@
 \alias{lantern_linear_reg.matrix}
 \alias{lantern_linear_reg.formula}
 \alias{lantern_linear_reg.recipe}
-\title{Fit a linear regression using torch}
+\title{Fit a linear regression model}
 \usage{
 lantern_linear_reg(x, ...)
 
@@ -16,9 +16,13 @@ lantern_linear_reg(x, ...)
 \method{lantern_linear_reg}{data.frame}(
   x,
   y,
-  epochs = 100L,
+  epochs = 20L,
+  penalty = 0.001,
+  validation = 0,
   learn_rate = 0.01,
-  conv_crit = 0,
+  momentum = 0,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -26,9 +30,13 @@ lantern_linear_reg(x, ...)
 \method{lantern_linear_reg}{matrix}(
   x,
   y,
-  epochs = 100L,
+  epochs = 20L,
+  penalty = 0.001,
+  validation = 0,
   learn_rate = 0.01,
-  conv_crit = 0,
+  momentum = 0,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -36,9 +44,13 @@ lantern_linear_reg(x, ...)
 \method{lantern_linear_reg}{formula}(
   formula,
   data,
-  epochs = 100L,
+  epochs = 20L,
+  penalty = 0.001,
+  validation = 0,
   learn_rate = 0.01,
-  conv_crit = 0,
+  momentum = 0,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -46,9 +58,13 @@ lantern_linear_reg(x, ...)
 \method{lantern_linear_reg}{recipe}(
   x,
   data,
-  epochs = 100L,
+  epochs = 20L,
+  penalty = 0.001,
+  validation = 0,
   learn_rate = 0.01,
-  conv_crit = 0,
+  momentum = 0,
+  batch_size = NULL,
+  conv_crit = -Inf,
   verbose = FALSE,
   ...
 )
@@ -76,7 +92,18 @@ specified as:
 
 \item{epochs}{An integer for the number of epochs of training.}
 
+\item{penalty}{The amount of weight decay (i.e., L2 regularization).}
+
+\item{validation}{The proportion of the data randomly assigned to a
+validation set.}
+
 \item{learn_rate}{A positive number (usually less than 0.1).}
+
+\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
+gradient decent.}
+
+\item{batch_size}{An integer for the number of training set points in each
+batch.}
 
 \item{conv_crit}{A non-negative number for convergence.}
 
@@ -91,25 +118,96 @@ and the predictor terms on the right-hand side.}
 }}
 }
 \value{
-A \code{lantern_linear_reg} object.
+A \code{lantern_linear_reg} object with elements:
+\itemize{
+\item \code{models}: a list object of serialized models for each epoch.
+\item \code{loss}: A vector of loss values (MSE) at each epoch.
+\item \code{dim}: A list of data dimensions.
+\item \code{y_stats}: A list of summary statistics for numeric outcomes.
+\item \code{parameters}: A list of some tuning parameter values.
+\item \code{blueprint}: The \code{hardhat} blueprint data.
+}
 }
 \description{
 \code{lantern_linear_reg()} fits a model.
 }
+\details{
+The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
+standardized to the same range or distribution). If there are factor
+predictors, use a recipe or formula to create indicator variables (or some
+other method) to make them numeric.
+
+The function internally standardizes the
+outcome data to have mean zero and a standard deviation of one. The prediction
+function creates predictions on the original scale.
+
+If \code{conv_crit} is used, it stops training when the difference in the loss
+function is below \code{conv_crit} or if it gets worse. The default trains the
+model over the specified number of epochs.
+}
 \examples{
-predictors <- mtcars[, -1]
-outcome <- mtcars[, 1]
+\donttest{
+if (torch::torch_is_installed()) {
 
-# XY interface
-mod <- lantern_linear_reg(predictors, outcome)
+ ## -----------------------------------------------------------------------------
 
-# Formula interface
-mod2 <- lantern_linear_reg(mpg ~ ., mtcars)
+ data(ames, package = "modeldata")
 
-# Recipes interface
-library(recipes)
-rec <- recipe(mpg ~ ., mtcars)
-rec <- step_log(rec, disp)
-mod3 <- lantern_linear_reg(rec, mtcars)
+ ames$Sale_Price <- log10(ames$Sale_Price)
 
+ set.seed(122)
+ in_train <- sample(1:nrow(ames), 2000)
+ ames_train <- ames[ in_train,]
+ ames_test  <- ames[-in_train,]
+
+
+ # Using matrices
+ set.seed(1)
+ lantern_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+                    y = ames_train$Sale_Price,
+                    penalty = 0.10, epochs = 20, batch_size = 32)
+
+ # Using recipe
+ library(recipes)
+
+ ames_rec <-
+  recipe(Sale_Price ~ Bldg_Type + Neighborhood + Year_Built + Gr_Liv_Area +
+         Full_Bath + Year_Sold + Lot_Area + Central_Air + Longitude + Latitude,
+         data = ames_train) \%>\%
+    # Transform some highly skewed predictors
+    step_BoxCox(Lot_Area, Gr_Liv_Area) \%>\%
+    # Lump some rarely occuring categories into "other"
+    step_other(Neighborhood, threshold = 0.05)  \%>\%
+    # Encode categorical predictors as binary.
+    step_dummy(all_nominal(), one_hot = TRUE) \%>\%
+    # Add an interaction effect:
+    step_interact(~ starts_with("Central_Air"):Year_Built) \%>\%
+    step_zv(all_predictors()) \%>\%
+    step_normalize(all_predictors())
+
+ set.seed(2)
+ fit <- lantern_linear_reg(ames_rec, data = ames_train,
+                           epochs = 20, batch_size = 32)
+ fit
+
+ autoplot(fit)
+
+ library(ggplot2)
+
+ predict(fit, ames_test) \%>\%
+   bind_cols(ames_test) \%>\%
+   ggplot(aes(x = .pred, y = Sale_Price)) +
+   geom_abline(col = "green") +
+   geom_point(alpha = .3) +
+   lims(x = c(4, 6), y = c(4, 6)) +
+   coord_fixed(ratio = 1)
+
+ library(yardstick)
+ predict(fit, ames_test) \%>\%
+   bind_cols(ames_test) \%>\%
+   rmse(Sale_Price, .pred)
+
+ }
+
+}
 }
