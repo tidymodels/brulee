@@ -26,9 +26,13 @@
 #' and the predictor terms on the right-hand side.
 #'
 #' @param epochs An integer for the number of epochs of training.
-#' @param hidden_units An integer for the number of hidden units.
+#' @param hidden_units An integer for the number of hidden units, or a vector
+#'   of integers. If a vector of integers, the model will have `length(hidden_units)`
+#'   layers each with `hidden_units[i]` hidden units.
 #' @param activation A string for the activation function. Possible values are
-#'  "relu", "elu", "tanh", and "linear".
+#'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
+#'  can be a character vector with length equals to `length(hidden_units)` specifying
+#'  the activation for each hidden layer.
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param dropout The proportion of parameters set to zero.
 #' @param learn_rate A positive number (usually less than 0.1).
