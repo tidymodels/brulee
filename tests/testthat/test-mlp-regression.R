@@ -267,11 +267,11 @@ test_that('bad args', {
  bad_blueprint$blueprint <- "adorable"
  expect_error(
    lantern:::new_lantern_mlp(
-     bad_blueprint$models,
-     bad_blueprint$loss,
-     bad_blueprint$dims,
-     bad_blueprint$parameters,
-     bad_blueprint$blueprint
+     models = bad_blueprint$models,
+     loss = bad_blueprint$loss,
+     dims = bad_blueprint$dims,
+     parameters = bad_blueprint$parameters,
+     blueprint = bad_blueprint$blueprint
    ),
    "should be a hardhat blueprint"
  )
