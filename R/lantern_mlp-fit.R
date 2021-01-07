@@ -588,31 +588,38 @@ mlp_module <-
   torch::nn_module(
     "mlp_module",
     initialize = function(num_pred, hidden_units, act_type, dropout, y_dim) {
-      self$x_to_h <- torch::nn_linear(num_pred, hidden_units)
-      self$h_to_y <- torch::nn_linear(hidden_units, y_dim)
+
+      layers <- list()
+
+      # input layer
+      layers[[1]] <- torch::nn_linear(num_pred, hidden_units[1])
+      layers[[2]] <- get_activation_fn(act_type[1])
+
+      # if hidden units is a vector then we add those layers
+      if (length(hidden_units) > 1) {
+        for (i in 2:length(hidden_units)) {
+          layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[i-1], hidden_units[i])
+          layers[[length(layers) + 1]] <- get_activation_fn(act_type)
+        }
+      }
 
       if (dropout > 0) {
-        self$dropout <- torch::nn_dropout(p = dropout)
-      } else {
-        self$dropout <- identity
+        layers[[length(layers) + 1]] <- torch::nn_dropout(p = dropout)
       }
 
-      self$activation <- get_activation_fn(act_type)
+      # output layer
+      layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[length(hidden_units)], y_dim)
+
 
       if (y_dim > 1) {
-        self$transform <- torch::nn_softmax(dim = 2)
-      } else {
-        self$transform <- identity
+        layers[[length(layers) + 1]] <- torch::nn_softmax(dim = 2)
       }
+
+      self$model <- torch::nn_sequential(!!!layers)
 
     },
     forward = function(x) {
-      x %>%
-        self$x_to_h() %>%
-        self$activation() %>%
-        self$dropout() %>%
-        self$h_to_y() %>%
-        self$transform()
+      self$model(x)
     }
   )
 
