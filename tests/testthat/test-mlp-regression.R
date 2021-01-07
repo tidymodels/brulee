@@ -105,10 +105,7 @@ test_that('bad args', {
   lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
   "expected 'hidden_units' to be integer."
  )
- expect_error(
-  lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 1:2),
-  "expected 'hidden_units' to be a single integer."
- )
+
  expect_error(
   lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
   "expected 'hidden_units' to be an integer on"
@@ -121,10 +118,6 @@ test_that('bad args', {
  expect_error(
   lantern_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
   "expected 'activation' to be character"
- )
- expect_error(
-  lantern_mlp(ames_x_mat, ames_y, epochs = 2, activation = letters),
-  "expected 'activation' to be a single character string"
  )
 
  expect_error(
@@ -312,5 +305,32 @@ test_that("raise warning of bad loss", {
                        dropout = 0),
     regex = "NaN"
   )
+
+})
+
+test_that("variable hidden_units length", {
+
+  x <- data.frame(x = rnorm(1000))
+  y <- 2 * x$x
+
+  expect_error(
+    model <- lantern_mlp(x, y, hidden_units = c(2, 3), epochs = 1),
+    regexp = NA
+  )
+
+  expect_equal(get_num_mlp_coef(model), (1*2 + 2) + (2*3 + 3) + (3*1 + 1))
+
+  expect_error(
+    model <- lantern_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1,
+                         activation = c("relu", "tanh")),
+    regexp = "must be a single value or a vector with"
+  )
+
+  expect_error(
+    model <- lantern_mlp(x, y, hidden_units = c(1), epochs = 1,
+                         activation = c("relu", "tanh")),
+    regexp = "must be a single value or a vector with"
+  )
+
 
 })
