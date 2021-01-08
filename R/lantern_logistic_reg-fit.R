@@ -36,6 +36,7 @@
 #'  batch.
 #' @param conv_crit A non-negative number for convergence.
 #' @param verbose A logical that prints out the iteration history.
+#' @inheritParams lantern_linear_reg
 #'
 #' @param ... Not currently used, but required for extensibility.
 #'
@@ -153,6 +154,7 @@ lantern_logistic_reg.data.frame <-
           epochs = 100L,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           batch_size = NULL,
@@ -164,6 +166,7 @@ lantern_logistic_reg.data.frame <-
   lantern_logistic_reg_bridge(
    processed,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    penalty = penalty,
    validation = validation,
@@ -184,6 +187,7 @@ lantern_logistic_reg.matrix <- function(x,
                                epochs = 100L,
                                penalty = 0,
                                validation = 0.1,
+                               optimizer = "LBFGS",
                                learn_rate = 0.01,
                                momentum = 0.0,
                                batch_size = NULL,
@@ -195,6 +199,7 @@ lantern_logistic_reg.matrix <- function(x,
  lantern_logistic_reg_bridge(
   processed,
   epochs = epochs,
+  optimizer = optimizer,
   learn_rate = learn_rate,
   momentum = momentum,
   penalty = penalty,
@@ -216,6 +221,7 @@ lantern_logistic_reg.formula <-
           epochs = 100L,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           batch_size = NULL,
@@ -227,6 +233,7 @@ lantern_logistic_reg.formula <-
   lantern_logistic_reg_bridge(
    processed,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    momentum = momentum,
    penalty = penalty,
@@ -248,6 +255,7 @@ lantern_logistic_reg.recipe <-
           epochs = 100L,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           batch_size = NULL,
@@ -259,6 +267,7 @@ lantern_logistic_reg.recipe <-
   lantern_logistic_reg_bridge(
    processed,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    momentum = momentum,
    penalty = penalty,
@@ -273,7 +282,7 @@ lantern_logistic_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_logistic_reg_bridge <- function(processed, epochs,
+lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
                                learn_rate, momentum, penalty,
                                validation, batch_size, conv_crit, verbose, ...) {
  if(!torch::torch_is_installed()) {
@@ -325,6 +334,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs,
    x = predictors,
    y = outcome,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    momentum = momentum,
    penalty = penalty,
@@ -378,6 +388,7 @@ lantern_logistic_reg_reg_fit_imp <-
           batch_size = 32,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           conv_crit = -Inf,
@@ -441,9 +452,15 @@ lantern_logistic_reg_reg_fit_imp <-
   model <- logistic_module(ncol(x), y_dim)
 
   # Write a optim wrapper
-  optimizer <-
-   torch::optim_sgd(model$parameters, lr = learn_rate,
-                    weight_decay = penalty, momentum = momentum)
+  if (optimizer == "LBFGS") {
+    optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate)
+  } else if (optimizer == "SGD") {
+    optimizer <-
+      torch::optim_sgd(model$parameters, lr = learn_rate,
+                       weight_decay = penalty, momentum = momentum)
+  } else {
+    rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+  }
 
   ## ---------------------------------------------------------------------------
 
@@ -462,13 +479,14 @@ lantern_logistic_reg_reg_fit_imp <-
 
    # training loop
    for (batch in torch::enumerate(dl)) {
-
-    pred <- model(batch$x)
-    loss <- loss_fn(pred, batch$y)
-
-    optimizer$zero_grad()
-    loss$backward()
-    optimizer$step()
+     cl <- function() {
+       optimizer$zero_grad()
+       pred <- model(batch$x)
+       loss <- loss_fn(pred, batch$y)
+       loss$backward()
+       loss
+     }
+     optimizer$step(cl)
    }
 
    # calculate loss on the full datasets
