@@ -19,6 +19,7 @@ lantern_linear_reg(x, ...)
   epochs = 20L,
   penalty = 0.001,
   validation = 0,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -33,6 +34,7 @@ lantern_linear_reg(x, ...)
   epochs = 20L,
   penalty = 0.001,
   validation = 0,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -47,6 +49,7 @@ lantern_linear_reg(x, ...)
   epochs = 20L,
   penalty = 0.001,
   validation = 0,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -61,6 +64,7 @@ lantern_linear_reg(x, ...)
   epochs = 20L,
   penalty = 0.001,
   validation = 0,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -96,6 +100,9 @@ specified as:
 
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
+
+\item{optimizer}{The method used in the optimization procedure. Possible choices
+are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number (usually less than 0.1).}
 
