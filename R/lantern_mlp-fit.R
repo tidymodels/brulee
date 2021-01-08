@@ -726,9 +726,9 @@ autoplot.lantern_mlp <- function(object, ...) {
 }
 
 model_to_raw <- function(model) {
-  con <- rawConnection(raw(), open = "wr")
-  torch::torch_save(model, con)
+  con <- rawConnection(raw(), open = "w")
   on.exit({close(con)}, add = TRUE)
+  torch::torch_save(model, con)
   r <- rawConnectionValue(con)
   r
 }
