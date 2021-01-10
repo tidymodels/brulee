@@ -3,7 +3,7 @@ test_that("logistic regression", {
  df <- tibble::tibble(
   x1 = rnorm(100),
   x2 = rnorm(100),
-  logit = x1 + x2 + rnorm(100, sd = 0.1),
+  logit = x1 + x2 + rnorm(100, sd = 0.25),
   y = as.factor(exp(logit)/(1 + exp(logit)) > 0.5)
  )
  df$logit <- NULL
