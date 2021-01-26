@@ -93,7 +93,8 @@
 #'   recipe(class ~ ., data = cells_train) %>%
 #'   # Transform some highly skewed predictors
 #'   step_YeoJohnson(all_predictors()) %>%
-#'   step_normalize(all_predictors())
+#'   step_normalize(all_predictors()) %>%
+#'   step_pca(all_predictors(), num_comp = 10)
 #'
 #'  set.seed(2)
 #'  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
@@ -568,7 +569,7 @@ get_num_logistic_reg_coef <- function(x) {
 print.lantern_logistic_reg <- function(x, ...) {
  lvl <- get_levels(x)
 
- if (lvl == 2) {
+ if (length(lvl) == 2) {
   cat("Logistic regression\n\n")
  } else {
   cat("Multinomial regression\n\n")
