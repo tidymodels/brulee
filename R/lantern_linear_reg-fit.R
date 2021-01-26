@@ -587,8 +587,12 @@ print.lantern_linear_reg <- function(x, ...) {
   invisible(x)
 }
 
-coef.lantern_linear_reg <- function(object, ...) {
-  module <- revive_model(object, epoch = length(object$models))
+#' @export
+coef.lantern_linear_reg <- function(object, epoch = NULL, ...) {
+  if (is.null(epoch)) {
+    epoch <- length(object$models)
+  }
+  module <- revive_model(object, epoch = epoch)
   parameters <- module$parameters
   lapply(parameters, as.array)
 }

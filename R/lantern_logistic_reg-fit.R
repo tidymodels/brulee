@@ -607,11 +607,17 @@ print.lantern_logistic_reg <- function(x, ...) {
  invisible(x)
 }
 
-coef.lantern_logistic_reg <- function(object, ...) {
- module <- revive_model(object, epoch = length(object$models))
- parameters <- module$parameters
- lapply(parameters, as.array)
+#' @export
+coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
+  if (is.null(epoch)) {
+    epoch <- length(object$models)
+  }
+  module <- revive_model(object, epoch = epoch)
+  parameters <- module$parameters
+  lapply(parameters, as.array)
 }
+
+
 
 ## -----------------------------------------------------------------------------
 
