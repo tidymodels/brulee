@@ -26,9 +26,13 @@
 #' and the predictor terms on the right-hand side.
 #'
 #' @param epochs An integer for the number of epochs of training.
-#' @param hidden_units An integer for the number of hidden units.
+#' @param hidden_units An integer for the number of hidden units, or a vector
+#'   of integers. If a vector of integers, the model will have `length(hidden_units)`
+#'   layers each with `hidden_units[i]` hidden units.
 #' @param activation A string for the activation function. Possible values are
-#'  "relu", "elu", "tanh", and "linear".
+#'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
+#'  can be a character vector with length equals to `length(hidden_units)` specifying
+#'  the activation for each hidden layer.
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param dropout The proportion of parameters set to zero.
 #' @param learn_rate A positive number (usually less than 0.1).
@@ -319,6 +323,13 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
     hidden_units <- as.integer(hidden_units)
   }
+  if (length(hidden_units) > 1 && length(activation) == 1) {
+    activation <- rep(activation, length(hidden_units))
+  }
+  if (length(hidden_units) != length(activation)) {
+    rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
+  }
+
   check_integer(epochs, single = TRUE, 1, fn = f_nm)
   if (!is.null(batch_size)) {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
@@ -326,14 +337,14 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
     }
     check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
-  check_integer(hidden_units, single = TRUE, 1, fn = f_nm)
+  check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
-  check_character(activation, single = TRUE, fn = f_nm)
+  check_character(activation, single = FALSE, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 
@@ -577,7 +588,8 @@ lantern_mlp_reg_fit_imp <-
 
       y_stats = y_stats,
       stats = y_stats,
-      parameters = list(activation = activation, learn_rate = learn_rate,
+      parameters = list(activation = activation, hidden_units = hidden_units,
+                        learn_rate = learn_rate,
                         penalty = penalty, dropout = dropout, validation = validation,
                         batch_size = batch_size, momentum = momentum)
     )
@@ -588,31 +600,40 @@ mlp_module <-
   torch::nn_module(
     "mlp_module",
     initialize = function(num_pred, hidden_units, act_type, dropout, y_dim) {
-      self$x_to_h <- torch::nn_linear(num_pred, hidden_units)
-      self$h_to_y <- torch::nn_linear(hidden_units, y_dim)
 
+      layers <- list()
+
+      # input layer
+      layers[[1]] <- torch::nn_linear(num_pred, hidden_units[1])
+      layers[[2]] <- get_activation_fn(act_type[1])
+
+      # if hidden units is a vector then we add those layers
+      if (length(hidden_units) > 1) {
+        for (i in 2:length(hidden_units)) {
+          layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[i-1], hidden_units[i])
+          layers[[length(layers) + 1]] <- get_activation_fn(act_type[i])
+        }
+      }
+
+      # we only add dropout between the last layer and the output layer
       if (dropout > 0) {
-        self$dropout <- torch::nn_dropout(p = dropout)
-      } else {
-        self$dropout <- identity
+        layers[[length(layers) + 1]] <- torch::nn_dropout(p = dropout)
       }
 
-      self$activation <- get_activation_fn(act_type)
+      # output layer
+      layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[length(hidden_units)], y_dim)
 
+      # conditionally add the softmax layer
       if (y_dim > 1) {
-        self$transform <- torch::nn_softmax(dim = 2)
-      } else {
-        self$transform <- identity
+        layers[[length(layers) + 1]] <- torch::nn_softmax(dim = 2)
       }
+
+      # create a sequential module that calls the layers in the same order.
+      self$model <- torch::nn_sequential(!!!layers)
 
     },
     forward = function(x) {
-      x %>%
-        self$x_to_h() %>%
-        self$activation() %>%
-        self$dropout() %>%
-        self$h_to_y() %>%
-        self$transform()
+      self$model(x)
     }
   )
 
@@ -640,7 +661,7 @@ print.lantern_mlp <- function(x, ...) {
     chr_y, "\n"
   )
   cat(
-    x$dims$h, "hidden units,",
+    paste0("c(", paste(x$dims$h, collapse = ","), ")"), "hidden units,",
     format(get_num_mlp_coef(x), big.mark = ","), "model parameters\n"
   )
   if (x$parameters$penalty > 0) {
