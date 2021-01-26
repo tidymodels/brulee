@@ -7,7 +7,7 @@
 \alias{lantern_logistic_reg.matrix}
 \alias{lantern_logistic_reg.formula}
 \alias{lantern_logistic_reg.recipe}
-\title{Fit a single layer neural network}
+\title{Fit a logistic regression model}
 \usage{
 lantern_logistic_reg(x, ...)
 
@@ -180,7 +180,8 @@ if (torch::torch_is_installed()) {
   recipe(class ~ ., data = cells_train) \%>\%
   # Transform some highly skewed predictors
   step_YeoJohnson(all_predictors()) \%>\%
-  step_normalize(all_predictors())
+  step_normalize(all_predictors()) \%>\%
+  step_pca(all_predictors(), num_comp = 10)
 
  set.seed(2)
  fit <- lantern_logistic_reg(cells_rec, data = cells_train,

@@ -1,4 +1,4 @@
-#' Fit a single layer neural network
+#' Fit a logistic regression model
 #'
 #' `lantern_logistic_reg()` fits a model.
 #'
