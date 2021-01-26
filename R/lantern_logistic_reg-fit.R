@@ -84,7 +84,7 @@
 #'  set.seed(1)
 #'  lantern_logistic_reg(x = as.matrix(cells_train[, c("fiber_width_ch_1", "width_ch_1")]),
 #'                       y = cells_train$class,
-#'                       penalty = 0.10, epochs = 20L, batch_size = 32)
+#'                       penalty = 0.10, epochs = 20L)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -98,7 +98,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
-#'                              penalty = .01, epochs = 100L, batch_size = 32)
+#'                              penalty = .01, epochs = 20L)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -125,8 +125,7 @@
 #'   step_normalize(all_predictors())
 #'
 #'  set.seed(3)
-#'  fit <- lantern_logistic_reg(rec, data = penguins_train,
-#'                              epochs = 200L, batch_size = 32)
+#'  fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 20L)
 #'  fit
 #'
 #'  predict(fit, penguins_test) %>%
@@ -152,7 +151,7 @@ lantern_logistic_reg.default <- function(x, ...) {
 lantern_logistic_reg.data.frame <-
  function(x,
           y,
-          epochs = 100L,
+          epochs = 20L,
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
@@ -185,7 +184,7 @@ lantern_logistic_reg.data.frame <-
 #' @rdname lantern_logistic_reg
 lantern_logistic_reg.matrix <- function(x,
                                y,
-                               epochs = 100L,
+                               epochs = 20L,
                                penalty = 0,
                                validation = 0.1,
                                optimizer = "LBFGS",
@@ -219,7 +218,7 @@ lantern_logistic_reg.matrix <- function(x,
 lantern_logistic_reg.formula <-
  function(formula,
           data,
-          epochs = 100L,
+          epochs = 20L,
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
@@ -253,7 +252,7 @@ lantern_logistic_reg.formula <-
 lantern_logistic_reg.recipe <-
  function(x,
           data,
-          epochs = 100L,
+          epochs = 20L,
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
@@ -385,7 +384,7 @@ new_lantern_logistic_reg <- function( models, loss, dims, y_stats, parameters, b
 
 lantern_logistic_reg_reg_fit_imp <-
  function(x, y,
-          epochs = 100L,
+          epochs = 20L,
           batch_size = 32,
           penalty = 0,
           validation = 0.1,
