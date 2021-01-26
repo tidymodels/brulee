@@ -104,10 +104,14 @@ specified as:
 
 \item{epochs}{An integer for the number of epochs of training.}
 
-\item{hidden_units}{An integer for the number of hidden units.}
+\item{hidden_units}{An integer for the number of hidden units, or a vector
+of integers. If a vector of integers, the model will have \code{length(hidden_units)}
+layers each with \code{hidden_units[i]} hidden units.}
 
 \item{activation}{A string for the activation function. Possible values are
-"relu", "elu", "tanh", and "linear".}
+"relu", "elu", "tanh", and "linear". If \code{hidden_units} is a vector, \code{activation}
+can be a character vector with length equals to \code{length(hidden_units)} specifying
+the activation for each hidden layer.}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
 
