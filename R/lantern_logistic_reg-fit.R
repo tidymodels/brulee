@@ -453,7 +453,8 @@ lantern_logistic_reg_reg_fit_imp <-
 
   # Write a optim wrapper
   if (optimizer == "LBFGS") {
-    optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate)
+    optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                    history_size = 5)
   } else if (optimizer == "SGD") {
     optimizer <-
       torch::optim_sgd(model$parameters, lr = learn_rate,
