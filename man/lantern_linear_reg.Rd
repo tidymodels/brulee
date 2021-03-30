@@ -20,7 +20,7 @@ lantern_linear_reg(x, ...)
   penalty = 0.001,
   validation = 0,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -35,7 +35,7 @@ lantern_linear_reg(x, ...)
   penalty = 0.001,
   validation = 0,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -50,7 +50,7 @@ lantern_linear_reg(x, ...)
   penalty = 0.001,
   validation = 0,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -65,7 +65,7 @@ lantern_linear_reg(x, ...)
   penalty = 0.001,
   validation = 0,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -104,10 +104,10 @@ validation set.}
 \item{optimizer}{The method used in the optimization procedure. Possible choices
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
-\item{learn_rate}{A positive number (usually less than 0.1).}
+\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller valuesare normally chosen for other optimizers.}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient decent.}
+gradient descent.}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -172,7 +172,7 @@ if (torch::torch_is_installed()) {
  set.seed(1)
  lantern_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
                     y = ames_train$Sale_Price,
-                    penalty = 0.10, epochs = 20, batch_size = 32)
+                    penalty = 0.10, epochs = 1, batch_size = 64)
 
  # Using recipe
  library(recipes)
@@ -194,7 +194,7 @@ if (torch::torch_is_installed()) {
 
  set.seed(2)
  fit <- lantern_linear_reg(ames_rec, data = ames_train,
-                           epochs = 20, batch_size = 32)
+                           epochs = 5, batch_size = 32)
  fit
 
  autoplot(fit)
