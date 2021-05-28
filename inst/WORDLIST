@@ -7,3 +7,5 @@ tibble
 tanh
 CMD
 Lifecycle
+LBFGS
+SGD

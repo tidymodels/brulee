@@ -7,7 +7,7 @@
 \alias{lantern_logistic_reg.matrix}
 \alias{lantern_logistic_reg.formula}
 \alias{lantern_logistic_reg.recipe}
-\title{Fit a single layer neural network}
+\title{Fit a logistic regression model}
 \usage{
 lantern_logistic_reg(x, ...)
 
@@ -16,9 +16,10 @@ lantern_logistic_reg(x, ...)
 \method{lantern_logistic_reg}{data.frame}(
   x,
   y,
-  epochs = 100L,
+  epochs = 20L,
   penalty = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -30,9 +31,10 @@ lantern_logistic_reg(x, ...)
 \method{lantern_logistic_reg}{matrix}(
   x,
   y,
-  epochs = 100L,
+  epochs = 20L,
   penalty = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -44,9 +46,10 @@ lantern_logistic_reg(x, ...)
 \method{lantern_logistic_reg}{formula}(
   formula,
   data,
-  epochs = 100L,
+  epochs = 20L,
   penalty = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -58,9 +61,10 @@ lantern_logistic_reg(x, ...)
 \method{lantern_logistic_reg}{recipe}(
   x,
   data,
-  epochs = 100L,
+  epochs = 20L,
   penalty = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -96,6 +100,9 @@ specified as:
 
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
+
+\item{optimizer}{The method used in the optimization procedure. Possible choices
+are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number (usually less than 0.1).}
 
@@ -164,7 +171,7 @@ if (torch::torch_is_installed()) {
  set.seed(1)
  lantern_logistic_reg(x = as.matrix(cells_train[, c("fiber_width_ch_1", "width_ch_1")]),
                       y = cells_train$class,
-                      penalty = 0.10, epochs = 20L, batch_size = 32)
+                      penalty = 0.10, epochs = 20L)
 
  # Using recipe
  library(recipes)
@@ -173,11 +180,12 @@ if (torch::torch_is_installed()) {
   recipe(class ~ ., data = cells_train) \%>\%
   # Transform some highly skewed predictors
   step_YeoJohnson(all_predictors()) \%>\%
-  step_normalize(all_predictors())
+  step_normalize(all_predictors()) \%>\%
+  step_pca(all_predictors(), num_comp = 10)
 
  set.seed(2)
  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
-                             penalty = .01, epochs = 100L, batch_size = 32)
+                             penalty = .01, epochs = 20L)
  fit
 
  autoplot(fit)
@@ -204,8 +212,7 @@ if (torch::torch_is_installed()) {
   step_normalize(all_predictors())
 
  set.seed(3)
- fit <- lantern_logistic_reg(rec, data = penguins_train,
-                             epochs = 200L, batch_size = 32)
+ fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 20L)
  fit
 
  predict(fit, penguins_test) \%>\%

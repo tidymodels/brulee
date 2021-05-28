@@ -27,6 +27,8 @@
 #'
 #' @param epochs An integer for the number of epochs of training.
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
+#' @param optimizer The method used in the optimization procedure. Possible choices
+#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number (usually less than 0.1).
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
 #'  gradient decent.
@@ -151,6 +153,7 @@ lantern_linear_reg.data.frame <-
            epochs = 20L,
            penalty = 0.001,
            validation = 0,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
@@ -162,6 +165,7 @@ lantern_linear_reg.data.frame <-
     lantern_linear_reg_bridge(
       processed,
       epochs = epochs,
+      optimizer = optimizer,
       learn_rate = learn_rate,
       penalty = penalty,
       validation = validation,
@@ -182,6 +186,7 @@ lantern_linear_reg.matrix <- function(x,
                                epochs = 20L,
                                penalty = 0.001,
                                validation = 0,
+                               optimizer = "LBFGS",
                                learn_rate = 0.01,
                                momentum = 0.0,
                                batch_size = NULL,
@@ -193,6 +198,7 @@ lantern_linear_reg.matrix <- function(x,
   lantern_linear_reg_bridge(
     processed,
     epochs = epochs,
+    optimizer = optimizer,
     learn_rate = learn_rate,
     momentum = momentum,
     penalty = penalty,
@@ -214,6 +220,7 @@ lantern_linear_reg.formula <-
            epochs = 20L,
            penalty = 0.001,
            validation = 0,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
@@ -225,6 +232,7 @@ lantern_linear_reg.formula <-
     lantern_linear_reg_bridge(
       processed,
       epochs = epochs,
+      optimizer = optimizer,
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
@@ -246,6 +254,7 @@ lantern_linear_reg.recipe <-
            epochs = 20L,
            penalty = 0.001,
            validation = 0,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
@@ -257,6 +266,7 @@ lantern_linear_reg.recipe <-
     lantern_linear_reg_bridge(
       processed,
       epochs = epochs,
+      optimizer = optimizer,
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
@@ -271,7 +281,7 @@ lantern_linear_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_linear_reg_bridge <- function(processed, epochs,
+lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
                                learn_rate, momentum, penalty, dropout,
                                validation, batch_size, conv_crit, verbose, ...) {
   if(!torch::torch_is_installed()) {
@@ -324,6 +334,7 @@ lantern_linear_reg_bridge <- function(processed, epochs,
       x = predictors,
       y = outcome,
       epochs = epochs,
+      optimizer = optimizer,
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
@@ -377,6 +388,7 @@ lantern_linear_reg_reg_fit_imp <-
            batch_size = 32,
            penalty = 0.001,
            validation = 0,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            conv_crit = -Inf,
@@ -438,9 +450,16 @@ lantern_linear_reg_reg_fit_imp <-
     model <- linear_reg_module(ncol(x))
 
     # Write a optim wrapper
-    optimizer <-
-      torch::optim_sgd(model$parameters, lr = learn_rate,
-                       weight_decay = penalty, momentum = momentum)
+    if (optimizer == "LBFGS") {
+      optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                      history_size = 5)
+    } else if (optimizer == "SGD") {
+      optimizer <-
+        torch::optim_sgd(model$parameters, lr = learn_rate,
+                         weight_decay = penalty, momentum = momentum)
+    } else {
+      rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+    }
 
     ## ---------------------------------------------------------------------------
 
@@ -459,13 +478,14 @@ lantern_linear_reg_reg_fit_imp <-
 
       # training loop
       for (batch in torch::enumerate(dl)) {
-
-        pred <- model(batch$x)
-        loss <- loss_fn(pred, batch$y)
-
-        optimizer$zero_grad()
-        loss$backward()
-        optimizer$step()
+        cl <- function() {
+          optimizer$zero_grad()
+          pred <- model(batch$x)
+          loss <- loss_fn(pred, batch$y)
+          loss$backward()
+          loss
+        }
+        optimizer$step(cl)
       }
 
       # calculate loss on the full datasets
@@ -501,8 +521,6 @@ lantern_linear_reg_reg_fit_imp <-
       if (loss_diff <= conv_crit) {
         break()
       }
-
-      model_per_epoch[[epoch]] <- model_to_raw(model)
 
     }
 
@@ -570,8 +588,12 @@ print.lantern_linear_reg <- function(x, ...) {
   invisible(x)
 }
 
-coef.lantern_linear_reg <- function(object, ...) {
-  module <- revive_model(object, epoch = length(object$models))
+#' @export
+coef.lantern_linear_reg <- function(object, epoch = NULL, ...) {
+  if (is.null(epoch)) {
+    epoch <- length(object$models)
+  }
+  module <- revive_model(object, epoch = epoch)
   parameters <- module$parameters
   lapply(parameters, as.array)
 }

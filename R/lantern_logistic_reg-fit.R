@@ -1,4 +1,4 @@
-#' Fit a single layer neural network
+#' Fit a logistic regression model
 #'
 #' `lantern_logistic_reg()` fits a model.
 #'
@@ -36,6 +36,7 @@
 #'  batch.
 #' @param conv_crit A non-negative number for convergence.
 #' @param verbose A logical that prints out the iteration history.
+#' @inheritParams lantern_linear_reg
 #'
 #' @param ... Not currently used, but required for extensibility.
 #'
@@ -83,7 +84,7 @@
 #'  set.seed(1)
 #'  lantern_logistic_reg(x = as.matrix(cells_train[, c("fiber_width_ch_1", "width_ch_1")]),
 #'                       y = cells_train$class,
-#'                       penalty = 0.10, epochs = 20L, batch_size = 32)
+#'                       penalty = 0.10, epochs = 20L)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -92,11 +93,12 @@
 #'   recipe(class ~ ., data = cells_train) %>%
 #'   # Transform some highly skewed predictors
 #'   step_YeoJohnson(all_predictors()) %>%
-#'   step_normalize(all_predictors())
+#'   step_normalize(all_predictors()) %>%
+#'   step_pca(all_predictors(), num_comp = 10)
 #'
 #'  set.seed(2)
 #'  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
-#'                              penalty = .01, epochs = 100L, batch_size = 32)
+#'                              penalty = .01, epochs = 20L)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -123,8 +125,7 @@
 #'   step_normalize(all_predictors())
 #'
 #'  set.seed(3)
-#'  fit <- lantern_logistic_reg(rec, data = penguins_train,
-#'                              epochs = 200L, batch_size = 32)
+#'  fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 20L)
 #'  fit
 #'
 #'  predict(fit, penguins_test) %>%
@@ -150,9 +151,10 @@ lantern_logistic_reg.default <- function(x, ...) {
 lantern_logistic_reg.data.frame <-
  function(x,
           y,
-          epochs = 100L,
+          epochs = 20L,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           batch_size = NULL,
@@ -164,6 +166,7 @@ lantern_logistic_reg.data.frame <-
   lantern_logistic_reg_bridge(
    processed,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    penalty = penalty,
    validation = validation,
@@ -181,9 +184,10 @@ lantern_logistic_reg.data.frame <-
 #' @rdname lantern_logistic_reg
 lantern_logistic_reg.matrix <- function(x,
                                y,
-                               epochs = 100L,
+                               epochs = 20L,
                                penalty = 0,
                                validation = 0.1,
+                               optimizer = "LBFGS",
                                learn_rate = 0.01,
                                momentum = 0.0,
                                batch_size = NULL,
@@ -195,6 +199,7 @@ lantern_logistic_reg.matrix <- function(x,
  lantern_logistic_reg_bridge(
   processed,
   epochs = epochs,
+  optimizer = optimizer,
   learn_rate = learn_rate,
   momentum = momentum,
   penalty = penalty,
@@ -213,9 +218,10 @@ lantern_logistic_reg.matrix <- function(x,
 lantern_logistic_reg.formula <-
  function(formula,
           data,
-          epochs = 100L,
+          epochs = 20L,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           batch_size = NULL,
@@ -227,6 +233,7 @@ lantern_logistic_reg.formula <-
   lantern_logistic_reg_bridge(
    processed,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    momentum = momentum,
    penalty = penalty,
@@ -245,9 +252,10 @@ lantern_logistic_reg.formula <-
 lantern_logistic_reg.recipe <-
  function(x,
           data,
-          epochs = 100L,
+          epochs = 20L,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           batch_size = NULL,
@@ -259,6 +267,7 @@ lantern_logistic_reg.recipe <-
   lantern_logistic_reg_bridge(
    processed,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    momentum = momentum,
    penalty = penalty,
@@ -273,7 +282,7 @@ lantern_logistic_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_logistic_reg_bridge <- function(processed, epochs,
+lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
                                learn_rate, momentum, penalty,
                                validation, batch_size, conv_crit, verbose, ...) {
  if(!torch::torch_is_installed()) {
@@ -325,6 +334,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs,
    x = predictors,
    y = outcome,
    epochs = epochs,
+   optimizer = optimizer,
    learn_rate = learn_rate,
    momentum = momentum,
    penalty = penalty,
@@ -374,10 +384,11 @@ new_lantern_logistic_reg <- function( models, loss, dims, y_stats, parameters, b
 
 lantern_logistic_reg_reg_fit_imp <-
  function(x, y,
-          epochs = 100L,
+          epochs = 20L,
           batch_size = 32,
           penalty = 0,
           validation = 0.1,
+          optimizer = "LBFGS",
           learn_rate = 0.01,
           momentum = 0.0,
           conv_crit = -Inf,
@@ -441,9 +452,16 @@ lantern_logistic_reg_reg_fit_imp <-
   model <- logistic_module(ncol(x), y_dim)
 
   # Write a optim wrapper
-  optimizer <-
-   torch::optim_sgd(model$parameters, lr = learn_rate,
-                    weight_decay = penalty, momentum = momentum)
+  if (optimizer == "LBFGS") {
+    optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                    history_size = 5)
+  } else if (optimizer == "SGD") {
+    optimizer <-
+      torch::optim_sgd(model$parameters, lr = learn_rate,
+                       weight_decay = penalty, momentum = momentum)
+  } else {
+    rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+  }
 
   ## ---------------------------------------------------------------------------
 
@@ -462,13 +480,14 @@ lantern_logistic_reg_reg_fit_imp <-
 
    # training loop
    for (batch in torch::enumerate(dl)) {
-
-    pred <- model(batch$x)
-    loss <- loss_fn(pred, batch$y)
-
-    optimizer$zero_grad()
-    loss$backward()
-    optimizer$step()
+     cl <- function() {
+       optimizer$zero_grad()
+       pred <- model(batch$x)
+       loss <- loss_fn(pred, batch$y)
+       loss$backward()
+       loss
+     }
+     optimizer$step(cl)
    }
 
    # calculate loss on the full datasets
@@ -550,7 +569,7 @@ get_num_logistic_reg_coef <- function(x) {
 print.lantern_logistic_reg <- function(x, ...) {
  lvl <- get_levels(x)
 
- if (lvl == 2) {
+ if (length(lvl) == 2) {
   cat("Logistic regression\n\n")
  } else {
   cat("Multinomial regression\n\n")
@@ -589,11 +608,17 @@ print.lantern_logistic_reg <- function(x, ...) {
  invisible(x)
 }
 
-coef.lantern_logistic_reg <- function(object, ...) {
- module <- revive_model(object, epoch = length(object$models))
- parameters <- module$parameters
- lapply(parameters, as.array)
+#' @export
+coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
+  if (is.null(epoch)) {
+    epoch <- length(object$models)
+  }
+  module <- revive_model(object, epoch = epoch)
+  parameters <- module$parameters
+  lapply(parameters, as.array)
 }
+
+
 
 ## -----------------------------------------------------------------------------
 
