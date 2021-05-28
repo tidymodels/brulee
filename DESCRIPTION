@@ -34,4 +34,4 @@ Suggests:
     covr,
     yardstick
 Language: en-US
-
+Biarch: true
