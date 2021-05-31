@@ -104,7 +104,8 @@ validation set.}
 \item{optimizer}{The method used in the optimization procedure. Possible choices
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
-\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller valuesare normally chosen for other optimizers.}
+\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
+are normally chosen for other optimizers.}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
 gradient descent.}

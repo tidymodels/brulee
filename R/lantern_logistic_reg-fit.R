@@ -154,7 +154,7 @@ lantern_logistic_reg.data.frame <-
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
-          learn_rate = 1,
+          learn_rate = 1.0,
           momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,

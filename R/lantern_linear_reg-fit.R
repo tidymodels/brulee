@@ -30,7 +30,7 @@
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
-#' # are normally chosen for other optimizers.
+#' are normally chosen for other optimizers.
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
 #'  gradient descent.
 #' @param validation The proportion of the data randomly assigned to a
@@ -155,7 +155,7 @@ lantern_linear_reg.data.frame <-
            penalty = 0.001,
            validation = 0,
            optimizer = "LBFGS",
-           learn_rate = 1,
+           learn_rate = 1.0,
            momentum = 0.0,
            batch_size = NULL,
            conv_crit = -Inf,
