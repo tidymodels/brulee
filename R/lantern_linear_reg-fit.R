@@ -29,9 +29,10 @@
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
-#' @param learn_rate A positive number (usually less than 0.1).
+#' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
+#' are normally chosen for other optimizers.
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient decent.
+#'  gradient descent.
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
@@ -87,7 +88,7 @@
 #'  set.seed(1)
 #'  lantern_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
 #'                     y = ames_train$Sale_Price,
-#'                     penalty = 0.10, epochs = 20, batch_size = 32)
+#'                     penalty = 0.10, epochs = 1, batch_size = 64)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -109,7 +110,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- lantern_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 20, batch_size = 32)
+#'                            epochs = 5, batch_size = 32)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -154,7 +155,7 @@ lantern_linear_reg.data.frame <-
            penalty = 0.001,
            validation = 0,
            optimizer = "LBFGS",
-           learn_rate = 0.01,
+           learn_rate = 1.0,
            momentum = 0.0,
            batch_size = NULL,
            conv_crit = -Inf,
@@ -187,7 +188,7 @@ lantern_linear_reg.matrix <- function(x,
                                penalty = 0.001,
                                validation = 0,
                                optimizer = "LBFGS",
-                               learn_rate = 0.01,
+                               learn_rate = 1,
                                momentum = 0.0,
                                batch_size = NULL,
                                conv_crit = -Inf,
@@ -221,7 +222,7 @@ lantern_linear_reg.formula <-
            penalty = 0.001,
            validation = 0,
            optimizer = "LBFGS",
-           learn_rate = 0.01,
+           learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
            conv_crit = -Inf,
@@ -255,7 +256,7 @@ lantern_linear_reg.recipe <-
            penalty = 0.001,
            validation = 0,
            optimizer = "LBFGS",
-           learn_rate = 0.01,
+           learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
            conv_crit = -Inf,
@@ -389,7 +390,7 @@ lantern_linear_reg_reg_fit_imp <-
            penalty = 0.001,
            validation = 0,
            optimizer = "LBFGS",
-           learn_rate = 0.01,
+           learn_rate = 1,
            momentum = 0.0,
            conv_crit = -Inf,
            verbose = FALSE,

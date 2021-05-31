@@ -9,7 +9,7 @@ test_that("logistic regression", {
  df$logit <- NULL
 
  expect_error(
-  fit <- lantern_logistic_reg(y ~ ., df, epochs = 10, learn_rate = 0.1, verbose = TRUE),
+  fit <- lantern_logistic_reg(y ~ ., df, epochs = 2, verbose = TRUE),
   regexp = NA
  )
 

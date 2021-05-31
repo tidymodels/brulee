@@ -20,7 +20,7 @@ lantern_logistic_reg(x, ...)
   penalty = 0,
   validation = 0.1,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -35,7 +35,7 @@ lantern_logistic_reg(x, ...)
   penalty = 0,
   validation = 0.1,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -50,7 +50,7 @@ lantern_logistic_reg(x, ...)
   penalty = 0,
   validation = 0.1,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -65,7 +65,7 @@ lantern_logistic_reg(x, ...)
   penalty = 0,
   validation = 0.1,
   optimizer = "LBFGS",
-  learn_rate = 0.01,
+  learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   conv_crit = -Inf,
@@ -104,7 +104,8 @@ validation set.}
 \item{optimizer}{The method used in the optimization procedure. Possible choices
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
-\item{learn_rate}{A positive number (usually less than 0.1).}
+\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
+are normally chosen for other optimizers.}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
 gradient decent.}
@@ -171,7 +172,7 @@ if (torch::torch_is_installed()) {
  set.seed(1)
  lantern_logistic_reg(x = as.matrix(cells_train[, c("fiber_width_ch_1", "width_ch_1")]),
                       y = cells_train$class,
-                      penalty = 0.10, epochs = 20L)
+                      penalty = 0.10, epochs = 3)
 
  # Using recipe
  library(recipes)
@@ -185,7 +186,7 @@ if (torch::torch_is_installed()) {
 
  set.seed(2)
  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
-                             penalty = .01, epochs = 20L)
+                             penalty = .01, epochs = 5)
  fit
 
  autoplot(fit)
@@ -212,7 +213,7 @@ if (torch::torch_is_installed()) {
   step_normalize(all_predictors())
 
  set.seed(3)
- fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 20L)
+ fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 5)
  fit
 
  predict(fit, penguins_test) \%>\%

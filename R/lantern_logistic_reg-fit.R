@@ -27,7 +27,6 @@
 #'
 #' @param epochs An integer for the number of epochs of training.
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
-#' @param learn_rate A positive number (usually less than 0.1).
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
 #'  gradient decent.
 #' @param validation The proportion of the data randomly assigned to a
@@ -84,7 +83,7 @@
 #'  set.seed(1)
 #'  lantern_logistic_reg(x = as.matrix(cells_train[, c("fiber_width_ch_1", "width_ch_1")]),
 #'                       y = cells_train$class,
-#'                       penalty = 0.10, epochs = 20L)
+#'                       penalty = 0.10, epochs = 3)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -98,7 +97,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
-#'                              penalty = .01, epochs = 20L)
+#'                              penalty = .01, epochs = 5)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -125,7 +124,7 @@
 #'   step_normalize(all_predictors())
 #'
 #'  set.seed(3)
-#'  fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 20L)
+#'  fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 5)
 #'  fit
 #'
 #'  predict(fit, penguins_test) %>%
@@ -155,7 +154,7 @@ lantern_logistic_reg.data.frame <-
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
-          learn_rate = 0.01,
+          learn_rate = 1.0,
           momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,
@@ -188,7 +187,7 @@ lantern_logistic_reg.matrix <- function(x,
                                penalty = 0,
                                validation = 0.1,
                                optimizer = "LBFGS",
-                               learn_rate = 0.01,
+                               learn_rate = 1,
                                momentum = 0.0,
                                batch_size = NULL,
                                conv_crit = -Inf,
@@ -222,7 +221,7 @@ lantern_logistic_reg.formula <-
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
-          learn_rate = 0.01,
+          learn_rate = 1,
           momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,
@@ -256,7 +255,7 @@ lantern_logistic_reg.recipe <-
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
-          learn_rate = 0.01,
+          learn_rate = 1,
           momentum = 0.0,
           batch_size = NULL,
           conv_crit = -Inf,
@@ -389,7 +388,7 @@ lantern_logistic_reg_reg_fit_imp <-
           penalty = 0,
           validation = 0.1,
           optimizer = "LBFGS",
-          learn_rate = 0.01,
+          learn_rate = 1,
           momentum = 0.0,
           conv_crit = -Inf,
           verbose = FALSE,

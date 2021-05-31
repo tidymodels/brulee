@@ -7,7 +7,7 @@ test_that("linear regression test", {
   )
 
   expect_error(
-    fit <- lantern_linear_reg(y ~ ., df, epochs = 10, learn_rate = 0.1),
+    fit <- lantern_linear_reg(y ~ ., df, epochs = 2),
     regexp = NA
   )
 
