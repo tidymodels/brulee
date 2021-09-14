@@ -18,7 +18,7 @@ lantern_linear_reg(x, ...)
   y,
   epochs = 20L,
   penalty = 0.001,
-  validation = 0,
+  validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
@@ -33,7 +33,7 @@ lantern_linear_reg(x, ...)
   y,
   epochs = 20L,
   penalty = 0.001,
-  validation = 0,
+  validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
@@ -48,7 +48,7 @@ lantern_linear_reg(x, ...)
   data,
   epochs = 20L,
   penalty = 0.001,
-  validation = 0,
+  validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
@@ -63,7 +63,7 @@ lantern_linear_reg(x, ...)
   data,
   epochs = 20L,
   penalty = 0.001,
-  validation = 0,
+  validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
@@ -105,10 +105,10 @@ validation set.}
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers.}
+are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient descent.}
+gradient descent. (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}

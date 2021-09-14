@@ -17,7 +17,7 @@ lantern_logistic_reg(x, ...)
   x,
   y,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -32,7 +32,7 @@ lantern_logistic_reg(x, ...)
   x,
   y,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -47,7 +47,7 @@ lantern_logistic_reg(x, ...)
   formula,
   data,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -62,7 +62,7 @@ lantern_logistic_reg(x, ...)
   x,
   data,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -105,10 +105,10 @@ validation set.}
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers.}
+are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient decent.}
+gradient descent. (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -132,7 +132,6 @@ A \code{lantern_logistic_reg} object with elements:
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.
-\item \code{y_stats}: A list of summary statistics for numeric outcomes.
 \item \code{parameters}: A list of some tuning parameter values.
 \item \code{blueprint}: The \code{hardhat} blueprint data.
 }

@@ -164,7 +164,7 @@ lantern_mlp.data.frame <-
            epochs = 100L,
            hidden_units = 3L,
            activation = "relu",
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -201,7 +201,7 @@ lantern_mlp.matrix <- function(x,
                                epochs = 100L,
                                hidden_units = 3L,
                                activation = "relu",
-                               penalty = 0,
+                               penalty = 0.001,
                                dropout = 0,
                                validation = 0.1,
                                learn_rate = 0.01,
@@ -239,7 +239,7 @@ lantern_mlp.formula <-
            epochs = 100L,
            hidden_units = 3L,
            activation = "relu",
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -277,7 +277,7 @@ lantern_mlp.recipe <-
            epochs = 100L,
            hidden_units = 3L,
            activation = "relu",
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -428,7 +428,7 @@ lantern_mlp_reg_fit_imp <-
            epochs = 100L,
            batch_size = 32,
            hidden_units = 3L,
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -531,15 +531,16 @@ lantern_mlp_reg_fit_imp <-
     for (epoch in 1:epochs) {
 
       # training loop
-      for (batch in torch::enumerate(dl)) {
+      coro::loop(
+        for (batch in dl) {
+          pred <- model(batch$x)
+          loss <- loss_fn(pred, batch$y)
 
-        pred <- model(batch$x)
-        loss <- loss_fn(pred, batch$y)
-
-        optimizer$zero_grad()
-        loss$backward()
-        optimizer$step()
-      }
+          optimizer$zero_grad()
+          loss$backward()
+          optimizer$step()
+        }
+      )
 
       # calculate loss on the full datasets
       if (validation > 0) {

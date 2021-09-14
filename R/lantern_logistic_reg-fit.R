@@ -24,20 +24,7 @@
 #'
 #' @param formula A formula specifying the outcome terms on the left-hand side,
 #' and the predictor terms on the right-hand side.
-#'
-#' @param epochs An integer for the number of epochs of training.
-#' @param penalty The amount of weight decay (i.e., L2 regularization).
-#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient decent.
-#' @param validation The proportion of the data randomly assigned to a
-#'  validation set.
-#' @param batch_size An integer for the number of training set points in each
-#'  batch.
-#' @param conv_crit A non-negative number for convergence.
-#' @param verbose A logical that prints out the iteration history.
 #' @inheritParams lantern_linear_reg
-#'
-#' @param ... Not currently used, but required for extensibility.
 #'
 #' @details
 #'
@@ -60,7 +47,6 @@
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
-#'  * `y_stats`: A list of summary statistics for numeric outcomes.
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
@@ -151,7 +137,7 @@ lantern_logistic_reg.data.frame <-
  function(x,
           y,
           epochs = 20L,
-          penalty = 0,
+          penalty = 0.001,
           validation = 0.1,
           optimizer = "LBFGS",
           learn_rate = 1.0,
@@ -184,7 +170,7 @@ lantern_logistic_reg.data.frame <-
 lantern_logistic_reg.matrix <- function(x,
                                y,
                                epochs = 20L,
-                               penalty = 0,
+                               penalty = 0.001,
                                validation = 0.1,
                                optimizer = "LBFGS",
                                learn_rate = 1,
@@ -218,7 +204,7 @@ lantern_logistic_reg.formula <-
  function(formula,
           data,
           epochs = 20L,
-          penalty = 0,
+          penalty = 0.001,
           validation = 0.1,
           optimizer = "LBFGS",
           learn_rate = 1,
@@ -252,7 +238,7 @@ lantern_logistic_reg.recipe <-
  function(x,
           data,
           epochs = 20L,
-          penalty = 0,
+          penalty = 0.001,
           validation = 0.1,
           optimizer = "LBFGS",
           learn_rate = 1,
@@ -385,7 +371,7 @@ lantern_logistic_reg_reg_fit_imp <-
  function(x, y,
           epochs = 20L,
           batch_size = 32,
-          penalty = 0,
+          penalty = 0.001,
           validation = 0.1,
           optimizer = "LBFGS",
           learn_rate = 1,
@@ -427,7 +413,6 @@ lantern_logistic_reg_reg_fit_imp <-
    y <- y[-in_val]
   }
 
-  y_stats <- list(mean = NA_real_, sd = NA_real_)
   loss_label <- "\tLoss:"
 
   if (is.null(batch_size)) {
@@ -477,17 +462,19 @@ lantern_logistic_reg_reg_fit_imp <-
   # Optimize parameters
   for (epoch in 1:epochs) {
 
-   # training loop
-   for (batch in torch::enumerate(dl)) {
-     cl <- function() {
-       optimizer$zero_grad()
-       pred <- model(batch$x)
-       loss <- loss_fn(pred, batch$y)
-       loss$backward()
-       loss
-     }
-     optimizer$step(cl)
-   }
+    # training loop
+    coro::loop(
+      for (batch in dl) {
+        cl <- function() {
+          optimizer$zero_grad()
+          pred <- model(batch$x)
+          loss <- loss_fn(pred, batch$y)
+          loss$backward()
+          loss
+        }
+        optimizer$step(cl)
+      }
+    )
 
    # calculate loss on the full datasets
    if (validation > 0) {
@@ -534,8 +521,6 @@ lantern_logistic_reg_reg_fit_imp <-
    loss = loss_vec[!is.na(loss_vec)],
    dims = list(p = p, n = n, h = 0, y = y_dim),
 
-   y_stats = y_stats,
-   stats = y_stats,
    parameters = list(learn_rate = learn_rate,
                      penalty = penalty, validation = validation,
                      batch_size = batch_size, momentum = momentum)
@@ -587,21 +572,11 @@ print.lantern_logistic_reg <- function(x, ...) {
  if (!is.null(x$loss)) {
 
   if(x$parameters$validation > 0) {
-   if (is.na(x$y_stats$mean)) {
-    cat("final validation loss after", length(x$loss), "epochs:",
-        signif(x$loss[length(x$loss)]), "\n")
-   } else {
     cat("final scaled validation loss after", length(x$loss), "epochs:",
         signif(x$loss[length(x$loss)]), "\n")
-   }
   } else {
-   if (is.na(x$y_stats$mean)) {
-    cat("final training set loss after", length(x$loss), "epochs:",
-        signif(x$loss[length(x$loss)]), "\n")
-   } else {
     cat("final scaled training set loss after", length(x$loss), "epochs:",
         signif(x$loss[length(x$loss)]), "\n")
-   }
   }
  }
  invisible(x)
@@ -632,17 +607,9 @@ autoplot.lantern_logistic_reg <- function(object, ...) {
  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
 
  if(object$parameters$validation > 0) {
-  if (is.na(object$y_stats$mean)) {
-   lab <- "loss (validation set)"
-  } else {
    lab <- "loss (validation set, scaled)"
-  }
  } else {
-  if (is.na(object$y_stats$mean)) {
    lab <- "loss (training set)"
-  } else {
-   lab <- "loss (training set, scaled)"
-  }
  }
 
  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +

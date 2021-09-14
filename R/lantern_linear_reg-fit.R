@@ -30,9 +30,9 @@
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
-#' are normally chosen for other optimizers.
+#' are normally chosen for other optimizers. (`optimizer = "SGD"` only)
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient descent.
+#'  gradient descent. (`optimizer = "SGD"` only)
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
@@ -153,7 +153,7 @@ lantern_linear_reg.data.frame <-
            y,
            epochs = 20L,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1.0,
            momentum = 0.0,
@@ -183,17 +183,17 @@ lantern_linear_reg.data.frame <-
 #' @export
 #' @rdname lantern_linear_reg
 lantern_linear_reg.matrix <- function(x,
-                               y,
-                               epochs = 20L,
-                               penalty = 0.001,
-                               validation = 0,
-                               optimizer = "LBFGS",
-                               learn_rate = 1,
-                               momentum = 0.0,
-                               batch_size = NULL,
-                               conv_crit = -Inf,
-                               verbose = FALSE,
-                               ...) {
+                                      y,
+                                      epochs = 20L,
+                                      penalty = 0.001,
+                                      validation = 0.1,
+                                      optimizer = "LBFGS",
+                                      learn_rate = 1,
+                                      momentum = 0.0,
+                                      batch_size = NULL,
+                                      conv_crit = -Inf,
+                                      verbose = FALSE,
+                                      ...) {
   processed <- hardhat::mold(x, y)
 
   lantern_linear_reg_bridge(
@@ -220,7 +220,7 @@ lantern_linear_reg.formula <-
            data,
            epochs = 20L,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
@@ -254,7 +254,7 @@ lantern_linear_reg.recipe <-
            data,
            epochs = 20L,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
@@ -283,8 +283,8 @@ lantern_linear_reg.recipe <-
 # Bridge
 
 lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
-                               learn_rate, momentum, penalty, dropout,
-                               validation, batch_size, conv_crit, verbose, ...) {
+                                      learn_rate, momentum, penalty, dropout,
+                                      validation, batch_size, conv_crit, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -388,7 +388,7 @@ lantern_linear_reg_reg_fit_imp <-
            epochs = 20L,
            batch_size = 32,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
@@ -424,7 +424,9 @@ lantern_linear_reg_reg_fit_imp <-
     }
 
     y_stats <- scale_stats(y)
+    y_stats <- list(mean = 0, sd = 1)
     y <- scale_y(y, y_stats)
+
     if (validation > 0) {
       y_val <- scale_y(y_val, y_stats)
     }
@@ -476,18 +478,19 @@ lantern_linear_reg_reg_fit_imp <-
 
     # Optimize parameters
     for (epoch in 1:epochs) {
-
       # training loop
-      for (batch in torch::enumerate(dl)) {
-        cl <- function() {
-          optimizer$zero_grad()
-          pred <- model(batch$x)
-          loss <- loss_fn(pred, batch$y)
-          loss$backward()
-          loss
+      coro::loop(
+        for (batch in dl) {
+          cl <- function() {
+            optimizer$zero_grad()
+            pred <- model(batch$x)
+            loss <- loss_fn(pred, batch$y)
+            loss$backward()
+            loss
+          }
+          optimizer$step(cl)
         }
-        optimizer$step(cl)
-      }
+      )
 
       # calculate loss on the full datasets
       if (validation > 0) {
