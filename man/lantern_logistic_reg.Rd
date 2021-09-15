@@ -23,6 +23,7 @@ lantern_logistic_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -38,6 +39,7 @@ lantern_logistic_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -53,6 +55,7 @@ lantern_logistic_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -68,6 +71,7 @@ lantern_logistic_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...

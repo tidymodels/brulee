@@ -178,6 +178,9 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 
 
 check_class_weights <- function(wts, lvls, xtab, fn) {
+  if (is.null(wts)) {
+    return(wts)
+  }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
     rlang::abort(msg)
