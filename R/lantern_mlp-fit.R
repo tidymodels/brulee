@@ -17,15 +17,11 @@
 #'   * A __data frame__ with 1 numeric column.
 #'   * A __matrix__ with 1 numeric column.
 #'   * A numeric __vector__.
-#'
+#' @inheritParams lantern_linear_reg
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
 #'
-#' @param formula A formula specifying the outcome terms on the left-hand side,
-#' and the predictor terms on the right-hand side.
-#'
-#' @param epochs An integer for the number of epochs of training.
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
@@ -33,15 +29,7 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
-#' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param dropout The proportion of parameters set to zero.
-#' @param learn_rate A positive number (usually less than 0.1).
-#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient decent.
-#' @param validation The proportion of the data randomly assigned to a
-#'  validation set.
-#' @param batch_size An integer for the number of training set points in each
-#'  batch.
 #' @param class_weights Numeric class weights (classification only). The value
 #' can be:
 #'
@@ -51,11 +39,6 @@
 #'    factor levels.
 #'  * A single numeric value for the least frequent class in the training data
 #'    and all other classes receive a weight of one.
-#'
-#' @param conv_crit A non-negative number for convergence.
-#' @param verbose A logical that prints out the iteration history.
-#'
-#' @param ... Not currently used, but required for extensibility.
 #'
 #' @details
 #'

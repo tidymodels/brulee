@@ -124,10 +124,11 @@ the activation for each hidden layer.}
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
-\item{learn_rate}{A positive number (usually less than 0.1).}
+\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
+are normally chosen for other optimizers.}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient decent.}
+gradient descent.}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}

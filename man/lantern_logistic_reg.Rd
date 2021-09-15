@@ -112,10 +112,21 @@ are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 are normally chosen for other optimizers.}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient decent.}
+gradient descent.}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
+
+\item{class_weights}{Numeric class weights (classification only). The value
+can be:
+\itemize{
+\item A named numeric vector (in any order) where the names are the outcome
+factor levels.
+\item An unnamed numeric vector assumed to be in the same order as the outcome
+factor levels.
+\item A single numeric value for the least frequent class in the training data
+and all other classes receive a weight of one.
+}}
 
 \item{conv_crit}{A non-negative number for convergence.}
 
