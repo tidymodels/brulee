@@ -25,7 +25,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -42,7 +42,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -59,7 +59,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -76,7 +76,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -120,15 +120,17 @@ the activation for each hidden layer.}
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
-\item{learn_rate}{A positive number (usually less than 0.1).}
+\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
+are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient decent.}
+gradient descent. (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
 
-\item{conv_crit}{A non-negative number for convergence.}
+\item{stop_iter}{A non-negative integer for how many iterations with no
+improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
@@ -143,7 +145,8 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{lantern_mlp} object with elements:
 \itemize{
-\item \code{models}: a list object of serialized models for each epoch.
+\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{best_epoch}: an integer for the epoch with the smallest loss.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.
@@ -169,10 +172,6 @@ other method) to make them numeric.
 When the outcome is a number, the function internally standardizes the
 outcome data to have mean zero and a standard deviation of one. The prediction
 function creates predictions on the original scale.
-
-If \code{conv_crit} is used, it stops training when the difference in the loss
-function is below \code{conv_crit} or if it gets worse. The default trains the
-model over the specified number of epochs.
 }
 \examples{
 \donttest{
@@ -193,9 +192,10 @@ if (torch::torch_is_installed()) {
 
  # Using matrices
  set.seed(1)
- lantern_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-             y = ames_train$Sale_Price,
-             penalty = 0.10, epochs = 20, batch_size = 32)
+ fit <-
+   lantern_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+               y = ames_train$Sale_Price,
+               penalty = 0.10, batch_size = 2^8)
 
  # Using recipe
  library(recipes)
@@ -217,7 +217,7 @@ if (torch::torch_is_installed()) {
 
  set.seed(2)
  fit <- lantern_mlp(ames_rec, data = ames_train, hidden_units = 20,
-                    dropout = 0.05, epochs = 20, batch_size = 32)
+                    dropout = 0.05, batch_size = 2^8)
  fit
 
  autoplot(fit)
@@ -237,6 +237,35 @@ if (torch::torch_is_installed()) {
    bind_cols(ames_test) \%>\%
    rmse(Sale_Price, .pred)
  }
+
+ # ------------------------------------------------------------------------------
+ # classification
+
+ library(dplyr)
+ library(ggplot2)
+
+ data("parabolic", package = "modeldata")
+
+ set.seed(1)
+ in_train <- sample(1:nrow(parabolic), 300)
+ parabolic_tr <- parabolic[ in_train,]
+ parabolic_te <- parabolic[-in_train,]
+
+ set.seed(2)
+ cls_fit <- lantern_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
+                        epochs = 200L, learn_rate = 0.1, activation = "elu",
+                        penalty = 0.1, batch_size = 2^8)
+ autoplot(cls_fit)
+
+ grid_points <- seq(-4, 4, length.out = 100)
+
+ grid <- expand.grid(X1 = grid_points, X2 = grid_points)
+
+ predict(cls_fit, grid, type = "prob") \%>\%
+  bind_cols(grid) \%>\%
+  ggplot(aes(X1, X2)) +
+  geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
+  geom_point(data = parabolic_te, aes(col = class))
 
 }
 }

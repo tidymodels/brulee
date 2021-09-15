@@ -26,7 +26,7 @@ predict.lantern_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
-    epoch <- length(object$models)
+    epoch <- object$best_epoch
   }
   predict_lantern_mlp_bridge(type, object, forged$predictors, epoch = epoch)
 }

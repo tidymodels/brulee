@@ -23,7 +23,7 @@ lantern_linear_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -38,7 +38,7 @@ lantern_linear_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -53,7 +53,7 @@ lantern_linear_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -68,7 +68,7 @@ lantern_linear_reg(x, ...)
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -113,7 +113,8 @@ gradient descent. (\code{optimizer = "SGD"} only)}
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
 
-\item{conv_crit}{A non-negative number for convergence.}
+\item{stop_iter}{A non-negative integer for how many iterations with no
+improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
@@ -128,7 +129,8 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{lantern_linear_reg} object with elements:
 \itemize{
-\item \code{models}: a list object of serialized models for each epoch.
+\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{best_epoch}: an integer for the epoch with the smallest loss.
 \item \code{loss}: A vector of loss values (MSE) at each epoch.
 \item \code{dim}: A list of data dimensions.
 \item \code{y_stats}: A list of summary statistics for numeric outcomes.
@@ -148,10 +150,6 @@ other method) to make them numeric.
 The function internally standardizes the
 outcome data to have mean zero and a standard deviation of one. The prediction
 function creates predictions on the original scale.
-
-If \code{conv_crit} is used, it stops training when the difference in the loss
-function is below \code{conv_crit} or if it gets worse. The default trains the
-model over the specified number of epochs.
 }
 \examples{
 \donttest{
