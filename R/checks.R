@@ -187,10 +187,11 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     rlang::abort(msg)
   }
 
-  if (length(lvls) == 2 & length(wts) == 1) {
-    wts <- rep(wts, 2)
-    majority <- names(xtab)[which.max(xtab)]
-    wts[lvls != majority] <- 1
+  if (length(wts) == 1) {
+    val <- wts
+    wts <- rep(1, length(lvls))
+    minority <- names(xtab)[which.min(xtab)]
+    wts[lvls == minority] <- val
     names(wts) <- lvls
   }
 

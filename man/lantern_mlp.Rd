@@ -25,6 +25,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -42,6 +43,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -59,6 +61,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -76,6 +79,7 @@ lantern_mlp(x, ...)
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
+  class_weights = NULL,
   conv_crit = -Inf,
   verbose = FALSE,
   ...
@@ -127,6 +131,17 @@ gradient decent.}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
+
+\item{class_weights}{Numeric class weights (classification only). The value
+can be:
+\itemize{
+\item A named numeric vector (in any order) where the names are the outcome
+factor levels.
+\item An unnamed numeric vector assumed to be in the same order as the outcome
+factor levels.
+\item A single numeric value for the least frequent class in the training data
+and all other classes receive a weight of one.
+}}
 
 \item{conv_crit}{A non-negative number for convergence.}
 

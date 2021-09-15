@@ -42,6 +42,16 @@
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
 #'  batch.
+#' @param class_weights Numeric class weights (classification only). The value
+#' can be:
+#'
+#'  * A named numeric vector (in any order) where the names are the outcome
+#'    factor levels.
+#'  * An unnamed numeric vector assumed to be in the same order as the outcome
+#'    factor levels.
+#'  * A single numeric value for the least frequent class in the training data
+#'    and all other classes receive a weight of one.
+#'
 #' @param conv_crit A non-negative number for convergence.
 #' @param verbose A logical that prints out the iteration history.
 #'
