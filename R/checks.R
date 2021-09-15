@@ -177,3 +177,40 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 }
 
 
+check_class_weights <- function(wts, lvls, xtab, fn) {
+  if (!is.numeric(wts)) {
+    msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
+    rlang::abort(msg)
+  }
+  if (length(lvls) == 0) {
+    msg <- "Class weights are only applicable to classification problems."
+    rlang::abort(msg)
+  }
+
+  if (length(lvls) == 2 & length(wts) == 1) {
+    wts <- rep(wts, 2)
+    majority <- names(xtab)[which.max(xtab)]
+    wts[lvls != majority] <- 1
+    names(wts) <- lvls
+  }
+
+  if (length(lvls) != length(wts)) {
+    msg <- paste0("There were ", length(wts), " class weights given but ",
+                  length(lvls), " were expected.")
+  }
+
+  nms <- names(wts)
+  if (is.null(nms)) {
+    names(wts) <- lvls
+  } else {
+    if (!identical(sort(nms), sort(lvls))) {
+      msg <- paste("Names for class weights should be:",
+                   paste0("'", lvls, "'", collapse = ", "))
+      rlang::abort(msg)
+    }
+    wts <- wts[lvls]
+  }
+
+
+  wts
+}

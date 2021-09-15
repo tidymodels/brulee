@@ -170,6 +170,7 @@ lantern_mlp.data.frame <-
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            conv_crit = -Inf,
            verbose = FALSE,
            ...) {
@@ -186,6 +187,7 @@ lantern_mlp.data.frame <-
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
+      class_weights = class_weights,
       conv_crit = conv_crit,
       verbose = verbose,
       ...
@@ -207,6 +209,7 @@ lantern_mlp.matrix <- function(x,
                                learn_rate = 0.01,
                                momentum = 0.0,
                                batch_size = NULL,
+                               class_weights = NULL,
                                conv_crit = -Inf,
                                verbose = FALSE,
                                ...) {
@@ -223,6 +226,7 @@ lantern_mlp.matrix <- function(x,
     dropout = dropout,
     validation = validation,
     batch_size = batch_size,
+    class_weights = class_weights,
     conv_crit = conv_crit,
     verbose = verbose,
     ...
@@ -245,6 +249,7 @@ lantern_mlp.formula <-
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            conv_crit = -Inf,
            verbose = FALSE,
            ...) {
@@ -261,6 +266,7 @@ lantern_mlp.formula <-
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       conv_crit = conv_crit,
       verbose = verbose,
       ...
@@ -283,6 +289,7 @@ lantern_mlp.recipe <-
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            conv_crit = -Inf,
            verbose = FALSE,
            ...) {
@@ -299,6 +306,7 @@ lantern_mlp.recipe <-
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       conv_crit = conv_crit,
       verbose = verbose,
       ...
@@ -310,7 +318,8 @@ lantern_mlp.recipe <-
 
 lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                                learn_rate, momentum, penalty, dropout,
-                               validation, batch_size, conv_crit, verbose, ...) {
+                               validation, batch_size, class_weights,
+                               conv_crit, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -366,6 +375,12 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
   outcome <- processed$outcomes[[1]]
 
+  # ------------------------------------------------------------------------------
+
+  lvls <- levels(outcome)
+  xtab <- table(outcome)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+
   ## -----------------------------------------------------------------------------
 
   fit <-
@@ -381,6 +396,7 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       conv_crit = conv_crit,
       verbose = verbose
     )
@@ -434,6 +450,7 @@ lantern_mlp_reg_fit_imp <-
            learn_rate = 0.01,
            momentum = 0.0,
            activation = "relu",
+           class_weights = NULL,
            conv_crit = -Inf,
            verbose = FALSE,
            ...) {
@@ -457,15 +474,16 @@ lantern_mlp_reg_fit_imp <-
       # the model will output softmax values.
       # so we need to use negative likelihood loss and
       # pass the log of softmax.
-      loss_fn <- function(input, target) {
+      loss_fn <- function(input, target, wts = NULL) {
         nnf_nll_loss(
+          weight = wts,
           input = torch::torch_log(input),
           target = target
         )
       }
     } else {
       y_dim <- 1
-      loss_fn <- function(input, target) {
+      loss_fn <- function(input, target, wts = NULL) {
         nnf_mse_loss(input, target$view(c(-1,1)))
       }
     }
@@ -534,7 +552,7 @@ lantern_mlp_reg_fit_imp <-
       for (batch in torch::enumerate(dl)) {
 
         pred <- model(batch$x)
-        loss <- loss_fn(pred, batch$y)
+        loss <- loss_fn(pred, batch$y, class_weights)
 
         optimizer$zero_grad()
         loss$backward()
@@ -544,10 +562,10 @@ lantern_mlp_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y)
+        loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
       } else {
         pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y)
+        loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
       }
 
       # calculate losses
@@ -589,7 +607,7 @@ lantern_mlp_reg_fit_imp <-
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(activation = activation, hidden_units = hidden_units,
-                        learn_rate = learn_rate,
+                        learn_rate = learn_rate, class_weights = class_weights,
                         penalty = penalty, dropout = dropout, validation = validation,
                         batch_size = batch_size, momentum = momentum)
     )
@@ -660,6 +678,18 @@ print.lantern_mlp <- function(x, ...) {
     format(x$dims$p, big.mark = ","), "features,",
     chr_y, "\n"
   )
+  if (!is.null(x$parameters$class_weights)) {
+    cat("class weights",
+        paste0(
+          names(x$parameters$class_weights),
+          "=",
+          format(x$parameters$class_weights),
+          collapse = ", "
+        ),
+        "\n")
+  }
+
+
   cat(
     paste0("c(", paste(x$dims$h, collapse = ","), ")"), "hidden units,",
     format(get_num_mlp_coef(x), big.mark = ","), "model parameters\n"
