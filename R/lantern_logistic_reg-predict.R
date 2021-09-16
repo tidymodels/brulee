@@ -25,7 +25,7 @@ predict.lantern_logistic_reg <- function(object, new_data, type = NULL, epoch = 
  forged <- hardhat::forge(new_data, object$blueprint)
  type <- check_type(object, type)
  if (is.null(epoch)) {
-  epoch <- length(object$models)
+   epoch <- object$best_epoch
  }
  predict_lantern_logistic_reg_bridge(type, object, forged$predictors, epoch = epoch)
 }

@@ -22,8 +22,7 @@
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
 #'
-#' @param formula A formula specifying the outcome terms on the left-hand side,
-#' and the predictor terms on the right-hand side.
+#' @inheritParams lantern_linear_reg
 #'
 #' @param epochs An integer for the number of epochs of training.
 #' @param hidden_units An integer for the number of hidden units, or a vector
@@ -33,17 +32,7 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
-#' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param dropout The proportion of parameters set to zero.
-#' @param learn_rate A positive number (usually less than 0.1).
-#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient decent.
-#' @param validation The proportion of the data randomly assigned to a
-#'  validation set.
-#' @param batch_size An integer for the number of training set points in each
-#'  batch.
-#' @param conv_crit A non-negative number for convergence.
-#' @param verbose A logical that prints out the iteration history.
 #'
 #' @param ... Not currently used, but required for extensibility.
 #'
@@ -63,14 +52,11 @@
 #' outcome data to have mean zero and a standard deviation of one. The prediction
 #' function creates predictions on the original scale.
 #'
-#' If `conv_crit` is used, it stops training when the difference in the loss
-#' function is below `conv_crit` or if it gets worse. The default trains the
-#' model over the specified number of epochs.
-#'
 #' @return
 #'
 #' A `lantern_mlp` object with elements:
-#'  * `models`: a list object of serialized models for each epoch.
+#'  * `models`: a list object of serialized models for each epoch before stopping.
+#'  * `best_epoch`: an integer for the epoch with the smallest loss.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
@@ -97,9 +83,10 @@
 #'
 #'  # Using matrices
 #'  set.seed(1)
-#'  lantern_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'              y = ames_train$Sale_Price,
-#'              penalty = 0.10, epochs = 20, batch_size = 32)
+#'  fit <-
+#'    lantern_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+#'                y = ames_train$Sale_Price,
+#'                penalty = 0.10, batch_size = 2^8)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -121,7 +108,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- lantern_mlp(ames_rec, data = ames_train, hidden_units = 20,
-#'                     dropout = 0.05, epochs = 20, batch_size = 32)
+#'                     dropout = 0.05, batch_size = 2^8)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -141,6 +128,35 @@
 #'    bind_cols(ames_test) %>%
 #'    rmse(Sale_Price, .pred)
 #'  }
+#'
+#'  # ------------------------------------------------------------------------------
+#'  # classification
+#'
+#'  library(dplyr)
+#'  library(ggplot2)
+#'
+#'  data("parabolic", package = "modeldata")
+#'
+#'  set.seed(1)
+#'  in_train <- sample(1:nrow(parabolic), 300)
+#'  parabolic_tr <- parabolic[ in_train,]
+#'  parabolic_te <- parabolic[-in_train,]
+#'
+#'  set.seed(2)
+#'  cls_fit <- lantern_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
+#'                         epochs = 200L, learn_rate = 0.1, activation = "elu",
+#'                         penalty = 0.1, batch_size = 2^8)
+#'  autoplot(cls_fit)
+#'
+#'  grid_points <- seq(-4, 4, length.out = 100)
+#'
+#'  grid <- expand.grid(X1 = grid_points, X2 = grid_points)
+#'
+#'  predict(cls_fit, grid, type = "prob") %>%
+#'   bind_cols(grid) %>%
+#'   ggplot(aes(X1, X2)) +
+#'   geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
+#'   geom_point(data = parabolic_te, aes(col = class))
 #'
 #' }
 #' @export
@@ -164,13 +180,13 @@ lantern_mlp.data.frame <-
            epochs = 100L,
            hidden_units = 3L,
            activation = "relu",
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -186,7 +202,7 @@ lantern_mlp.data.frame <-
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose,
       ...
     )
@@ -201,13 +217,13 @@ lantern_mlp.matrix <- function(x,
                                epochs = 100L,
                                hidden_units = 3L,
                                activation = "relu",
-                               penalty = 0,
+                               penalty = 0.001,
                                dropout = 0,
                                validation = 0.1,
                                learn_rate = 0.01,
                                momentum = 0.0,
                                batch_size = NULL,
-                               conv_crit = -Inf,
+                               stop_iter = 5,
                                verbose = FALSE,
                                ...) {
   processed <- hardhat::mold(x, y)
@@ -223,7 +239,7 @@ lantern_mlp.matrix <- function(x,
     dropout = dropout,
     validation = validation,
     batch_size = batch_size,
-    conv_crit = conv_crit,
+    stop_iter = stop_iter,
     verbose = verbose,
     ...
   )
@@ -239,13 +255,13 @@ lantern_mlp.formula <-
            epochs = 100L,
            hidden_units = 3L,
            activation = "relu",
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -261,7 +277,7 @@ lantern_mlp.formula <-
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose,
       ...
     )
@@ -277,13 +293,13 @@ lantern_mlp.recipe <-
            epochs = 100L,
            hidden_units = 3L,
            activation = "relu",
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -299,7 +315,7 @@ lantern_mlp.recipe <-
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose,
       ...
     )
@@ -310,7 +326,7 @@ lantern_mlp.recipe <-
 
 lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                                learn_rate, momentum, penalty, dropout,
-                               validation, batch_size, conv_crit, verbose, ...) {
+                               validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -381,12 +397,13 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose
     )
 
   new_lantern_mlp(
     models = fit$models,
+    best_epoch = fit$best_epoch,
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
@@ -395,7 +412,7 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
 }
 
-new_lantern_mlp <- function( models, loss, dims, y_stats, parameters, blueprint) {
+new_lantern_mlp <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -412,6 +429,7 @@ new_lantern_mlp <- function( models, loss, dims, y_stats, parameters, blueprint)
     rlang::abort("'blueprint' should be a hardhat blueprint")
   }
   hardhat::new_model(models = models,
+                     best_epoch = best_epoch,
                      loss = loss,
                      dims = dims,
                      y_stats = y_stats,
@@ -428,13 +446,13 @@ lantern_mlp_reg_fit_imp <-
            epochs = 100L,
            batch_size = 32,
            hidden_units = 3L,
-           penalty = 0,
+           penalty = 0.001,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
            momentum = 0.0,
            activation = "relu",
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
 
@@ -518,6 +536,9 @@ lantern_mlp_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
 
     loss_prev <- 10^38
+    loss_min <- loss_prev
+    poor_epoch <- 0
+    best_epoch <- 1
     loss_vec <- rep(NA_real_, epochs)
     if (verbose) {
       epoch_chr <- format(1:epochs)
@@ -531,15 +552,16 @@ lantern_mlp_reg_fit_imp <-
     for (epoch in 1:epochs) {
 
       # training loop
-      for (batch in torch::enumerate(dl)) {
+      coro::loop(
+        for (batch in dl) {
+          pred <- model(batch$x)
+          loss <- loss_fn(pred, batch$y)
 
-        pred <- model(batch$x)
-        loss <- loss_fn(pred, batch$y)
-
-        optimizer$zero_grad()
-        loss$backward()
-        optimizer$step()
-      }
+          optimizer$zero_grad()
+          loss$backward()
+          optimizer$step()
+        }
+      )
 
       # calculate loss on the full datasets
       if (validation > 0) {
@@ -559,19 +581,28 @@ lantern_mlp_reg_fit_imp <-
         break()
       }
 
-      loss_diff <- (loss_prev - loss_curr)/loss_prev
+      if (loss_curr >= loss_min) {
+        poor_epoch <- poor_epoch + 1
+        loss_note <- paste0(" ", cli::symbol$cross, " ")
+      } else {
+        loss_min <- loss_curr
+        loss_note <- NULL
+        poor_epoch <- 0
+        best_epoch <- epoch
+      }
       loss_prev <- loss_curr
 
       # persists models and coefficients
       model_per_epoch[[epoch]] <- model_to_raw(model)
 
       if (verbose) {
-        rlang::inform(
-          paste("epoch:", epoch_chr[epoch], loss_label, signif(loss_curr, 5))
-        )
+        msg <- paste("epoch:", epoch_chr[epoch], loss_label,
+                     signif(loss_curr, 5), loss_note)
+
+        rlang::inform(msg)
       }
 
-      if (loss_diff <= conv_crit) {
+      if (poor_epoch == stop_iter) {
         break()
       }
 
@@ -583,7 +614,8 @@ lantern_mlp_reg_fit_imp <-
 
     list(
       models = model_per_epoch,
-      loss = loss_vec[!is.na(loss_vec)],
+      loss = loss_vec[1:length(model_per_epoch)],
+      best_epoch = best_epoch,
       dims = list(p = p, n = n, h = hidden_units, y = y_dim),
 
       y_stats = y_stats,
@@ -672,30 +704,33 @@ print.lantern_mlp <- function(x, ...) {
   }
   cat("batch size:", x$parameters$batch_size, "\n")
   if (!is.null(x$loss)) {
-
+    it <- x$best_epoch
     if(x$parameters$validation > 0) {
       if (is.na(x$y_stats$mean)) {
-        cat("final validation loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("validation loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       } else {
-        cat("final scaled validation loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("scaled validation loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       }
     } else {
       if (is.na(x$y_stats$mean)) {
-        cat("final training set loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("training set loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       } else {
-        cat("final scaled training set loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("scaled training set loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       }
     }
   }
   invisible(x)
 }
 
-coef.lantern_mlp <- function(object, ...) {
-  module <- revive_model(object, epoch = length(object$models))
+coef.lantern_mlp <- function(object, epoch = NULL, ...) {
+  if (is.null(epoch)) {
+    epoch <- object$best_epoch
+  }
+  module <- revive_model(object, epoch = epoch)
   parameters <- module$parameters
   lapply(parameters, as.array)
 }
@@ -743,7 +778,8 @@ autoplot.lantern_mlp <- function(object, ...) {
 
   ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
     ggplot2::geom_line() +
-    ggplot2::labs(y = lab)
+    ggplot2::labs(y = lab)+
+    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
 }
 
 model_to_raw <- function(model) {

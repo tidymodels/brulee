@@ -17,13 +17,13 @@ lantern_logistic_reg(x, ...)
   x,
   y,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -32,13 +32,13 @@ lantern_logistic_reg(x, ...)
   x,
   y,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -47,13 +47,13 @@ lantern_logistic_reg(x, ...)
   formula,
   data,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -62,13 +62,13 @@ lantern_logistic_reg(x, ...)
   x,
   data,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -105,15 +105,16 @@ validation set.}
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers.}
+are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient decent.}
+gradient descent. (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
 
-\item{conv_crit}{A non-negative number for convergence.}
+\item{stop_iter}{A non-negative integer for how many iterations with no
+improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
@@ -128,11 +129,11 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{lantern_logistic_reg} object with elements:
 \itemize{
-\item \code{models}: a list object of serialized models for each epoch.
+\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{best_epoch}: an integer for the epoch with the smallest loss.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.
-\item \code{y_stats}: A list of summary statistics for numeric outcomes.
 \item \code{parameters}: A list of some tuning parameter values.
 \item \code{blueprint}: The \code{hardhat} blueprint data.
 }
@@ -148,10 +149,6 @@ The \emph{predictors} data should all be numeric and encoded in the same units (
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric.
-
-If \code{conv_crit} is used, it stops training when the difference in the loss
-function is below \code{conv_crit} or if it gets worse. The default trains the
-model over the specified number of epochs.
 }
 \examples{
 if (torch::torch_is_installed()) {
