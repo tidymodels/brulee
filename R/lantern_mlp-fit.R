@@ -463,7 +463,8 @@ lantern_mlp_reg_fit_imp <-
     p <- ncol(x)
 
     if (is.factor(y)) {
-      y_dim <- length(levels(y))
+      lvls <- levels(y)
+      y_dim <- length(lvls)
       # the model will output softmax values.
       # so we need to use negative likelihood loss and
       # pass the log of softmax.
@@ -476,6 +477,7 @@ lantern_mlp_reg_fit_imp <-
       }
     } else {
       y_dim <- 1
+      lvls <- NULL
       loss_fn <- function(input, target, wts = NULL) {
         nnf_mse_loss(input, target$view(c(-1,1)))
       }
@@ -590,12 +592,17 @@ lantern_mlp_reg_fit_imp <-
 
     }
 
+    # ------------------------------------------------------------------------------
+
+    class_weights <- as.numeric(class_weights)
+    names(class_weights) <- lvls
+
     ## ---------------------------------------------------------------------------
 
     list(
       models = model_per_epoch,
       loss = loss_vec[!is.na(loss_vec)],
-      dims = list(p = p, n = n, h = hidden_units, y = y_dim),
+      dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls),
 
       y_stats = y_stats,
       stats = y_stats,

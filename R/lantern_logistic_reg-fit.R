@@ -21,23 +21,8 @@
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
-#'
-#' @param formula A formula specifying the outcome terms on the left-hand side,
-#' and the predictor terms on the right-hand side.
-#'
-#' @param epochs An integer for the number of epochs of training.
-#' @param penalty The amount of weight decay (i.e., L2 regularization).
-#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient decent.
-#' @param validation The proportion of the data randomly assigned to a
-#'  validation set.
-#' @param batch_size An integer for the number of training set points in each
-#'  batch.
-#' @param conv_crit A non-negative number for convergence.
-#' @param verbose A logical that prints out the iteration history.
 #' @inheritParams lantern_linear_reg
-#'
-#' @param ... Not currently used, but required for extensibility.
+#' @inheritParams lantern_mlp
 #'
 #' @details
 #'
@@ -424,7 +409,8 @@ lantern_logistic_reg_reg_fit_imp <-
     n <- length(y)
     p <- ncol(x)
 
-    y_dim <- length(levels(y))
+    lvls <- levels(y)
+    y_dim <- length(lvls)
     # the model will output softmax values.
     # so we need to use negative likelihood loss and
     # pass the log of softmax.
@@ -544,12 +530,17 @@ lantern_logistic_reg_reg_fit_imp <-
 
     }
 
+    # ------------------------------------------------------------------------------
+
+    class_weights <- as.numeric(class_weights)
+    names(class_weights) <- lvls
+
     ## ---------------------------------------------------------------------------
 
     list(
       models = model_per_epoch,
       loss = loss_vec[!is.na(loss_vec)],
-      dims = list(p = p, n = n, h = 0, y = y_dim),
+      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls),
 
       y_stats = y_stats,
       stats = y_stats,

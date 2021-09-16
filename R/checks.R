@@ -216,5 +216,5 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   }
 
 
-  wts
+  torch::torch_tensor(wts)
 }
