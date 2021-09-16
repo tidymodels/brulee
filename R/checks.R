@@ -178,15 +178,17 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 
 
 check_class_weights <- function(wts, lvls, xtab, fn) {
+  if (length(lvls) == 0) {
+    msg <- "Class weights are only applicable to classification problems."
+    rlang::abort(msg)
+  }
+
   if (is.null(wts)) {
-    return(wts)
+    wts <- rep(1, length(lvls))
+    return(torch::torch_tensor(wts))
   }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
-    rlang::abort(msg)
-  }
-  if (length(lvls) == 0) {
-    msg <- "Class weights are only applicable to classification problems."
     rlang::abort(msg)
   }
 
