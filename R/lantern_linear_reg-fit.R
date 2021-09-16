@@ -329,7 +329,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
   ## -----------------------------------------------------------------------------
 
   fit <-
-    lantern_linear_reg_reg_fit_imp(
+    linear_reg_fit_imp(
       x = predictors,
       y = outcome,
       epochs = epochs,
@@ -383,7 +383,7 @@ new_lantern_linear_reg <- function( models, best_epoch, loss, dims, y_stats, par
 ## -----------------------------------------------------------------------------
 # Fit code
 
-lantern_linear_reg_reg_fit_imp <-
+linear_reg_fit_imp <-
   function(x, y,
            epochs = 20L,
            batch_size = 32,
@@ -571,51 +571,14 @@ linear_reg_module <-
 
 ## -----------------------------------------------------------------------------
 
-
 #' @export
 print.lantern_linear_reg <- function(x, ...) {
   cat("Linear regression\n\n")
-  cat(
-    format(x$dims$n, big.mark = ","), "samples,",
-    format(x$dims$p, big.mark = ","), "features\n"
-  )
-  if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
-  }
-  cat("batch size:", x$parameters$batch_size, "\n")
-  if (!is.null(x$loss)) {
-    it <- x$best_epoch
-
-    if(x$parameters$validation > 0) {
-      if (is.na(x$y_stats$mean)) {
-        cat("validation loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      } else {
-        cat("scaled validation loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      }
-    } else {
-      if (is.na(x$y_stats$mean)) {
-        cat("training set loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      } else {
-        cat("scaled training set loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      }
-    }
-  }
-  invisible(x)
+  lantern_print(x)
 }
 
 #' @export
-coef.lantern_linear_reg <- function(object, epoch = NULL, ...) {
-  if (is.null(epoch)) {
-    epoch <- object$best_epoch
-  }
-  module <- revive_model(object, epoch = epoch)
-  parameters <- module$parameters
-  lapply(parameters, as.array)
-}
+coef.lantern_linear_reg <- lantern_coefs
 
 ## -----------------------------------------------------------------------------
 
@@ -626,25 +589,4 @@ coef.lantern_linear_reg <- function(object, epoch = NULL, ...) {
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_linear_reg <- function(object, ...) {
-  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
-
-  if(object$parameters$validation > 0) {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (validation set)"
-    } else {
-      lab <- "loss (validation set, scaled)"
-    }
-  } else {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (training set)"
-    } else {
-      lab <- "loss (training set, scaled)"
-    }
-  }
-
-  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-    ggplot2::geom_line() +
-    ggplot2::labs(y = lab) +
-    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
-}
+autoplot.lantern_linear_reg <- lantern_plot

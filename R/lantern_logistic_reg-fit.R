@@ -330,7 +330,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   ## -----------------------------------------------------------------------------
 
   fit <-
-    lantern_logistic_reg_reg_fit_imp(
+    logistic_reg_fit_imp(
       x = predictors,
       y = outcome,
       epochs = epochs,
@@ -385,7 +385,7 @@ new_lantern_logistic_reg <- function( models, best_epoch, loss, dims, y_stats, p
 ## -----------------------------------------------------------------------------
 # Fit code
 
-lantern_logistic_reg_reg_fit_imp <-
+logistic_reg_fit_imp <-
   function(x, y,
            epochs = 20L,
            batch_size = 32,
@@ -420,7 +420,7 @@ lantern_logistic_reg_reg_fit_imp <-
     # pass the log of softmax.
     loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
-        # weight = wts,
+        weight = wts,
         input = torch::torch_log(input),
         target = target
       )
@@ -594,56 +594,16 @@ get_num_logistic_reg_coef <- function(x) {
 #' @export
 print.lantern_logistic_reg <- function(x, ...) {
   lvl <- get_levels(x)
-  it <- x$best_epoch
   if (length(lvl) == 2) {
     cat("Logistic regression\n\n")
   } else {
     cat("Multinomial regression\n\n")
   }
-
-  chr_y <- paste(length(lvl), "classes")
-  cat(
-    format(x$dims$n, big.mark = ","), "samples,",
-    format(x$dims$p, big.mark = ","), "features,",
-    chr_y, "\n"
-  )
-  if (!is.null(x$parameters$class_weights)) {
-    cat("class weights",
-        paste0(
-          names(x$parameters$class_weights),
-          "=",
-          format(x$parameters$class_weights),
-          collapse = ", "
-        ),
-        "\n")
-  }
-  if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
-  }
-  cat("batch size:", x$parameters$batch_size, "\n")
-  if (!is.null(x$loss)) {
-
-    if(x$parameters$validation > 0) {
-      cat("scaled validation loss after", it, "epochs:",
-          signif(x$loss[it]), "\n")
-    } else {
-      cat("scaled training set loss after", it, "epochs:",
-          signif(x$loss[it]), "\n")
-    }
-  }
-  invisible(x)
+  lantern_print(x)
 }
 
 #' @export
-coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
-  if (is.null(epoch)) {
-    epoch <- object$best_epoch
-  }
-  module <- revive_model(object, epoch = epoch)
-  parameters <- module$parameters
-  lapply(parameters, as.array)
-}
-
+coef.lantern_logistic_reg <- lantern_coefs
 
 
 ## -----------------------------------------------------------------------------
@@ -655,25 +615,4 @@ coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_logistic_reg <- function(object, ...) {
-  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
-
-  if(object$parameters$validation > 0) {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (validation set)"
-    } else {
-      lab <- "loss (validation set, scaled)"
-    }
-  } else {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (training set)"
-    } else {
-      lab <- "loss (training set, scaled)"
-    }
-  }
-
-  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-    ggplot2::geom_line() +
-    ggplot2::labs(y = lab)
-    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
-}
+autoplot.lantern_logistic_reg <- lantern_plot
