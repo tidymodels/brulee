@@ -2,20 +2,19 @@
 % Please edit documentation in R/lantern_linear_reg-predict.R
 \name{predict.lantern_linear_reg}
 \alias{predict.lantern_linear_reg}
-\title{Predict from a \code{lantern_linear_reg}}
+\title{Predict from a `lantern_linear_reg`}
 \usage{
 \method{predict}{lantern_linear_reg}(object, new_data, type = NULL, epoch = NULL, ...)
 }
 \arguments{
-\item{object}{A \code{lantern_linear_reg} object.}
+\item{object}{A `lantern_linear_reg` object.}
 
 \item{new_data}{A data frame or matrix of new predictors.}
 
 \item{type}{A single character. The type of predictions to generate.
 Valid options are:
-\itemize{
-\item \code{"numeric"} for numeric predictions.
-}}
+
+- `"numeric"` for numeric predictions.}
 
 \item{epoch}{An integer for the epoch to make predictions from. If this value
 is larger than the maximum number that was fit, a warning is issued and the
@@ -25,8 +24,8 @@ parameters from the last epoch are used.}
 }
 \value{
 A tibble of predictions. The number of rows in the tibble is guaranteed
-to be the same as the number of rows in \code{new_data}.
+to be the same as the number of rows in `new_data`.
 }
 \description{
-Predict from a \code{lantern_linear_reg}
+Predict from a `lantern_linear_reg`
 }
