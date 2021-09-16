@@ -179,8 +179,7 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 
 check_class_weights <- function(wts, lvls, xtab, fn) {
   if (length(lvls) == 0) {
-    msg <- "Class weights are only applicable to classification problems."
-    rlang::abort(msg)
+    return(NULL)
   }
 
   if (is.null(wts)) {
