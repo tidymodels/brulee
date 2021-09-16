@@ -34,7 +34,7 @@ You can install the released version of lantern from [CRAN](https://CRAN.R-proje
 # install.packages("lantern")
 ```
 
-And the development version from [GitHub](https://github.com/) with:
+And the development version from [GitHub](https://github.com/tidymodels/lantern) with:
 
 ``` r
 # install.packages("devtools")

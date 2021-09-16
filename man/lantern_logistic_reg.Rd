@@ -17,14 +17,14 @@ lantern_logistic_reg(x, ...)
   x,
   y,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -33,14 +33,14 @@ lantern_logistic_reg(x, ...)
   x,
   y,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -49,14 +49,14 @@ lantern_logistic_reg(x, ...)
   formula,
   data,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
@@ -65,38 +65,36 @@ lantern_logistic_reg(x, ...)
   x,
   data,
   epochs = 20L,
-  penalty = 0,
+  penalty = 0.001,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
-  conv_crit = -Inf,
+  stop_iter = 5,
   verbose = FALSE,
   ...
 )
 }
 \arguments{
 \item{x}{Depending on the context:
-\itemize{
-\item A \strong{data frame} of predictors.
-\item A \strong{matrix} of predictors.
-\item A \strong{recipe} specifying a set of preprocessing steps
-created from \code{\link[recipes:recipe]{recipes::recipe()}}.
-}
 
-The predictor data should be standardized (e.g. centered or scaled).}
+  * A __data frame__ of predictors.
+  * A __matrix__ of predictors.
+  * A __recipe__ specifying a set of preprocessing steps
+    created from [recipes::recipe()].
+
+ The predictor data should be standardized (e.g. centered or scaled).}
 
 \item{...}{Not currently used, but required for extensibility.}
 
-\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
+\item{y}{When `x` is a __data frame__ or __matrix__, `y` is the outcome
 specified as:
-\itemize{
-\item A \strong{data frame} with 1 numeric column.
-\item A \strong{matrix} with 1 numeric column.
-\item A numeric \strong{vector}.
-}}
+
+  * A __data frame__ with 1 numeric column.
+  * A __matrix__ with 1 numeric column.
+  * A numeric __vector__.}
 
 \item{epochs}{An integer for the number of epochs of training.}
 
@@ -109,64 +107,57 @@ validation set.}
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers.}
+are normally chosen for other optimizers. (`optimizer = "SGD"` only)}
 
-\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient descent.}
+\item{momentum}{A positive number on `[0, 1]` for the momentum parameter in
+gradient descent. (`optimizer = "SGD"` only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
 
 \item{class_weights}{Numeric class weights (classification only). The value
 can be:
-\itemize{
-\item A named numeric vector (in any order) where the names are the outcome
-factor levels.
-\item An unnamed numeric vector assumed to be in the same order as the outcome
-factor levels.
-\item A single numeric value for the least frequent class in the training data
-and all other classes receive a weight of one.
-}}
 
-\item{conv_crit}{A non-negative number for convergence.}
+ * A named numeric vector (in any order) where the names are the outcome
+   factor levels.
+ * An unnamed numeric vector assumed to be in the same order as the outcome
+   factor levels.
+ * A single numeric value for the least frequent class in the training data
+   and all other classes receive a weight of one.}
+
+\item{stop_iter}{A non-negative integer for how many iterations with no
+improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
 \item{formula}{A formula specifying the outcome terms on the left-hand side,
 and the predictor terms on the right-hand side.}
 
-\item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
-\itemize{
-\item A \strong{data frame} containing both the predictors and the outcome.
-}}
+\item{data}{When a __recipe__ or __formula__ is used, `data` is specified as:
+
+  * A __data frame__ containing both the predictors and the outcome.}
 }
 \value{
-A \code{lantern_logistic_reg} object with elements:
-\itemize{
-\item \code{models}: a list object of serialized models for each epoch.
-\item \code{loss}: A vector of loss values (MSE for regression, negative log-
-likelihood for classification) at each epoch.
-\item \code{dim}: A list of data dimensions.
-\item \code{y_stats}: A list of summary statistics for numeric outcomes.
-\item \code{parameters}: A list of some tuning parameter values.
-\item \code{blueprint}: The \code{hardhat} blueprint data.
-}
+A `lantern_logistic_reg` object with elements:
+ * `models`: a list object of serialized models for each epoch before stopping.
+ * `best_epoch`: an integer for the epoch with the smallest loss.
+ * `loss`: A vector of loss values (MSE for regression, negative log-
+           likelihood for classification) at each epoch.
+ * `dim`: A list of data dimensions.
+ * `parameters`: A list of some tuning parameter values.
+ * `blueprint`: The `hardhat` blueprint data.
 }
 \description{
-\code{lantern_logistic_reg()} fits a model.
+`lantern_logistic_reg()` fits a model.
 }
 \details{
 Despite its name, this function can be used with three or more classes (e.g.,
 multinomial regression).
 
-The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
+The _predictors_ data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric.
-
-If \code{conv_crit} is used, it stops training when the difference in the loss
-function is below \code{conv_crit} or if it gets worse. The default trains the
-model over the specified number of epochs.
 }
 \examples{
 if (torch::torch_is_installed()) {

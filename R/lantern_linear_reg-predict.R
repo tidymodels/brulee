@@ -24,7 +24,7 @@ predict.lantern_linear_reg <- function(object, new_data, type = NULL, epoch = NU
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
-    epoch <- length(object$models)
+    epoch <- object$best_epoch
   }
   predict_lantern_linear_reg_bridge(type, object, forged$predictors, epoch = epoch)
 }

@@ -54,10 +54,10 @@ nn_log_biv <- lantern_mlp(Class ~ log(A) + log(B), data = bivariate_train,
 predict(nn_log_biv, bivariate_test, type = "prob") %>% 
   bind_cols(bivariate_test) %>% 
   roc_auc(Class, .pred_One)
-#> # A tibble: 1 x 3
+#> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.834
+#> 1 roc_auc binary         0.607
 ```
 
 A recipe can also be used if the data require some sort of preprocessing
@@ -79,10 +79,10 @@ nn_rec_biv <- lantern_mlp(rec, data = bivariate_train,
 predict(nn_rec_biv, bivariate_test, type = "prob") %>% 
   bind_cols(bivariate_test) %>% 
   roc_auc(Class, .pred_One)
-#> # A tibble: 1 x 3
+#> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.859
+#> 1 roc_auc binary         0.865
 ```
 
 ## Code of Conduct

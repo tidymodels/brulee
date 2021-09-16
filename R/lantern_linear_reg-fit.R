@@ -30,14 +30,15 @@
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
-#' are normally chosen for other optimizers.
+#' are normally chosen for other optimizers. (`optimizer = "SGD"` only)
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient descent.
+#'  gradient descent. (`optimizer = "SGD"` only)
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
 #'  batch.
-#' @param conv_crit A non-negative number for convergence.
+#' @param stop_iter A non-negative integer for how many iterations with no
+#' improvement before stopping.
 #' @param verbose A logical that prints out the iteration history.
 #'
 #' @param ... Not currently used, but required for extensibility.
@@ -54,14 +55,11 @@
 #' outcome data to have mean zero and a standard deviation of one. The prediction
 #' function creates predictions on the original scale.
 #'
-#' If `conv_crit` is used, it stops training when the difference in the loss
-#' function is below `conv_crit` or if it gets worse. The default trains the
-#' model over the specified number of epochs.
-#'
 #' @return
 #'
 #' A `lantern_linear_reg` object with elements:
-#'  * `models`: a list object of serialized models for each epoch.
+#'  * `models`: a list object of serialized models for each epoch before stopping.
+#'  * `best_epoch`: an integer for the epoch with the smallest loss.
 #'  * `loss`: A vector of loss values (MSE) at each epoch.
 #'  * `dim`: A list of data dimensions.
 #'  * `y_stats`: A list of summary statistics for numeric outcomes.
@@ -153,12 +151,12 @@ lantern_linear_reg.data.frame <-
            y,
            epochs = 20L,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1.0,
            momentum = 0.0,
            batch_size = NULL,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -172,7 +170,7 @@ lantern_linear_reg.data.frame <-
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose,
       ...
     )
@@ -183,17 +181,17 @@ lantern_linear_reg.data.frame <-
 #' @export
 #' @rdname lantern_linear_reg
 lantern_linear_reg.matrix <- function(x,
-                               y,
-                               epochs = 20L,
-                               penalty = 0.001,
-                               validation = 0,
-                               optimizer = "LBFGS",
-                               learn_rate = 1,
-                               momentum = 0.0,
-                               batch_size = NULL,
-                               conv_crit = -Inf,
-                               verbose = FALSE,
-                               ...) {
+                                      y,
+                                      epochs = 20L,
+                                      penalty = 0.001,
+                                      validation = 0.1,
+                                      optimizer = "LBFGS",
+                                      learn_rate = 1,
+                                      momentum = 0.0,
+                                      batch_size = NULL,
+                                      stop_iter = 5,
+                                      verbose = FALSE,
+                                      ...) {
   processed <- hardhat::mold(x, y)
 
   lantern_linear_reg_bridge(
@@ -205,7 +203,7 @@ lantern_linear_reg.matrix <- function(x,
     penalty = penalty,
     validation = validation,
     batch_size = batch_size,
-    conv_crit = conv_crit,
+    stop_iter = stop_iter,
     verbose = verbose,
     ...
   )
@@ -220,12 +218,12 @@ lantern_linear_reg.formula <-
            data,
            epochs = 20L,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -239,7 +237,7 @@ lantern_linear_reg.formula <-
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose,
       ...
     )
@@ -254,12 +252,12 @@ lantern_linear_reg.recipe <-
            data,
            epochs = 20L,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -273,7 +271,7 @@ lantern_linear_reg.recipe <-
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose,
       ...
     )
@@ -283,8 +281,8 @@ lantern_linear_reg.recipe <-
 # Bridge
 
 lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
-                               learn_rate, momentum, penalty, dropout,
-                               validation, batch_size, conv_crit, verbose, ...) {
+                                      learn_rate, momentum, penalty, dropout,
+                                      validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -341,12 +339,13 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
-      conv_crit = conv_crit,
+      stop_iter = stop_iter,
       verbose = verbose
     )
 
   new_lantern_linear_reg(
     models = fit$models,
+    best_epoch = fit$best_epoch,
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
@@ -355,7 +354,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_lantern_linear_reg <- function( models, loss, dims, y_stats, parameters, blueprint) {
+new_lantern_linear_reg <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -372,6 +371,7 @@ new_lantern_linear_reg <- function( models, loss, dims, y_stats, parameters, blu
     rlang::abort("'blueprint' should be a hardhat blueprint")
   }
   hardhat::new_model(models = models,
+                     best_epoch = best_epoch,
                      loss = loss,
                      dims = dims,
                      y_stats = y_stats,
@@ -388,11 +388,11 @@ lantern_linear_reg_reg_fit_imp <-
            epochs = 20L,
            batch_size = 32,
            penalty = 0.001,
-           validation = 0,
+           validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
-           conv_crit = -Inf,
+           stop_iter = 5,
            verbose = FALSE,
            ...) {
 
@@ -424,7 +424,9 @@ lantern_linear_reg_reg_fit_imp <-
     }
 
     y_stats <- scale_stats(y)
+    y_stats <- list(mean = 0, sd = 1)
     y <- scale_y(y, y_stats)
+
     if (validation > 0) {
       y_val <- scale_y(y_val, y_stats)
     }
@@ -465,6 +467,9 @@ lantern_linear_reg_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
 
     loss_prev <- 10^38
+    loss_min <- loss_prev
+    poor_epoch <- 0
+    best_epoch <- 1
     loss_vec <- rep(NA_real_, epochs)
     if (verbose) {
       epoch_chr <- format(1:epochs)
@@ -476,18 +481,19 @@ lantern_linear_reg_reg_fit_imp <-
 
     # Optimize parameters
     for (epoch in 1:epochs) {
-
       # training loop
-      for (batch in torch::enumerate(dl)) {
-        cl <- function() {
-          optimizer$zero_grad()
-          pred <- model(batch$x)
-          loss <- loss_fn(pred, batch$y)
-          loss$backward()
-          loss
+      coro::loop(
+        for (batch in dl) {
+          cl <- function() {
+            optimizer$zero_grad()
+            pred <- model(batch$x)
+            loss <- loss_fn(pred, batch$y)
+            loss$backward()
+            loss
+          }
+          optimizer$step(cl)
         }
-        optimizer$step(cl)
-      }
+      )
 
       # calculate loss on the full datasets
       if (validation > 0) {
@@ -507,19 +513,29 @@ lantern_linear_reg_reg_fit_imp <-
         break()
       }
 
-      loss_diff <- (loss_prev - loss_curr)/loss_prev
+      if (loss_curr >= loss_min) {
+        poor_epoch <- poor_epoch + 1
+        loss_note <- paste0(" ", cli::symbol$cross, " ")
+      } else {
+        loss_min <- loss_curr
+        loss_note <- NULL
+        poor_epoch <- 0
+        best_epoch <- epoch
+      }
+
       loss_prev <- loss_curr
 
       # persists models and coefficients
       model_per_epoch[[epoch]] <- model_to_raw(model)
 
       if (verbose) {
-        rlang::inform(
-          paste("epoch:", epoch_chr[epoch], loss_label, signif(loss_curr, 5))
-        )
+        msg <- paste("epoch:", epoch_chr[epoch], loss_label,
+                     signif(loss_curr, 5), loss_note)
+
+        rlang::inform(msg)
       }
 
-      if (loss_diff <= conv_crit) {
+      if (poor_epoch == stop_iter) {
         break()
       }
 
@@ -529,7 +545,8 @@ lantern_linear_reg_reg_fit_imp <-
 
     list(
       models = model_per_epoch,
-      loss = loss_vec[!is.na(loss_vec)],
+      loss = loss_vec[1:length(model_per_epoch)],
+      best_epoch = best_epoch,
       dims = list(p = p, n = n, h = 0, y = y_dim),
 
       y_stats = y_stats,
@@ -567,22 +584,23 @@ print.lantern_linear_reg <- function(x, ...) {
   }
   cat("batch size:", x$parameters$batch_size, "\n")
   if (!is.null(x$loss)) {
+    it <- x$best_epoch
 
     if(x$parameters$validation > 0) {
       if (is.na(x$y_stats$mean)) {
-        cat("final validation loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("validation loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       } else {
-        cat("final scaled validation loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("scaled validation loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       }
     } else {
       if (is.na(x$y_stats$mean)) {
-        cat("final training set loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("training set loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       } else {
-        cat("final scaled training set loss after", length(x$loss), "epochs:",
-            signif(x$loss[length(x$loss)]), "\n")
+        cat("scaled training set loss after", it, "epochs:",
+            signif(x$loss[it]), "\n")
       }
     }
   }
@@ -592,7 +610,7 @@ print.lantern_linear_reg <- function(x, ...) {
 #' @export
 coef.lantern_linear_reg <- function(object, epoch = NULL, ...) {
   if (is.null(epoch)) {
-    epoch <- length(object$models)
+    epoch <- object$best_epoch
   }
   module <- revive_model(object, epoch = epoch)
   parameters <- module$parameters
@@ -627,5 +645,6 @@ autoplot.lantern_linear_reg <- function(object, ...) {
 
   ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
     ggplot2::geom_line() +
-    ggplot2::labs(y = lab)
+    ggplot2::labs(y = lab) +
+    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
 }
