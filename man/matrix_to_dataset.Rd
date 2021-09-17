@@ -9,16 +9,16 @@ matrix_to_dataset(x, y)
 \arguments{
 \item{x}{A numeric matrix of predictors.}
 
-\item{y}{A vector. If regression than `y` is numeric. For classification, it
+\item{y}{A vector. If regression than \code{y} is numeric. For classification, it
 is a factor.}
 }
 \value{
 An R6 index sampler object with classes "training_set",
- "dataset", and "R6".
+"dataset", and "R6".
 }
 \description{
-For an x/y interface, `matrix_to_dataset()` converts the data to proper
- encodings then formats the results for consumption by `torch`.
+For an x/y interface, \code{matrix_to_dataset()} converts the data to proper
+encodings then formats the results for consumption by \code{torch}.
 }
 \details{
 Missing values should be removed before passing data to this function.

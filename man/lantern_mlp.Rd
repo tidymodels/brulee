@@ -87,32 +87,34 @@ lantern_mlp(x, ...)
 }
 \arguments{
 \item{x}{Depending on the context:
+\itemize{
+\item A \strong{data frame} of predictors.
+\item A \strong{matrix} of predictors.
+\item A \strong{recipe} specifying a set of preprocessing steps
+created from \code{\link[recipes:recipe]{recipes::recipe()}}.
+}
 
-  * A __data frame__ of predictors.
-  * A __matrix__ of predictors.
-  * A __recipe__ specifying a set of preprocessing steps
-    created from [recipes::recipe()].
-
- The predictor data should be standardized (e.g. centered or scaled).}
+The predictor data should be standardized (e.g. centered or scaled).}
 
 \item{...}{Not currently used, but required for extensibility.}
 
-\item{y}{When `x` is a __data frame__ or __matrix__, `y` is the outcome
+\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
-
-  * A __data frame__ with 1 numeric column.
-  * A __matrix__ with 1 numeric column.
-  * A numeric __vector__.}
+\itemize{
+\item A \strong{data frame} with 1 numeric column.
+\item A \strong{matrix} with 1 numeric column.
+\item A numeric \strong{vector}.
+}}
 
 \item{epochs}{An integer for the number of epochs of training.}
 
 \item{hidden_units}{An integer for the number of hidden units, or a vector
-of integers. If a vector of integers, the model will have `length(hidden_units)`
-layers each with `hidden_units[i]` hidden units.}
+of integers. If a vector of integers, the model will have \code{length(hidden_units)}
+layers each with \code{hidden_units[i]} hidden units.}
 
 \item{activation}{A string for the activation function. Possible values are
-"relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
-can be a character vector with length equals to `length(hidden_units)` specifying
+"relu", "elu", "tanh", and "linear". If \code{hidden_units} is a vector, \code{activation}
+can be a character vector with length equals to \code{length(hidden_units)} specifying
 the activation for each hidden layer.}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
@@ -123,23 +125,24 @@ the activation for each hidden layer.}
 validation set.}
 
 \item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers. (`optimizer = "SGD"` only)}
+are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
 
-\item{momentum}{A positive number on `[0, 1]` for the momentum parameter in
-gradient descent. (`optimizer = "SGD"` only)}
+\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
+gradient descent. (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
 
 \item{class_weights}{Numeric class weights (classification only). The value
 can be:
-
- * A named numeric vector (in any order) where the names are the outcome
-   factor levels.
- * An unnamed numeric vector assumed to be in the same order as the outcome
-   factor levels.
- * A single numeric value for the least frequent class in the training data
-   and all other classes receive a weight of one.}
+\itemize{
+\item A named numeric vector (in any order) where the names are the outcome
+factor levels.
+\item An unnamed numeric vector assumed to be in the same order as the outcome
+factor levels.
+\item A single numeric value for the least frequent class in the training data
+and all other classes receive a weight of one.
+}}
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
@@ -149,23 +152,26 @@ improvement before stopping.}
 \item{formula}{A formula specifying the outcome terms on the left-hand side,
 and the predictor terms on the right-hand side.}
 
-\item{data}{When a __recipe__ or __formula__ is used, `data` is specified as:
-
-  * A __data frame__ containing both the predictors and the outcome.}
+\item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
+\itemize{
+\item A \strong{data frame} containing both the predictors and the outcome.
+}}
 }
 \value{
-A `lantern_mlp` object with elements:
- * `models`: a list object of serialized models for each epoch before stopping.
- * `best_epoch`: an integer for the epoch with the smallest loss.
- * `loss`: A vector of loss values (MSE for regression, negative log-
-           likelihood for classification) at each epoch.
- * `dim`: A list of data dimensions.
- * `y_stats`: A list of summary statistics for numeric outcomes.
- * `parameters`: A list of some tuning parameter values.
- * `blueprint`: The `hardhat` blueprint data.
+A \code{lantern_mlp} object with elements:
+\itemize{
+\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{best_epoch}: an integer for the epoch with the smallest loss.
+\item \code{loss}: A vector of loss values (MSE for regression, negative log-
+likelihood for classification) at each epoch.
+\item \code{dim}: A list of data dimensions.
+\item \code{y_stats}: A list of summary statistics for numeric outcomes.
+\item \code{parameters}: A list of some tuning parameter values.
+\item \code{blueprint}: The \code{hardhat} blueprint data.
+}
 }
 \description{
-`lantern_mlp()` fits a model.
+\code{lantern_mlp()} fits a model.
 }
 \details{
 This function fits single layer, feed-forward neural network models for
@@ -173,7 +179,7 @@ regression (when the outcome is a number) or classification (a factor). For
 regression, the mean squared error is optimized and cross-entropy is the loss
 function for classification.
 
-The _predictors_ data should all be numeric and encoded in the same units (e.g.
+The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric.

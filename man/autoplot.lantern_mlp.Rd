@@ -7,12 +7,12 @@
 \method{autoplot}{lantern_mlp}(object, ...)
 }
 \arguments{
-\item{object}{A `lantern_mlp` object.}
+\item{object}{A \code{lantern_mlp} object.}
 
 \item{...}{Not currently used}
 }
 \value{
-A `ggplot` object.
+A \code{ggplot} object.
 }
 \description{
 Plot model loss over epochs

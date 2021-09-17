@@ -75,22 +75,24 @@ lantern_linear_reg(x, ...)
 }
 \arguments{
 \item{x}{Depending on the context:
+\itemize{
+\item A \strong{data frame} of predictors.
+\item A \strong{matrix} of predictors.
+\item A \strong{recipe} specifying a set of preprocessing steps
+created from \code{\link[recipes:recipe]{recipes::recipe()}}.
+}
 
-  * A __data frame__ of predictors.
-  * A __matrix__ of predictors.
-  * A __recipe__ specifying a set of preprocessing steps
-    created from [recipes::recipe()].
-
- The predictor data should be standardized (e.g. centered or scaled).}
+The predictor data should be standardized (e.g. centered or scaled).}
 
 \item{...}{Not currently used, but required for extensibility.}
 
-\item{y}{When `x` is a __data frame__ or __matrix__, `y` is the outcome
+\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
-
-  * A __data frame__ with 1 numeric column.
-  * A __matrix__ with 1 numeric column.
-  * A numeric __vector__.}
+\itemize{
+\item A \strong{data frame} with 1 numeric column.
+\item A \strong{matrix} with 1 numeric column.
+\item A numeric \strong{vector}.
+}}
 
 \item{epochs}{An integer for the number of epochs of training.}
 
@@ -103,10 +105,10 @@ validation set.}
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers. (`optimizer = "SGD"` only)}
+are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
 
-\item{momentum}{A positive number on `[0, 1]` for the momentum parameter in
-gradient descent. (`optimizer = "SGD"` only)}
+\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
+gradient descent. (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -119,25 +121,28 @@ improvement before stopping.}
 \item{formula}{A formula specifying the outcome terms on the left-hand side,
 and the predictor terms on the right-hand side.}
 
-\item{data}{When a __recipe__ or __formula__ is used, `data` is specified as:
-
-  * A __data frame__ containing both the predictors and the outcome.}
+\item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
+\itemize{
+\item A \strong{data frame} containing both the predictors and the outcome.
+}}
 }
 \value{
-A `lantern_linear_reg` object with elements:
- * `models`: a list object of serialized models for each epoch before stopping.
- * `best_epoch`: an integer for the epoch with the smallest loss.
- * `loss`: A vector of loss values (MSE) at each epoch.
- * `dim`: A list of data dimensions.
- * `y_stats`: A list of summary statistics for numeric outcomes.
- * `parameters`: A list of some tuning parameter values.
- * `blueprint`: The `hardhat` blueprint data.
+A \code{lantern_linear_reg} object with elements:
+\itemize{
+\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{best_epoch}: an integer for the epoch with the smallest loss.
+\item \code{loss}: A vector of loss values (MSE) at each epoch.
+\item \code{dim}: A list of data dimensions.
+\item \code{y_stats}: A list of summary statistics for numeric outcomes.
+\item \code{parameters}: A list of some tuning parameter values.
+\item \code{blueprint}: The \code{hardhat} blueprint data.
+}
 }
 \description{
-`lantern_linear_reg()` fits a model.
+\code{lantern_linear_reg()} fits a model.
 }
 \details{
-The _predictors_ data should all be numeric and encoded in the same units (e.g.
+The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric.

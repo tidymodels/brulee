@@ -2,21 +2,22 @@
 % Please edit documentation in R/lantern_mlp-predict.R
 \name{predict.lantern_mlp}
 \alias{predict.lantern_mlp}
-\title{Predict from a `lantern_mlp`}
+\title{Predict from a \code{lantern_mlp}}
 \usage{
 \method{predict}{lantern_mlp}(object, new_data, type = NULL, epoch = NULL, ...)
 }
 \arguments{
-\item{object}{A `lantern_mlp` object.}
+\item{object}{A \code{lantern_mlp} object.}
 
 \item{new_data}{A data frame or matrix of new predictors.}
 
 \item{type}{A single character. The type of predictions to generate.
 Valid options are:
-
-- `"numeric"` for numeric predictions.
-- `"class"` for hard class predictions
-- `"prob"` for soft class predictions (i.e., class probabilities)}
+\itemize{
+\item \code{"numeric"} for numeric predictions.
+\item \code{"class"} for hard class predictions
+\item \code{"prob"} for soft class predictions (i.e., class probabilities)
+}}
 
 \item{epoch}{An integer for the epoch to make predictions from. If this value
 is larger than the maximum number that was fit, a warning is issued and the
@@ -26,8 +27,8 @@ parameters from the last epoch are used.}
 }
 \value{
 A tibble of predictions. The number of rows in the tibble is guaranteed
-to be the same as the number of rows in `new_data`.
+to be the same as the number of rows in \code{new_data}.
 }
 \description{
-Predict from a `lantern_mlp`
+Predict from a \code{lantern_mlp}
 }
