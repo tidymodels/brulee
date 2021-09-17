@@ -61,18 +61,18 @@ lantern_print <- function(x, ...) {
   if(x$parameters$validation > 0) {
    if (is.na(x$y_stats$mean)) {
     cat("validation loss after", it, "epochs:",
-        signif(x$loss[it]), "\n")
+        signif(x$loss[it], 3), "\n")
    } else {
     cat("scaled validation loss after", it, "epochs:",
-        signif(x$loss[it]), "\n")
+        signif(x$loss[it], 3), "\n")
    }
   } else {
    if (is.na(x$y_stats$mean)) {
     cat("training set loss after", it, "epochs:",
-        signif(x$loss[it]), "\n")
+        signif(x$loss[it], 3), "\n")
    } else {
     cat("scaled training set loss after", it, "epochs:",
-        signif(x$loss[it]), "\n")
+        signif(x$loss[it], 3), "\n")
    }
   }
  }

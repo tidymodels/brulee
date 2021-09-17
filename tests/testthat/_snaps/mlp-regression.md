@@ -12,5 +12,5 @@
       weight decay: 0.001 
       dropout proportion: 0 
       batch size: 2637 
-      scaled validation loss after 10 epochs: 1.31204 
+      scaled validation loss after 10 epochs: 1.31 
 
