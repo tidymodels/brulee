@@ -122,19 +122,19 @@ test_that("class weights - mlp", {
     logit = x1 + x2 + rnorm(200, sd = 0.25),
     y = as.factor(ifelse(exp(logit)/(1 + exp(logit)) > 0.8, "a", "b"))
   )
-  df$logit <- NULL
+  df_imbal$logit <- NULL
 
   expect_snapshot({
     set.seed(1)
     fit_imbal <- lantern_mlp(y ~ ., df_imbal, verbose = TRUE,
-                                      class_weights = 20)
+                             class_weights = 20)
   })
 
 
   expect_snapshot({
     set.seed(1)
     fit <- lantern_mlp(y ~ ., df_imbal, epochs = 2, verbose = TRUE,
-                                class_weights = c(a = 12, b = 1))
+                       class_weights = c(a = 12, b = 1))
   })
 
   expect_error({
