@@ -18,6 +18,10 @@ test_that("logistic regression", {
     fit <- lantern_logistic_reg(y ~ ., df, epochs = 2, verbose = TRUE)
   })
 
+  expect_snapshot({
+    fit
+  })
+
   expect_error(
     fit <- lantern_logistic_reg(y ~ ., df, epochs = 10, learn_rate = 0.1,
                                 optimizer = "SGD"),

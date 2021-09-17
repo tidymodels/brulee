@@ -438,11 +438,17 @@ new_lantern_mlp <- function( models, best_epoch, loss, dims, y_stats, parameters
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
+  if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
+    rlang::abort("'best_epoch' should be an integer")
+  }
   if (!is.vector(loss) || !is.numeric(loss)) {
     rlang::abort("'loss' should be a numeric vector")
   }
   if (!is.list(dims)) {
     rlang::abort("'dims' should be a list")
+  }
+  if (!is.list(y_stats)) {
+    rlang::abort("'y_stats' should be a list")
   }
   if (!is.list(parameters)) {
     rlang::abort("'parameters' should be a list")
