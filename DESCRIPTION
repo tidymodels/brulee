@@ -19,6 +19,7 @@ Imports:
     cli,
     coro (>= 1.0.1),
     dplyr,
+    generics,
     ggplot2,
     glue,
     hardhat,
@@ -37,4 +38,4 @@ Suggests:
 Encoding: UTF-8
 Language: en-US
 Config/testthat/edition: 3
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
