@@ -1,5 +1,8 @@
 test_that("linear regression test", {
   skip_if(!torch::torch_is_installed())
+  skip_on_os("mac") # Generating slightly different results on macOS. eg.
+  # - "  scaled validation loss after 1 epochs: 1.46e-12 "
+  # + "  scaled validation loss after 1 epochs: 1.57e-12 "
 
   set.seed(1)
   df <- tibble::tibble(
