@@ -100,9 +100,6 @@ predict_lantern_mlp_raw <- function(model, predictors, epoch) {
   # convert to torch representation
   estimates <- lapply(estimates, torch::torch_tensor)
 
-  print(str(estimates))
-  print(str(module$state_dict()))
-
   # stuff back into the model
   module$load_state_dict(estimates)
   module$eval() # put the model in evaluation mode
@@ -113,8 +110,7 @@ predict_lantern_mlp_raw <- function(model, predictors, epoch) {
   predictions
 }
 
-predict_lantern_mlp_numeric <- function(object, predictors, epoch) {
-  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
+predict_lantern_mlp_numeric <- function(model, predictors, epoch) {
   predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
   hardhat::spruce_numeric(predictions[,1])

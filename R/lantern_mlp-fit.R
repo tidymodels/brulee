@@ -598,7 +598,8 @@ lantern_mlp_reg_fit_imp <-
       loss_prev <- loss_curr
 
       # persists models and coefficients
-      param_per_epoch[[epoch]] <- lapply(model$state_dict(), as.matrix)
+      param_per_epoch[[epoch]] <-
+        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
