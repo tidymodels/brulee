@@ -7,7 +7,7 @@
 \alias{lantern_mlp.matrix}
 \alias{lantern_mlp.formula}
 \alias{lantern_mlp.recipe}
-\title{Fit a single layer neural network}
+\title{Fit neural networks}
 \usage{
 lantern_mlp(x, ...)
 
@@ -124,11 +124,11 @@ the activation for each hidden layer.}
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
-\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
+\item{learn_rate}{A positive number that controls the rapidity that the model
+moves along the descent path. Values less that 0.1 are typical.}
 
 \item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient descent. (\code{optimizer = "SGD"} only)}
+gradient descent.}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -171,10 +171,11 @@ likelihood for classification) at each epoch.
 }
 }
 \description{
-\code{lantern_mlp()} fits a model.
+\code{lantern_mlp()} fits neural network models using stochastic gradient
+descent. Multiple layers can be used.
 }
 \details{
-This function fits single layer, feed-forward neural network models for
+This function fits feed-forward neural network models for
 regression (when the outcome is a number) or classification (a factor). For
 regression, the mean squared error is optimized and cross-entropy is the loss
 function for classification.
@@ -182,11 +183,18 @@ function for classification.
 The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
-other method) to make them numeric.
+other method) to make them numeric. Predictors should be in the same units
+before training.
 
 When the outcome is a number, the function internally standardizes the
 outcome data to have mean zero and a standard deviation of one. The prediction
 function creates predictions on the original scale.
+
+By default, training halts when the validation loss increases for at least
+\code{step_iter} iterations.
+
+The model objects are saved for each epoch so that the number of epochs can
+be efficiently tuned.
 }
 \examples{
 \donttest{

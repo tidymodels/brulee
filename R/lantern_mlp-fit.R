@@ -1,6 +1,7 @@
-#' Fit a single layer neural network
+#' Fit neural networks
 #'
-#' `lantern_mlp()` fits a model.
+#' `lantern_mlp()` fits neural network models using stochastic gradient
+#' descent. Multiple layers can be used.
 #'
 #' @param x Depending on the context:
 #'
@@ -32,6 +33,10 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
+#' @param learn_rate A positive number that controls the rapidity that the model
+#' moves along the descent path. Values less that 0.1 are typical.
+#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
+#' gradient descent.
 #' @param dropout The proportion of parameters set to zero.
 #' @param class_weights Numeric class weights (classification only). The value
 #' can be:
@@ -45,7 +50,7 @@
 #'
 #' @details
 #'
-#' This function fits single layer, feed-forward neural network models for
+#' This function fits feed-forward neural network models for
 #' regression (when the outcome is a number) or classification (a factor). For
 #' regression, the mean squared error is optimized and cross-entropy is the loss
 #' function for classification.
@@ -53,11 +58,18 @@
 #' The _predictors_ data should all be numeric and encoded in the same units (e.g.
 #' standardized to the same range or distribution). If there are factor
 #' predictors, use a recipe or formula to create indicator variables (or some
-#' other method) to make them numeric.
+#' other method) to make them numeric. Predictors should be in the same units
+#' before training.
 #'
 #' When the outcome is a number, the function internally standardizes the
 #' outcome data to have mean zero and a standard deviation of one. The prediction
 #' function creates predictions on the original scale.
+#'
+#' By default, training halts when the validation loss increases for at least
+#' `step_iter` iterations.
+#'
+#' The model objects are saved for each epoch so that the number of epochs can
+#' be efficiently tuned.
 #'
 #' @return
 #'
