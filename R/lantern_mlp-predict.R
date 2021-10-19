@@ -54,7 +54,7 @@ predict_lantern_mlp_bridge <- function(type, model, predictors, epoch) {
 
   predict_function <- get_mlp_predict_function(type)
 
-  max_epoch <- length(model$models)
+  max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
     msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
                  "be made at epoch", epoch, "so last epoch is used.")
@@ -85,15 +85,26 @@ add_intercept <- function(x) {
   cbind(rep(1, nrow(x)), x)
 }
 
-revive_model <- function(model, epoch) {
-  con <- rawConnection(model$models[[epoch]])
+revive_model <- function(model) {
+  con <- rawConnection(model)
   on.exit({close(con)}, add = TRUE)
   module <- torch::torch_load(con)
   module
 }
 
 predict_lantern_mlp_raw <- function(model, predictors, epoch) {
-  module <- revive_model(model, epoch)
+  # convert from raw format
+  module <- revive_model(model$model_obj)
+  # get current model parameters
+  estimates <- model$estimates[[epoch]]
+  # convert to torch representation
+  estimates <- lapply(estimates, torch::torch_tensor)
+
+  print(str(estimates))
+  print(str(module$state_dict()))
+
+  # stuff back into the model
+  module$load_state_dict(estimates)
   module$eval() # put the model in evaluation mode
   predictions <- module(torch::torch_tensor(predictors))
   predictions <- as.array(predictions)
@@ -102,7 +113,7 @@ predict_lantern_mlp_raw <- function(model, predictors, epoch) {
   predictions
 }
 
-predict_lantern_mlp_numeric <- function(model, predictors, epoch) {
+predict_lantern_mlp_numeric <- function(object, predictors, epoch) {
   predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean

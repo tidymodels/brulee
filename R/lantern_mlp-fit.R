@@ -55,7 +55,9 @@
 #' @return
 #'
 #' A `lantern_mlp` object with elements:
-#'  * `models`: a list object of serialized models for each epoch before stopping.
+#'  * `models_obj`: a serialized raw vector for the torch module.
+#'  * `estimates`: a list of matrices with the model parameter estimates per
+#'                 epoch.
 #'  * `best_epoch`: an integer for the epoch with the smallest loss.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
@@ -402,7 +404,8 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
     )
 
   new_lantern_mlp(
-    models = fit$models,
+    model_obj = fit$model_obj,
+    estimates = fit$estimates,
     best_epoch = fit$best_epoch,
     loss = fit$loss,
     dims = fit$dims,
@@ -412,9 +415,10 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
 }
 
-new_lantern_mlp <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
-  if (!is.list(models)) {
-    rlang::abort("'models' should be a list.")
+new_lantern_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
+                             y_stats, parameters, blueprint) {
+  if (!inherits(model_obj, "raw")) {
+    rlang::abort("'model_obj' should be a raw vector.")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
     rlang::abort("'loss' should be a numeric vector")
@@ -422,13 +426,14 @@ new_lantern_mlp <- function( models, best_epoch, loss, dims, y_stats, parameters
   if (!is.list(dims)) {
     rlang::abort("'dims' should be a list")
   }
-  if (!is.list(parameters)) {
+  if (!is.list(estimates)) {
     rlang::abort("'parameters' should be a list")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
     rlang::abort("'blueprint' should be a hardhat blueprint")
   }
-  hardhat::new_model(models = models,
+  hardhat::new_model(model_obj = model_obj,
+                     estimates = estimates,
                      best_epoch = best_epoch,
                      loss = loss,
                      dims = dims,
@@ -546,7 +551,7 @@ lantern_mlp_reg_fit_imp <-
 
     ## -----------------------------------------------------------------------------
 
-    model_per_epoch <- list()
+    param_per_epoch <- list()
 
     # Optimize parameters
     for (epoch in 1:epochs) {
@@ -593,7 +598,7 @@ lantern_mlp_reg_fit_imp <-
       loss_prev <- loss_curr
 
       # persists models and coefficients
-      model_per_epoch[[epoch]] <- model_to_raw(model)
+      param_per_epoch[[epoch]] <- lapply(model$state_dict(), as.matrix)
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
@@ -606,15 +611,14 @@ lantern_mlp_reg_fit_imp <-
         break()
       }
 
-      model_per_epoch[[epoch]] <- model_to_raw(model)
-
     }
 
     ## ---------------------------------------------------------------------------
 
     list(
-      models = model_per_epoch,
-      loss = loss_vec[1:length(model_per_epoch)],
+      model_obj = model_to_raw(model),
+      estimates = param_per_epoch,
+      loss = loss_vec[1:length(param_per_epoch)],
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = hidden_units, y = y_dim),
 
@@ -642,7 +646,9 @@ mlp_module <-
       # if hidden units is a vector then we add those layers
       if (length(hidden_units) > 1) {
         for (i in 2:length(hidden_units)) {
-          layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[i-1], hidden_units[i])
+          layers[[length(layers) + 1]] <-
+            torch::nn_linear(hidden_units[i-1], hidden_units[i])
+
           layers[[length(layers) + 1]] <- get_activation_fn(act_type[i])
         }
       }
@@ -653,7 +659,8 @@ mlp_module <-
       }
 
       # output layer
-      layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[length(hidden_units)], y_dim)
+      layers[[length(layers) + 1]] <-
+        torch::nn_linear(hidden_units[length(hidden_units)], y_dim)
 
       # conditionally add the softmax layer
       if (y_dim > 1) {
@@ -672,7 +679,7 @@ mlp_module <-
 ## -----------------------------------------------------------------------------
 
 get_num_mlp_coef <- function(x) {
-  model <- revive_model(x, 1)$parameters
+  model <- x$estimates[[1]]
   param <- vapply(model, function(.x) prod(dim(.x)), double(1))
   sum(unlist(param))
 }
@@ -730,9 +737,7 @@ coef.lantern_mlp <- function(object, epoch = NULL, ...) {
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  module <- revive_model(object, epoch = epoch)
-  parameters <- module$parameters
-  lapply(parameters, as.array)
+  object$estimates[[epoch]]
 }
 
 ## -----------------------------------------------------------------------------
