@@ -420,13 +420,16 @@ new_lantern_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
   if (!inherits(model_obj, "raw")) {
     rlang::abort("'model_obj' should be a raw vector.")
   }
+  if (!is.list(estimates)) {
+    rlang::abort("'parameters' should be a list")
+  }
   if (!is.vector(loss) || !is.numeric(loss)) {
     rlang::abort("'loss' should be a numeric vector")
   }
   if (!is.list(dims)) {
     rlang::abort("'dims' should be a list")
   }
-  if (!is.list(estimates)) {
+  if (!is.list(parameters)) {
     rlang::abort("'parameters' should be a list")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
