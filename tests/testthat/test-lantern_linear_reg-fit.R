@@ -23,11 +23,11 @@ test_that("linear regression test", {
   )
 
   # TODO
-  # expect_equal(
-  #   as.numeric(unlist(coef.lantern_linear_reg(fit))[c(3,1,2)]),
-  #   as.numeric(coef(lm(scale(y) ~ ., df))),
-  #   tolerance = 1e-4
-  # )
+  expect_equal(
+    as.numeric(unlist(coef(fit))[c(3,1,2)]),
+    as.numeric(coef(lm(y ~ ., df))),
+    tolerance = 1e-4
+  )
 
   expect_error(
     fit <- lantern_linear_reg(y ~ ., df, epochs = 10, learn_rate = 0.1, optimizer = "SGD"),
