@@ -12,6 +12,7 @@ test_that("linear regression test", {
   )
 
   expect_snapshot({
+    skip_on_os("windows") # slightly different values from unix and macOS
     set.seed(1)
     fit <- lantern_linear_reg(y ~ ., df, epochs = 2, verbose = TRUE)
     fit
