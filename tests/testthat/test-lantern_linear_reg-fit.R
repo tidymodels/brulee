@@ -6,10 +6,6 @@ df <- tibble::tibble(
   y = 3 + 2*x1 + 3*x2
 )
 
-# Log for an upcoming issue:
-set.seed(1)
-lantern_linear_reg(y ~ ., df, epochs = 2, verbose = TRUE)
-
 test_that("linear regression test", {
   skip_if(!torch::torch_is_installed())
   skip_on_os("mac") # Generating slightly different results on macOS. eg.
@@ -22,7 +18,6 @@ test_that("linear regression test", {
     regexp = NA
   )
 
-  # TODO
   expect_equal(
     as.numeric(unlist(coef(fit))[c(3,1,2)]),
     as.numeric(coef(lm(y ~ ., df))),
