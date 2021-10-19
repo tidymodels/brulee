@@ -543,8 +543,6 @@ logistic_reg_fit_imp <-
         break()
       }
 
-      model_per_epoch[[epoch]] <- model_to_raw(model)
-
     }
 
     # ------------------------------------------------------------------------------
