@@ -732,9 +732,7 @@ mlp_module <-
 ## -----------------------------------------------------------------------------
 
 get_num_mlp_coef <- function(x) {
-  model <- x$estimates[[1]]
-  param <- vapply(model, function(.x) prod(dim(.x)), double(1))
-  sum(unlist(param))
+  length(unlist(x$estimates[[1]]))
 }
 
 #' @export
@@ -748,6 +746,7 @@ print.lantern_mlp <- function(x, ...) {
   lantern_print(x, ...)
 }
 
+#' @export
 coef.lantern_mlp <- lantern_coefs
 
 ## -----------------------------------------------------------------------------
