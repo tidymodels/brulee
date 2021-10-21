@@ -23,6 +23,7 @@ Imports:
     ggplot2,
     glue,
     hardhat,
+    parsnip,
     recipes,
     rlang,
     stats,
