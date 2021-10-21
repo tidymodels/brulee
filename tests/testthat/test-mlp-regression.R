@@ -311,7 +311,7 @@ test_that("variable hidden_units length", {
     regexp = NA
   )
 
-  expect_equal(get_num_mlp_coef(model), (1*2 + 2) + (2*3 + 3) + (3*1 + 1))
+  expect_equal(length(unlist(coef(model))), (1*2 + 2) + (2*3 + 3) + (3*1 + 1))
 
   expect_error(
     model <- lantern_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1,
