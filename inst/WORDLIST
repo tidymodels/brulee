@@ -17,4 +17,12 @@ perceptron
 relu
 relu’
 tanh
+CMD
+Lifecycle
+LBFGS
+SGD
+optimizers
+ggplot
+mlp
 tibble
+

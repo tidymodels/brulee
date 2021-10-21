@@ -21,10 +21,8 @@
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
-#'
-#' @param formula A formula specifying the outcome terms on the left-hand side,
-#' and the predictor terms on the right-hand side.
 #' @inheritParams lantern_linear_reg
+#' @inheritParams lantern_mlp
 #'
 #' @details
 #'
@@ -140,6 +138,7 @@ lantern_logistic_reg.data.frame <-
            learn_rate = 1.0,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -154,6 +153,7 @@ lantern_logistic_reg.data.frame <-
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -173,6 +173,7 @@ lantern_logistic_reg.matrix <- function(x,
                                         learn_rate = 1,
                                         momentum = 0.0,
                                         batch_size = NULL,
+                                        class_weights = NULL,
                                         stop_iter = 5,
                                         verbose = FALSE,
                                         ...) {
@@ -187,6 +188,7 @@ lantern_logistic_reg.matrix <- function(x,
     penalty = penalty,
     validation = validation,
     batch_size = batch_size,
+    class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
     ...
@@ -202,11 +204,13 @@ lantern_logistic_reg.formula <-
            data,
            epochs = 20L,
            penalty = 0.001,
+
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -221,6 +225,7 @@ lantern_logistic_reg.formula <-
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -241,6 +246,7 @@ lantern_logistic_reg.recipe <-
            learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -255,6 +261,7 @@ lantern_logistic_reg.recipe <-
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -265,7 +272,7 @@ lantern_logistic_reg.recipe <-
 # Bridge
 
 lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
-                                        learn_rate, momentum, penalty,
+                                        learn_rate, momentum, penalty, class_weights,
                                         validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
@@ -304,15 +311,26 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
       )
     }
   }
+  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+  check_logical(verbose, single = TRUE, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 
   outcome <- processed$outcomes[[1]]
 
+  # ------------------------------------------------------------------------------
+
+  lvls <- levels(outcome)
+  xtab <- table(outcome)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+
   ## -----------------------------------------------------------------------------
 
   fit <-
-    lantern_logistic_reg_reg_fit_imp(
+    logistic_reg_fit_imp(
       x = predictors,
       y = outcome,
       epochs = epochs,
@@ -322,6 +340,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose
     )
@@ -366,7 +385,7 @@ new_lantern_logistic_reg <- function( models, best_epoch, loss, dims, y_stats, p
 ## -----------------------------------------------------------------------------
 # Fit code
 
-lantern_logistic_reg_reg_fit_imp <-
+logistic_reg_fit_imp <-
   function(x, y,
            epochs = 20L,
            batch_size = 32,
@@ -375,6 +394,7 @@ lantern_logistic_reg_reg_fit_imp <-
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -393,12 +413,14 @@ lantern_logistic_reg_reg_fit_imp <-
     n <- length(y)
     p <- ncol(x)
 
-    y_dim <- length(levels(y))
+    lvls <- levels(y)
+    y_dim <- length(lvls)
     # the model will output softmax values.
     # so we need to use negative likelihood loss and
     # pass the log of softmax.
-    loss_fn <- function(input, target) {
+    loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
+        weight = wts,
         input = torch::torch_log(input),
         target = target
       )
@@ -411,7 +433,7 @@ lantern_logistic_reg_reg_fit_imp <-
       x <- x[-in_val,, drop = FALSE]
       y <- y[-in_val]
     }
-
+    y_stats <- list(mean = NA_real_, sd = NA_real_)
     loss_label <- "\tLoss:"
 
     if (is.null(batch_size)) {
@@ -470,7 +492,7 @@ lantern_logistic_reg_reg_fit_imp <-
           cl <- function() {
             optimizer$zero_grad()
             pred <- model(batch$x)
-            loss <- loss_fn(pred, batch$y)
+            loss <- loss_fn(pred, batch$y, class_weights)
             loss$backward()
             loss
           }
@@ -481,10 +503,10 @@ lantern_logistic_reg_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y)
+        loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
       } else {
         pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y)
+        loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
       }
 
       # calculate losses
@@ -512,7 +534,7 @@ lantern_logistic_reg_reg_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 5), loss_note)
+                     signif(loss_curr, 3), loss_note)
 
         rlang::inform(msg)
       }
@@ -521,20 +543,26 @@ lantern_logistic_reg_reg_fit_imp <-
         break()
       }
 
-      model_per_epoch[[epoch]] <- model_to_raw(model)
-
     }
+
+    # ------------------------------------------------------------------------------
+
+    class_weights <- as.numeric(class_weights)
+    names(class_weights) <- lvls
 
     ## ---------------------------------------------------------------------------
 
     list(
       models = model_per_epoch,
-      loss = loss_vec[1:length(model_per_epoch)],
       best_epoch = best_epoch,
-      dims = list(p = p, n = n, h = 0, y = y_dim),
+      loss = loss_vec[1:length(model_per_epoch)],
+      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls),
 
+      y_stats = y_stats,
+      stats = y_stats,
       parameters = list(learn_rate = learn_rate,
                         penalty = penalty, validation = validation,
+                        class_weights = class_weights,
                         batch_size = batch_size, momentum = momentum)
     )
   }
@@ -564,48 +592,16 @@ get_num_logistic_reg_coef <- function(x) {
 #' @export
 print.lantern_logistic_reg <- function(x, ...) {
   lvl <- get_levels(x)
-
-  it <- x$best_epoch
-
   if (length(lvl) == 2) {
     cat("Logistic regression\n\n")
   } else {
     cat("Multinomial regression\n\n")
   }
-
-  chr_y <- paste(length(lvl), "classes")
-  cat(
-    format(x$dims$n, big.mark = ","), "samples,",
-    format(x$dims$p, big.mark = ","), "features,",
-    chr_y, "\n"
-  )
-  if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
-  }
-  cat("batch size:", x$parameters$batch_size, "\n")
-  if (!is.null(x$loss)) {
-
-    if(x$parameters$validation > 0) {
-      cat("scaled validation loss after", it, "epochs:",
-          signif(x$loss[it]), "\n")
-    } else {
-      cat("scaled training set loss after", it, "epochs:",
-          signif(x$loss[it]), "\n")
-    }
-  }
-  invisible(x)
+  lantern_print(x)
 }
 
 #' @export
-coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
-  if (is.null(epoch)) {
-    epoch <- object$best_epoch
-  }
-  module <- revive_model(object, epoch = epoch)
-  parameters <- module$parameters
-  lapply(parameters, as.array)
-}
-
+coef.lantern_logistic_reg <- lantern_coefs
 
 
 ## -----------------------------------------------------------------------------
@@ -617,17 +613,4 @@ coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_logistic_reg <- function(object, ...) {
-  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
-
-  if(object$parameters$validation > 0) {
-    lab <- "loss (validation set, scaled)"
-  } else {
-    lab <- "loss (training set)"
-  }
-
-  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-    ggplot2::geom_line() +
-    ggplot2::labs(y = lab) +
-    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
-}
+autoplot.lantern_logistic_reg <- lantern_plot
