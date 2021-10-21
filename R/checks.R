@@ -177,3 +177,45 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 }
 
 
+check_class_weights <- function(wts, lvls, xtab, fn) {
+  if (length(lvls) == 0) {
+    return(NULL)
+  }
+
+  if (is.null(wts)) {
+    wts <- rep(1, length(lvls))
+    return(torch::torch_tensor(wts))
+  }
+  if (!is.numeric(wts)) {
+    msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
+    rlang::abort(msg)
+  }
+
+  if (length(wts) == 1) {
+    val <- wts
+    wts <- rep(1, length(lvls))
+    minority <- names(xtab)[which.min(xtab)]
+    wts[lvls == minority] <- val
+    names(wts) <- lvls
+  }
+
+  if (length(lvls) != length(wts)) {
+    msg <- paste0("There were ", length(wts), " class weights given but ",
+                  length(lvls), " were expected.")
+  }
+
+  nms <- names(wts)
+  if (is.null(nms)) {
+    names(wts) <- lvls
+  } else {
+    if (!identical(sort(nms), sort(lvls))) {
+      msg <- paste("Names for class weights should be:",
+                   paste0("'", lvls, "'", collapse = ", "))
+      rlang::abort(msg)
+    }
+    wts <- wts[lvls]
+  }
+
+
+  torch::torch_tensor(wts)
+}

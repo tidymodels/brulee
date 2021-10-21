@@ -1,6 +1,7 @@
-#' Fit a single layer neural network
+#' Fit neural networks
 #'
-#' `lantern_mlp()` fits a model.
+#' `lantern_mlp()` fits neural network models using stochastic gradient
+#' descent. Multiple layers can be used.
 #'
 #' @param x Depending on the context:
 #'
@@ -17,7 +18,7 @@
 #'   * A __data frame__ with 1 numeric column.
 #'   * A __matrix__ with 1 numeric column.
 #'   * A numeric __vector__.
-#'
+#' @inheritParams lantern_linear_reg
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
@@ -32,13 +33,24 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
+#' @param learn_rate A positive number that controls the rapidity that the model
+#' moves along the descent path. Values less that 0.1 are typical.
+#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
+#' gradient descent.
 #' @param dropout The proportion of parameters set to zero.
+#' @param class_weights Numeric class weights (classification only). The value
+#' can be:
 #'
-#' @param ... Not currently used, but required for extensibility.
+#'  * A named numeric vector (in any order) where the names are the outcome
+#'    factor levels.
+#'  * An unnamed numeric vector assumed to be in the same order as the outcome
+#'    factor levels.
+#'  * A single numeric value for the least frequent class in the training data
+#'    and all other classes receive a weight of one.
 #'
 #' @details
 #'
-#' This function fits single layer, feed-forward neural network models for
+#' This function fits feed-forward neural network models for
 #' regression (when the outcome is a number) or classification (a factor). For
 #' regression, the mean squared error is optimized and cross-entropy is the loss
 #' function for classification.
@@ -46,11 +58,18 @@
 #' The _predictors_ data should all be numeric and encoded in the same units (e.g.
 #' standardized to the same range or distribution). If there are factor
 #' predictors, use a recipe or formula to create indicator variables (or some
-#' other method) to make them numeric.
+#' other method) to make them numeric. Predictors should be in the same units
+#' before training.
 #'
 #' When the outcome is a number, the function internally standardizes the
 #' outcome data to have mean zero and a standard deviation of one. The prediction
 #' function creates predictions on the original scale.
+#'
+#' By default, training halts when the validation loss increases for at least
+#' `step_iter` iterations.
+#'
+#' The model objects are saved for each epoch so that the number of epochs can
+#' be efficiently tuned.
 #'
 #' @return
 #'
@@ -188,6 +207,7 @@ lantern_mlp.data.frame <-
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -204,6 +224,7 @@ lantern_mlp.data.frame <-
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -225,6 +246,7 @@ lantern_mlp.matrix <- function(x,
                                learn_rate = 0.01,
                                momentum = 0.0,
                                batch_size = NULL,
+                               class_weights = NULL,
                                stop_iter = 5,
                                verbose = FALSE,
                                ...) {
@@ -241,6 +263,7 @@ lantern_mlp.matrix <- function(x,
     dropout = dropout,
     validation = validation,
     batch_size = batch_size,
+    class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
     ...
@@ -263,6 +286,7 @@ lantern_mlp.formula <-
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -279,6 +303,7 @@ lantern_mlp.formula <-
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -301,6 +326,7 @@ lantern_mlp.recipe <-
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -317,6 +343,7 @@ lantern_mlp.recipe <-
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -327,7 +354,7 @@ lantern_mlp.recipe <-
 # Bridge
 
 lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                               learn_rate, momentum, penalty, dropout,
+                               learn_rate, momentum, penalty, dropout, class_weights,
                                validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
@@ -384,10 +411,16 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
   outcome <- processed$outcomes[[1]]
 
+  # ------------------------------------------------------------------------------
+
+  lvls <- levels(outcome)
+  xtab <- table(outcome)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+
   ## -----------------------------------------------------------------------------
 
   fit <-
-    lantern_mlp_reg_fit_imp(
+    mlp_fit_imp(
       x = predictors,
       y = outcome,
       epochs = epochs,
@@ -399,6 +432,7 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose
     )
@@ -423,11 +457,17 @@ new_lantern_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
   if (!is.list(estimates)) {
     rlang::abort("'parameters' should be a list")
   }
+  if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
+    rlang::abort("'best_epoch' should be an integer")
+  }
   if (!is.vector(loss) || !is.numeric(loss)) {
     rlang::abort("'loss' should be a numeric vector")
   }
   if (!is.list(dims)) {
     rlang::abort("'dims' should be a list")
+  }
+  if (!is.list(y_stats)) {
+    rlang::abort("'y_stats' should be a list")
   }
   if (!is.list(parameters)) {
     rlang::abort("'parameters' should be a list")
@@ -449,7 +489,7 @@ new_lantern_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
 ## -----------------------------------------------------------------------------
 # Fit code
 
-lantern_mlp_reg_fit_imp <-
+mlp_fit_imp <-
   function(x, y,
            epochs = 100L,
            batch_size = 32,
@@ -460,6 +500,7 @@ lantern_mlp_reg_fit_imp <-
            learn_rate = 0.01,
            momentum = 0.0,
            activation = "relu",
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
@@ -479,19 +520,22 @@ lantern_mlp_reg_fit_imp <-
     p <- ncol(x)
 
     if (is.factor(y)) {
-      y_dim <- length(levels(y))
+      lvls <- levels(y)
+      y_dim <- length(lvls)
       # the model will output softmax values.
       # so we need to use negative likelihood loss and
       # pass the log of softmax.
-      loss_fn <- function(input, target) {
+      loss_fn <- function(input, target, wts = NULL) {
         nnf_nll_loss(
+          weight = wts,
           input = torch::torch_log(input),
           target = target
         )
       }
     } else {
       y_dim <- 1
-      loss_fn <- function(input, target) {
+      lvls <- NULL
+      loss_fn <- function(input, target, wts = NULL) {
         nnf_mse_loss(input, target$view(c(-1,1)))
       }
     }
@@ -563,7 +607,7 @@ lantern_mlp_reg_fit_imp <-
       coro::loop(
         for (batch in dl) {
           pred <- model(batch$x)
-          loss <- loss_fn(pred, batch$y)
+          loss <- loss_fn(pred, batch$y, class_weights)
 
           optimizer$zero_grad()
           loss$backward()
@@ -574,10 +618,10 @@ lantern_mlp_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y)
+        loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
       } else {
         pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y)
+        loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
       }
 
       # calculate losses
@@ -606,7 +650,7 @@ lantern_mlp_reg_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 5), loss_note)
+                     signif(loss_curr, 3), loss_note)
 
         rlang::inform(msg)
       }
@@ -617,6 +661,11 @@ lantern_mlp_reg_fit_imp <-
 
     }
 
+    # ------------------------------------------------------------------------------
+
+    class_weights <- as.numeric(class_weights)
+    names(class_weights) <- lvls
+
     ## ---------------------------------------------------------------------------
 
     list(
@@ -624,12 +673,12 @@ lantern_mlp_reg_fit_imp <-
       estimates = param_per_epoch,
       loss = loss_vec[1:length(param_per_epoch)],
       best_epoch = best_epoch,
-      dims = list(p = p, n = n, h = hidden_units, y = y_dim),
-
+      loss = loss_vec[1:length(model_per_epoch)],
+      dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls),
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(activation = activation, hidden_units = hidden_units,
-                        learn_rate = learn_rate,
+                        learn_rate = learn_rate, class_weights = class_weights,
                         penalty = penalty, dropout = dropout, validation = validation,
                         batch_size = batch_size, momentum = momentum)
     )
@@ -692,57 +741,14 @@ get_num_mlp_coef <- function(x) {
 print.lantern_mlp <- function(x, ...) {
   cat("Multilayer perceptron\n\n")
   cat(x$param$activation, "activation\n")
-  lvl <- get_levels(x)
-  if (is.null(lvl)) {
-    chr_y <- "numeric outcome"
-  } else {
-    chr_y <- paste(length(lvl), "classes")
-  }
-  cat(
-    format(x$dims$n, big.mark = ","), "samples,",
-    format(x$dims$p, big.mark = ","), "features,",
-    chr_y, "\n"
-  )
   cat(
     paste0("c(", paste(x$dims$h, collapse = ","), ")"), "hidden units,",
     format(get_num_mlp_coef(x), big.mark = ","), "model parameters\n"
   )
-  if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
-  }
-  if (x$parameters$dropout > 0) {
-    cat("dropout proportion:", x$parameters$dropout, "\n")
-  }
-  cat("batch size:", x$parameters$batch_size, "\n")
-  if (!is.null(x$loss)) {
-    it <- x$best_epoch
-    if(x$parameters$validation > 0) {
-      if (is.na(x$y_stats$mean)) {
-        cat("validation loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      } else {
-        cat("scaled validation loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      }
-    } else {
-      if (is.na(x$y_stats$mean)) {
-        cat("training set loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      } else {
-        cat("scaled training set loss after", it, "epochs:",
-            signif(x$loss[it]), "\n")
-      }
-    }
-  }
-  invisible(x)
+  lantern_print(x, ...)
 }
 
-coef.lantern_mlp <- function(object, epoch = NULL, ...) {
-  if (is.null(epoch)) {
-    epoch <- object$best_epoch
-  }
-  object$estimates[[epoch]]
-}
+coef.lantern_mlp <- lantern_coefs
 
 ## -----------------------------------------------------------------------------
 
@@ -768,34 +774,4 @@ get_activation_fn <- function(arg, ...) {
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_mlp <- function(object, ...) {
-  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
-
-  if(object$parameters$validation > 0) {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (validation set)"
-    } else {
-      lab <- "loss (validation set, scaled)"
-    }
-  } else {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (training set)"
-    } else {
-      lab <- "loss (training set, scaled)"
-    }
-  }
-
-  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-    ggplot2::geom_line() +
-    ggplot2::labs(y = lab)+
-    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
-}
-
-model_to_raw <- function(model) {
-  con <- rawConnection(raw(), open = "w")
-  on.exit({close(con)}, add = TRUE)
-  torch::torch_save(model, con)
-  r <- rawConnectionValue(con)
-  r
-}
-
+autoplot.lantern_mlp <- lantern_plot
