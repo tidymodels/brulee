@@ -85,9 +85,7 @@ lantern_coefs <- function(object, epoch = NULL, ...) {
  if (is.null(epoch)) {
   epoch <- object$best_epoch
  }
- module <- revive_model(object, epoch = epoch)
- parameters <- module$parameters
- lapply(parameters, as.array)
+ coefs <- object$estimates[[epoch]]
 }
 
 # ------------------------------------------------------------------------------
