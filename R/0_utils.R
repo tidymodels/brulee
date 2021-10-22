@@ -5,17 +5,18 @@ lantern_plot <- function(object, ...) {
 
  if(object$parameters$validation > 0) {
   if (is.na(object$y_stats$mean)) {
-   lab <- "loss (validation set)"
+   lab <- "\n(validation set)"
   } else {
-   lab <- "loss (validation set, scaled)"
+   lab <- "\n(validation set, scaled)"
   }
  } else {
   if (is.na(object$y_stats$mean)) {
-   lab <- "loss (training set)"
+   lab <- "\n(training set)"
   } else {
-   lab <- "loss (training set, scaled)"
+   lab <- "\n(training set, scaled)"
   }
  }
+ lab <- paste(object$loss_type, lab)
 
  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
   ggplot2::geom_line() +

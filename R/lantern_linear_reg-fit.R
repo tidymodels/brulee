@@ -544,7 +544,8 @@ linear_reg_fit_imp <-
       loss_prev <- loss_curr
 
       # persists models and coefficients
-      model_per_epoch[[epoch]] <- model_to_raw(model)
+      # TODO change this
+      model_per_epoch[[epoch]] <- 2 #model_to_raw(model)
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
@@ -565,7 +566,7 @@ linear_reg_fit_imp <-
       loss = loss_vec[1:length(model_per_epoch)],
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = 0, y = y_dim),
-      loss = loss,
+      loss_type = loss_type,
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(learn_rate = learn_rate,
