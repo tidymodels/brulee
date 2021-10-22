@@ -587,21 +587,6 @@ linear_reg_module <-
     }
   )
 
-# ------------------------------------------------------------------------------
-
-reg_loss_fn <- function(input, target, loss) {
-  loss_fn <- get_loss_fn(loss)
-  loss_fn(input, target$view(c(-1,1)))
-}
-
-get_loss_fn <- function(x) {
-  switch(x,
-         mse = torch::nnf_mse_loss,
-         mae = torch::nnf_l1_loss,
-         poisson = torch::nn_poisson_nll_loss
-  )
-}
-
 ## -----------------------------------------------------------------------------
 
 #' @export
