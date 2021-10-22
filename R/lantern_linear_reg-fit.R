@@ -31,6 +31,9 @@
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
 #' are normally chosen for other optimizers. (`optimizer = "SGD"` only)
+#' @param loss A character string for the loss function. For this model,
+#' possible values are `"mse"` (mean squared error, the default) or `"mae"`
+#' (mean absolute error).
 #' @param momentum A positive number on `[0, 1]` for the momentum parameter in
 #'  gradient descent. (`optimizer = "SGD"` only)
 #' @param validation The proportion of the data randomly assigned to a
@@ -157,6 +160,7 @@ lantern_linear_reg.data.frame <-
            momentum = 0.0,
            batch_size = NULL,
            stop_iter = 5,
+           loss = "mse",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -166,6 +170,7 @@ lantern_linear_reg.data.frame <-
       epochs = epochs,
       optimizer = optimizer,
       learn_rate = learn_rate,
+      loss = loss,
       penalty = penalty,
       validation = validation,
       momentum = momentum,
@@ -190,6 +195,7 @@ lantern_linear_reg.matrix <- function(x,
                                       momentum = 0.0,
                                       batch_size = NULL,
                                       stop_iter = 5,
+                                      loss = "mse",
                                       verbose = FALSE,
                                       ...) {
   processed <- hardhat::mold(x, y)
@@ -204,6 +210,7 @@ lantern_linear_reg.matrix <- function(x,
     validation = validation,
     batch_size = batch_size,
     stop_iter = stop_iter,
+    loss = loss,
     verbose = verbose,
     ...
   )
@@ -224,6 +231,7 @@ lantern_linear_reg.formula <-
            momentum = 0.0,
            batch_size = NULL,
            stop_iter = 5,
+           loss = "mse",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -238,6 +246,7 @@ lantern_linear_reg.formula <-
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -258,6 +267,7 @@ lantern_linear_reg.recipe <-
            momentum = 0.0,
            batch_size = NULL,
            stop_iter = 5,
+           loss = "mse",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -272,6 +282,7 @@ lantern_linear_reg.recipe <-
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -282,7 +293,8 @@ lantern_linear_reg.recipe <-
 
 lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
                                       learn_rate, momentum, penalty, dropout,
-                                      validation, batch_size, stop_iter, verbose, ...) {
+                                      validation, batch_size, stop_iter,
+                                      verbose, loss, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -326,6 +338,10 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
 
   outcome <- processed$outcomes[[1]]
 
+  # ------------------------------------------------------------------------------
+
+  loss <- check_loss(loss, "regression")
+
   ## -----------------------------------------------------------------------------
 
   fit <-
@@ -340,12 +356,14 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose
     )
 
   new_lantern_linear_reg(
     models = fit$models,
     best_epoch = fit$best_epoch,
+    loss_type = fit$loss_type,
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
@@ -354,7 +372,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_lantern_linear_reg <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
+new_lantern_linear_reg <- function( models, best_epoch, loss, loss_type, dims, y_stats, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -370,8 +388,10 @@ new_lantern_linear_reg <- function( models, best_epoch, loss, dims, y_stats, par
   if (!inherits(blueprint, "hardhat_blueprint")) {
     rlang::abort("'blueprint' should be a hardhat blueprint")
   }
+
   hardhat::new_model(models = models,
                      best_epoch = best_epoch,
+                     loss_type = loss_type,
                      loss = loss,
                      dims = dims,
                      y_stats = y_stats,
@@ -393,6 +413,7 @@ linear_reg_fit_imp <-
            learn_rate = 1,
            momentum = 0.0,
            stop_iter = 5,
+           loss_type = NA_character_,
            verbose = FALSE,
            ...) {
 
@@ -411,9 +432,6 @@ linear_reg_fit_imp <-
     p <- ncol(x)
 
     y_dim <- 1
-    loss_fn <- function(input, target) {
-      nnf_mse_loss(input, target$view(c(-1,1)))
-    }
 
     if (validation > 0) {
       in_val <- sample(seq_along(y), floor(n * validation))
@@ -430,7 +448,7 @@ linear_reg_fit_imp <-
     if (validation > 0) {
       y_val <- scale_y(y_val, y_stats)
     }
-    loss_label <- "\tLoss (scaled):"
+    loss_label <- paste(loss_type, "(scaled):")
 
     if (is.null(batch_size)) {
       batch_size <- nrow(x)
@@ -487,7 +505,7 @@ linear_reg_fit_imp <-
           cl <- function() {
             optimizer$zero_grad()
             pred <- model(batch$x)
-            loss <- loss_fn(pred, batch$y)
+            loss <- reg_loss_fn(pred, batch$y, loss_type)
             loss$backward()
             loss
           }
@@ -498,10 +516,10 @@ linear_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y)
+        loss <- reg_loss_fn(pred, dl_val$dataset$data$y, loss_type)
       } else {
         pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y)
+        loss <- reg_loss_fn(pred, dl$dataset$data$y, loss_type)
       }
 
       # calculate losses
@@ -530,7 +548,7 @@ linear_reg_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 3), loss_note)
+                     signif(loss_curr, 3), "\t", loss_note)
 
         rlang::inform(msg)
       }
@@ -538,7 +556,6 @@ linear_reg_fit_imp <-
       if (poor_epoch == stop_iter) {
         break()
       }
-
     }
 
     ## ---------------------------------------------------------------------------
@@ -548,7 +565,7 @@ linear_reg_fit_imp <-
       loss = loss_vec[1:length(model_per_epoch)],
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = 0, y = y_dim),
-
+      loss = loss,
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(learn_rate = learn_rate,
@@ -568,6 +585,21 @@ linear_reg_module <-
       x %>% self$fc1()
     }
   )
+
+# ------------------------------------------------------------------------------
+
+reg_loss_fn <- function(input, target, loss) {
+  loss_fn <- get_loss_fn(loss)
+  loss_fn(input, target$view(c(-1,1)))
+}
+
+get_loss_fn <- function(x) {
+  switch(x,
+         mse = torch::nnf_mse_loss,
+         mae = torch::nnf_l1_loss,
+         poisson = torch::nn_poisson_nll_loss
+  )
+}
 
 ## -----------------------------------------------------------------------------
 

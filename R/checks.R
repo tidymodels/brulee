@@ -219,3 +219,16 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
 
   torch::torch_tensor(wts)
 }
+
+check_loss <- function(x, type = "regression") {
+  if (!is.character(x) | length(x) != 1) {
+    rlang::abort("'loss' should be a single character value.")
+  }
+  if (type == "regression") {
+    x <- rlang::arg_match0(x, c("mse", "mae"), "loss")
+  } else {
+    x <- rlang::arg_match0(x, c("cross_entropy"), "loss")
+  }
+  x
+}
+
