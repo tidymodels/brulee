@@ -47,7 +47,10 @@
 #'    factor levels.
 #'  * A single numeric value for the least frequent class in the training data
 #'    and all other classes receive a weight of one.
-#'
+#' @param loss A character string for the loss function. For regression models,
+#' possible values are `"mse"` (mean squared error, the default) or `"mae"`
+#' (mean absolute error). For classification, the only possibility is
+#' "`cross_entropy"`.
 #' @details
 #'
 #' This function fits feed-forward neural network models for
@@ -76,6 +79,7 @@
 #' A `lantern_mlp` object with elements:
 #'  * `models`: a list object of serialized models for each epoch before stopping.
 #'  * `best_epoch`: an integer for the epoch with the smallest loss.
+#'  * `loss_type`: a character string for the type of loss function.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
@@ -207,6 +211,7 @@ lantern_mlp.data.frame <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           loss = NULL,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -224,6 +229,7 @@ lantern_mlp.data.frame <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -246,6 +252,7 @@ lantern_mlp.matrix <- function(x,
                                batch_size = NULL,
                                class_weights = NULL,
                                stop_iter = 5,
+                               loss = NULL,
                                verbose = FALSE,
                                ...) {
   processed <- hardhat::mold(x, y)
@@ -263,6 +270,7 @@ lantern_mlp.matrix <- function(x,
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    loss = loss,
     verbose = verbose,
     ...
   )
@@ -286,6 +294,7 @@ lantern_mlp.formula <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           loss = NULL,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -303,6 +312,7 @@ lantern_mlp.formula <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -326,6 +336,7 @@ lantern_mlp.recipe <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           loss = NULL,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -343,6 +354,7 @@ lantern_mlp.recipe <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -352,8 +364,9 @@ lantern_mlp.recipe <-
 # Bridge
 
 lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                               learn_rate, momentum, penalty, dropout, class_weights,
-                               validation, batch_size, stop_iter, verbose, ...) {
+                               learn_rate, momentum, penalty, dropout,
+                               class_weights, validation, batch_size, stop_iter,
+                               loss, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -415,6 +428,20 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   xtab <- table(outcome)
   class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
 
+  # ------------------------------------------------------------------------------
+
+  if (is.null(lvls)) {
+    if (is.null(loss)) {
+      loss <- "mse"
+    }
+    loss <- check_loss(loss, "regression")
+  } else {
+    if (is.null(loss)) {
+      loss <- "cross_entropy"
+    }
+    loss <- check_loss(loss, "classification")
+  }
+
   ## -----------------------------------------------------------------------------
 
   fit <-
@@ -432,12 +459,14 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss_type = loss,
       verbose = verbose
     )
 
   new_lantern_mlp(
     models = fit$models,
     best_epoch = fit$best_epoch,
+    loss_type = fit$loss_type,
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
@@ -446,7 +475,8 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
 }
 
-new_lantern_mlp <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
+new_lantern_mlp <- function( models, best_epoch, loss_type, loss, dims, y_stats,
+                             parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -470,6 +500,7 @@ new_lantern_mlp <- function( models, best_epoch, loss, dims, y_stats, parameters
   }
   hardhat::new_model(models = models,
                      best_epoch = best_epoch,
+                     loss_type = loss_type,
                      loss = loss,
                      dims = dims,
                      y_stats = y_stats,
@@ -494,6 +525,7 @@ mlp_fit_imp <-
            activation = "relu",
            class_weights = NULL,
            stop_iter = 5,
+           loss_type = NULL,
            verbose = FALSE,
            ...) {
 
@@ -514,22 +546,9 @@ mlp_fit_imp <-
     if (is.factor(y)) {
       lvls <- levels(y)
       y_dim <- length(lvls)
-      # the model will output softmax values.
-      # so we need to use negative likelihood loss and
-      # pass the log of softmax.
-      loss_fn <- function(input, target, wts = NULL) {
-        nnf_nll_loss(
-          weight = wts,
-          input = torch::torch_log(input),
-          target = target
-        )
-      }
     } else {
       y_dim <- 1
       lvls <- NULL
-      loss_fn <- function(input, target, wts = NULL) {
-        nnf_mse_loss(input, target$view(c(-1,1)))
-      }
     }
 
     if (validation > 0) {
@@ -546,10 +565,10 @@ mlp_fit_imp <-
       if (validation > 0) {
         y_val <- scale_y(y_val, y_stats)
       }
-      loss_label <- "\tLoss (scaled):"
+      loss_label <- paste(loss_type, "(scaled):")
     } else {
       y_stats <- list(mean = NA_real_, sd = NA_real_)
-      loss_label <- "\tLoss:"
+      loss_label <- loss_type
     }
 
     if (is.null(batch_size)) {
@@ -599,7 +618,8 @@ mlp_fit_imp <-
       coro::loop(
         for (batch in dl) {
           pred <- model(batch$x)
-          loss <- loss_fn(pred, batch$y, class_weights)
+
+          loss <- mlp_loss(pred, batch$y, class_weights, loss_type)
 
           optimizer$zero_grad()
           loss$backward()
@@ -610,10 +630,10 @@ mlp_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
+        loss <- mlp_loss(pred, dl_val$dataset$data$y, class_weights, loss_type)
       } else {
         pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
+        loss <- mlp_loss(pred, dl$dataset$data$y, class_weights, loss_type)
       }
 
       # calculate losses
@@ -627,7 +647,7 @@ mlp_fit_imp <-
 
       if (loss_curr >= loss_min) {
         poor_epoch <- poor_epoch + 1
-        loss_note <- paste0(" ", cli::symbol$cross, " ")
+        loss_note <- cli::symbol$cross
       } else {
         loss_min <- loss_curr
         loss_note <- NULL
@@ -641,7 +661,7 @@ mlp_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 3), loss_note)
+                     signif(loss_curr, 3), "\t", loss_note)
 
         rlang::inform(msg)
       }
@@ -664,6 +684,7 @@ mlp_fit_imp <-
       best_epoch = best_epoch,
       loss = loss_vec[1:length(model_per_epoch)],
       dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls),
+      loss_type = loss_type,
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(activation = activation, hidden_units = hidden_units,

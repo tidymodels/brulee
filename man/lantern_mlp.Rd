@@ -27,6 +27,7 @@ lantern_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  loss = NULL,
   verbose = FALSE,
   ...
 )
@@ -45,6 +46,7 @@ lantern_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  loss = NULL,
   verbose = FALSE,
   ...
 )
@@ -63,6 +65,7 @@ lantern_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  loss = NULL,
   verbose = FALSE,
   ...
 )
@@ -81,6 +84,7 @@ lantern_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  loss = NULL,
   verbose = FALSE,
   ...
 )
@@ -147,6 +151,11 @@ and all other classes receive a weight of one.
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
 
+\item{loss}{A character string for the loss function. For regression models,
+possible values are \code{"mse"} (mean squared error, the default) or \code{"mae"}
+(mean absolute error). For classification, the only possibility is
+"\verb{cross_entropy"}.}
+
 \item{verbose}{A logical that prints out the iteration history.}
 
 \item{formula}{A formula specifying the outcome terms on the left-hand side,
@@ -162,6 +171,7 @@ A \code{lantern_mlp} object with elements:
 \itemize{
 \item \code{models}: a list object of serialized models for each epoch before stopping.
 \item \code{best_epoch}: an integer for the epoch with the smallest loss.
+\item \code{loss_type}: a character string for the type of loss function.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
 \item \code{dim}: A list of data dimensions.

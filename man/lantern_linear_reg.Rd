@@ -24,6 +24,7 @@ lantern_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  loss = "mse",
   verbose = FALSE,
   ...
 )
@@ -39,6 +40,7 @@ lantern_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  loss = "mse",
   verbose = FALSE,
   ...
 )
@@ -54,6 +56,7 @@ lantern_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  loss = "mse",
   verbose = FALSE,
   ...
 )
@@ -69,6 +72,7 @@ lantern_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  loss = "mse",
   verbose = FALSE,
   ...
 )
@@ -115,6 +119,10 @@ batch.}
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
+
+\item{loss}{A character string for the loss function. For this model,
+possible values are \code{"mse"} (mean squared error, the default) or \code{"mae"}
+(mean absolute error).}
 
 \item{verbose}{A logical that prints out the iteration history.}
 

@@ -356,7 +356,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
-      loss = loss,
+      loss_type = loss,
       verbose = verbose
     )
 
@@ -413,7 +413,7 @@ linear_reg_fit_imp <-
            learn_rate = 1,
            momentum = 0.0,
            stop_iter = 5,
-           loss_type = NA_character_,
+           loss_type = "mse",
            verbose = FALSE,
            ...) {
 
@@ -533,7 +533,7 @@ linear_reg_fit_imp <-
 
       if (loss_curr >= loss_min) {
         poor_epoch <- poor_epoch + 1
-        loss_note <- paste0(" ", cli::symbol$cross, " ")
+        loss_note <- cli::symbol$cross
       } else {
         loss_min <- loss_curr
         loss_note <- NULL
