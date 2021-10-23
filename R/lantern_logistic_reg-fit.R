@@ -23,6 +23,8 @@
 #'   * A __data frame__ containing both the predictors and the outcome.
 #' @inheritParams lantern_linear_reg
 #' @inheritParams lantern_mlp
+#' @param loss A character string for the loss function. For this model,the
+#' only value is `"cross_entropy"`.
 #'
 #' @details
 #'
@@ -39,6 +41,7 @@
 #' A `lantern_logistic_reg` object with elements:
 #'  * `models`: a list object of serialized models for each epoch before stopping.
 #'  * `best_epoch`: an integer for the epoch with the smallest loss.
+#'  * `loss_type`: a character vector with the name of the loss function.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
@@ -140,6 +143,7 @@ lantern_logistic_reg.data.frame <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           loss = "cross_entropy",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -155,6 +159,7 @@ lantern_logistic_reg.data.frame <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -175,6 +180,7 @@ lantern_logistic_reg.matrix <- function(x,
                                         batch_size = NULL,
                                         class_weights = NULL,
                                         stop_iter = 5,
+                                        loss = "cross_entropy",
                                         verbose = FALSE,
                                         ...) {
   processed <- hardhat::mold(x, y)
@@ -190,6 +196,7 @@ lantern_logistic_reg.matrix <- function(x,
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    loss = loss,
     verbose = verbose,
     ...
   )
@@ -212,6 +219,7 @@ lantern_logistic_reg.formula <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           loss = "cross_entropy",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -227,6 +235,7 @@ lantern_logistic_reg.formula <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -248,6 +257,7 @@ lantern_logistic_reg.recipe <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           loss = "cross_entropy",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -263,6 +273,7 @@ lantern_logistic_reg.recipe <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = loss,
       verbose = verbose,
       ...
     )
@@ -271,9 +282,10 @@ lantern_logistic_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
-                                        learn_rate, momentum, penalty, class_weights,
-                                        validation, batch_size, stop_iter, verbose, ...) {
+lantern_logistic_reg_bridge <- function(processed, epochs, optimizer, learn_rate,
+                                        momentum, penalty, class_weights,
+                                        validation, batch_size, stop_iter, loss,
+                                        verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -342,12 +354,14 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      loss = "cross_entropy",
       verbose = verbose
     )
 
   new_lantern_logistic_reg(
     models = fit$models,
     best_epoch = fit$best_epoch,
+    loss_type = fit$loss_type,
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
@@ -356,7 +370,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_lantern_logistic_reg <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
+new_lantern_logistic_reg <- function( models, best_epoch, loss, loss_type, dims, y_stats, parameters, blueprint) {
   if (!is.list(models)) {
     rlang::abort("'models' should be a list.")
   }
@@ -374,6 +388,7 @@ new_lantern_logistic_reg <- function( models, best_epoch, loss, dims, y_stats, p
   }
   hardhat::new_model(models = models,
                      best_epoch = best_epoch,
+                     loss_type = loss_type,
                      loss = loss,
                      dims = dims,
                      y_stats = y_stats,
@@ -396,6 +411,7 @@ logistic_reg_fit_imp <-
            momentum = 0.0,
            class_weights = NULL,
            stop_iter = 5,
+           loss_type = loss_type,
            verbose = FALSE,
            ...) {
 
@@ -415,16 +431,6 @@ logistic_reg_fit_imp <-
 
     lvls <- levels(y)
     y_dim <- length(lvls)
-    # the model will output softmax values.
-    # so we need to use negative likelihood loss and
-    # pass the log of softmax.
-    loss_fn <- function(input, target, wts = NULL) {
-      nnf_nll_loss(
-        weight = wts,
-        input = torch::torch_log(input),
-        target = target
-      )
-    }
 
     if (validation > 0) {
       in_val <- sample(seq_along(y), floor(n * validation))
@@ -434,7 +440,7 @@ logistic_reg_fit_imp <-
       y <- y[-in_val]
     }
     y_stats <- list(mean = NA_real_, sd = NA_real_)
-    loss_label <- "\tLoss:"
+    loss_label <- loss_type
 
     if (is.null(batch_size)) {
       batch_size <- nrow(x)
@@ -492,7 +498,7 @@ logistic_reg_fit_imp <-
           cl <- function() {
             optimizer$zero_grad()
             pred <- model(batch$x)
-            loss <- loss_fn(pred, batch$y, class_weights)
+            loss <- cls_loss_fn(pred, batch$y, class_weights)
             loss$backward()
             loss
           }
@@ -503,10 +509,10 @@ logistic_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
+        loss <- cls_loss_fn(pred, dl_val$dataset$data$y, class_weights)
       } else {
         pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
+        loss <- cls_loss_fn(pred, dl$dataset$data$y, class_weights)
       }
 
       # calculate losses
@@ -520,7 +526,7 @@ logistic_reg_fit_imp <-
 
       if (loss_curr >= loss_min) {
         poor_epoch <- poor_epoch + 1
-        loss_note <- paste0(" ", cli::symbol$cross, " ")
+        loss_note <- cli::symbol$cross
       } else {
         loss_min <- loss_curr
         loss_note <- NULL
@@ -530,11 +536,11 @@ logistic_reg_fit_imp <-
       loss_prev <- loss_curr
 
       # persists models and coefficients
-      model_per_epoch[[epoch]] <- model_to_raw(model)
+      model_per_epoch[[epoch]] <- 2 #model_to_raw(model)
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 3), loss_note)
+                     signif(loss_curr, 3), "\t", loss_note)
 
         rlang::inform(msg)
       }
@@ -557,7 +563,7 @@ logistic_reg_fit_imp <-
       best_epoch = best_epoch,
       loss = loss_vec[1:length(model_per_epoch)],
       dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls),
-
+      loss_type = loss_type,
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(learn_rate = learn_rate,

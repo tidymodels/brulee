@@ -16,7 +16,7 @@ lantern_plot <- function(object, ...) {
    lab <- "\n(training set, scaled)"
   }
  }
- lab <- paste(object$loss_type, lab)
+ lab <- paste(gsub("_", " ", object$loss_type), lab)
 
  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
   ggplot2::geom_line() +
@@ -114,13 +114,13 @@ get_loss_fn <- function(x) {
   )
 }
 
-reg_loss_fn <- function(input, target, loss) {
+reg_loss_fn <- function(input, target, loss = "mse") {
   loss_fn <- get_loss_fn(loss)
   loss_fn(input, target$view(c(-1,1)))
 }
 
 
-cls_loss_fn <- function(input, target, weights, loss) {
+cls_loss_fn <- function(input, target, weights, loss = "cross_entropy") {
   loss_fn <- get_loss_fn(loss)
   # We currently allow only cross_entry so the log is applied. That might have
   # be more complex if anothere loss function is used.
