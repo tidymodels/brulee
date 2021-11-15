@@ -6,6 +6,8 @@
 \alias{lantern-package}
 \title{lantern: High-Level Modeling Functions with 'torch'}
 \description{
+\if{html}{\figure{logo.png}{options: align='right' alt='logo' width='120'}}
+
 High-level modeling functions with 'torch'.
 }
 \author{

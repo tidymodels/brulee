@@ -7,7 +7,7 @@
 
 [![R-CMD-check](https://github.com/tidymodels/lantern/workflows/R-CMD-check/badge.svg)](https://github.com/tidymodels/lantern/actions)
 [![Codecov test
-coverage](https://codecov.io/gh/tidymodels/lantern/branch/master/graph/badge.svg)](https://codecov.io/gh/tidymodels/lantern?branch=master)
+coverage](https://codecov.io/gh/tidymodels/lantern/branch/main/graph/badge.svg)](https://codecov.io/gh/tidymodels/lantern?branch=main)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->

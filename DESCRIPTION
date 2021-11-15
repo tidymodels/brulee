@@ -13,6 +13,7 @@ Imports:
     cli,
     coro (>= 1.0.1),
     dplyr,
+    generics,
     ggplot2,
     glue,
     hardhat,
@@ -28,9 +29,10 @@ Suggests:
     spelling,
     testthat,
     yardstick
-Config/Needs/website: tidyverse/tidytemplate
+Config/Needs/website: 
+    tidyverse/tidytemplate
+Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
