@@ -52,7 +52,7 @@ predict_lantern_linear_reg_bridge <- function(type, model, predictors, epoch) {
 
   predict_function <- get_linear_reg_predict_function(type)
 
-  max_epoch <- length(model$models)
+  max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
     msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
                  "be made at epoch", epoch, "so last epoch is used.")
@@ -73,8 +73,16 @@ get_linear_reg_predict_function <- function(type) {
 
 
 predict_lantern_linear_reg_raw <- function(model, predictors, epoch) {
-  module <- revive_model(model, epoch)
-  module$eval() # put the model in evaluation mode
+  # convert from raw format
+  module <- revive_model(model$model_obj)
+  # get current model parameters
+  estimates <- model$estimates[[epoch]]
+  # convert to torch representation
+  estimates <- lapply(estimates, torch::torch_tensor)
+  # stuff back into the model
+  module$load_state_dict(estimates)
+  # put the model in evaluation mode
+  module$eval()
   predictions <- module(torch::torch_tensor(predictors))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
