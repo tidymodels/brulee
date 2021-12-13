@@ -571,20 +571,12 @@ autoplot.lantern_multinomial_reg <- lantern_plot
 
 
 
-foo <- function(object, epoch = NULL, ...) {
-  if (is.null(epoch)) {
-    epoch <- object$best_epoch
-  }
+coef.lantern_multinomial_reg <- function(object, epoch = NULL, ...) {
   param <- lantern:::lantern_coefs(object, epoch)
   x_names <- c("(Intercept)", object$dims$features)
   param <- rbind(param$fc1.bias, t(param$fc1.weight))
-  # need feature names
   rownames(param) <- x_names
   colnames(param) <- object$dims$levels
   param
 }
-
-# foo(fit)
-
-
 
