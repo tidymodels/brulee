@@ -1,15 +1,29 @@
 #' @import torch
 #'
 
-#' @importFrom dplyr %>%
+
 #' @importFrom stats complete.cases model.matrix terms
 #' @importFrom utils globalVariables
+#' @importFrom recipes names0
+# This is a temporary dummy import for parsnip; won't be needed as a dependency
+# once lantern is sent to CRAN
+#' @importFrom parsnip show_fit
+#'
+#' @importFrom dplyr %>%
 #' @export
 dplyr::`%>%`
 
 #' @importFrom ggplot2 autoplot
 #' @export
 ggplot2::autoplot
+
+#' @importFrom generics tunable
+#' @export
+generics::tunable
+
+#' @importFrom stats coef
+#' @export
+stats::coef
 
 # ------------------------------------------------------------------------------
 
