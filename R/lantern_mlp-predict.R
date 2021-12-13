@@ -31,10 +31,6 @@ predict.lantern_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...
   predict_lantern_mlp_bridge(type, object, forged$predictors, epoch = epoch)
 }
 
-mlp_valid_predict_types <- function() {
-  c("numeric", "prob", "class")
-}
-
 # ------------------------------------------------------------------------------
 # Bridge
 
@@ -137,6 +133,11 @@ get_levels <- function(model) {
   levels(model$blueprint$ptypes$outcomes[[1]])
 }
 
+
+valid_predict_types <- function() {
+  c("numeric", "prob", "class")
+}
+
 check_type <- function(model, type) {
 
   outcome_ptype <- model$blueprint$ptypes$outcomes[[1]]
@@ -150,7 +151,7 @@ check_type <- function(model, type) {
       rlang::abort(glue::glue("Unknown outcome type '{class(outcome_ptype)}'"))
   }
 
-  type <- rlang::arg_match(type, mlp_valid_predict_types())
+  type <- rlang::arg_match(type, valid_predict_types())
 
   if (is.factor(outcome_ptype)) {
     if (!type %in% c("prob", "class"))

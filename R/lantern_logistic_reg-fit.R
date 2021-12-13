@@ -48,6 +48,9 @@
 #' @examples
 #' if (torch::torch_is_installed()) {
 #'
+#'  library(recipes)
+#'  library(yardstick)
+#'
 #'  ## -----------------------------------------------------------------------------
 #'  # increase # epochs to get better results
 #'
@@ -87,30 +90,6 @@
 #'  predict(fit, cells_test, type = "prob") %>%
 #'   bind_cols(cells_test) %>%
 #'   roc_auc(class, .pred_PS)
-#'
-#'  # ------------------------------------------------------------------------------
-#'  # multinomial regression
-#'
-#'  data(penguins, package = "modeldata")
-#'
-#'  penguins <- penguins %>% na.omit()
-#'
-#'  set.seed(122)
-#'  in_train <- sample(1:nrow(penguins), 200)
-#'  penguins_train <- penguins[ in_train,]
-#'  penguins_test  <- penguins[-in_train,]
-#'
-#'  rec <- recipe(island ~ ., data = penguins_train) %>%
-#'   step_dummy(species, sex) %>%
-#'   step_normalize(all_predictors())
-#'
-#'  set.seed(3)
-#'  fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 5)
-#'  fit
-#'
-#'  predict(fit, penguins_test) %>%
-#'   bind_cols(penguins_test) %>%
-#'   conf_mat(island, .pred_class)
 #' }
 #'
 #' @export
@@ -320,6 +299,9 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   ## -----------------------------------------------------------------------------
 
   outcome <- processed$outcomes[[1]]
+  if (length(levels(outcome)) > 2) {
+    rlang::abort("logistic regression is for outcomes with two classes.")
+  }
 
   # ------------------------------------------------------------------------------
 
@@ -591,12 +573,7 @@ get_num_logistic_reg_coef <- function(x) {
 
 #' @export
 print.lantern_logistic_reg <- function(x, ...) {
-  lvl <- get_levels(x)
-  if (length(lvl) == 2) {
-    cat("Logistic regression\n\n")
-  } else {
-    cat("Multinomial regression\n\n")
-  }
+  cat("Logistic regression\n\n")
   lantern_print(x)
 }
 
