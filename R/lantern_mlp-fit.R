@@ -609,11 +609,11 @@ mlp_fit_imp <-
 
       # calculate loss on the full datasets
       if (validation > 0) {
-        pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
+        pred <- model(dl_val$dataset$tensors$x)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
       } else {
-        pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
+        pred <- model(dl$dataset$tensors$x)
+        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
       }
 
       # calculate losses
