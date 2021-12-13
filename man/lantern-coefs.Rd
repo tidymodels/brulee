@@ -18,6 +18,8 @@
 
 \item{epoch}{A single integer for the training iteration. If left \code{NULL},
 the estimates from the best model fit (via internal performance metrics).}
+
+\item{...}{Not currently used.}
 }
 \value{
 For logistic/linear regression, a named vector. For neural networks,

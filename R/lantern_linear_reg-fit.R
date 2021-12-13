@@ -577,9 +577,6 @@ print.lantern_linear_reg <- function(x, ...) {
   lantern_print(x)
 }
 
-#' @export
-coef.lantern_linear_reg <- lantern_coefs
-
 ## -----------------------------------------------------------------------------
 
 #' Plot model loss over epochs

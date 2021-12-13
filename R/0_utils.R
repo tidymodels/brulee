@@ -81,14 +81,48 @@ lantern_print <- function(x, ...) {
 
 # ------------------------------------------------------------------------------
 
+
 lantern_coefs <- function(object, epoch = NULL, ...) {
- if (is.null(epoch)) {
-  epoch <- object$best_epoch
- }
- module <- revive_model(object, epoch = epoch)
- parameters <- module$parameters
- lapply(parameters, as.array)
+  if (!is.null(epoch) && length(epoch) != 1) {
+    rlang::abort("'epoch' should be a single integer.")
+  }
+  if (is.null(epoch)) {
+    epoch <- object$best_epoch
+  }
+  module <- revive_model(object, epoch = epoch)
+  parameters <- module$parameters
+  lapply(parameters, as.array)
 }
+
+
+#' Extract Model Coefficients
+#'
+#' @param object A model fit from \pkg{lantern}.
+#' @param epoch A single integer for the training iteration. If left `NULL`,
+#' the estimates from the best model fit (via internal performance metrics).
+#' @param ... Not currently used.
+#' @return For logistic/linear regression, a named vector. For neural networks,
+#' a list of arrays.
+#'
+#' @name lantern-coefs
+#' @export
+coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
+  network_params <- lantern_coefs(object, epoch)
+  slopes <- network_params$fc1.weight[,2] - network_params$fc1.weight[,1]
+  int <- network_params$fc1.bias[2] - network_params$fc1.bias[1]
+  param <- c(int, slopes)
+  names(param) <- c("(Intercept)", colnames(object$blueprint$ptypes$predictors))
+  param
+}
+
+#' @rdname lantern-coefs
+#' @export
+coef.lantern_linear_reg <- lantern_coefs
+
+#' @rdname lantern-coefs
+#' @export
+coef.lantern_mlp <- lantern_coefs
+
 
 # ------------------------------------------------------------------------------
 

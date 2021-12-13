@@ -600,9 +600,6 @@ print.lantern_logistic_reg <- function(x, ...) {
   lantern_print(x)
 }
 
-#' @export
-coef.lantern_logistic_reg <- lantern_coefs
-
 
 ## -----------------------------------------------------------------------------
 

@@ -734,9 +734,6 @@ print.lantern_mlp <- function(x, ...) {
   lantern_print(x, ...)
 }
 
-#' @export
-coef.lantern_mlp <- lantern_coefs
-
 ## -----------------------------------------------------------------------------
 
 get_activation_fn <- function(arg, ...) {
