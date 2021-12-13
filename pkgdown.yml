@@ -2,7 +2,7 @@ pandoc: 2.7.3
 pkgdown: 2.0.1
 pkgdown_sha: ~
 articles: {}
-last_built: 2021-12-13T19:34Z
+last_built: 2021-12-13T19:55Z
 urls:
   reference: https://lantern.tidymodels.org/reference
   article: https://lantern.tidymodels.org/articles

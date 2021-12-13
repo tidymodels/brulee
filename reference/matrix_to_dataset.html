@@ -80,15 +80,15 @@ is a factor.</p></dd>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">matrix_to_dataset</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="va">mtcars</span><span class="op">$</span><span class="va">mpg</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;lantern_training_set&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;tensor_dataset&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Inherits from: &lt;dataset&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Public:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     .getbatch: function (index) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     .getitem: function (index) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     .length: function () </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     clone: function (deep = FALSE) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     data: list</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     initialize: function (x, y) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     prepare_training_set: function (x, y) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     initialize: function (...) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     tensors: list</span>
 </code></pre></div>
     </div>
   </div>
