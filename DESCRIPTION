@@ -5,7 +5,6 @@ Authors@R: c(
     person("Max", "Kuhn", , "max@rstudio.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2402-136X")),
     person("Daniel", "Falbel", , "daniel@rstudio.com", role = "aut"),
-    person("Hamada S.", "Badr", , "badr@jhu.edu", role = "ctb"),
     person("RStudio", role = "cph")
   )
 Description: High-level modeling functions with 'torch'.
