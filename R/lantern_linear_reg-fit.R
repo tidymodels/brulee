@@ -547,8 +547,7 @@ linear_reg_fit_imp <-
       models = model_per_epoch,
       loss = loss_vec[1:length(model_per_epoch)],
       best_epoch = best_epoch,
-      dims = list(p = p, n = n, h = 0, y = y_dim),
-
+      dims = list(p = p, n = n, h = 0, y = y_dim, features = colnames(x)),
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(learn_rate = learn_rate,

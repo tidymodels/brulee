@@ -663,7 +663,7 @@ mlp_fit_imp <-
       models = model_per_epoch,
       best_epoch = best_epoch,
       loss = loss_vec[1:length(model_per_epoch)],
-      dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls),
+      dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(activation = activation, hidden_units = hidden_units,

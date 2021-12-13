@@ -519,8 +519,7 @@ multinomial_reg_fit_imp <-
    models = model_per_epoch,
    best_epoch = best_epoch,
    loss = loss_vec[1:length(model_per_epoch)],
-   dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls),
-
+   dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
    y_stats = y_stats,
    stats = y_stats,
    parameters = list(learn_rate = learn_rate,
@@ -532,7 +531,7 @@ multinomial_reg_fit_imp <-
 
 multinomial_module <-
  torch::nn_module(
-  "linear_reg_module",
+  "multinomial_reg_module",
   initialize = function(num_pred, num_classes) {
    self$fc1 <- torch::nn_linear(num_pred, num_classes)
    self$transform <- torch::nn_softmax(dim = 2)
@@ -571,19 +570,17 @@ print.lantern_multinomial_reg <- function(x, ...) {
 autoplot.lantern_multinomial_reg <- lantern_plot
 
 
-# maybe save _feature_ names
 
 foo <- function(object, epoch = NULL, ...) {
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  param <- lantern:::lantern_coefs(object)
-  x_names <- colnames(object$blueprint$ptypes$predictors)
-  x_names <- c("(Intercept)", x_names)
+  param <- lantern:::lantern_coefs(object, epoch)
+  x_names <- c("(Intercept)", object$dims$features)
   param <- rbind(param$fc1.bias, t(param$fc1.weight))
-  browser()
+  # need feature names
   rownames(param) <- x_names
-  colnames(param) <- param$dims$levels
+  colnames(param) <- object$dims$levels
   param
 }
 

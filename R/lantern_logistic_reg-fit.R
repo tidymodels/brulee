@@ -538,8 +538,7 @@ logistic_reg_fit_imp <-
       models = model_per_epoch,
       best_epoch = best_epoch,
       loss = loss_vec[1:length(model_per_epoch)],
-      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls),
-
+      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
       stats = y_stats,
       parameters = list(learn_rate = learn_rate,
@@ -551,7 +550,7 @@ logistic_reg_fit_imp <-
 
 logistic_module <-
   torch::nn_module(
-    "linear_reg_module",
+    "logistic_reg_module",
     initialize = function(num_pred, num_classes) {
       self$fc1 <- torch::nn_linear(num_pred, num_classes)
       self$transform <- torch::nn_softmax(dim = 2)
