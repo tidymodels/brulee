@@ -539,7 +539,7 @@ linear_reg_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 3), loss_note)
+                     signif(loss_curr, 5), loss_note)
 
         rlang::inform(msg)
       }
@@ -586,9 +586,6 @@ print.lantern_linear_reg <- function(x, ...) {
   cat("Linear regression\n\n")
   lantern_print(x)
 }
-
-#' @export
-coef.lantern_linear_reg <- lantern_coefs
 
 ## -----------------------------------------------------------------------------
 
