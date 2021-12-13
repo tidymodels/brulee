@@ -28,16 +28,10 @@
     <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_mlp.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/details_linear_reg_torch.html</loc>
-  </url>
-  <url>
-    <loc>https://lantern.tidymodels.org/reference/details_logistic_reg_torch.html</loc>
-  </url>
-  <url>
-    <loc>https://lantern.tidymodels.org/reference/details_mlp_torch.html</loc>
-  </url>
-  <url>
     <loc>https://lantern.tidymodels.org/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://lantern.tidymodels.org/reference/lantern-coefs.html</loc>
   </url>
   <url>
     <loc>https://lantern.tidymodels.org/reference/lantern-internal.html</loc>
