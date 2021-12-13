@@ -56,4 +56,4 @@ jobs:
 
       - uses: r-lib/actions/check-r-package@v1
         with:
-          args: 'c("--no-multiarch")'
+          args: 'c("--no-multiarch", "--no-manual")'
