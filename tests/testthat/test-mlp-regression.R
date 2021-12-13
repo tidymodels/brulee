@@ -205,16 +205,33 @@ test_that('bad args', {
   fit_mat <- lantern_mlp(ames_x_mat, ames_y, epochs = 10L)
 
   bad_models <- fit_mat
-  bad_models$models <- "potato!"
+  bad_models$model_obj <- "potato!"
   expect_error(
     lantern:::new_lantern_mlp(
-      models = bad_models$models,
+      model_obj = bad_models$model_obj,
+      estimates = bad_models$estimates,
       best_epoch = bad_models$best_epoch,
       loss = bad_models$loss,
       dims = bad_models$dims,
       y_stats = bad_models$y_stats,
       parameters = bad_models$parameters,
       blueprint = bad_models$blueprint
+    ),
+    "should be a raw vector"
+  )
+
+  bad_est <- fit_mat
+  bad_est$estimates <- "potato!"
+  expect_error(
+    lantern:::new_lantern_mlp(
+      model_obj = bad_est$model_obj,
+      estimates = bad_est$estimates,
+      best_epoch = bad_est$best_epoch,
+      loss = bad_est$loss,
+      dims = bad_est$dims,
+      y_stats = bad_est$y_stats,
+      parameters = bad_est$parameters,
+      blueprint = bad_est$blueprint
     ),
     "should be a list"
   )
@@ -223,7 +240,8 @@ test_that('bad args', {
   bad_loss$loss <- "potato!"
   expect_error(
     lantern:::new_lantern_mlp(
-      models = bad_loss$models,
+      model_obj = bad_loss$model_obj,
+      estimates = bad_loss$estimates,
       best_epoch = bad_loss$best_epoch,
       loss = bad_loss$loss,
       dims = bad_loss$dims,
@@ -238,7 +256,8 @@ test_that('bad args', {
   bad_dims$dims <- "mountainous"
   expect_error(
     lantern:::new_lantern_mlp(
-      models = bad_dims$models,
+      model_obj = bad_dims$model_obj,
+      estimates = bad_dims$estimates,
       best_epoch = bad_dims$best_epoch,
       loss = bad_dims$loss,
       dims = bad_dims$dims,
@@ -254,7 +273,8 @@ test_that('bad args', {
   bad_parameters$dims <- "mitten"
   expect_error(
     lantern:::new_lantern_mlp(
-      models = bad_parameters$models,
+      model_obj = bad_parameters$model_obj,
+      estimates = bad_parameters$estimates,
       best_epoch = bad_parameters$best_epoch,
       loss = bad_parameters$loss,
       dims = bad_parameters$dims,
@@ -270,7 +290,8 @@ test_that('bad args', {
   bad_blueprint$blueprint <- "adorable"
   expect_error(
     lantern:::new_lantern_mlp(
-      models = bad_blueprint$models,
+      model_obj = bad_blueprint$model_obj,
+      estimates = bad_blueprint$estimates,
       best_epoch = bad_blueprint$best_epoch,
       loss = bad_blueprint$loss,
       dims = bad_blueprint$dims,
@@ -284,6 +305,7 @@ test_that('bad args', {
 })
 
 test_that("mlp learns something", {
+  skip_if(!torch::torch_is_installed())
 
   set.seed(1)
   x <- data.frame(x = rnorm(1000))

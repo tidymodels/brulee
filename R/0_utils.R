@@ -86,12 +86,19 @@ lantern_coefs <- function(object, epoch = NULL, ...) {
   if (!is.null(epoch) && length(epoch) != 1) {
     rlang::abort("'epoch' should be a single integer.")
   }
+  max_epochs <- length(object$estimates)
+
   if (is.null(epoch)) {
     epoch <- object$best_epoch
+  } else {
+    if (epoch > max_epochs) {
+      msg <- glue::glue("There were only {max_epochs} epochs fit. Setting 'epochs' to {max_epochs}.")
+      rlang::warn(msg)
+      epoch <- max_epochs
+    }
+
   }
-  module <- revive_model(object, epoch = epoch)
-  parameters <- module$parameters
-  lapply(parameters, as.array)
+  object$estimates[[epoch]]
 }
 
 
