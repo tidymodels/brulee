@@ -305,6 +305,7 @@ test_that('bad args', {
 })
 
 test_that("mlp learns something", {
+  skip_if(!torch::torch_is_installed())
 
   set.seed(1)
   x <- data.frame(x = rnorm(1000))

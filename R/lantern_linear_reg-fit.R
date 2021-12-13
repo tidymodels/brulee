@@ -505,11 +505,11 @@ linear_reg_fit_imp <-
 
       # calculate loss on the full datasets
       if (validation > 0) {
-        pred <- model(dl_val$dataset$data$x)
-        loss <- loss_fn(pred, dl_val$dataset$data$y)
+        pred <- model(dl_val$dataset$tensors$x)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y)
       } else {
-        pred <- model(dl$dataset$data$x)
-        loss <- loss_fn(pred, dl$dataset$data$y)
+        pred <- model(dl$dataset$tensors$x)
+        loss <- loss_fn(pred, dl$dataset$tensors$y)
       }
 
       # calculate losses
