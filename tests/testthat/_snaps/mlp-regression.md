@@ -6,9 +6,8 @@
       Multilayer perceptron
       
       relu activation
-      c(3) hidden units, 13 model parameters
+      3 hidden units,  13 model parameters
       2,930 samples, 2 features, numeric outcome 
-      class weights = 
       weight decay: 0.001 
       dropout proportion: 0 
       batch size: 2637 

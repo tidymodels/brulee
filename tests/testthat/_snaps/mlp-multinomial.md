@@ -15,7 +15,7 @@
       Multilayer perceptron
       
       relu activation
-      c(3) hidden units, 21 model parameters
+      3 hidden units,  21 model parameters
       10,000 samples, 2 features, 3 classes 
       class weights a=1, b=1, c=1 
       weight decay: 0.001 
