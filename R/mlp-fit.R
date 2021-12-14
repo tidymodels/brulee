@@ -1,6 +1,6 @@
 #' Fit neural networks
 #'
-#' `lantern_mlp()` fits neural network models using stochastic gradient
+#' `brulee_mlp()` fits neural network models using stochastic gradient
 #' descent. Multiple layers can be used.
 #'
 #' @param x Depending on the context:
@@ -18,12 +18,12 @@
 #'   * A __data frame__ with 1 numeric column.
 #'   * A __matrix__ with 1 numeric column.
 #'   * A numeric __vector__.
-#' @inheritParams lantern_linear_reg
+#' @inheritParams brulee_linear_reg
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
 #'
-#' @inheritParams lantern_linear_reg
+#' @inheritParams brulee_linear_reg
 #'
 #' @param epochs An integer for the number of epochs of training.
 #' @param hidden_units An integer for the number of hidden units, or a vector
@@ -73,7 +73,7 @@
 #'
 #' @return
 #'
-#' A `lantern_mlp` object with elements:
+#' A `brulee_mlp` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
 #'                 epoch.
@@ -105,7 +105,7 @@
 #'  # Using matrices
 #'  set.seed(1)
 #'  fit <-
-#'    lantern_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+#'    brulee_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
 #'                y = ames_train$Sale_Price,
 #'                penalty = 0.10, batch_size = 2^8)
 #'
@@ -128,7 +128,7 @@
 #'    step_normalize(all_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- lantern_mlp(ames_rec, data = ames_train, hidden_units = 20,
+#'  fit <- brulee_mlp(ames_rec, data = ames_train, hidden_units = 20,
 #'                     dropout = 0.05, batch_size = 2^8)
 #'  fit
 #'
@@ -164,7 +164,7 @@
 #'  parabolic_te <- parabolic[-in_train,]
 #'
 #'  set.seed(2)
-#'  cls_fit <- lantern_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
+#'  cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
 #'                         epochs = 200L, learn_rate = 0.1, activation = "elu",
 #'                         penalty = 0.1, batch_size = 2^8)
 #'  autoplot(cls_fit)
@@ -181,21 +181,21 @@
 #'
 #' }
 #' @export
-lantern_mlp <- function(x, ...) {
-  UseMethod("lantern_mlp")
+brulee_mlp <- function(x, ...) {
+  UseMethod("brulee_mlp")
 }
 
 #' @export
-#' @rdname lantern_mlp
-lantern_mlp.default <- function(x, ...) {
-  stop("`lantern_mlp()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+#' @rdname brulee_mlp
+brulee_mlp.default <- function(x, ...) {
+  stop("`brulee_mlp()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
 
 #' @export
-#' @rdname lantern_mlp
-lantern_mlp.data.frame <-
+#' @rdname brulee_mlp
+brulee_mlp.data.frame <-
   function(x,
            y,
            epochs = 100L,
@@ -213,7 +213,7 @@ lantern_mlp.data.frame <-
            ...) {
     processed <- hardhat::mold(x, y)
 
-    lantern_mlp_bridge(
+    brulee_mlp_bridge(
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
@@ -234,25 +234,25 @@ lantern_mlp.data.frame <-
 # XY method - matrix
 
 #' @export
-#' @rdname lantern_mlp
-lantern_mlp.matrix <- function(x,
-                               y,
-                               epochs = 100L,
-                               hidden_units = 3L,
-                               activation = "relu",
-                               penalty = 0.001,
-                               dropout = 0,
-                               validation = 0.1,
-                               learn_rate = 0.01,
-                               momentum = 0.0,
-                               batch_size = NULL,
-                               class_weights = NULL,
-                               stop_iter = 5,
-                               verbose = FALSE,
-                               ...) {
+#' @rdname brulee_mlp
+brulee_mlp.matrix <- function(x,
+                              y,
+                              epochs = 100L,
+                              hidden_units = 3L,
+                              activation = "relu",
+                              penalty = 0.001,
+                              dropout = 0,
+                              validation = 0.1,
+                              learn_rate = 0.01,
+                              momentum = 0.0,
+                              batch_size = NULL,
+                              class_weights = NULL,
+                              stop_iter = 5,
+                              verbose = FALSE,
+                              ...) {
   processed <- hardhat::mold(x, y)
 
-  lantern_mlp_bridge(
+  brulee_mlp_bridge(
     processed,
     epochs = epochs,
     hidden_units = hidden_units,
@@ -273,8 +273,8 @@ lantern_mlp.matrix <- function(x,
 # Formula method
 
 #' @export
-#' @rdname lantern_mlp
-lantern_mlp.formula <-
+#' @rdname brulee_mlp
+brulee_mlp.formula <-
   function(formula,
            data,
            epochs = 100L,
@@ -292,7 +292,7 @@ lantern_mlp.formula <-
            ...) {
     processed <- hardhat::mold(formula, data)
 
-    lantern_mlp_bridge(
+    brulee_mlp_bridge(
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
@@ -313,8 +313,8 @@ lantern_mlp.formula <-
 # Recipe method
 
 #' @export
-#' @rdname lantern_mlp
-lantern_mlp.recipe <-
+#' @rdname brulee_mlp
+brulee_mlp.recipe <-
   function(x,
            data,
            epochs = 100L,
@@ -332,7 +332,7 @@ lantern_mlp.recipe <-
            ...) {
     processed <- hardhat::mold(x, data)
 
-    lantern_mlp_bridge(
+    brulee_mlp_bridge(
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
@@ -353,14 +353,14 @@ lantern_mlp.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                               learn_rate, momentum, penalty, dropout, class_weights,
-                               validation, batch_size, stop_iter, verbose, ...) {
+brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
+                              learn_rate, momentum, penalty, dropout, class_weights,
+                              validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
-  f_nm <- "lantern_mlp"
+  f_nm <- "brulee_mlp"
   # check values of various argument values
   if (is.numeric(epochs) & !is.integer(epochs)) {
     epochs <- as.integer(epochs)
@@ -437,7 +437,7 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       verbose = verbose
     )
 
-  new_lantern_mlp(
+  new_brulee_mlp(
     model_obj = fit$model_obj,
     estimates = fit$estimates,
     best_epoch = fit$best_epoch,
@@ -449,8 +449,8 @@ lantern_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
 }
 
-new_lantern_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
-                             y_stats, parameters, blueprint) {
+new_brulee_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
+                            y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
     rlang::abort("'model_obj' should be a raw vector.")
   }
@@ -483,7 +483,7 @@ new_lantern_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
                      y_stats = y_stats,
                      parameters = parameters,
                      blueprint = blueprint,
-                     class = "lantern_mlp")
+                     class = "brulee_mlp")
 }
 
 ## -----------------------------------------------------------------------------
@@ -513,7 +513,7 @@ mlp_fit_imp <-
     check_data_att(x, y)
 
     # Check missing values
-    compl_data <- check_missing_data(x, y, "lantern_mlp", verbose)
+    compl_data <- check_missing_data(x, y, "brulee_mlp", verbose)
     x <- compl_data$x
     y <- compl_data$y
     n <- length(y)
@@ -568,11 +568,11 @@ mlp_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
-    ds <- lantern::matrix_to_dataset(x, y)
+    ds <- brulee::matrix_to_dataset(x, y)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
-      ds_val <- lantern::matrix_to_dataset(x_val, y_val)
+      ds_val <- brulee::matrix_to_dataset(x_val, y_val)
       dl_val <- torch::dataloader(ds_val)
     }
 
@@ -734,14 +734,14 @@ get_num_mlp_coef <- function(x) {
 }
 
 #' @export
-print.lantern_mlp <- function(x, ...) {
+print.brulee_mlp <- function(x, ...) {
   cat("Multilayer perceptron\n\n")
   cat(x$param$activation, "activation\n")
   cat(
     paste0("c(", paste(x$dims$h, collapse = ","), ")"), "hidden units,",
     format(get_num_mlp_coef(x), big.mark = ","), "model parameters\n"
   )
-  lantern_print(x, ...)
+  brulee_print(x, ...)
 }
 
 ## -----------------------------------------------------------------------------
@@ -763,9 +763,9 @@ get_activation_fn <- function(arg, ...) {
 
 #' Plot model loss over epochs
 #'
-#' @param object A `lantern_mlp` object.
+#' @param object A `brulee_mlp` object.
 #' @param ... Not currently used
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_mlp <- lantern_plot
+autoplot.brulee_mlp <- brulee_plot

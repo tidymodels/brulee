@@ -2,7 +2,7 @@
 
     Code
       set.seed(1)
-      fit <- lantern_logistic_reg(y ~ ., df, epochs = 2, verbose = TRUE)
+      fit <- brulee_logistic_reg(y ~ ., df, epochs = 2, verbose = TRUE)
     Message <message>
       epoch: 1 	Loss: 0.17322 
       epoch: 2 	Loss: 0.17322  x 
@@ -24,7 +24,7 @@
 
     Code
       set.seed(1)
-      fit_imbal <- lantern_logistic_reg(y ~ ., df_imbal, verbose = TRUE,
+      fit_imbal <- brulee_logistic_reg(y ~ ., df_imbal, verbose = TRUE,
       class_weights = 20, optimizer = "SGD")
     Message <message>
       epoch:  1 	Loss: 0.32851 
@@ -52,7 +52,7 @@
 
     Code
       set.seed(1)
-      fit <- lantern_logistic_reg(y ~ ., df_imbal, epochs = 2, verbose = TRUE,
+      fit <- brulee_logistic_reg(y ~ ., df_imbal, epochs = 2, verbose = TRUE,
       class_weights = c(a = 12, b = 1))
     Message <message>
       epoch: 1 	Loss: 0.11313 

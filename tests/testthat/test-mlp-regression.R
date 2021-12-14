@@ -27,9 +27,9 @@ test_that('different fit interfaces', {
   # matrix x
   expect_error({
     set.seed(1)
-    fit_mat <- lantern_mlp(ames_x_mat, ames_y, epochs = 10L)
-    },
-    regex = NA
+    fit_mat <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L)
+  },
+  regex = NA
   )
 
   expect_snapshot({
@@ -38,25 +38,25 @@ test_that('different fit interfaces', {
 
   # data frame x (all numeric)
   expect_error(
-    fit_df <- lantern_mlp(ames_x_df, ames_y, epochs = 10L),
+    fit_df <- brulee_mlp(ames_x_df, ames_y, epochs = 10L),
     regex = NA
   )
 
   # data frame x (mixed)
   expect_error(
-    lantern_mlp(ames_x_df_mixed, ames_y, epochs = 10L),
+    brulee_mlp(ames_x_df_mixed, ames_y, epochs = 10L),
     regex = "There were some non-numeric columns in the predictors"
   )
 
   # formula (mixed)
   expect_error(
-    fit_f <- lantern_mlp(Sale_Price ~ ., ames_smol, epochs = 10L),
+    fit_f <- brulee_mlp(Sale_Price ~ ., ames_smol, epochs = 10L),
     regex = NA
   )
 
   # recipe (mixed)
   expect_error(
-    fit_rec <- lantern_mlp(ames_rec, ames, epochs = 10L),
+    fit_rec <- brulee_mlp(ames_rec, ames, epochs = 10L),
     regex = NA
   )
 })
@@ -66,7 +66,7 @@ test_that('predictions', {
   skip_if(!torch::torch_is_installed())
 
   set.seed(1)
-  fit_df <- lantern_mlp(ames_x_df, ames_y, epochs = 10L)
+  fit_df <- brulee_mlp(ames_x_df, ames_y, epochs = 10L)
 
   complete_pred <- predict(fit_df, head(ames_x_df))
   expect_true(tibble::is_tibble(complete_pred))
@@ -87,127 +87,127 @@ test_that('bad args', {
   skip_if(!torch::torch_is_installed())
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = NA),
     "expected 'epochs' to be integer."
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 1:2),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 1:2),
     "expected 'epochs' to be a single integer."
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 0L),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 0L),
     "expected 'epochs' to be an integer on"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2),
     regex = NA
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
     "expected 'hidden_units' to be integer."
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
     "expected 'hidden_units' to be an integer on"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 2),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 2),
     regex = NA
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
     "expected 'activation' to be character"
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA),
     "expected 'penalty' to be a double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2)),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2)),
     "expected 'penalty' to be a single double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1),
     "expected 'penalty' to be a double on"
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA),
     "expected 'dropout' to be a double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2)),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2)),
     "expected 'dropout' to be a single double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1),
     "expected 'dropout' to be a double on"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1.0),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1.0),
     "expected 'dropout' to be a double on"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 0),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 0),
     regex = NA
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA),
     "expected 'validation' to be a double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2)),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2)),
     "expected 'validation' to be a single double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1),
     "expected 'validation' to be a double on"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1.0),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1.0),
     "expected 'validation' to be a double on"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, validation = 0),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 0),
     regex = NA
   )
 
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
     "expected 'learn_rate' to be a double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
     "expected 'learn_rate' to be a single double"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
     "expected 'learn_rate' to be a double on"
   )
 
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2),
     "expected 'verbose' to be logical"
   )
   expect_error(
-    lantern_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10)),
+    brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10)),
     "expected 'verbose' to be a single logical"
   )
 
   # ------------------------------------------------------------------------------
 
-  fit_mat <- lantern_mlp(ames_x_mat, ames_y, epochs = 10L)
+  fit_mat <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L)
 
   bad_models <- fit_mat
   bad_models$model_obj <- "potato!"
   expect_error(
-    lantern:::new_lantern_mlp(
+    brulee:::new_brulee_mlp(
       model_obj = bad_models$model_obj,
       estimates = bad_models$estimates,
       best_epoch = bad_models$best_epoch,
@@ -223,7 +223,7 @@ test_that('bad args', {
   bad_est <- fit_mat
   bad_est$estimates <- "potato!"
   expect_error(
-    lantern:::new_lantern_mlp(
+    brulee:::new_brulee_mlp(
       model_obj = bad_est$model_obj,
       estimates = bad_est$estimates,
       best_epoch = bad_est$best_epoch,
@@ -239,7 +239,7 @@ test_that('bad args', {
   bad_loss <- fit_mat
   bad_loss$loss <- "potato!"
   expect_error(
-    lantern:::new_lantern_mlp(
+    brulee:::new_brulee_mlp(
       model_obj = bad_loss$model_obj,
       estimates = bad_loss$estimates,
       best_epoch = bad_loss$best_epoch,
@@ -255,7 +255,7 @@ test_that('bad args', {
   bad_dims <- fit_mat
   bad_dims$dims <- "mountainous"
   expect_error(
-    lantern:::new_lantern_mlp(
+    brulee:::new_brulee_mlp(
       model_obj = bad_dims$model_obj,
       estimates = bad_dims$estimates,
       best_epoch = bad_dims$best_epoch,
@@ -272,7 +272,7 @@ test_that('bad args', {
   bad_parameters <- fit_mat
   bad_parameters$dims <- "mitten"
   expect_error(
-    lantern:::new_lantern_mlp(
+    brulee:::new_brulee_mlp(
       model_obj = bad_parameters$model_obj,
       estimates = bad_parameters$estimates,
       best_epoch = bad_parameters$best_epoch,
@@ -289,7 +289,7 @@ test_that('bad args', {
   bad_blueprint <- fit_mat
   bad_blueprint$blueprint <- "adorable"
   expect_error(
-    lantern:::new_lantern_mlp(
+    brulee:::new_brulee_mlp(
       model_obj = bad_blueprint$model_obj,
       estimates = bad_blueprint$estimates,
       best_epoch = bad_blueprint$best_epoch,
@@ -312,13 +312,13 @@ test_that("mlp learns something", {
   y <- 2 * x$x
 
   set.seed(2)
-  model <- lantern_mlp(x, y,
-                       batch_size = 25,
-                       epochs = 50,
-                       activation = "relu",
-                       hidden_units = 5L,
-                       learn_rate = 0.1,
-                       dropout = 0)
+  model <- brulee_mlp(x, y,
+                      batch_size = 25,
+                      epochs = 50,
+                      activation = "relu",
+                      hidden_units = 5L,
+                      learn_rate = 0.1,
+                      dropout = 0)
 
   expect_true(tail(model$loss, 1) < 0.03)
 
@@ -329,21 +329,21 @@ test_that("variable hidden_units length", {
   y <- 2 * x$x
 
   expect_error(
-    model <- lantern_mlp(x, y, hidden_units = c(2, 3), epochs = 1),
+    model <- brulee_mlp(x, y, hidden_units = c(2, 3), epochs = 1),
     regexp = NA
   )
 
   expect_equal(length(unlist(coef(model))), (1*2 + 2) + (2*3 + 3) + (3*1 + 1))
 
   expect_error(
-    model <- lantern_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1,
-                         activation = c("relu", "tanh")),
+    model <- brulee_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1,
+                        activation = c("relu", "tanh")),
     regexp = "must be a single value or a vector with"
   )
 
   expect_error(
-    model <- lantern_mlp(x, y, hidden_units = c(1), epochs = 1,
-                         activation = c("relu", "tanh")),
+    model <- brulee_mlp(x, y, hidden_units = c(1), epochs = 1,
+                        activation = c("relu", "tanh")),
     regexp = "must be a single value or a vector with"
   )
 

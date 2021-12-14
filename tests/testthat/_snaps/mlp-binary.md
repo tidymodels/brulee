@@ -18,7 +18,7 @@
 
     Code
       set.seed(1)
-      fit_imbal <- lantern_mlp(y ~ ., df_imbal, verbose = TRUE, class_weights = 20)
+      fit_imbal <- brulee_mlp(y ~ ., df_imbal, verbose = TRUE, class_weights = 20)
     Message <message>
       epoch:   1 	Loss: 0.57648 
       epoch:   2 	Loss: 0.57335 
@@ -125,7 +125,7 @@
 
     Code
       set.seed(1)
-      fit <- lantern_mlp(y ~ ., df_imbal, epochs = 2, verbose = TRUE, class_weights = c(
+      fit <- brulee_mlp(y ~ ., df_imbal, epochs = 2, verbose = TRUE, class_weights = c(
         a = 12, b = 1))
     Message <message>
       epoch: 1 	Loss: 0.66515 

@@ -5,9 +5,6 @@
 #' @importFrom stats complete.cases model.matrix terms
 #' @importFrom utils globalVariables
 #' @importFrom recipes names0
-# This is a temporary dummy import for parsnip; won't be needed as a dependency
-# once lantern is sent to CRAN
-#' @importFrom parsnip show_fit
 #'
 #' @importFrom dplyr %>%
 #' @export
@@ -37,7 +34,7 @@ utils::globalVariables(
 
 # nocov start
 .onAttach <- function(libname, pkgname) {
- s3_register("ggplot2::autoplot", "lantern_mlp")
+ s3_register("ggplot2::autoplot", "brulee_mlp")
  invisible()
 }
 

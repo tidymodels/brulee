@@ -1,7 +1,7 @@
 library(testthat)
-library(lantern)
+library(brulee)
 library(tibble)
 
 RNGkind("Mersenne-Twister")
 
-test_check("lantern")
+test_check("brulee")

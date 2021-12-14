@@ -1,6 +1,6 @@
-#' Fit a logistic regression model
+#' Fit a multinomial regression model
 #'
-#' `lantern_logistic_reg()` fits a model.
+#' `brulee_multinomial_reg()` fits a model.
 #'
 #' @param x Depending on the context:
 #'
@@ -21,8 +21,8 @@
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
-#' @inheritParams lantern_linear_reg
-#' @inheritParams lantern_mlp
+#' @inheritParams brulee_linear_reg
+#' @inheritParams brulee_mlp
 #'
 #' @details
 #'
@@ -36,7 +36,7 @@
 #'
 #' @return
 #'
-#' A `lantern_logistic_reg` object with elements:
+#' A `brulee_multinomial_reg` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
 #'                 epoch.
@@ -50,66 +50,46 @@
 #' @examples
 #' if (torch::torch_is_installed()) {
 #'
-#'  library(recipes)
-#'  library(yardstick)
+#'   library(recipes)
+#'   library(yardstick)
 #'
-#'  ## -----------------------------------------------------------------------------
-#'  # increase # epochs to get better results
+#'   data(penguins, package = "modeldata")
 #'
-#'  data(cells, package = "modeldata")
+#'   penguins <- penguins %>% na.omit()
 #'
-#'  cells$case <- NULL
+#'   set.seed(122)
+#'   in_train <- sample(1:nrow(penguins), 200)
+#'   penguins_train <- penguins[ in_train,]
+#'   penguins_test  <- penguins[-in_train,]
 #'
-#'  set.seed(122)
-#'  in_train <- sample(1:nrow(cells), 1000)
-#'  cells_train <- cells[ in_train,]
-#'  cells_test  <- cells[-in_train,]
+#'   rec <- recipe(island ~ ., data = penguins_train) %>%
+#'     step_dummy(species, sex) %>%
+#'     step_normalize(all_predictors())
 #'
-#'  # Using matrices
-#'  set.seed(1)
-#'  lantern_logistic_reg(x = as.matrix(cells_train[, c("fiber_width_ch_1", "width_ch_1")]),
-#'                       y = cells_train$class,
-#'                       penalty = 0.10, epochs = 3)
+#'   set.seed(3)
+#'   fit <- brulee_multinomial_reg(rec, data = penguins_train, epochs = 5)
+#'   fit
 #'
-#'  # Using recipe
-#'  library(recipes)
-#'
-#'  cells_rec <-
-#'   recipe(class ~ ., data = cells_train) %>%
-#'   # Transform some highly skewed predictors
-#'   step_YeoJohnson(all_predictors()) %>%
-#'   step_normalize(all_predictors()) %>%
-#'   step_pca(all_predictors(), num_comp = 10)
-#'
-#'  set.seed(2)
-#'  fit <- lantern_logistic_reg(cells_rec, data = cells_train,
-#'                              penalty = .01, epochs = 5)
-#'  fit
-#'
-#'  autoplot(fit)
-#'
-#'  library(yardstick)
-#'  predict(fit, cells_test, type = "prob") %>%
-#'   bind_cols(cells_test) %>%
-#'   roc_auc(class, .pred_PS)
+#'   predict(fit, penguins_test) %>%
+#'     bind_cols(penguins_test) %>%
+#'     conf_mat(island, .pred_class)
 #' }
-#'
 #' @export
-lantern_logistic_reg <- function(x, ...) {
-  UseMethod("lantern_logistic_reg")
+brulee_multinomial_reg <- function(x, ...) {
+  UseMethod("brulee_multinomial_reg")
 }
 
 #' @export
-#' @rdname lantern_logistic_reg
-lantern_logistic_reg.default <- function(x, ...) {
-  stop("`lantern_logistic_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+#' @rdname brulee_multinomial_reg
+brulee_multinomial_reg.default <- function(x, ...) {
+  stop("`brulee_multinomial_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
 
 #' @export
-#' @rdname lantern_logistic_reg
-lantern_logistic_reg.data.frame <-
+#' @rdname brulee_multinomial_reg
+brulee_multinomial_reg.data.frame <-
   function(x,
            y,
            epochs = 20L,
@@ -125,7 +105,7 @@ lantern_logistic_reg.data.frame <-
            ...) {
     processed <- hardhat::mold(x, y)
 
-    lantern_logistic_reg_bridge(
+    brulee_multinomial_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -144,23 +124,23 @@ lantern_logistic_reg.data.frame <-
 # XY method - matrix
 
 #' @export
-#' @rdname lantern_logistic_reg
-lantern_logistic_reg.matrix <- function(x,
-                                        y,
-                                        epochs = 20L,
-                                        penalty = 0.001,
-                                        validation = 0.1,
-                                        optimizer = "LBFGS",
-                                        learn_rate = 1,
-                                        momentum = 0.0,
-                                        batch_size = NULL,
-                                        class_weights = NULL,
-                                        stop_iter = 5,
-                                        verbose = FALSE,
-                                        ...) {
+#' @rdname brulee_multinomial_reg
+brulee_multinomial_reg.matrix <- function(x,
+                                          y,
+                                          epochs = 20L,
+                                          penalty = 0.001,
+                                          validation = 0.1,
+                                          optimizer = "LBFGS",
+                                          learn_rate = 1,
+                                          momentum = 0.0,
+                                          batch_size = NULL,
+                                          class_weights = NULL,
+                                          stop_iter = 5,
+                                          verbose = FALSE,
+                                          ...) {
   processed <- hardhat::mold(x, y)
 
-  lantern_logistic_reg_bridge(
+  brulee_multinomial_reg_bridge(
     processed,
     epochs = epochs,
     optimizer = optimizer,
@@ -179,8 +159,8 @@ lantern_logistic_reg.matrix <- function(x,
 # Formula method
 
 #' @export
-#' @rdname lantern_logistic_reg
-lantern_logistic_reg.formula <-
+#' @rdname brulee_multinomial_reg
+brulee_multinomial_reg.formula <-
   function(formula,
            data,
            epochs = 20L,
@@ -197,7 +177,7 @@ lantern_logistic_reg.formula <-
            ...) {
     processed <- hardhat::mold(formula, data)
 
-    lantern_logistic_reg_bridge(
+    brulee_multinomial_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -216,8 +196,8 @@ lantern_logistic_reg.formula <-
 # Recipe method
 
 #' @export
-#' @rdname lantern_logistic_reg
-lantern_logistic_reg.recipe <-
+#' @rdname brulee_multinomial_reg
+brulee_multinomial_reg.recipe <-
   function(x,
            data,
            epochs = 20L,
@@ -233,7 +213,7 @@ lantern_logistic_reg.recipe <-
            ...) {
     processed <- hardhat::mold(x, data)
 
-    lantern_logistic_reg_bridge(
+    brulee_multinomial_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -252,14 +232,14 @@ lantern_logistic_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
-                                        learn_rate, momentum, penalty, class_weights,
-                                        validation, batch_size, stop_iter, verbose, ...) {
+brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
+                                          learn_rate, momentum, penalty, class_weights,
+                                          validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
-  f_nm <- "lantern_logistic_reg"
+  f_nm <- "brulee_multinomial_reg"
   # check values of various argument values
   if (is.numeric(epochs) & !is.integer(epochs)) {
     epochs <- as.integer(epochs)
@@ -301,8 +281,8 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   ## -----------------------------------------------------------------------------
 
   outcome <- processed$outcomes[[1]]
-  if (length(levels(outcome)) > 2) {
-    rlang::abort("logistic regression is for outcomes with two classes.")
+  if (length(levels(outcome)) < 3) {
+    rlang::abort("multinomial regression is for outcomes with 3+ classes.")
   }
 
   # ------------------------------------------------------------------------------
@@ -314,7 +294,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   ## -----------------------------------------------------------------------------
 
   fit <-
-    logistic_reg_fit_imp(
+    multinomial_reg_fit_imp(
       x = predictors,
       y = outcome,
       epochs = epochs,
@@ -329,7 +309,7 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
       verbose = verbose
     )
 
-  new_lantern_logistic_reg(
+  new_brulee_multinomial_reg(
     model_obj = fit$model_obj,
     estimates = fit$estimates,
     best_epoch = fit$best_epoch,
@@ -341,8 +321,8 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_lantern_logistic_reg <- function( model_obj, estimates, best_epoch, loss,
-                                      dims, y_stats, parameters, blueprint) {
+new_brulee_multinomial_reg <- function( model_obj, estimates, best_epoch, loss,
+                                        dims, y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
     rlang::abort("'model_obj' should be a raw vector.")
   }
@@ -369,13 +349,13 @@ new_lantern_logistic_reg <- function( model_obj, estimates, best_epoch, loss,
                      y_stats = y_stats,
                      parameters = parameters,
                      blueprint = blueprint,
-                     class = "lantern_logistic_reg")
+                     class = "brulee_multinomial_reg")
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
-logistic_reg_fit_imp <-
+multinomial_reg_fit_imp <-
   function(x, y,
            epochs = 20L,
            batch_size = 32,
@@ -397,7 +377,7 @@ logistic_reg_fit_imp <-
     check_data_att(x, y)
 
     # Check missing values
-    compl_data <- check_missing_data(x, y, "lantern_logistic_reg", verbose)
+    compl_data <- check_missing_data(x, y, "brulee_multinomial_reg", verbose)
     x <- compl_data$x
     y <- compl_data$y
     n <- length(y)
@@ -434,17 +414,17 @@ logistic_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
-    ds <- lantern::matrix_to_dataset(x, y)
+    ds <- brulee::matrix_to_dataset(x, y)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
-      ds_val <- lantern::matrix_to_dataset(x_val, y_val)
+      ds_val <- brulee::matrix_to_dataset(x_val, y_val)
       dl_val <- torch::dataloader(ds_val)
     }
 
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
-    model <- logistic_module(ncol(x), y_dim)
+    model <- multinomial_module(ncol(x), y_dim)
 
     # Write a optim wrapper
     if (optimizer == "LBFGS") {
@@ -557,9 +537,9 @@ logistic_reg_fit_imp <-
     )
   }
 
-logistic_module <-
+multinomial_module <-
   torch::nn_module(
-    "logistic_reg_module",
+    "multinomial_reg_module",
     initialize = function(num_pred, num_classes) {
       self$fc1 <- torch::nn_linear(num_pred, num_classes)
       self$transform <- torch::nn_softmax(dim = 2)
@@ -573,25 +553,25 @@ logistic_module <-
 
 ## -----------------------------------------------------------------------------
 
-get_num_logistic_reg_coef <- function(x) {
+get_num_multinomial_reg_coef <- function(x) {
   model <- x$estimates[[1]]
   param <- vapply(model, function(.x) prod(dim(.x)), double(1))
   sum(unlist(param))
 }
 
 #' @export
-print.lantern_logistic_reg <- function(x, ...) {
-  cat("Logistic regression\n\n")
-  lantern_print(x)
+print.brulee_multinomial_reg <- function(x, ...) {
+  cat("Multinomial regression\n\n")
+  brulee_print(x)
 }
 
 ## -----------------------------------------------------------------------------
 
 #' Plot model loss over epochs
 #'
-#' @param object A `lantern_logistic_reg` object.
+#' @param object A `brulee_multinomial_reg` object.
 #' @param ... Not currently used
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_logistic_reg <- lantern_plot
+autoplot.brulee_multinomial_reg <- brulee_plot
