@@ -564,14 +564,3 @@ print.brulee_multinomial_reg <- function(x, ...) {
   cat("Multinomial regression\n\n")
   brulee_print(x)
 }
-
-## -----------------------------------------------------------------------------
-
-#' Plot model loss over epochs
-#'
-#' @param object A `brulee_multinomial_reg` object.
-#' @param ... Not currently used
-#' @return A `ggplot` object.
-#' @details This function plots the loss function across the available epochs.
-#' @export
-autoplot.brulee_multinomial_reg <- brulee_plot

@@ -585,13 +585,3 @@ print.brulee_logistic_reg <- function(x, ...) {
   brulee_print(x)
 }
 
-## -----------------------------------------------------------------------------
-
-#' Plot model loss over epochs
-#'
-#' @param object A `brulee_logistic_reg` object.
-#' @param ... Not currently used
-#' @return A `ggplot` object.
-#' @details This function plots the loss function across the available epochs.
-#' @export
-autoplot.brulee_logistic_reg <- brulee_plot

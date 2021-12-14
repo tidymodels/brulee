@@ -758,14 +758,3 @@ get_activation_fn <- function(arg, ...) {
   }
   res
 }
-
-## -----------------------------------------------------------------------------
-
-#' Plot model loss over epochs
-#'
-#' @param object A `brulee_mlp` object.
-#' @param ... Not currently used
-#' @return A `ggplot` object.
-#' @details This function plots the loss function across the available epochs.
-#' @export
-autoplot.brulee_mlp <- brulee_plot
