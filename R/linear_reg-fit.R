@@ -1,6 +1,6 @@
 #' Fit a linear regression model
 #'
-#' `lantern_linear_reg()` fits a model.
+#' `brulee_linear_reg()` fits a model.
 #'
 #' @param x Depending on the context:
 #'
@@ -57,7 +57,7 @@
 #'
 #' @return
 #'
-#' A `lantern_linear_reg` object with elements:
+#' A `brulee_linear_reg` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
 #'                 epoch.
@@ -86,7 +86,7 @@
 #'
 #'  # Using matrices
 #'  set.seed(1)
-#'  lantern_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
+#'  brulee_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
 #'                     y = ames_train$Sale_Price,
 #'                     penalty = 0.10, epochs = 1, batch_size = 64)
 #'
@@ -109,7 +109,7 @@
 #'     step_normalize(all_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- lantern_linear_reg(ames_rec, data = ames_train,
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
 #'                            epochs = 5, batch_size = 32)
 #'  fit
 #'
@@ -134,21 +134,21 @@
 #'
 #' }
 #' @export
-lantern_linear_reg <- function(x, ...) {
-  UseMethod("lantern_linear_reg")
+brulee_linear_reg <- function(x, ...) {
+  UseMethod("brulee_linear_reg")
 }
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.default <- function(x, ...) {
-  stop("`lantern_linear_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+#' @rdname brulee_linear_reg
+brulee_linear_reg.default <- function(x, ...) {
+  stop("`brulee_linear_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.data.frame <-
+#' @rdname brulee_linear_reg
+brulee_linear_reg.data.frame <-
   function(x,
            y,
            epochs = 20L,
@@ -163,7 +163,7 @@ lantern_linear_reg.data.frame <-
            ...) {
     processed <- hardhat::mold(x, y)
 
-    lantern_linear_reg_bridge(
+    brulee_linear_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -181,22 +181,22 @@ lantern_linear_reg.data.frame <-
 # XY method - matrix
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.matrix <- function(x,
-                                      y,
-                                      epochs = 20L,
-                                      penalty = 0.001,
-                                      validation = 0.1,
-                                      optimizer = "LBFGS",
-                                      learn_rate = 1,
-                                      momentum = 0.0,
-                                      batch_size = NULL,
-                                      stop_iter = 5,
-                                      verbose = FALSE,
-                                      ...) {
+#' @rdname brulee_linear_reg
+brulee_linear_reg.matrix <- function(x,
+                                     y,
+                                     epochs = 20L,
+                                     penalty = 0.001,
+                                     validation = 0.1,
+                                     optimizer = "LBFGS",
+                                     learn_rate = 1,
+                                     momentum = 0.0,
+                                     batch_size = NULL,
+                                     stop_iter = 5,
+                                     verbose = FALSE,
+                                     ...) {
   processed <- hardhat::mold(x, y)
 
-  lantern_linear_reg_bridge(
+  brulee_linear_reg_bridge(
     processed,
     epochs = epochs,
     optimizer = optimizer,
@@ -214,8 +214,8 @@ lantern_linear_reg.matrix <- function(x,
 # Formula method
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.formula <-
+#' @rdname brulee_linear_reg
+brulee_linear_reg.formula <-
   function(formula,
            data,
            epochs = 20L,
@@ -230,7 +230,7 @@ lantern_linear_reg.formula <-
            ...) {
     processed <- hardhat::mold(formula, data)
 
-    lantern_linear_reg_bridge(
+    brulee_linear_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -248,8 +248,8 @@ lantern_linear_reg.formula <-
 # Recipe method
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.recipe <-
+#' @rdname brulee_linear_reg
+brulee_linear_reg.recipe <-
   function(x,
            data,
            epochs = 20L,
@@ -264,7 +264,7 @@ lantern_linear_reg.recipe <-
            ...) {
     processed <- hardhat::mold(x, data)
 
-    lantern_linear_reg_bridge(
+    brulee_linear_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -282,14 +282,14 @@ lantern_linear_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
-                                      learn_rate, momentum, penalty, dropout,
-                                      validation, batch_size, stop_iter, verbose, ...) {
+brulee_linear_reg_bridge <- function(processed, epochs, optimizer,
+                                     learn_rate, momentum, penalty, dropout,
+                                     validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
-  f_nm <- "lantern_linear_reg"
+  f_nm <- "brulee_linear_reg"
   # check values of various argument values
   if (is.numeric(epochs) & !is.integer(epochs)) {
     epochs <- as.integer(epochs)
@@ -345,7 +345,7 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
       verbose = verbose
     )
 
-  new_lantern_linear_reg(
+  new_brulee_linear_reg(
     model_obj = fit$model_obj,
     estimates = fit$estimates,
     best_epoch = fit$best_epoch,
@@ -357,8 +357,8 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_lantern_linear_reg <- function( model_obj, estimates, best_epoch, loss,
-                                    dims, y_stats, parameters, blueprint) {
+new_brulee_linear_reg <- function( model_obj, estimates, best_epoch, loss,
+                                   dims, y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
     rlang::abort("'model_obj' should be a raw vector.")
   }
@@ -385,7 +385,7 @@ new_lantern_linear_reg <- function( model_obj, estimates, best_epoch, loss,
                      y_stats = y_stats,
                      parameters = parameters,
                      blueprint = blueprint,
-                     class = "lantern_linear_reg")
+                     class = "brulee_linear_reg")
 }
 
 ## -----------------------------------------------------------------------------
@@ -412,7 +412,7 @@ linear_reg_fit_imp <-
     check_data_att(x, y)
 
     # Check missing values
-    compl_data <- check_missing_data(x, y, "lantern_linear_reg", verbose)
+    compl_data <- check_missing_data(x, y, "brulee_linear_reg", verbose)
     x <- compl_data$x
     y <- compl_data$y
     n <- length(y)
@@ -448,11 +448,11 @@ linear_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
-    ds <- lantern::matrix_to_dataset(x, y)
+    ds <- brulee::matrix_to_dataset(x, y)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
-      ds_val <- lantern::matrix_to_dataset(x_val, y_val)
+      ds_val <- brulee::matrix_to_dataset(x_val, y_val)
       dl_val <- torch::dataloader(ds_val)
     }
 
@@ -580,18 +580,18 @@ linear_reg_module <-
 ## -----------------------------------------------------------------------------
 
 #' @export
-print.lantern_linear_reg <- function(x, ...) {
+print.brulee_linear_reg <- function(x, ...) {
   cat("Linear regression\n\n")
-  lantern_print(x)
+  brulee_print(x)
 }
 
 ## -----------------------------------------------------------------------------
 
 #' Plot model loss over epochs
 #'
-#' @param object A `lantern_linear_reg` object.
+#' @param object A `brulee_linear_reg` object.
 #' @param ... Not currently used
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_linear_reg <- lantern_plot
+autoplot.brulee_linear_reg <- brulee_plot

@@ -26,7 +26,7 @@ test_that('different fit interfaces', {
   # matrix x
   expect_error({
     set.seed(4499)
-    fit_mat <- lantern_mlp(x_mat, y, epochs = 10L)
+    fit_mat <- brulee_mlp(x_mat, y, epochs = 10L)
   },
   regex = NA
   )
@@ -37,25 +37,25 @@ test_that('different fit interfaces', {
 
   # data frame x (all numeric)
   expect_error(
-    fit_df <- lantern_mlp(x_df, y, epochs = 10L),
+    fit_df <- brulee_mlp(x_df, y, epochs = 10L),
     regex = NA
 
     # data frame x (mixed)
   )
   expect_error(
-    lantern_mlp(x_df_mixed, y, epochs = 10L),
+    brulee_mlp(x_df_mixed, y, epochs = 10L),
     regex = "There were some non-numeric columns in the predictors"
   )
 
   # formula (mixed)
   expect_error(
-    fit_f <- lantern_mlp(Class ~ ., smol, epochs = 10L),
+    fit_f <- brulee_mlp(Class ~ ., smol, epochs = 10L),
     regex = NA
   )
 
   # recipe (mixed)
   expect_error(
-    fit_rec <- lantern_mlp(rec, lending_club, epochs = 10L),
+    fit_rec <- brulee_mlp(rec, lending_club, epochs = 10L),
     regex = NA
   )
 
@@ -67,7 +67,7 @@ test_that('predictions', {
   x_df <- as.data.frame(scale(x_df))
 
   set.seed(1)
-  fit_df <- lantern_mlp(x_df, y, epochs = 10L, batch_size = length(y))
+  fit_df <- brulee_mlp(x_df, y, epochs = 10L, batch_size = length(y))
 
   complete_pred <- predict(fit_df, head(x_df))
   expect_true(tibble::is_tibble(complete_pred))
@@ -97,13 +97,13 @@ test_that("mlp binary learns something", {
   x <- data.frame(x = rnorm(1000))
   y <- as.factor(x > 0)
 
-  model <- lantern_mlp(x, y,
-                       batch_size = 50,
-                       epochs = 100L,
-                       activation = "relu",
-                       hidden_units = 5L,
-                       learn_rate = 0.1,
-                       dropout = 0)
+  model <- brulee_mlp(x, y,
+                      batch_size = 50,
+                      epochs = 100L,
+                      activation = "relu",
+                      hidden_units = 5L,
+                      learn_rate = 0.1,
+                      dropout = 0)
 
   y_ <- predict(model, x)$.pred_class
   expect_true(sum(diag(table(y, y_))) > 950)
@@ -127,20 +127,20 @@ test_that("class weights - mlp", {
 
   expect_snapshot({
     set.seed(1)
-    fit_imbal <- lantern_mlp(y ~ ., df_imbal, verbose = TRUE,
-                             class_weights = 20)
+    fit_imbal <- brulee_mlp(y ~ ., df_imbal, verbose = TRUE,
+                            class_weights = 20)
   })
 
 
   expect_snapshot({
     set.seed(1)
-    fit <- lantern_mlp(y ~ ., df_imbal, epochs = 2, verbose = TRUE,
-                       class_weights = c(a = 12, b = 1))
+    fit <- brulee_mlp(y ~ ., df_imbal, epochs = 2, verbose = TRUE,
+                      class_weights = c(a = 12, b = 1))
   })
 
   expect_error({
     set.seed(1)
-    fit_bal <- lantern_mlp(y ~ ., df_imbal, learn_rate = 0.1)
+    fit_bal <- brulee_mlp(y ~ ., df_imbal, learn_rate = 0.1)
   },
   regexp = NA
   )

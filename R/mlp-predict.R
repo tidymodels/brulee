@@ -1,6 +1,6 @@
-#' Predict from a `lantern_mlp`
+#' Predict from a `brulee_mlp`
 #'
-#' @param object A `lantern_mlp` object.
+#' @param object A `brulee_mlp` object.
 #'
 #' @param new_data A data frame or matrix of new predictors.
 #' @param epoch An integer for the epoch to make predictions from. If this value
@@ -22,19 +22,19 @@
 #'
 #'
 #' @export
-predict.lantern_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+predict.brulee_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_lantern_mlp_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_mlp_bridge(type, object, forged$predictors, epoch = epoch)
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_lantern_mlp_bridge <- function(type, model, predictors, epoch) {
+predict_brulee_mlp_bridge <- function(type, model, predictors, epoch) {
 
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
@@ -65,9 +65,9 @@ predict_lantern_mlp_bridge <- function(type, model, predictors, epoch) {
 get_mlp_predict_function <- function(type) {
   switch(
     type,
-    numeric = predict_lantern_mlp_numeric,
-    prob    = predict_lantern_mlp_prob,
-    class   = predict_lantern_mlp_class
+    numeric = predict_brulee_mlp_numeric,
+    prob    = predict_brulee_mlp_prob,
+    class   = predict_brulee_mlp_class
   )
 }
 
@@ -88,7 +88,7 @@ revive_model <- function(model) {
   module
 }
 
-predict_lantern_mlp_raw <- function(model, predictors, epoch) {
+predict_brulee_mlp_raw <- function(model, predictors, epoch) {
   # convert from raw format
   module <- revive_model(model$model_obj)
   # get current model parameters
@@ -106,20 +106,20 @@ predict_lantern_mlp_raw <- function(model, predictors, epoch) {
   predictions
 }
 
-predict_lantern_mlp_numeric <- function(model, predictors, epoch) {
-  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
+predict_brulee_mlp_numeric <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_mlp_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
   hardhat::spruce_numeric(predictions[,1])
 }
 
-predict_lantern_mlp_prob <- function(model, predictors, epoch) {
-  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
+predict_brulee_mlp_prob <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_mlp_raw(model, predictors, epoch)
   lvs <- get_levels(model)
   hardhat::spruce_prob(pred_levels = lvs, predictions)
 }
 
-predict_lantern_mlp_class <- function(model, predictors, epoch) {
-  predictions <- predict_lantern_mlp_raw(model, predictors, epoch)
+predict_brulee_mlp_class <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_mlp_raw(model, predictors, epoch)
   predictions <- apply(predictions, 1, which.max2) # take the maximum value
   lvs <- get_levels(model)
   hardhat::spruce_class(factor(lvs[predictions], levels = lvs))

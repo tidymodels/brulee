@@ -15,57 +15,57 @@ df$y <- factor(df$y)
 # ------------------------------------------------------------------------------
 
 test_that("multinomial mlp", {
- skip_if_not(torch::torch_is_installed())
+  skip_if_not(torch::torch_is_installed())
 
- expect_snapshot({
-  set.seed(1)
-  fit <- lantern_mlp(y ~ ., df, epochs = 2, verbose = TRUE)
- })
+  expect_snapshot({
+    set.seed(1)
+    fit <- brulee_mlp(y ~ ., df, epochs = 2, verbose = TRUE)
+  })
 
- expect_snapshot({
-  fit
- })
+  expect_snapshot({
+    fit
+  })
 
- expect_error(
-  fit <- lantern_mlp(y ~ ., df, epochs = 10, learn_rate = 0.1,
-                     optimizer = "SGD"),
-  regexp = NA
- )
+  expect_error(
+    fit <- brulee_mlp(y ~ ., df, epochs = 10, learn_rate = 0.1,
+                      optimizer = "SGD"),
+    regexp = NA
+  )
 })
 
 # ------------------------------------------------------------------------------
 
 test_that("class weights - mlp", {
- skip_if_not(torch::torch_is_installed())
+  skip_if_not(torch::torch_is_installed())
 
 
- expect_snapshot({
-  set.seed(1)
-  fit_imbal <- lantern_mlp(y ~ ., df, verbose = TRUE,
-                           class_weights = 20,
-                           optimizer = "SGD")
- })
+  expect_snapshot({
+    set.seed(1)
+    fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE,
+                            class_weights = 20,
+                            optimizer = "SGD")
+  })
 
 
- expect_snapshot({
-  set.seed(1)
-  fit <- lantern_mlp(y ~ ., df, epochs = 2, verbose = TRUE,
-                     class_weights = c(a = 12, b = 1, c = 1))
- })
+  expect_snapshot({
+    set.seed(1)
+    fit <- brulee_mlp(y ~ ., df, epochs = 2, verbose = TRUE,
+                      class_weights = c(a = 12, b = 1, c = 1))
+  })
 
- expect_error({
-  set.seed(1)
-  fit_bal <- lantern_mlp(y ~ ., df, learn_rate = 0.1,
-                         optimizer = "SGD")
- },
- regexp = NA
- )
+  expect_error({
+    set.seed(1)
+    fit_bal <- brulee_mlp(y ~ ., df, learn_rate = 0.1,
+                          optimizer = "SGD")
+  },
+  regexp = NA
+  )
 
- expect_true(
-  names(sort(table(predict(fit_bal, df))))[1] == "c"
- )
- expect_true(
-  names(sort(table(predict(fit_imbal, df))))[3] == "c"
- )
+  expect_true(
+    names(sort(table(predict(fit_bal, df))))[1] == "c"
+  )
+  expect_true(
+    names(sort(table(predict(fit_imbal, df))))[3] == "c"
+  )
 })
 

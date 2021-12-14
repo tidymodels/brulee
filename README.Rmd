@@ -13,51 +13,51 @@ knitr::opts_chunk$set(
 )
 ```
 
-# lantern
+# brulee
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/tidymodels/lantern/workflows/R-CMD-check/badge.svg)](https://github.com/tidymodels/lantern/actions)
-[![Codecov test coverage](https://codecov.io/gh/tidymodels/lantern/branch/main/graph/badge.svg)](https://codecov.io/gh/tidymodels/lantern?branch=main)
+[![R-CMD-check](https://github.com/tidymodels/brulee/workflows/R-CMD-check/badge.svg)](https://github.com/tidymodels/brulee/actions)
+[![Codecov test coverage](https://codecov.io/gh/tidymodels/brulee/branch/main/graph/badge.svg)](https://codecov.io/gh/tidymodels/brulee?branch=main)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-The R `lantern` package contains several basic modeling functions that use the `torch` package (and is unrelated to the python script).  
+The R `brulee` package contains several basic modeling functions that use the `torch` package (and is unrelated to the python script).  
 
 The package is currently experimental; the user interface and other details may change before release. 
 
 ## Installation
 
-You can install the released version of lantern from [CRAN](https://CRAN.R-project.org) with:
+You can install the released version of brulee from [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
 # not yet!
-# install.packages("lantern")
+# install.packages("brulee")
 ```
 
-And the development version from [GitHub](https://github.com/tidymodels/lantern) with:
+And the development version from [GitHub](https://github.com/tidymodels/brulee) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("tidymodels/lantern")
+devtools::install_github("tidymodels/brulee")
 ```
 ## Example
 
-`lantern` has formula, x/y, and recipe user interfaces for each function. For example:
+`brulee` has formula, x/y, and recipe user interfaces for each function. For example:
 
 ```{r load, include = FALSE}
-library(lantern)
+library(brulee)
 library(yardstick)
 library(recipes)
 ```
 ```{r class-fit-form}
-library(lantern)
+library(brulee)
 library(recipes)
 library(yardstick)
 
 data(bivariate, package = "modeldata")
 set.seed(20)
-nn_log_biv <- lantern_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
-                          epochs = 150, hidden_units = 3, batch_size = 64)
+nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
+                         epochs = 150, hidden_units = 3, batch_size = 64)
 
 # We use the tidymodels semantics to always return a tibble when predicting
 predict(nn_log_biv, bivariate_test, type = "prob") %>% 
@@ -76,8 +76,8 @@ rec <-
   step_normalize(all_predictors())
 
 set.seed(20)
-nn_rec_biv <- lantern_mlp(rec, data = bivariate_train, 
-                          epochs = 150, hidden_units = 3, batch_size = 64)
+nn_rec_biv <- brulee_mlp(rec, data = bivariate_train, 
+                         epochs = 150, hidden_units = 3, batch_size = 64)
 
 # A little better
 predict(nn_rec_biv, bivariate_test, type = "prob") %>% 
@@ -87,5 +87,5 @@ predict(nn_rec_biv, bivariate_test, type = "prob") %>%
 
 ## Code of Conduct
   
-Please note that the lantern project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+Please note that the brulee project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
 

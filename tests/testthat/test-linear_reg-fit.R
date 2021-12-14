@@ -11,7 +11,7 @@ test_that("linear regression test", {
 
   set.seed(1)
   expect_error(
-    fit <- lantern_linear_reg(y ~ ., df, epochs = 2),
+    fit <- brulee_linear_reg(y ~ ., df, epochs = 2),
     regexp = NA
   )
 
@@ -22,7 +22,7 @@ test_that("linear regression test", {
   )
 
   expect_error(
-    fit <- lantern_linear_reg(y ~ ., df, epochs = 10, learn_rate = 0.1, optimizer = "SGD"),
+    fit <- brulee_linear_reg(y ~ ., df, epochs = 10, learn_rate = 0.1, optimizer = "SGD"),
     regexp = NA
   )
 

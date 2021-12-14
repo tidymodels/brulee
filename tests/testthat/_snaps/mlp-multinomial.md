@@ -2,7 +2,7 @@
 
     Code
       set.seed(1)
-      fit <- lantern_mlp(y ~ ., df, epochs = 2, verbose = TRUE)
+      fit <- brulee_mlp(y ~ ., df, epochs = 2, verbose = TRUE)
     Message <message>
       epoch: 1 	Loss: 1.1422 
       epoch: 2 	Loss: 1.1416 
@@ -27,7 +27,7 @@
 
     Code
       set.seed(1)
-      fit_imbal <- lantern_mlp(y ~ ., df, verbose = TRUE, class_weights = 20,
+      fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE, class_weights = 20,
       optimizer = "SGD")
     Message <message>
       epoch:   1 	Loss: 1.3621 
@@ -135,7 +135,7 @@
 
     Code
       set.seed(1)
-      fit <- lantern_mlp(y ~ ., df, epochs = 2, verbose = TRUE, class_weights = c(a = 12,
+      fit <- brulee_mlp(y ~ ., df, epochs = 2, verbose = TRUE, class_weights = c(a = 12,
         b = 1, c = 1))
     Message <message>
       epoch: 1 	Loss: 0.72659 

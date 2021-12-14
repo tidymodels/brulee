@@ -19,7 +19,7 @@ test_that("multinomial regression", {
 
   expect_snapshot({
     set.seed(1)
-    fit <- lantern_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE)
+    fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE)
   })
 
   expect_snapshot({
@@ -27,8 +27,8 @@ test_that("multinomial regression", {
   })
 
   expect_error(
-    fit <- lantern_multinomial_reg(y ~ ., df, epochs = 10, learn_rate = 0.1,
-                                   optimizer = "SGD"),
+    fit <- brulee_multinomial_reg(y ~ ., df, epochs = 10, learn_rate = 0.1,
+                                  optimizer = "SGD"),
     regexp = NA
   )
 })
@@ -41,22 +41,22 @@ test_that("class weights - multinomial regression", {
 
   expect_snapshot({
     set.seed(1)
-    fit_imbal <- lantern_multinomial_reg(y ~ ., df, verbose = TRUE,
-                                         class_weights = 20,
-                                         optimizer = "SGD")
+    fit_imbal <- brulee_multinomial_reg(y ~ ., df, verbose = TRUE,
+                                        class_weights = 20,
+                                        optimizer = "SGD")
   })
 
 
   expect_snapshot({
     set.seed(1)
-    fit <- lantern_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE,
-                                   class_weights = c(a = 12, b = 1, c = 1))
+    fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE,
+                                  class_weights = c(a = 12, b = 1, c = 1))
   })
 
   expect_error({
     set.seed(1)
-    fit_bal <- lantern_multinomial_reg(y ~ ., df, learn_rate = 0.1,
-                                       optimizer = "SGD")
+    fit_bal <- brulee_multinomial_reg(y ~ ., df, learn_rate = 0.1,
+                                      optimizer = "SGD")
   },
   regexp = NA
   )

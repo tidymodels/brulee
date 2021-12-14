@@ -1,4 +1,4 @@
-Package: lantern
+Package: brulee
 Title: High-Level Modeling Functions with 'torch'
 Version: 0.0.0.9000
 Authors@R: c(
@@ -39,5 +39,3 @@ Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
-Remotes:
-    tidymodels/parsnip@add-lantern
