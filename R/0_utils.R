@@ -14,7 +14,7 @@ brulee_print <- function(x, ...) {
     format(x$dims$p, big.mark = ","), "features,",
     chr_y, "\n"
   )
-  if (!is.null(x$parameters$class_weights)) {
+  if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
     cat("class weights",
         paste0(
           names(x$parameters$class_weights),
@@ -34,20 +34,21 @@ brulee_print <- function(x, ...) {
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
+    chr_it <- cli::pluralize("{it} epoch{?s}:")
     if(x$parameters$validation > 0) {
       if (is.na(x$y_stats$mean)) {
-        cat("validation loss after", it, "epochs:",
+        cat("validation loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       } else {
-        cat("scaled validation loss after", it, "epochs:",
+        cat("scaled validation loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       }
     } else {
       if (is.na(x$y_stats$mean)) {
-        cat("training set loss after", it, "epochs:",
+        cat("training set loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       } else {
-        cat("scaled training set loss after", it, "epochs:",
+        cat("scaled training set loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       }
     }

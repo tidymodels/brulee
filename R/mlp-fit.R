@@ -745,12 +745,22 @@ get_num_mlp_coef <- function(x) {
   length(unlist(x$estimates[[1]]))
 }
 
+get_units<- function(x) {
+  if (length(x$dims$h) > 1) {
+    res <- paste0("c(", paste(x$dims$h, collapse = ","), ") hidden units,")
+  } else {
+    res <- paste(format(x$dims$h, big.mark = ","), "hidden units,")
+  }
+  res
+}
+
+
 #' @export
 print.brulee_mlp <- function(x, ...) {
   cat("Multilayer perceptron\n\n")
   cat(x$param$activation, "activation\n")
   cat(
-    paste0("c(", paste(x$dims$h, collapse = ","), ")"), "hidden units,",
+    get_units(x), "",
     format(get_num_mlp_coef(x), big.mark = ","), "model parameters\n"
   )
   brulee_print(x, ...)
