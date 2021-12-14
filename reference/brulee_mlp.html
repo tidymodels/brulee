@@ -27,7 +27,7 @@ descent. Multiple layers can be used."><meta name="twitter:card" content="summar
         <a class="navbar-brand" href="../index.html">brulee</a>
         <div class="info hidden-xs hidden-sm">
           <span class="partof">part of <a href="https://tidymodels.org" class="external-link">tidymodels</a></span>
-          <span class="version version-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
+          <span class="version version-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1</span>
         </div>
       </div>
     </div>
@@ -35,7 +35,12 @@ descent. Multiple layers can be used."><meta name="twitter:card" content="summar
       <ul class="nav navbar-nav navbar-right"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-        
+        <li>
+  <a href="https://github.com/tidymodels/brulee/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -46,7 +51,7 @@ descent. Multiple layers can be used."><meta name="twitter:card" content="summar
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Fit neural networks</h1>
-    
+    <small class="dont-index">Source: <a href="https://github.com/tidymodels/brulee/blob/HEAD/R/mlp-fit.R" class="external-link"><code>R/mlp-fit.R</code></a></small>
     <div class="hidden name"><code>brulee_mlp.Rd</code></div>
     </div>
 
@@ -150,9 +155,9 @@ created from <code><a href="https://recipes.tidymodels.org/reference/recipe.html
 <dd><p>Not currently used, but required for extensibility.</p></dd>
 <dt>y</dt>
 <dd><p>When <code>x</code> is a <strong>data frame</strong> or <strong>matrix</strong>, <code>y</code> is the outcome
-specified as:</p><ul><li><p>A <strong>data frame</strong> with 1 numeric column.</p></li>
-<li><p>A <strong>matrix</strong> with 1 numeric column.</p></li>
-<li><p>A numeric <strong>vector</strong>.</p></li>
+specified as:</p><ul><li><p>A <strong>data frame</strong> with 1 column (numeric or factor).</p></li>
+<li><p>A <strong>matrix</strong> with numeric column  (numeric or factor).</p></li>
+<li><p>A  <strong>vector</strong>  (numeric or factor).</p></li>
 </ul></dd>
 <dt>epochs</dt>
 <dd><p>An integer for the number of epochs of training.</p></dd>
@@ -174,10 +179,10 @@ the activation for each hidden layer.</p></dd>
 validation set.</p></dd>
 <dt>learn_rate</dt>
 <dd><p>A positive number that controls the rapidity that the model
-moves along the descent path. Values less that 0.1 are typical.</p></dd>
+moves along the descent path. Values around 0.1 or less are typical.</p></dd>
 <dt>momentum</dt>
-<dd><p>A positive number on <code>[0, 1]</code> for the momentum parameter in
-gradient descent.</p></dd>
+<dd><p>A positive number usually on <code>[0.50, 0.99]</code> for the momentum
+parameter in gradient descent.</p></dd>
 <dt>batch_size</dt>
 <dd><p>An integer for the number of training set points in each
 batch.</p></dd>
@@ -196,8 +201,8 @@ improvement before stopping.</p></dd>
 <dt>verbose</dt>
 <dd><p>A logical that prints out the iteration history.</p></dd>
 <dt>formula</dt>
-<dd><p>A formula specifying the outcome terms on the left-hand side,
-and the predictor terms on the right-hand side.</p></dd>
+<dd><p>A formula specifying the outcome term(s) on the left-hand side,
+and the predictor term(s) on the right-hand side.</p></dd>
 <dt>data</dt>
 <dd><p>When a <strong>recipe</strong> or <strong>formula</strong> is used, <code>data</code> is specified as:</p><ul><li><p>A <strong>data frame</strong> containing both the predictors and the outcome.</p></li>
 </ul></dd>
@@ -217,22 +222,28 @@ likelihood for classification) at each epoch.</p></li>
 </ul></div>
     <div id="details">
     <h2>Details</h2>
-    <p>This function fits feed-forward neural network models for
-regression (when the outcome is a number) or classification (a factor). For
-regression, the mean squared error is optimized and cross-entropy is the loss
-function for classification.</p>
+    <p>This function fits feed-forward neural network models for regression (when
+the outcome is a number) or classification (a factor). For regression, the
+mean squared error is optimized and cross-entropy is the loss function for
+classification.</p>
+<p>When the outcome is a number, the function internally standardizes the
+outcome data to have mean zero and a standard deviation of one. The prediction
+function creates predictions on the original scale.</p>
+<p>By default, training halts when the validation loss increases for at least
+<code>step_iter</code> iterations. If <code>validation = 0</code> the training set loss is used.</p>
 <p>The <em>predictors</em> data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric. Predictors should be in the same units
 before training.</p>
-<p>When the outcome is a number, the function internally standardizes the
-outcome data to have mean zero and a standard deviation of one. The prediction
-function creates predictions on the original scale.</p>
-<p>By default, training halts when the validation loss increases for at least
-<code>step_iter</code> iterations.</p>
 <p>The model objects are saved for each epoch so that the number of epochs can
-be efficiently tuned.</p>
+be efficiently tuned. Both the <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods for this
+model have an <code>epoch</code> argument (which defaults to the epoch with the best
+loss value).</p>
+    </div>
+    <div id="see-also">
+    <h2>See also</h2>
+    <div class="dont-index"><p><code><a href="predict.brulee_mlp.html">predict.brulee_mlp()</a></code>, <code><a href="brulee-coefs.html">coef.brulee_mlp()</a></code>, <code><a href="brulee-autoplot.html">autoplot.brulee_mlp()</a></code></p></div>
     </div>
 
     <div id="ref-examples">
@@ -269,14 +280,14 @@ be efficiently tuned.</p>
 <span class="r-in">         data <span class="op">=</span> <span class="va">ames_train</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">   <span class="co"># Transform some highly skewed predictors</span></span>
 <span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_BoxCox.html" class="external-link">step_BoxCox</a></span><span class="op">(</span><span class="va">Lot_Area</span>, <span class="va">Gr_Liv_Area</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">   <span class="co"># Lump some rarely occuring categories into "other"</span></span>
+<span class="r-in">   <span class="co"># Lump some rarely occurring categories into "other"</span></span>
 <span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_other.html" class="external-link">step_other</a></span><span class="op">(</span><span class="va">Neighborhood</span>, threshold <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>  <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">   <span class="co"># Encode categorical predictors as binary.</span></span>
-<span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_dummy.html" class="external-link">step_dummy</a></span><span class="op">(</span><span class="fu"><a href="https://recipes.tidymodels.org/reference/has_role.html" class="external-link">all_nominal</a></span><span class="op">(</span><span class="op">)</span>, one_hot <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_dummy.html" class="external-link">step_dummy</a></span><span class="op">(</span><span class="fu"><a href="https://recipes.tidymodels.org/reference/has_role.html" class="external-link">all_nominal_predictors</a></span><span class="op">(</span><span class="op">)</span>, one_hot <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">   <span class="co"># Add an interaction effect:</span></span>
 <span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_interact.html" class="external-link">step_interact</a></span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"Central_Air"</span><span class="op">)</span><span class="op">:</span><span class="va">Year_Built</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_zv.html" class="external-link">step_zv</a></span><span class="op">(</span><span class="fu"><a href="https://recipes.tidymodels.org/reference/has_role.html" class="external-link">all_predictors</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_normalize.html" class="external-link">step_normalize</a></span><span class="op">(</span><span class="fu"><a href="https://recipes.tidymodels.org/reference/has_role.html" class="external-link">all_predictors</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in">   <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_normalize.html" class="external-link">step_normalize</a></span><span class="op">(</span><span class="fu"><a href="https://recipes.tidymodels.org/reference/has_role.html" class="external-link">all_numeric_predictors</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
 <span class="r-in"> <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">brulee_mlp</span><span class="op">(</span><span class="va">ames_rec</span>, data <span class="op">=</span> <span class="va">ames_train</span>, hidden_units <span class="op">=</span> <span class="fl">20</span>,</span>

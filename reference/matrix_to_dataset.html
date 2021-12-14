@@ -27,7 +27,7 @@ encodings then formats the results for consumption by torch."><meta name="twitte
         <a class="navbar-brand" href="../index.html">brulee</a>
         <div class="info hidden-xs hidden-sm">
           <span class="partof">part of <a href="https://tidymodels.org" class="external-link">tidymodels</a></span>
-          <span class="version version-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
+          <span class="version version-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1</span>
         </div>
       </div>
     </div>
@@ -35,7 +35,12 @@ encodings then formats the results for consumption by torch."><meta name="twitte
       <ul class="nav navbar-nav navbar-right"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-        
+        <li>
+  <a href="https://github.com/tidymodels/brulee/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -46,7 +51,7 @@ encodings then formats the results for consumption by torch."><meta name="twitte
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Convert data to torch format</h1>
-    
+    <small class="dont-index">Source: <a href="https://github.com/tidymodels/brulee/blob/HEAD/R/convert_data.R" class="external-link"><code>R/convert_data.R</code></a></small>
     <div class="hidden name"><code>matrix_to_dataset.Rd</code></div>
     </div>
 
@@ -79,7 +84,9 @@ is a factor.</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu">matrix_to_dataset</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="va">mtcars</span><span class="op">$</span><span class="va">mpg</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span class="r-in">  <span class="fu">matrix_to_dataset</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="va">mtcars</span><span class="op">$</span><span class="va">mpg</span><span class="op">)</span></span>
+<span class="r-in"><span class="op">}</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;tensor_dataset&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Inherits from: &lt;dataset&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Public:</span>
