@@ -62,8 +62,9 @@ test_that('different fit interfaces', {
 })
 
 test_that('predictions', {
-  skip("problem with loss computation")
   skip_if(!torch::torch_is_installed())
+
+  x_df <- as.data.frame(scale(x_df))
 
   set.seed(1)
   fit_df <- lantern_mlp(x_df, y, epochs = 10L, batch_size = length(y))
