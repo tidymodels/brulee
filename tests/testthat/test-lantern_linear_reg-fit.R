@@ -9,13 +9,14 @@ df <- tibble::tibble(
 test_that("linear regression test", {
   skip_if(!torch::torch_is_installed())
 
+  set.seed(1)
   expect_error(
     fit <- lantern_linear_reg(y ~ ., df, epochs = 2),
     regexp = NA
   )
 
   expect_equal(
-    as.numeric(unlist(coef(fit))[c(3,1,2)]),
+    as.numeric(coef(fit)),
     as.numeric(coef(lm(y ~ ., df))),
     tolerance = 0.1
   )
