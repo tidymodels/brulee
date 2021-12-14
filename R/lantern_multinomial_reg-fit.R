@@ -37,7 +37,9 @@
 #' @return
 #'
 #' A `lantern_multinomial_reg` object with elements:
-#'  * `models`: a list object of serialized models for each epoch before stopping.
+#'  * `models_obj`: a serialized raw vector for the torch module.
+#'  * `estimates`: a list of matrices with the model parameter estimates per
+#'                 epoch.
 #'  * `best_epoch`: an integer for the epoch with the smallest loss.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
 #'            likelihood for classification) at each epoch.
@@ -48,40 +50,39 @@
 #' @examples
 #' if (torch::torch_is_installed()) {
 #'
-#'  library(recipes)
-#'  library(yardstick)
+#'   library(recipes)
+#'   library(yardstick)
 #'
-#'  data(penguins, package = "modeldata")
+#'   data(penguins, package = "modeldata")
 #'
-#'  penguins <- penguins %>% na.omit()
+#'   penguins <- penguins %>% na.omit()
 #'
-#'  set.seed(122)
-#'  in_train <- sample(1:nrow(penguins), 200)
-#'  penguins_train <- penguins[ in_train,]
-#'  penguins_test  <- penguins[-in_train,]
+#'   set.seed(122)
+#'   in_train <- sample(1:nrow(penguins), 200)
+#'   penguins_train <- penguins[ in_train,]
+#'   penguins_test  <- penguins[-in_train,]
 #'
-#'  rec <- recipe(island ~ ., data = penguins_train) %>%
-#'   step_dummy(species, sex) %>%
-#'   step_normalize(all_predictors())
+#'   rec <- recipe(island ~ ., data = penguins_train) %>%
+#'     step_dummy(species, sex) %>%
+#'     step_normalize(all_predictors())
 #'
-#'  set.seed(3)
-#'  fit <- lantern_multinomial_reg(rec, data = penguins_train, epochs = 5)
-#'  fit
+#'   set.seed(3)
+#'   fit <- lantern_multinomial_reg(rec, data = penguins_train, epochs = 5)
+#'   fit
 #'
-#'  predict(fit, penguins_test) %>%
-#'   bind_cols(penguins_test) %>%
-#'   conf_mat(island, .pred_class)
+#'   predict(fit, penguins_test) %>%
+#'     bind_cols(penguins_test) %>%
+#'     conf_mat(island, .pred_class)
 #' }
-#'
 #' @export
 lantern_multinomial_reg <- function(x, ...) {
- UseMethod("lantern_multinomial_reg")
+  UseMethod("lantern_multinomial_reg")
 }
 
 #' @export
 #' @rdname lantern_multinomial_reg
 lantern_multinomial_reg.default <- function(x, ...) {
- stop("`lantern_multinomial_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+  stop("`lantern_multinomial_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
@@ -89,36 +90,36 @@ lantern_multinomial_reg.default <- function(x, ...) {
 #' @export
 #' @rdname lantern_multinomial_reg
 lantern_multinomial_reg.data.frame <-
- function(x,
-          y,
-          epochs = 20L,
-          penalty = 0.001,
-          validation = 0.1,
-          optimizer = "LBFGS",
-          learn_rate = 1.0,
-          momentum = 0.0,
-          batch_size = NULL,
-          class_weights = NULL,
-          stop_iter = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(x, y)
+  function(x,
+           y,
+           epochs = 20L,
+           penalty = 0.001,
+           validation = 0.1,
+           optimizer = "LBFGS",
+           learn_rate = 1.0,
+           momentum = 0.0,
+           batch_size = NULL,
+           class_weights = NULL,
+           stop_iter = 5,
+           verbose = FALSE,
+           ...) {
+    processed <- hardhat::mold(x, y)
 
-  lantern_multinomial_reg_bridge(
-   processed,
-   epochs = epochs,
-   optimizer = optimizer,
-   learn_rate = learn_rate,
-   penalty = penalty,
-   validation = validation,
-   momentum = momentum,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   verbose = verbose,
-   ...
-  )
- }
+    lantern_multinomial_reg_bridge(
+      processed,
+      epochs = epochs,
+      optimizer = optimizer,
+      learn_rate = learn_rate,
+      penalty = penalty,
+      validation = validation,
+      momentum = momentum,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      verbose = verbose,
+      ...
+    )
+  }
 
 # XY method - matrix
 
@@ -137,22 +138,22 @@ lantern_multinomial_reg.matrix <- function(x,
                                            stop_iter = 5,
                                            verbose = FALSE,
                                            ...) {
- processed <- hardhat::mold(x, y)
+  processed <- hardhat::mold(x, y)
 
- lantern_multinomial_reg_bridge(
-  processed,
-  epochs = epochs,
-  optimizer = optimizer,
-  learn_rate = learn_rate,
-  momentum = momentum,
-  penalty = penalty,
-  validation = validation,
-  batch_size = batch_size,
-  class_weights = class_weights,
-  stop_iter = stop_iter,
-  verbose = verbose,
-  ...
- )
+  lantern_multinomial_reg_bridge(
+    processed,
+    epochs = epochs,
+    optimizer = optimizer,
+    learn_rate = learn_rate,
+    momentum = momentum,
+    penalty = penalty,
+    validation = validation,
+    batch_size = batch_size,
+    class_weights = class_weights,
+    stop_iter = stop_iter,
+    verbose = verbose,
+    ...
+  )
 }
 
 # Formula method
@@ -160,73 +161,73 @@ lantern_multinomial_reg.matrix <- function(x,
 #' @export
 #' @rdname lantern_multinomial_reg
 lantern_multinomial_reg.formula <-
- function(formula,
-          data,
-          epochs = 20L,
-          penalty = 0.001,
+  function(formula,
+           data,
+           epochs = 20L,
+           penalty = 0.001,
 
-          validation = 0.1,
-          optimizer = "LBFGS",
-          learn_rate = 1,
-          momentum = 0.0,
-          batch_size = NULL,
-          class_weights = NULL,
-          stop_iter = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(formula, data)
+           validation = 0.1,
+           optimizer = "LBFGS",
+           learn_rate = 1,
+           momentum = 0.0,
+           batch_size = NULL,
+           class_weights = NULL,
+           stop_iter = 5,
+           verbose = FALSE,
+           ...) {
+    processed <- hardhat::mold(formula, data)
 
-  lantern_multinomial_reg_bridge(
-   processed,
-   epochs = epochs,
-   optimizer = optimizer,
-   learn_rate = learn_rate,
-   momentum = momentum,
-   penalty = penalty,
-   validation = validation,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   verbose = verbose,
-   ...
-  )
- }
+    lantern_multinomial_reg_bridge(
+      processed,
+      epochs = epochs,
+      optimizer = optimizer,
+      learn_rate = learn_rate,
+      momentum = momentum,
+      penalty = penalty,
+      validation = validation,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      verbose = verbose,
+      ...
+    )
+  }
 
 # Recipe method
 
 #' @export
 #' @rdname lantern_multinomial_reg
 lantern_multinomial_reg.recipe <-
- function(x,
-          data,
-          epochs = 20L,
-          penalty = 0.001,
-          validation = 0.1,
-          optimizer = "LBFGS",
-          learn_rate = 1,
-          momentum = 0.0,
-          batch_size = NULL,
-          class_weights = NULL,
-          stop_iter = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(x, data)
+  function(x,
+           data,
+           epochs = 20L,
+           penalty = 0.001,
+           validation = 0.1,
+           optimizer = "LBFGS",
+           learn_rate = 1,
+           momentum = 0.0,
+           batch_size = NULL,
+           class_weights = NULL,
+           stop_iter = 5,
+           verbose = FALSE,
+           ...) {
+    processed <- hardhat::mold(x, data)
 
-  lantern_multinomial_reg_bridge(
-   processed,
-   epochs = epochs,
-   optimizer = optimizer,
-   learn_rate = learn_rate,
-   momentum = momentum,
-   penalty = penalty,
-   validation = validation,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   verbose = verbose,
-   ...
-  )
- }
+    lantern_multinomial_reg_bridge(
+      processed,
+      epochs = epochs,
+      optimizer = optimizer,
+      learn_rate = learn_rate,
+      momentum = momentum,
+      penalty = penalty,
+      validation = validation,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      verbose = verbose,
+      ...
+    )
+  }
 
 # ------------------------------------------------------------------------------
 # Bridge
@@ -234,329 +235,335 @@ lantern_multinomial_reg.recipe <-
 lantern_multinomial_reg_bridge <- function(processed, epochs, optimizer,
                                            learn_rate, momentum, penalty, class_weights,
                                            validation, batch_size, stop_iter, verbose, ...) {
- if(!torch::torch_is_installed()) {
-  rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
- }
-
- f_nm <- "lantern_multinomial_reg"
- # check values of various argument values
- if (is.numeric(epochs) & !is.integer(epochs)) {
-  epochs <- as.integer(epochs)
- }
- check_integer(epochs, single = TRUE, 1, fn = f_nm)
- if (!is.null(batch_size)) {
-  if (is.numeric(batch_size) & !is.integer(batch_size)) {
-   batch_size <- as.integer(batch_size)
+  if(!torch::torch_is_installed()) {
+    rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
-  check_integer(batch_size, single = TRUE, 1, fn = f_nm)
- }
- check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
- check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
- check_logical(verbose, single = TRUE, fn = f_nm)
 
- ## -----------------------------------------------------------------------------
+  f_nm <- "lantern_multinomial_reg"
+  # check values of various argument values
+  if (is.numeric(epochs) & !is.integer(epochs)) {
+    epochs <- as.integer(epochs)
+  }
+  check_integer(epochs, single = TRUE, 1, fn = f_nm)
+  if (!is.null(batch_size)) {
+    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+      batch_size <- as.integer(batch_size)
+    }
+    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+  }
+  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+  check_logical(verbose, single = TRUE, fn = f_nm)
 
- predictors <- processed$predictors
+  ## -----------------------------------------------------------------------------
 
- if (!is.matrix(predictors)) {
-  predictors <- as.matrix(predictors)
-  if (is.character(predictors)) {
-   rlang::abort(
-    paste(
-     "There were some non-numeric columns in the predictors.",
-     "Please use a formula or recipe to encode all of the predictors as numeric."
+  predictors <- processed$predictors
+
+  if (!is.matrix(predictors)) {
+    predictors <- as.matrix(predictors)
+    if (is.character(predictors)) {
+      rlang::abort(
+        paste(
+          "There were some non-numeric columns in the predictors.",
+          "Please use a formula or recipe to encode all of the predictors as numeric."
+        )
+      )
+    }
+  }
+  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+  check_logical(verbose, single = TRUE, fn = f_nm)
+
+  ## -----------------------------------------------------------------------------
+
+  outcome <- processed$outcomes[[1]]
+  if (length(levels(outcome)) < 3) {
+    rlang::abort("multinomial regression is for outcomes with 3+ classes.")
+  }
+
+  # ------------------------------------------------------------------------------
+
+  lvls <- levels(outcome)
+  xtab <- table(outcome)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+
+  ## -----------------------------------------------------------------------------
+
+  fit <-
+    multinomial_reg_fit_imp(
+      x = predictors,
+      y = outcome,
+      epochs = epochs,
+      optimizer = optimizer,
+      learn_rate = learn_rate,
+      momentum = momentum,
+      penalty = penalty,
+      validation = validation,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      verbose = verbose
     )
-   )
-  }
- }
- check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
- check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
- check_logical(verbose, single = TRUE, fn = f_nm)
 
- ## -----------------------------------------------------------------------------
-
- outcome <- processed$outcomes[[1]]
- if (length(levels(outcome)) < 3) {
-  rlang::abort("multinomial regression is for outcomes with 3+ classes.")
- }
-
- # ------------------------------------------------------------------------------
-
- lvls <- levels(outcome)
- xtab <- table(outcome)
- class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
-
- ## -----------------------------------------------------------------------------
-
- fit <-
-  multinomial_reg_fit_imp(
-   x = predictors,
-   y = outcome,
-   epochs = epochs,
-   optimizer = optimizer,
-   learn_rate = learn_rate,
-   momentum = momentum,
-   penalty = penalty,
-   validation = validation,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   verbose = verbose
+  new_lantern_multinomial_reg(
+    model_obj = fit$model_obj,
+    estimates = fit$estimates,
+    best_epoch = fit$best_epoch,
+    loss = fit$loss,
+    dims = fit$dims,
+    y_stats = fit$y_stats,
+    parameters = fit$parameters,
+    blueprint = processed$blueprint
   )
-
- new_lantern_multinomial_reg(
-  models = fit$models,
-  best_epoch = fit$best_epoch,
-  loss = fit$loss,
-  dims = fit$dims,
-  y_stats = fit$y_stats,
-  parameters = fit$parameters,
-  blueprint = processed$blueprint
- )
 }
 
-new_lantern_multinomial_reg <- function( models, best_epoch, loss, dims, y_stats, parameters, blueprint) {
- if (!is.list(models)) {
-  rlang::abort("'models' should be a list.")
- }
- if (!is.vector(loss) || !is.numeric(loss)) {
-  rlang::abort("'loss' should be a numeric vector")
- }
- if (!is.list(dims)) {
-  rlang::abort("'dims' should be a list")
- }
- if (!is.list(parameters)) {
-  rlang::abort("'parameters' should be a list")
- }
- if (!inherits(blueprint, "hardhat_blueprint")) {
-  rlang::abort("'blueprint' should be a hardhat blueprint")
- }
- hardhat::new_model(models = models,
-                    best_epoch = best_epoch,
-                    loss = loss,
-                    dims = dims,
-                    y_stats = y_stats,
-                    parameters = parameters,
-                    blueprint = blueprint,
-                    class = "lantern_multinomial_reg")
+new_lantern_multinomial_reg <- function( model_obj, estimates, best_epoch, loss,
+                                         dims, y_stats, parameters, blueprint) {
+  if (!inherits(model_obj, "raw")) {
+    rlang::abort("'model_obj' should be a raw vector.")
+  }
+  if (!is.list(estimates)) {
+    rlang::abort("'parameters' should be a list")
+  }
+  if (!is.vector(loss) || !is.numeric(loss)) {
+    rlang::abort("'loss' should be a numeric vector")
+  }
+  if (!is.list(dims)) {
+    rlang::abort("'dims' should be a list")
+  }
+  if (!is.list(parameters)) {
+    rlang::abort("'parameters' should be a list")
+  }
+  if (!inherits(blueprint, "hardhat_blueprint")) {
+    rlang::abort("'blueprint' should be a hardhat blueprint")
+  }
+  hardhat::new_model(model_obj = model_obj,
+                     estimates = estimates,
+                     best_epoch = best_epoch,
+                     loss = loss,
+                     dims = dims,
+                     y_stats = y_stats,
+                     parameters = parameters,
+                     blueprint = blueprint,
+                     class = "lantern_multinomial_reg")
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
 multinomial_reg_fit_imp <-
- function(x, y,
-          epochs = 20L,
-          batch_size = 32,
-          penalty = 0.001,
-          validation = 0.1,
-          optimizer = "LBFGS",
-          learn_rate = 1,
-          momentum = 0.0,
-          class_weights = NULL,
-          stop_iter = 5,
-          verbose = FALSE,
-          ...) {
+  function(x, y,
+           epochs = 20L,
+           batch_size = 32,
+           penalty = 0.001,
+           validation = 0.1,
+           optimizer = "LBFGS",
+           learn_rate = 1,
+           momentum = 0.0,
+           class_weights = NULL,
+           stop_iter = 5,
+           verbose = FALSE,
+           ...) {
 
-  torch::torch_manual_seed(sample.int(10^5, 1))
+    torch::torch_manual_seed(sample.int(10^5, 1))
 
-  ## ---------------------------------------------------------------------------
-  # General data checks:
+    ## ---------------------------------------------------------------------------
+    # General data checks:
 
-  check_data_att(x, y)
+    check_data_att(x, y)
 
-  # Check missing values
-  compl_data <- check_missing_data(x, y, "lantern_multinomial_reg", verbose)
-  x <- compl_data$x
-  y <- compl_data$y
-  n <- length(y)
-  p <- ncol(x)
+    # Check missing values
+    compl_data <- check_missing_data(x, y, "lantern_multinomial_reg", verbose)
+    x <- compl_data$x
+    y <- compl_data$y
+    n <- length(y)
+    p <- ncol(x)
 
-  lvls <- levels(y)
-  y_dim <- length(lvls)
-  # the model will output softmax values.
-  # so we need to use negative likelihood loss and
-  # pass the log of softmax.
-  loss_fn <- function(input, target, wts = NULL) {
-   nnf_nll_loss(
-    weight = wts,
-    input = torch::torch_log(input),
-    target = target
-   )
-  }
-
-  if (validation > 0) {
-   in_val <- sample(seq_along(y), floor(n * validation))
-   x_val <- x[in_val,, drop = FALSE]
-   y_val <- y[in_val]
-   x <- x[-in_val,, drop = FALSE]
-   y <- y[-in_val]
-  }
-  y_stats <- list(mean = NA_real_, sd = NA_real_)
-  loss_label <- "\tLoss:"
-
-  if (is.null(batch_size)) {
-   batch_size <- nrow(x)
-  } else {
-   batch_size <- min(batch_size, nrow(x))
-  }
-
-  ## ---------------------------------------------------------------------------
-  # Convert to index sampler and data loader
-  ds <- lantern::matrix_to_dataset(x, y)
-  dl <- torch::dataloader(ds, batch_size = batch_size)
-
-  if (validation > 0) {
-   ds_val <- lantern::matrix_to_dataset(x_val, y_val)
-   dl_val <- torch::dataloader(ds_val)
-  }
-
-  ## ---------------------------------------------------------------------------
-  # Initialize model and optimizer
-  model <- multinomial_module(ncol(x), y_dim)
-
-  # Write a optim wrapper
-  if (optimizer == "LBFGS") {
-   optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
-                                   history_size = 5)
-  } else if (optimizer == "SGD") {
-   optimizer <-
-    torch::optim_sgd(model$parameters, lr = learn_rate,
-                     weight_decay = penalty, momentum = momentum)
-  } else {
-   rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
-  }
-
-  ## ---------------------------------------------------------------------------
-
-  loss_prev <- 10^38
-  loss_min <- loss_prev
-  poor_epoch <- 0
-  best_epoch <- 1
-  loss_vec <- rep(NA_real_, epochs)
-  if (verbose) {
-   epoch_chr <- format(1:epochs)
-  }
-
-  ## -----------------------------------------------------------------------------
-
-  model_per_epoch <- list()
-
-  # Optimize parameters
-  for (epoch in 1:epochs) {
-
-   # training loop
-   coro::loop(
-    for (batch in dl) {
-     cl <- function() {
-      optimizer$zero_grad()
-      pred <- model(batch$x)
-      loss <- loss_fn(pred, batch$y, class_weights)
-      loss$backward()
-      loss
-     }
-     optimizer$step(cl)
+    lvls <- levels(y)
+    y_dim <- length(lvls)
+    # the model will output softmax values.
+    # so we need to use negative likelihood loss and
+    # pass the log of softmax.
+    loss_fn <- function(input, target, wts = NULL) {
+      nnf_nll_loss(
+        weight = wts,
+        input = torch::torch_log(input),
+        target = target
+      )
     }
-   )
 
-   # calculate loss on the full datasets
-   if (validation > 0) {
-    pred <- model(dl_val$dataset$data$x)
-    loss <- loss_fn(pred, dl_val$dataset$data$y, class_weights)
-   } else {
-    pred <- model(dl$dataset$data$x)
-    loss <- loss_fn(pred, dl$dataset$data$y, class_weights)
-   }
+    if (validation > 0) {
+      in_val <- sample(seq_along(y), floor(n * validation))
+      x_val <- x[in_val,, drop = FALSE]
+      y_val <- y[in_val]
+      x <- x[-in_val,, drop = FALSE]
+      y <- y[-in_val]
+    }
+    y_stats <- list(mean = NA_real_, sd = NA_real_)
+    loss_label <- "\tLoss:"
 
-   # calculate losses
-   loss_curr <- loss$item()
-   loss_vec[epoch] <- loss_curr
+    if (is.null(batch_size)) {
+      batch_size <- nrow(x)
+    } else {
+      batch_size <- min(batch_size, nrow(x))
+    }
 
-   if (is.nan(loss_curr)) {
-    rlang::warn("Current loss in NaN. Training wil be stopped.")
-    break()
-   }
+    ## ---------------------------------------------------------------------------
+    # Convert to index sampler and data loader
+    ds <- lantern::matrix_to_dataset(x, y)
+    dl <- torch::dataloader(ds, batch_size = batch_size)
 
-   if (loss_curr >= loss_min) {
-    poor_epoch <- poor_epoch + 1
-    loss_note <- paste0(" ", cli::symbol$cross, " ")
-   } else {
-    loss_min <- loss_curr
-    loss_note <- NULL
+    if (validation > 0) {
+      ds_val <- lantern::matrix_to_dataset(x_val, y_val)
+      dl_val <- torch::dataloader(ds_val)
+    }
+
+    ## ---------------------------------------------------------------------------
+    # Initialize model and optimizer
+    model <- multinomial_module(ncol(x), y_dim)
+
+    # Write a optim wrapper
+    if (optimizer == "LBFGS") {
+      optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                      history_size = 5)
+    } else if (optimizer == "SGD") {
+      optimizer <-
+        torch::optim_sgd(model$parameters, lr = learn_rate,
+                         weight_decay = penalty, momentum = momentum)
+    } else {
+      rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+    }
+
+    ## ---------------------------------------------------------------------------
+
+    loss_prev <- 10^38
+    loss_min <- loss_prev
     poor_epoch <- 0
-    best_epoch <- epoch
-   }
-   loss_prev <- loss_curr
+    best_epoch <- 1
+    loss_vec <- rep(NA_real_, epochs)
+    if (verbose) {
+      epoch_chr <- format(1:epochs)
+    }
 
-   # persists models and coefficients
-   model_per_epoch[[epoch]] <- model_to_raw(model)
+    ## -----------------------------------------------------------------------------
 
-   if (verbose) {
-    msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                 signif(loss_curr, 3), loss_note)
+    param_per_epoch <- list()
 
-    rlang::inform(msg)
-   }
+    # Optimize parameters
+    for (epoch in 1:epochs) {
 
-   if (poor_epoch == stop_iter) {
-    break()
-   }
+      # training loop
+      coro::loop(
+        for (batch in dl) {
+          cl <- function() {
+            optimizer$zero_grad()
+            pred <- model(batch$x)
+            loss <- loss_fn(pred, batch$y, class_weights)
+            loss$backward()
+            loss
+          }
+          optimizer$step(cl)
+        }
+      )
 
+      # calculate loss on the full datasets
+      if (validation > 0) {
+        pred <- model(dl_val$dataset$tensors$x)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
+      } else {
+        pred <- model(dl$dataset$tensors$x)
+        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
+      }
+
+      # calculate losses
+      loss_curr <- loss$item()
+      loss_vec[epoch] <- loss_curr
+
+      if (is.nan(loss_curr)) {
+        rlang::warn("Current loss in NaN. Training wil be stopped.")
+        break()
+      }
+
+      if (loss_curr >= loss_min) {
+        poor_epoch <- poor_epoch + 1
+        loss_note <- paste0(" ", cli::symbol$cross, " ")
+      } else {
+        loss_min <- loss_curr
+        loss_note <- NULL
+        poor_epoch <- 0
+        best_epoch <- epoch
+      }
+      loss_prev <- loss_curr
+
+      # persists models and coefficients
+      param_per_epoch[[epoch]] <-
+        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+      if (verbose) {
+        msg <- paste("epoch:", epoch_chr[epoch], loss_label,
+                     signif(loss_curr, 5), loss_note)
+
+        rlang::inform(msg)
+      }
+
+      if (poor_epoch == stop_iter) {
+        break()
+      }
+
+    }
+
+    # ------------------------------------------------------------------------------
+
+    class_weights <- as.numeric(class_weights)
+    names(class_weights) <- lvls
+
+    ## ---------------------------------------------------------------------------
+
+    list(
+      model_obj = model_to_raw(model),
+      estimates = param_per_epoch,
+      loss = loss_vec[1:length(param_per_epoch)],
+      best_epoch = best_epoch,
+      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
+      y_stats = y_stats,
+      parameters = list(learn_rate = learn_rate,
+                        penalty = penalty, validation = validation,
+                        class_weights = class_weights,
+                        batch_size = batch_size, momentum = momentum)
+    )
   }
-
-  # ------------------------------------------------------------------------------
-
-  class_weights <- as.numeric(class_weights)
-  names(class_weights) <- lvls
-
-  ## ---------------------------------------------------------------------------
-
-  list(
-   models = model_per_epoch,
-   best_epoch = best_epoch,
-   loss = loss_vec[1:length(model_per_epoch)],
-   dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
-   y_stats = y_stats,
-   stats = y_stats,
-   parameters = list(learn_rate = learn_rate,
-                     penalty = penalty, validation = validation,
-                     class_weights = class_weights,
-                     batch_size = batch_size, momentum = momentum)
-  )
- }
 
 multinomial_module <-
- torch::nn_module(
-  "multinomial_reg_module",
-  initialize = function(num_pred, num_classes) {
-   self$fc1 <- torch::nn_linear(num_pred, num_classes)
-   self$transform <- torch::nn_softmax(dim = 2)
-  },
-  forward = function(x) {
-   x %>%
-    self$fc1() %>%
-    self$transform()
-  }
- )
+  torch::nn_module(
+    "multinomial_reg_module",
+    initialize = function(num_pred, num_classes) {
+      self$fc1 <- torch::nn_linear(num_pred, num_classes)
+      self$transform <- torch::nn_softmax(dim = 2)
+    },
+    forward = function(x) {
+      x %>%
+        self$fc1() %>%
+        self$transform()
+    }
+  )
 
 ## -----------------------------------------------------------------------------
 
 get_num_multinomial_reg_coef <- function(x) {
- model <- revive_model(x, 1)$parameters
- param <- vapply(model, function(.x) prod(dim(.x)), double(1))
- sum(unlist(param))
+  model <- x$estimates[[1]]
+  param <- vapply(model, function(.x) prod(dim(.x)), double(1))
+  sum(unlist(param))
 }
 
 #' @export
 print.lantern_multinomial_reg <- function(x, ...) {
- cat("Multinomial regression\n\n")
- lantern_print(x)
+  cat("Multinomial regression\n\n")
+  lantern_print(x)
 }
-
 
 ## -----------------------------------------------------------------------------
 
@@ -568,15 +575,3 @@ print.lantern_multinomial_reg <- function(x, ...) {
 #' @details This function plots the loss function across the available epochs.
 #' @export
 autoplot.lantern_multinomial_reg <- lantern_plot
-
-
-
-coef.lantern_multinomial_reg <- function(object, epoch = NULL, ...) {
-  param <- lantern:::lantern_coefs(object, epoch)
-  x_names <- c("(Intercept)", object$dims$features)
-  param <- rbind(param$fc1.bias, t(param$fc1.weight))
-  rownames(param) <- x_names
-  colnames(param) <- object$dims$levels
-  param
-}
-

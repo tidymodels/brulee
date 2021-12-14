@@ -144,7 +144,9 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{lantern_multinomial_reg} object with elements:
 \itemize{
-\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{models_obj}: a serialized raw vector for the torch module.
+\item \code{estimates}: a list of matrices with the model parameter estimates per
+epoch.
 \item \code{best_epoch}: an integer for the epoch with the smallest loss.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.
@@ -168,29 +170,28 @@ other method) to make them numeric.
 \examples{
 if (torch::torch_is_installed()) {
 
- library(recipes)
- library(yardstick)
+  library(recipes)
+  library(yardstick)
 
- data(penguins, package = "modeldata")
+  data(penguins, package = "modeldata")
 
- penguins <- penguins \%>\% na.omit()
+  penguins <- penguins \%>\% na.omit()
 
- set.seed(122)
- in_train <- sample(1:nrow(penguins), 200)
- penguins_train <- penguins[ in_train,]
- penguins_test  <- penguins[-in_train,]
+  set.seed(122)
+  in_train <- sample(1:nrow(penguins), 200)
+  penguins_train <- penguins[ in_train,]
+  penguins_test  <- penguins[-in_train,]
 
- rec <- recipe(island ~ ., data = penguins_train) \%>\%
-  step_dummy(species, sex) \%>\%
-  step_normalize(all_predictors())
+  rec <- recipe(island ~ ., data = penguins_train) \%>\%
+    step_dummy(species, sex) \%>\%
+    step_normalize(all_predictors())
 
- set.seed(3)
- fit <- lantern_multinomial_reg(rec, data = penguins_train, epochs = 5)
- fit
+  set.seed(3)
+  fit <- lantern_multinomial_reg(rec, data = penguins_train, epochs = 5)
+  fit
 
- predict(fit, penguins_test) \%>\%
-  bind_cols(penguins_test) \%>\%
-  conf_mat(island, .pred_class)
+  predict(fit, penguins_test) \%>\%
+    bind_cols(penguins_test) \%>\%
+    conf_mat(island, .pred_class)
 }
-
 }

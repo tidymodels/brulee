@@ -5,6 +5,7 @@
 \alias{coef.lantern_logistic_reg}
 \alias{coef.lantern_linear_reg}
 \alias{coef.lantern_mlp}
+\alias{coef.lantern_multinomial_reg}
 \title{Extract Model Coefficients}
 \usage{
 \method{coef}{lantern_logistic_reg}(object, epoch = NULL, ...)
@@ -12,6 +13,8 @@
 \method{coef}{lantern_linear_reg}(object, epoch = NULL, ...)
 
 \method{coef}{lantern_mlp}(object, epoch = NULL, ...)
+
+\method{coef}{lantern_multinomial_reg}(object, epoch = NULL, ...)
 }
 \arguments{
 \item{object}{A model fit from \pkg{lantern}.}

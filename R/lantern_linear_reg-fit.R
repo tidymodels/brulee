@@ -559,7 +559,6 @@ linear_reg_fit_imp <-
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = 0, y = y_dim, features = colnames(x)),
       y_stats = y_stats,
-      stats = y_stats,
       parameters = list(learn_rate = learn_rate,
                         penalty = penalty, validation = validation,
                         batch_size = batch_size, momentum = momentum)
