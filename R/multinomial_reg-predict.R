@@ -1,18 +1,12 @@
 #' Predict from a `brulee_multinomial_reg`
 #'
+#' @inheritParams predict.brulee_mlp
 #' @param object A `brulee_multinomial_reg` object.
-#'
-#' @param new_data A data frame or matrix of new predictors.
-#' @param epoch An integer for the epoch to make predictions from. If this value
-#' is larger than the maximum number that was fit, a warning is issued and the
-#' parameters from the last epoch are used.
 #' @param type A single character. The type of predictions to generate.
 #' Valid options are:
 #'
 #' - `"class"` for hard class predictions
 #' - `"prob"` for soft class predictions (i.e., class probabilities)
-#'
-#' @param ... Not used, but required for extensibility.
 #'
 #' @return
 #'

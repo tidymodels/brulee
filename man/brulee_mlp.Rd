@@ -101,9 +101,9 @@ The predictor data should be standardized (e.g. centered or scaled).}
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
 \itemize{
-\item A \strong{data frame} with 1 numeric column.
-\item A \strong{matrix} with 1 numeric column.
-\item A numeric \strong{vector}.
+\item A \strong{data frame} with 1 column (numeric or factor).
+\item A \strong{matrix} with numeric column  (numeric or factor).
+\item A  \strong{vector}  (numeric or factor).
 }}
 
 \item{epochs}{An integer for the number of epochs of training.}
@@ -125,10 +125,10 @@ the activation for each hidden layer.}
 validation set.}
 
 \item{learn_rate}{A positive number that controls the rapidity that the model
-moves along the descent path. Values less that 0.1 are typical.}
+moves along the descent path. Values around 0.1 or less are typical.}
 
-\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient descent.}
+\item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
+parameter in gradient descent.}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -149,8 +149,8 @@ improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
-\item{formula}{A formula specifying the outcome terms on the left-hand side,
-and the predictor terms on the right-hand side.}
+\item{formula}{A formula specifying the outcome term(s) on the left-hand side,
+and the predictor term(s) on the right-hand side.}
 
 \item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
 \itemize{
@@ -177,10 +177,17 @@ likelihood for classification) at each epoch.
 descent. Multiple layers can be used.
 }
 \details{
-This function fits feed-forward neural network models for
-regression (when the outcome is a number) or classification (a factor). For
-regression, the mean squared error is optimized and cross-entropy is the loss
-function for classification.
+This function fits feed-forward neural network models for regression (when
+the outcome is a number) or classification (a factor). For regression, the
+mean squared error is optimized and cross-entropy is the loss function for
+classification.
+
+When the outcome is a number, the function internally standardizes the
+outcome data to have mean zero and a standard deviation of one. The prediction
+function creates predictions on the original scale.
+
+By default, training halts when the validation loss increases for at least
+\code{step_iter} iterations. If \code{validation = 0} the training set loss is used.
 
 The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
@@ -188,15 +195,10 @@ predictors, use a recipe or formula to create indicator variables (or some
 other method) to make them numeric. Predictors should be in the same units
 before training.
 
-When the outcome is a number, the function internally standardizes the
-outcome data to have mean zero and a standard deviation of one. The prediction
-function creates predictions on the original scale.
-
-By default, training halts when the validation loss increases for at least
-\code{step_iter} iterations.
-
 The model objects are saved for each epoch so that the number of epochs can
-be efficiently tuned.
+be efficiently tuned. Both the \code{\link[=coef]{coef()}} and \code{\link[=predict]{predict()}} methods for this
+model have an \code{epoch} argument (which defaults to the epoch with the best
+loss value).
 }
 \examples{
 \donttest{
@@ -293,4 +295,7 @@ if (torch::torch_is_installed()) {
   geom_point(data = parabolic_te, aes(col = class))
 
 }
+}
+\seealso{
+\code{\link[=predict.brulee_mlp]{predict.brulee_mlp()}}, \code{\link[=coef.brulee_mlp]{coef.brulee_mlp()}}, \code{\link[=autoplot.brulee_mlp]{autoplot.brulee_mlp()}}
 }

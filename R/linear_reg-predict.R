@@ -1,17 +1,11 @@
 #' Predict from a `brulee_linear_reg`
 #'
+#' @inheritParams predict.brulee_mlp
 #' @param object A `brulee_linear_reg` object.
-#'
-#' @param new_data A data frame or matrix of new predictors.
-#' @param epoch An integer for the epoch to make predictions from. If this value
-#' is larger than the maximum number that was fit, a warning is issued and the
-#' parameters from the last epoch are used.
 #' @param type A single character. The type of predictions to generate.
 #' Valid options are:
 #'
 #' - `"numeric"` for numeric predictions.
-#'
-#' @param ... Not used, but required for extensibility.
 #'
 #' @return
 #'

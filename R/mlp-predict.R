@@ -3,9 +3,10 @@
 #' @param object A `brulee_mlp` object.
 #'
 #' @param new_data A data frame or matrix of new predictors.
-#' @param epoch An integer for the epoch to make predictions from. If this value
+#' @param epoch An integer for the epoch to make predictions. If this value
 #' is larger than the maximum number that was fit, a warning is issued and the
-#' parameters from the last epoch are used.
+#' parameters from the last epoch are used. If left `NULL`, the epoch
+#' associated with the smallest loss is used.
 #' @param type A single character. The type of predictions to generate.
 #' Valid options are:
 #'

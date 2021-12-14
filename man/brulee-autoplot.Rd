@@ -29,7 +29,8 @@ A \code{ggplot} object.
 Plot model loss over epochs
 }
 \details{
-This function plots the loss function across the available epochs.
+This function plots the loss function across the available epochs. A
+vertical line shows the epoch with the best loss value.
 }
 \examples{
 \donttest{

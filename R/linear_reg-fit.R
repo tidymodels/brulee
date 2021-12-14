@@ -1,6 +1,6 @@
 #' Fit a linear regression model
 #'
-#' `brulee_linear_reg()` fits a model.
+#' `brulee_linear_reg()` fits a linear regression model.
 #'
 #' @param x Depending on the context:
 #'
@@ -22,38 +22,41 @@
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
 #'
-#' @param formula A formula specifying the outcome terms on the left-hand side,
-#' and the predictor terms on the right-hand side.
+#' @inheritParams brulee_mlp
 #'
-#' @param epochs An integer for the number of epochs of training.
-#' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
-#' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
-#' are normally chosen for other optimizers. (`optimizer = "SGD"` only)
-#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient descent. (`optimizer = "SGD"` only)
-#' @param validation The proportion of the data randomly assigned to a
-#'  validation set.
-#' @param batch_size An integer for the number of training set points in each
-#'  batch.
-#' @param stop_iter A non-negative integer for how many iterations with no
-#' improvement before stopping.
-#' @param verbose A logical that prints out the iteration history.
-#'
-#' @param ... Not currently used, but required for extensibility.
-#'
+#' @param learn_rate A positive number that controls the rapidity that the model
+#' moves along the descent path. Values less that 0.1 are typical.
+#' (`optimizer = "SGD"` only)
+#' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
+#' parameter in gradient descent.  (`optimizer = "SGD"` only)
 #' @details
 #'
+#' This function fits a linear combination of coefficients and predictors to
+#' model the numeric outcome. The training process optimizes the
+#' mean squared error loss function.
+#'
+#' The function internally standardizes the outcome data to have mean zero and
+#'  a standard deviation of one. The prediction function creates predictions on
+#'  the original scale.
+#'
+#' By default, training halts when the validation loss increases for at least
+#' `step_iter` iterations. If `validation = 0` the training set loss is used.
 #'
 #' The _predictors_ data should all be numeric and encoded in the same units (e.g.
 #' standardized to the same range or distribution). If there are factor
 #' predictors, use a recipe or formula to create indicator variables (or some
-#' other method) to make them numeric.
+#' other method) to make them numeric. Predictors should be in the same units
+#' before training.
 #'
-#' The function internally standardizes the
-#' outcome data to have mean zero and a standard deviation of one. The prediction
-#' function creates predictions on the original scale.
+#' The model objects are saved for each epoch so that the number of epochs can
+#' be efficiently tuned. Both the [coef()] and [predict()] methods for this
+#' model have an `epoch` argument (which defaults to the epoch with the best
+#' loss value).
+#'
+#' @seealso [predict.brulee_linear_reg()], [coef.brulee_linear_reg()],
+#' [autoplot.brulee_linear_reg()]
 #'
 #' @return
 #'

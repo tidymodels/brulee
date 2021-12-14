@@ -93,9 +93,9 @@ The predictor data should be standardized (e.g. centered or scaled).}
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
 \itemize{
-\item A \strong{data frame} with 1 numeric column.
-\item A \strong{matrix} with 1 numeric column.
-\item A numeric \strong{vector}.
+\item A \strong{data frame} with 1 factor column (with three or more levels).
+\item A \strong{matrix} with 1 factor column (with three or more levels).
+\item A factor \strong{vector} (with three or more levels).
 }}
 
 \item{epochs}{An integer for the number of epochs of training.}
@@ -108,11 +108,12 @@ validation set.}
 \item{optimizer}{The method used in the optimization procedure. Possible choices
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
-\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
+\item{learn_rate}{A positive number that controls the rapidity that the model
+moves along the descent path. Values around 0.1 or less are typical.
+(\code{optimizer = "SGD"} only)}
 
-\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient descent. (\code{optimizer = "SGD"} only)}
+\item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
+parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -133,8 +134,8 @@ improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
-\item{formula}{A formula specifying the outcome terms on the left-hand side,
-and the predictor terms on the right-hand side.}
+\item{formula}{A formula specifying the outcome term(s) on the left-hand side,
+and the predictor term(s) on the right-hand side.}
 
 \item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
 \itemize{
@@ -159,13 +160,23 @@ likelihood for classification) at each epoch.
 \code{brulee_multinomial_reg()} fits a model.
 }
 \details{
-Despite its name, this function can be used with three or more classes (e.g.,
-multinomial regression).
+This function fits a linear combination of coefficients and predictors to
+model the log of the class probabilities. The training process optimizes the
+cross-entropy loss function.
+
+By default, training halts when the validation loss increases for at least
+\code{step_iter} iterations. If \code{validation = 0} the training set loss is used.
 
 The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
-other method) to make them numeric.
+other method) to make them numeric. Predictors should be in the same units
+before training.
+
+The model objects are saved for each epoch so that the number of epochs can
+be efficiently tuned. Both the \code{\link[=coef]{coef()}} and \code{\link[=predict]{predict()}} methods for this
+model have an \code{epoch} argument (which defaults to the epoch with the best
+loss value).
 }
 \examples{
 if (torch::torch_is_installed()) {
@@ -194,4 +205,8 @@ if (torch::torch_is_installed()) {
     bind_cols(penguins_test) \%>\%
     conf_mat(island, .pred_class)
 }
+}
+\seealso{
+\code{\link[=predict.brulee_multinomial_reg]{predict.brulee_multinomial_reg()}}, \code{\link[=coef.brulee_multinomial_reg]{coef.brulee_multinomial_reg()}},
+\code{\link[=autoplot.brulee_multinomial_reg]{autoplot.brulee_multinomial_reg()}}
 }

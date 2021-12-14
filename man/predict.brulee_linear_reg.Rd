@@ -17,9 +17,10 @@ Valid options are:
 \item \code{"numeric"} for numeric predictions.
 }}
 
-\item{epoch}{An integer for the epoch to make predictions from. If this value
+\item{epoch}{An integer for the epoch to make predictions. If this value
 is larger than the maximum number that was fit, a warning is issued and the
-parameters from the last epoch are used.}
+parameters from the last epoch are used. If left \code{NULL}, the epoch
+associated with the smallest loss is used.}
 
 \item{...}{Not used, but required for extensibility.}
 }
