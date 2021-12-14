@@ -18,7 +18,33 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
+#' @examples
+#' \donttest{
+#' if (torch::torch_is_installed()) {
 #'
+#'  data(ames, package = "modeldata")
+#'
+#'  ames$Sale_Price <- log10(ames$Sale_Price)
+#'
+#'  set.seed(1)
+#'  in_train <- sample(1:nrow(ames), 2000)
+#'  ames_train <- ames[ in_train,]
+#'  ames_test  <- ames[-in_train,]
+#'
+#'  # Using recipe
+#'  library(recipes)
+#'
+#'  ames_rec <-
+#'   recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) %>%
+#'     step_normalize(all_numeric_predictors())
+#'
+#'  set.seed(2)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
+#'                            epochs = 50, batch_size = 32)
+#'
+#'  predict(fit, ames_test)
+#' }
+#' }
 #' @export
 predict.brulee_linear_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {
   forged <- hardhat::forge(new_data, object$blueprint)

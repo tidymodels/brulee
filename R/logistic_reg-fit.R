@@ -77,9 +77,9 @@
 #'  cells_rec <-
 #'   recipe(class ~ ., data = cells_train) %>%
 #'   # Transform some highly skewed predictors
-#'   step_YeoJohnson(all_predictors()) %>%
-#'   step_normalize(all_predictors()) %>%
-#'   step_pca(all_predictors(), num_comp = 10)
+#'   step_YeoJohnson(all_numeric_predictors()) %>%
+#'   step_normalize(all_numeric_predictors()) %>%
+#'   step_pca(all_numeric_predictors(), num_comp = 10)
 #'
 #'  set.seed(2)
 #'  fit <- brulee_logistic_reg(cells_rec, data = cells_train,

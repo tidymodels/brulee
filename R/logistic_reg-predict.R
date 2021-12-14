@@ -19,7 +19,37 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
+#' @examples
+#' if (torch::torch_is_installed()) {
 #'
+#'   library(recipes)
+#'   library(yardstick)
+#'
+#'   data(penguins, package = "modeldata")
+#'
+#'   penguins <- penguins %>% na.omit()
+#'
+#'   set.seed(122)
+#'   in_train <- sample(1:nrow(penguins), 200)
+#'   penguins_train <- penguins[ in_train,]
+#'   penguins_test  <- penguins[-in_train,]
+#'
+#'   rec <- recipe(sex ~ ., data = penguins_train) %>%
+#'     step_dummy(all_nominal_predictors()) %>%
+#'     step_normalize(all_numeric_predictors())
+#'
+#'   set.seed(3)
+#'   fit <- brulee_logistic_reg(rec, data = penguins_train, epochs = 5)
+#'   fit
+#'
+#'   predict(fit, penguins_test)
+#'
+#'   predict(fit, penguins_test, type = "prob") %>%
+#'     bind_cols(penguins_test) %>%
+#'     roc_curve(sex, .pred_female) %>%
+#'     autoplot()
+#'
+#' }
 #' @export
 predict.brulee_logistic_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {
   forged <- hardhat::forge(new_data, object$blueprint)

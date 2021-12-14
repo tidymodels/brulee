@@ -33,6 +33,32 @@ brulee_plot <- function(object, ...) {
 #' @param ... Not currently used
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
+#' @examples
+#' \donttest{
+#' if (torch::torch_is_installed()) {
+#'  library(ggplot2)
+#'  library(recipes)
+#'  theme_set(theme_bw())
+#'
+#'  data(ames, package = "modeldata")
+#'
+#'  ames$Sale_Price <- log10(ames$Sale_Price)
+#'
+#'  set.seed(1)
+#'  in_train <- sample(1:nrow(ames), 2000)
+#'  ames_train <- ames[ in_train,]
+#'  ames_test  <- ames[-in_train,]
+#'
+#'  ames_rec <-
+#'   recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) %>%
+#'     step_normalize(all_numeric_predictors())
+#'
+#'  set.seed(2)
+#'  fit <- brulee_mlp(ames_rec, data = ames_train, epochs = 50, batch_size = 32)
+#'
+#'  autoplot(fit)
+#' }
+#' }
 #' @name brulee-autoplot
 #' @export
 autoplot.brulee_mlp <- brulee_plot

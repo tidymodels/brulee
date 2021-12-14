@@ -1,16 +1,18 @@
 Package: brulee
 Title: High-Level Modeling Functions with 'torch'
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: c(
     person("Max", "Kuhn", , "max@rstudio.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2402-136X")),
     person("Daniel", "Falbel", , "daniel@rstudio.com", role = "aut"),
     person("RStudio", role = "cph")
   )
-Description: Provides high-level modeling functions to define and train models
-    with 'torch'. Models include linear, logistic, and multinomial regression
-    as well as multilayer perceptrons.
+Description: Provides high-level modeling functions to define and train
+    models using the 'torch' R package. Models include linear, logistic, and 
+    multinomial regression as well as multilayer perceptrons.
 License: MIT + file LICENSE
+URL: https://github.com/tidymodels/brulee
+BugReports: https://github.com/tidymodels/brulee/issues
 Imports: 
     cli,
     coro (>= 1.0.1),
@@ -19,8 +21,6 @@ Imports:
     ggplot2,
     glue,
     hardhat,
-    parsnip,
-    recipes,
     rlang,
     stats,
     tibble,
@@ -29,11 +29,11 @@ Imports:
 Suggests: 
     covr,
     modeldata,
+    recipes,
     spelling,
     testthat,
     yardstick
-Config/Needs/website: 
-    tidyverse/tidytemplate
+Config/Needs/website: tidyverse/tidytemplate
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US

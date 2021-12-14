@@ -184,14 +184,14 @@ if (torch::torch_is_installed()) {
          data = ames_train) \%>\%
     # Transform some highly skewed predictors
     step_BoxCox(Lot_Area, Gr_Liv_Area) \%>\%
-    # Lump some rarely occuring categories into "other"
+    # Lump some rarely occurring categories into "other"
     step_other(Neighborhood, threshold = 0.05)  \%>\%
     # Encode categorical predictors as binary.
-    step_dummy(all_nominal(), one_hot = TRUE) \%>\%
+    step_dummy(all_nominal_predictors(), one_hot = TRUE) \%>\%
     # Add an interaction effect:
     step_interact(~ starts_with("Central_Air"):Year_Built) \%>\%
     step_zv(all_predictors()) \%>\%
-    step_normalize(all_predictors())
+    step_normalize(all_numeric_predictors())
 
  set.seed(2)
  fit <- brulee_linear_reg(ames_rec, data = ames_train,

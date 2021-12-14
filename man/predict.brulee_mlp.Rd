@@ -32,3 +32,31 @@ to be the same as the number of rows in \code{new_data}.
 \description{
 Predict from a \code{brulee_mlp}
 }
+\examples{
+\donttest{
+if (torch::torch_is_installed()) {
+ # regression example:
+
+ data(ames, package = "modeldata")
+
+ ames$Sale_Price <- log10(ames$Sale_Price)
+
+ set.seed(1)
+ in_train <- sample(1:nrow(ames), 2000)
+ ames_train <- ames[ in_train,]
+ ames_test  <- ames[-in_train,]
+
+ # Using recipe
+ library(recipes)
+
+ ames_rec <-
+  recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) \%>\%
+    step_normalize(all_numeric_predictors())
+
+ set.seed(2)
+ fit <- brulee_mlp(ames_rec, data = ames_train, epochs = 50, batch_size = 32)
+
+ predict(fit, ames_test)
+}
+}
+}
