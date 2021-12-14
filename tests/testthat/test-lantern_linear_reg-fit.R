@@ -26,12 +26,5 @@ test_that("linear regression test", {
     regexp = NA
   )
 
-  # fails on windows; slightly different values from unix and macOS
-  expect_snapshot({
-    set.seed(1)
-    fit <- lantern_linear_reg(y ~ ., df, epochs = 2, verbose = TRUE)
-    fit
-  })
-
 })
 
