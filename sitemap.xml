@@ -28,6 +28,9 @@
     <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_mlp.html</loc>
   </url>
   <url>
+    <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_multinomial_reg.html</loc>
+  </url>
+  <url>
     <loc>https://lantern.tidymodels.org/reference/index.html</loc>
   </url>
   <url>
@@ -49,6 +52,9 @@
     <loc>https://lantern.tidymodels.org/reference/lantern_mlp.html</loc>
   </url>
   <url>
+    <loc>https://lantern.tidymodels.org/reference/lantern_multinomial_reg.html</loc>
+  </url>
+  <url>
     <loc>https://lantern.tidymodels.org/reference/matrix_to_dataset.html</loc>
   </url>
   <url>
@@ -59,6 +65,9 @@
   </url>
   <url>
     <loc>https://lantern.tidymodels.org/reference/predict.lantern_mlp.html</loc>
+  </url>
+  <url>
+    <loc>https://lantern.tidymodels.org/reference/predict.lantern_multinomial_reg.html</loc>
   </url>
   <url>
     <loc>https://lantern.tidymodels.org/reference/reexports.html</loc>
