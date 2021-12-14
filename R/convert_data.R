@@ -10,7 +10,9 @@
 #'  "dataset", and "R6".
 #' @details Missing values should be removed before passing data to this function.
 #' @examples
-#' matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
+#' if (torch::torch_is_installed()) {
+#'   matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
+#' }
 #' @export
 matrix_to_dataset <- function(x, y) {
   x <- torch::torch_tensor(x)

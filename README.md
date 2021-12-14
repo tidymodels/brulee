@@ -7,9 +7,9 @@
 
 [![R-CMD-check](https://github.com/tidymodels/brulee/workflows/R-CMD-check/badge.svg)](https://github.com/tidymodels/brulee/actions)
 [![Codecov test
-coverage](https://codecov.io/gh/tidymodels/brulee/branch/main/graph/badge.svg)](https://codecov.io/gh/tidymodels/brulee?branch=main)
+coverage](https://codecov.io/gh/tidymodels/brulee/branch/main/graph/badge.svg)](https://app.codecov.io/gh/tidymodels/brulee?branch=main)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 <!-- badges: end -->
 
 The R `brulee` package contains several basic modeling functions that

@@ -14,25 +14,45 @@
 #' @param y When `x` is a __data frame__ or __matrix__, `y` is the outcome
 #' specified as:
 #'
-#'   * A __data frame__ with 1 numeric column.
-#'   * A __matrix__ with 1 numeric column.
-#'   * A numeric __vector__.
+#'   * A __data frame__ with 1 factor column (with three or more levels).
+#'   * A __matrix__ with 1 factor column (with three or more levels).
+#'   * A factor __vector__ (with three or more levels).
 #'
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
-#' @inheritParams brulee_linear_reg
 #' @inheritParams brulee_mlp
+#'
+#' @param optimizer The method used in the optimization procedure. Possible choices
+#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
+#' @param learn_rate A positive number that controls the rapidity that the model
+#' moves along the descent path. Values around 0.1 or less are typical.
+#' (`optimizer = "SGD"` only)
+#' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
+#' parameter in gradient descent.  (`optimizer = "SGD"` only)
 #'
 #' @details
 #'
-#' Despite its name, this function can be used with three or more classes (e.g.,
-#' multinomial regression).
+#' This function fits a linear combination of coefficients and predictors to
+#' model the log of the class probabilities. The training process optimizes the
+#' cross-entropy loss function.
+#'
+#' By default, training halts when the validation loss increases for at least
+#' `step_iter` iterations. If `validation = 0` the training set loss is used.
 #'
 #' The _predictors_ data should all be numeric and encoded in the same units (e.g.
 #' standardized to the same range or distribution). If there are factor
 #' predictors, use a recipe or formula to create indicator variables (or some
-#' other method) to make them numeric.
+#' other method) to make them numeric. Predictors should be in the same units
+#' before training.
+#'
+#' The model objects are saved for each epoch so that the number of epochs can
+#' be efficiently tuned. Both the [coef()] and [predict()] methods for this
+#' model have an `epoch` argument (which defaults to the epoch with the best
+#' loss value).
+#'
+#' @seealso [predict.brulee_multinomial_reg()], [coef.brulee_multinomial_reg()],
+#' [autoplot.brulee_multinomial_reg()]
 #'
 #' @return
 #'
@@ -564,14 +584,3 @@ print.brulee_multinomial_reg <- function(x, ...) {
   cat("Multinomial regression\n\n")
   brulee_print(x)
 }
-
-## -----------------------------------------------------------------------------
-
-#' Plot model loss over epochs
-#'
-#' @param object A `brulee_multinomial_reg` object.
-#' @param ... Not currently used
-#' @return A `ggplot` object.
-#' @details This function plots the loss function across the available epochs.
-#' @export
-autoplot.brulee_multinomial_reg <- brulee_plot

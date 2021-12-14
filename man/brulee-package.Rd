@@ -6,7 +6,15 @@
 \alias{brulee-package}
 \title{brulee: High-Level Modeling Functions with 'torch'}
 \description{
-Provides high-level modeling functions to define and train models with 'torch'. Models include linear, logistic, and multinomial regression as well as multilayer perceptrons.
+Provides high-level modeling functions to define and train models using the 'torch' R package. Models include linear, logistic, and multinomial regression as well as multilayer perceptrons.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/tidymodels/brulee}
+  \item Report bugs at \url{https://github.com/tidymodels/brulee/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Max Kuhn \email{max@rstudio.com} (\href{https://orcid.org/0000-0003-2402-136X}{ORCID})

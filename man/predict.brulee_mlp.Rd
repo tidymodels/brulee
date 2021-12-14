@@ -19,9 +19,10 @@ Valid options are:
 \item \code{"prob"} for soft class predictions (i.e., class probabilities)
 }}
 
-\item{epoch}{An integer for the epoch to make predictions from. If this value
+\item{epoch}{An integer for the epoch to make predictions. If this value
 is larger than the maximum number that was fit, a warning is issued and the
-parameters from the last epoch are used.}
+parameters from the last epoch are used. If left \code{NULL}, the epoch
+associated with the smallest loss is used.}
 
 \item{...}{Not used, but required for extensibility.}
 }
@@ -31,4 +32,32 @@ to be the same as the number of rows in \code{new_data}.
 }
 \description{
 Predict from a \code{brulee_mlp}
+}
+\examples{
+\donttest{
+if (torch::torch_is_installed()) {
+ # regression example:
+
+ data(ames, package = "modeldata")
+
+ ames$Sale_Price <- log10(ames$Sale_Price)
+
+ set.seed(1)
+ in_train <- sample(1:nrow(ames), 2000)
+ ames_train <- ames[ in_train,]
+ ames_test  <- ames[-in_train,]
+
+ # Using recipe
+ library(recipes)
+
+ ames_rec <-
+  recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) \%>\%
+    step_normalize(all_numeric_predictors())
+
+ set.seed(2)
+ fit <- brulee_mlp(ames_rec, data = ames_train, epochs = 50, batch_size = 32)
+
+ predict(fit, ames_test)
+}
+}
 }

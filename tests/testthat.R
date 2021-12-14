@@ -4,4 +4,6 @@ library(tibble)
 
 RNGkind("Mersenne-Twister")
 
-test_check("brulee")
+if (torch::torch_is_installed()) {
+ test_check("brulee")
+}

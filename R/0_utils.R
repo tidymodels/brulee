@@ -1,28 +1,4 @@
 
-# used for autoplots
-brulee_plot <- function(object, ...) {
-  x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
-
-  if(object$parameters$validation > 0) {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (validation set)"
-    } else {
-      lab <- "loss (validation set, scaled)"
-    }
-  } else {
-    if (is.na(object$y_stats$mean)) {
-      lab <- "loss (training set)"
-    } else {
-      lab <- "loss (training set, scaled)"
-    }
-  }
-
-  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-    ggplot2::geom_line() +
-    ggplot2::labs(y = lab)+
-    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
-}
-
 # ------------------------------------------------------------------------------
 # used in print methods
 
@@ -38,7 +14,7 @@ brulee_print <- function(x, ...) {
     format(x$dims$p, big.mark = ","), "features,",
     chr_y, "\n"
   )
-  if (!is.null(x$parameters$class_weights)) {
+  if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
     cat("class weights",
         paste0(
           names(x$parameters$class_weights),
@@ -58,97 +34,27 @@ brulee_print <- function(x, ...) {
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
+    chr_it <- cli::pluralize("{it} epoch{?s}:")
     if(x$parameters$validation > 0) {
       if (is.na(x$y_stats$mean)) {
-        cat("validation loss after", it, "epochs:",
+        cat("validation loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       } else {
-        cat("scaled validation loss after", it, "epochs:",
+        cat("scaled validation loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       }
     } else {
       if (is.na(x$y_stats$mean)) {
-        cat("training set loss after", it, "epochs:",
+        cat("training set loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       } else {
-        cat("scaled training set loss after", it, "epochs:",
+        cat("scaled training set loss after", chr_it,
             signif(x$loss[it], 5), "\n")
       }
     }
   }
   invisible(x)
 }
-
-# ------------------------------------------------------------------------------
-
-
-brulee_coefs <- function(object, epoch = NULL, ...) {
-  if (!is.null(epoch) && length(epoch) != 1) {
-    rlang::abort("'epoch' should be a single integer.")
-  }
-  max_epochs <- length(object$estimates)
-
-  if (is.null(epoch)) {
-    epoch <- object$best_epoch
-  } else {
-    if (epoch > max_epochs) {
-      msg <- glue::glue("There were only {max_epochs} epochs fit. Setting 'epochs' to {max_epochs}.")
-      rlang::warn(msg)
-      epoch <- max_epochs
-    }
-
-  }
-  object$estimates[[epoch]]
-}
-
-
-#' Extract Model Coefficients
-#'
-#' @param object A model fit from \pkg{brulee}.
-#' @param epoch A single integer for the training iteration. If left `NULL`,
-#' the estimates from the best model fit (via internal performance metrics).
-#' @param ... Not currently used.
-#' @return For logistic/linear regression, a named vector. For neural networks,
-#' a list of arrays.
-#'
-#' @name brulee-coefs
-#' @export
-coef.brulee_logistic_reg <- function(object, epoch = NULL, ...) {
-  network_params <- brulee_coefs(object, epoch)
-  slopes <- network_params$fc1.weight[,2] - network_params$fc1.weight[,1]
-  int <- network_params$fc1.bias[2] - network_params$fc1.bias[1]
-  param <- c(int, slopes)
-  names(param) <- c("(Intercept)", object$dims$features)
-  param
-}
-
-#' @rdname brulee-coefs
-#' @export
-coef.brulee_linear_reg <- function(object, epoch = NULL, ...) {
-  network_params <- brulee_coefs(object, epoch)
-  slopes <- network_params$fc1.weight[1,]
-  int <- network_params$fc1.bias
-  param <- c(int, slopes)
-  names(param) <- c("(Intercept)", object$dims$features)
-  param
-}
-
-#' @rdname brulee-coefs
-#' @export
-coef.brulee_mlp <- brulee_coefs
-
-#' @rdname brulee-coefs
-#' @export
-coef.brulee_multinomial_reg <- function(object, epoch = NULL, ...) {
-  network_params <- brulee_coefs(object, epoch)
-  slopes <- t(network_params$fc1.weight)
-  int <- network_params$fc1.bias
-  param <- rbind(int, slopes)
-  rownames(param) <- c("(Intercept)", object$dims$features)
-  colnames(param) <- object$dims$levels
-  param
-}
-
 
 # ------------------------------------------------------------------------------
 

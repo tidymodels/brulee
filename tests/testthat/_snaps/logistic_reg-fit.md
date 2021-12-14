@@ -18,7 +18,7 @@
       class weights a=1, b=1 
       weight decay: 0.001 
       batch size: 900 
-      validation loss after 1 epochs: 0.17322 
+      validation loss after 1 epoch: 0.17322 
 
 # class weights - logistic regression
 

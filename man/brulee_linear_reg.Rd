@@ -104,11 +104,12 @@ validation set.}
 \item{optimizer}{The method used in the optimization procedure. Possible choices
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
-\item{learn_rate}{A positive number. Default is 1 for LBFGS; smaller values
-are normally chosen for other optimizers. (\code{optimizer = "SGD"} only)}
+\item{learn_rate}{A positive number that controls the rapidity that the model
+moves along the descent path. Values less that 0.1 are typical.
+(\code{optimizer = "SGD"} only)}
 
-\item{momentum}{A positive number on \verb{[0, 1]} for the momentum parameter in
-gradient descent. (\code{optimizer = "SGD"} only)}
+\item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
+parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
@@ -118,8 +119,8 @@ improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
-\item{formula}{A formula specifying the outcome terms on the left-hand side,
-and the predictor terms on the right-hand side.}
+\item{formula}{A formula specifying the outcome term(s) on the left-hand side,
+and the predictor term(s) on the right-hand side.}
 
 \item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
 \itemize{
@@ -141,17 +142,30 @@ epoch.
 }
 }
 \description{
-\code{brulee_linear_reg()} fits a model.
+\code{brulee_linear_reg()} fits a linear regression model.
 }
 \details{
+This function fits a linear combination of coefficients and predictors to
+model the numeric outcome. The training process optimizes the
+mean squared error loss function.
+
+The function internally standardizes the outcome data to have mean zero and
+a standard deviation of one. The prediction function creates predictions on
+the original scale.
+
+By default, training halts when the validation loss increases for at least
+\code{step_iter} iterations. If \code{validation = 0} the training set loss is used.
+
 The \emph{predictors} data should all be numeric and encoded in the same units (e.g.
 standardized to the same range or distribution). If there are factor
 predictors, use a recipe or formula to create indicator variables (or some
-other method) to make them numeric.
+other method) to make them numeric. Predictors should be in the same units
+before training.
 
-The function internally standardizes the
-outcome data to have mean zero and a standard deviation of one. The prediction
-function creates predictions on the original scale.
+The model objects are saved for each epoch so that the number of epochs can
+be efficiently tuned. Both the \code{\link[=coef]{coef()}} and \code{\link[=predict]{predict()}} methods for this
+model have an \code{epoch} argument (which defaults to the epoch with the best
+loss value).
 }
 \examples{
 \donttest{
@@ -184,14 +198,14 @@ if (torch::torch_is_installed()) {
          data = ames_train) \%>\%
     # Transform some highly skewed predictors
     step_BoxCox(Lot_Area, Gr_Liv_Area) \%>\%
-    # Lump some rarely occuring categories into "other"
+    # Lump some rarely occurring categories into "other"
     step_other(Neighborhood, threshold = 0.05)  \%>\%
     # Encode categorical predictors as binary.
-    step_dummy(all_nominal(), one_hot = TRUE) \%>\%
+    step_dummy(all_nominal_predictors(), one_hot = TRUE) \%>\%
     # Add an interaction effect:
     step_interact(~ starts_with("Central_Air"):Year_Built) \%>\%
     step_zv(all_predictors()) \%>\%
-    step_normalize(all_predictors())
+    step_normalize(all_numeric_predictors())
 
  set.seed(2)
  fit <- brulee_linear_reg(ames_rec, data = ames_train,
@@ -218,4 +232,8 @@ if (torch::torch_is_installed()) {
  }
 
 }
+}
+\seealso{
+\code{\link[=predict.brulee_linear_reg]{predict.brulee_linear_reg()}}, \code{\link[=coef.brulee_linear_reg]{coef.brulee_linear_reg()}},
+\code{\link[=autoplot.brulee_linear_reg]{autoplot.brulee_linear_reg()}}
 }
