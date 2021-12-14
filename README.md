@@ -13,10 +13,16 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 The R `brulee` package contains several basic modeling functions that
-use the `torch` package (and is unrelated to the python script).
+use the `torch` package infrastructure, such as:
 
-The package is currently experimental; the user interface and other
-details may change before release.
+-   [neural
+    networks](https://tidymodels.github.io/brulee/reference/brulee_mlp.html)
+-   [linear
+    regression](https://tidymodels.github.io/brulee/reference/brulee_linear_reg.html)
+-   [logistic
+    regression](https://tidymodels.github.io/brulee/reference/brulee_logistic_reg.html)
+-   [multinomial
+    regression](https://tidymodels.github.io/brulee/reference/brulee_multinomial_reg.html)
 
 ## Installation
 
@@ -24,8 +30,7 @@ You can install the released version of brulee from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
-# not yet!
-# install.packages("brulee")
+install.packages("brulee")
 ```
 
 And the development version from
@@ -69,8 +74,8 @@ library(recipes)
 
 rec <- 
   recipe(Class ~ ., data = bivariate_train) %>%  
-  step_YeoJohnson(all_predictors()) %>% 
-  step_normalize(all_predictors())
+  step_YeoJohnson(all_numeric_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
 
 set.seed(20)
 nn_rec_biv <- brulee_mlp(rec, data = bivariate_train, 
