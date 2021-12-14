@@ -160,7 +160,9 @@ and the predictor terms on the right-hand side.}
 \value{
 A \code{lantern_mlp} object with elements:
 \itemize{
-\item \code{models}: a list object of serialized models for each epoch before stopping.
+\item \code{models_obj}: a serialized raw vector for the torch module.
+\item \code{estimates}: a list of matrices with the model parameter estimates per
+epoch.
 \item \code{best_epoch}: an integer for the epoch with the smallest loss.
 \item \code{loss}: A vector of loss values (MSE for regression, negative log-
 likelihood for classification) at each epoch.

@@ -1,12 +1,14 @@
 
+n <- 1000
+b <- c(-1, -3, 5)
 set.seed(1)
-df <- tibble::tibble(
-  x1 = rnorm(100),
-  x2 = rnorm(100),
-  logit = x1 + x2 + rnorm(100, sd = 0.25),
-  y = as.factor(ifelse(exp(logit)/(1 + exp(logit)) > 0.6, "a", "b"))
-)
-df$logit <- NULL
+df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+lp <- b[1] + b[2] * df$x1 + b[3] * df$x2
+prob <- binomial()$linkinv(lp)
+df$y <- ifelse(prob <= runif(n), "a", "b")
+df$y <- factor(df$y)
+
+glm_fit <- glm(y ~ ., data = df, family = "binomial")
 
 # ------------------------------------------------------------------------------
 
@@ -27,6 +29,9 @@ test_that("logistic regression", {
                                 optimizer = "SGD"),
     regexp = NA
   )
+
+  expect_equal(names(coef(fit)), c("(Intercept)", "x1", "x2"))
+  expect_equal(sign(coef(fit)), sign(coef(glm_fit)))
 })
 
 # ------------------------------------------------------------------------------
@@ -34,14 +39,14 @@ test_that("logistic regression", {
 test_that("class weights - logistic regression", {
   skip_if_not(torch::torch_is_installed())
 
+  n <- 1000
+  b <- c(8, -3, 5)
   set.seed(1)
-  df_imbal <- tibble::tibble(
-    x1 = rnorm(200),
-    x2 = rnorm(200),
-    logit = x1 + x2 + rnorm(200, sd = 0.25),
-    y = as.factor(ifelse(exp(logit)/(1 + exp(logit)) > 0.8, "a", "b"))
-  )
-  df$logit <- NULL
+  df_imbal <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  lp <- b[1] + b[2] * df_imbal$x1 + b[3] * df_imbal$x2
+  prob <- binomial()$linkinv(lp)
+  df_imbal$y <- ifelse(prob <= runif(n), "a", "b")
+  df_imbal$y <- factor(df_imbal$y)
 
   expect_snapshot({
     set.seed(1)
