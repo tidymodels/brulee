@@ -1,6 +1,6 @@
-#' Fit a linear regression model
+#' Fit a multinomial regression model
 #'
-#' `lantern_linear_reg()` fits a model.
+#' `lantern_multinomial_reg()` fits a model.
 #'
 #' @param x Depending on the context:
 #'
@@ -21,134 +21,75 @@
 #' @param data When a __recipe__ or __formula__ is used, `data` is specified as:
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
-#'
-#' @param formula A formula specifying the outcome terms on the left-hand side,
-#' and the predictor terms on the right-hand side.
-#'
-#' @param epochs An integer for the number of epochs of training.
-#' @param penalty The amount of weight decay (i.e., L2 regularization).
-#' @param optimizer The method used in the optimization procedure. Possible choices
-#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
-#' @param learn_rate A positive number. Default is 1 for LBFGS; smaller values
-#' are normally chosen for other optimizers. (`optimizer = "SGD"` only)
-#' @param momentum A positive number on `[0, 1]` for the momentum parameter in
-#'  gradient descent. (`optimizer = "SGD"` only)
-#' @param validation The proportion of the data randomly assigned to a
-#'  validation set.
-#' @param batch_size An integer for the number of training set points in each
-#'  batch.
-#' @param stop_iter A non-negative integer for how many iterations with no
-#' improvement before stopping.
-#' @param verbose A logical that prints out the iteration history.
-#'
-#' @param ... Not currently used, but required for extensibility.
+#' @inheritParams lantern_linear_reg
+#' @inheritParams lantern_mlp
 #'
 #' @details
 #'
+#' Despite its name, this function can be used with three or more classes (e.g.,
+#' multinomial regression).
 #'
 #' The _predictors_ data should all be numeric and encoded in the same units (e.g.
 #' standardized to the same range or distribution). If there are factor
 #' predictors, use a recipe or formula to create indicator variables (or some
 #' other method) to make them numeric.
 #'
-#' The function internally standardizes the
-#' outcome data to have mean zero and a standard deviation of one. The prediction
-#' function creates predictions on the original scale.
-#'
 #' @return
 #'
-#' A `lantern_linear_reg` object with elements:
+#' A `lantern_multinomial_reg` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
 #'                 epoch.
 #'  * `best_epoch`: an integer for the epoch with the smallest loss.
-#'  * `loss`: A vector of loss values (MSE) at each epoch.
+#'  * `loss`: A vector of loss values (MSE for regression, negative log-
+#'            likelihood for classification) at each epoch.
 #'  * `dim`: A list of data dimensions.
-#'  * `y_stats`: A list of summary statistics for numeric outcomes.
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
-#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
-#'  ## -----------------------------------------------------------------------------
+#'   library(recipes)
+#'   library(yardstick)
 #'
-#'  data(ames, package = "modeldata")
+#'   data(penguins, package = "modeldata")
 #'
-#'  ames$Sale_Price <- log10(ames$Sale_Price)
+#'   penguins <- penguins %>% na.omit()
 #'
-#'  set.seed(122)
-#'  in_train <- sample(1:nrow(ames), 2000)
-#'  ames_train <- ames[ in_train,]
-#'  ames_test  <- ames[-in_train,]
+#'   set.seed(122)
+#'   in_train <- sample(1:nrow(penguins), 200)
+#'   penguins_train <- penguins[ in_train,]
+#'   penguins_test  <- penguins[-in_train,]
 #'
-#'
-#'  # Using matrices
-#'  set.seed(1)
-#'  lantern_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'                     y = ames_train$Sale_Price,
-#'                     penalty = 0.10, epochs = 1, batch_size = 64)
-#'
-#'  # Using recipe
-#'  library(recipes)
-#'
-#'  ames_rec <-
-#'   recipe(Sale_Price ~ Bldg_Type + Neighborhood + Year_Built + Gr_Liv_Area +
-#'          Full_Bath + Year_Sold + Lot_Area + Central_Air + Longitude + Latitude,
-#'          data = ames_train) %>%
-#'     # Transform some highly skewed predictors
-#'     step_BoxCox(Lot_Area, Gr_Liv_Area) %>%
-#'     # Lump some rarely occuring categories into "other"
-#'     step_other(Neighborhood, threshold = 0.05)  %>%
-#'     # Encode categorical predictors as binary.
-#'     step_dummy(all_nominal(), one_hot = TRUE) %>%
-#'     # Add an interaction effect:
-#'     step_interact(~ starts_with("Central_Air"):Year_Built) %>%
-#'     step_zv(all_predictors()) %>%
+#'   rec <- recipe(island ~ ., data = penguins_train) %>%
+#'     step_dummy(species, sex) %>%
 #'     step_normalize(all_predictors())
 #'
-#'  set.seed(2)
-#'  fit <- lantern_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 5, batch_size = 32)
-#'  fit
+#'   set.seed(3)
+#'   fit <- lantern_multinomial_reg(rec, data = penguins_train, epochs = 5)
+#'   fit
 #'
-#'  autoplot(fit)
-#'
-#'  library(ggplot2)
-#'
-#'  predict(fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
-#'    ggplot(aes(x = .pred, y = Sale_Price)) +
-#'    geom_abline(col = "green") +
-#'    geom_point(alpha = .3) +
-#'    lims(x = c(4, 6), y = c(4, 6)) +
-#'    coord_fixed(ratio = 1)
-#'
-#'  library(yardstick)
-#'  predict(fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
-#'    rmse(Sale_Price, .pred)
-#'
-#'  }
-#'
+#'   predict(fit, penguins_test) %>%
+#'     bind_cols(penguins_test) %>%
+#'     conf_mat(island, .pred_class)
 #' }
 #' @export
-lantern_linear_reg <- function(x, ...) {
-  UseMethod("lantern_linear_reg")
+lantern_multinomial_reg <- function(x, ...) {
+  UseMethod("lantern_multinomial_reg")
 }
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.default <- function(x, ...) {
-  stop("`lantern_linear_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+#' @rdname lantern_multinomial_reg
+lantern_multinomial_reg.default <- function(x, ...) {
+  stop("`lantern_multinomial_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
 }
 
 # XY method - data frame
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.data.frame <-
+#' @rdname lantern_multinomial_reg
+lantern_multinomial_reg.data.frame <-
   function(x,
            y,
            epochs = 20L,
@@ -158,12 +99,13 @@ lantern_linear_reg.data.frame <-
            learn_rate = 1.0,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
 
-    lantern_linear_reg_bridge(
+    lantern_multinomial_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -172,6 +114,7 @@ lantern_linear_reg.data.frame <-
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -181,22 +124,23 @@ lantern_linear_reg.data.frame <-
 # XY method - matrix
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.matrix <- function(x,
-                                      y,
-                                      epochs = 20L,
-                                      penalty = 0.001,
-                                      validation = 0.1,
-                                      optimizer = "LBFGS",
-                                      learn_rate = 1,
-                                      momentum = 0.0,
-                                      batch_size = NULL,
-                                      stop_iter = 5,
-                                      verbose = FALSE,
-                                      ...) {
+#' @rdname lantern_multinomial_reg
+lantern_multinomial_reg.matrix <- function(x,
+                                           y,
+                                           epochs = 20L,
+                                           penalty = 0.001,
+                                           validation = 0.1,
+                                           optimizer = "LBFGS",
+                                           learn_rate = 1,
+                                           momentum = 0.0,
+                                           batch_size = NULL,
+                                           class_weights = NULL,
+                                           stop_iter = 5,
+                                           verbose = FALSE,
+                                           ...) {
   processed <- hardhat::mold(x, y)
 
-  lantern_linear_reg_bridge(
+  lantern_multinomial_reg_bridge(
     processed,
     epochs = epochs,
     optimizer = optimizer,
@@ -205,6 +149,7 @@ lantern_linear_reg.matrix <- function(x,
     penalty = penalty,
     validation = validation,
     batch_size = batch_size,
+    class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
     ...
@@ -214,23 +159,25 @@ lantern_linear_reg.matrix <- function(x,
 # Formula method
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.formula <-
+#' @rdname lantern_multinomial_reg
+lantern_multinomial_reg.formula <-
   function(formula,
            data,
            epochs = 20L,
            penalty = 0.001,
+
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
 
-    lantern_linear_reg_bridge(
+    lantern_multinomial_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -239,6 +186,7 @@ lantern_linear_reg.formula <-
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -248,8 +196,8 @@ lantern_linear_reg.formula <-
 # Recipe method
 
 #' @export
-#' @rdname lantern_linear_reg
-lantern_linear_reg.recipe <-
+#' @rdname lantern_multinomial_reg
+lantern_multinomial_reg.recipe <-
   function(x,
            data,
            epochs = 20L,
@@ -259,12 +207,13 @@ lantern_linear_reg.recipe <-
            learn_rate = 1,
            momentum = 0.0,
            batch_size = NULL,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
 
-    lantern_linear_reg_bridge(
+    lantern_multinomial_reg_bridge(
       processed,
       epochs = epochs,
       optimizer = optimizer,
@@ -273,6 +222,7 @@ lantern_linear_reg.recipe <-
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
       ...
@@ -282,19 +232,18 @@ lantern_linear_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
-                                      learn_rate, momentum, penalty, dropout,
-                                      validation, batch_size, stop_iter, verbose, ...) {
+lantern_multinomial_reg_bridge <- function(processed, epochs, optimizer,
+                                           learn_rate, momentum, penalty, class_weights,
+                                           validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
-  f_nm <- "lantern_linear_reg"
+  f_nm <- "lantern_multinomial_reg"
   # check values of various argument values
   if (is.numeric(epochs) & !is.integer(epochs)) {
     epochs <- as.integer(epochs)
   }
-
   check_integer(epochs, single = TRUE, 1, fn = f_nm)
   if (!is.null(batch_size)) {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
@@ -323,15 +272,29 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
       )
     }
   }
+  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+  check_logical(verbose, single = TRUE, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 
   outcome <- processed$outcomes[[1]]
+  if (length(levels(outcome)) < 3) {
+    rlang::abort("multinomial regression is for outcomes with 3+ classes.")
+  }
+
+  # ------------------------------------------------------------------------------
+
+  lvls <- levels(outcome)
+  xtab <- table(outcome)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
 
   ## -----------------------------------------------------------------------------
 
   fit <-
-    linear_reg_fit_imp(
+    multinomial_reg_fit_imp(
       x = predictors,
       y = outcome,
       epochs = epochs,
@@ -341,11 +304,12 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
       penalty = penalty,
       validation = validation,
       batch_size = batch_size,
+      class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose
     )
 
-  new_lantern_linear_reg(
+  new_lantern_multinomial_reg(
     model_obj = fit$model_obj,
     estimates = fit$estimates,
     best_epoch = fit$best_epoch,
@@ -357,8 +321,8 @@ lantern_linear_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_lantern_linear_reg <- function( model_obj, estimates, best_epoch, loss,
-                                    dims, y_stats, parameters, blueprint) {
+new_lantern_multinomial_reg <- function( model_obj, estimates, best_epoch, loss,
+                                         dims, y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
     rlang::abort("'model_obj' should be a raw vector.")
   }
@@ -385,13 +349,13 @@ new_lantern_linear_reg <- function( model_obj, estimates, best_epoch, loss,
                      y_stats = y_stats,
                      parameters = parameters,
                      blueprint = blueprint,
-                     class = "lantern_linear_reg")
+                     class = "lantern_multinomial_reg")
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
-linear_reg_fit_imp <-
+multinomial_reg_fit_imp <-
   function(x, y,
            epochs = 20L,
            batch_size = 32,
@@ -400,11 +364,12 @@ linear_reg_fit_imp <-
            optimizer = "LBFGS",
            learn_rate = 1,
            momentum = 0.0,
+           class_weights = NULL,
            stop_iter = 5,
            verbose = FALSE,
            ...) {
 
-    torch::torch_manual_seed(sample.int(10^5, 1)) # TODO doesn't give reproducible results
+    torch::torch_manual_seed(sample.int(10^5, 1))
 
     ## ---------------------------------------------------------------------------
     # General data checks:
@@ -412,15 +377,23 @@ linear_reg_fit_imp <-
     check_data_att(x, y)
 
     # Check missing values
-    compl_data <- check_missing_data(x, y, "lantern_linear_reg", verbose)
+    compl_data <- check_missing_data(x, y, "lantern_multinomial_reg", verbose)
     x <- compl_data$x
     y <- compl_data$y
     n <- length(y)
     p <- ncol(x)
 
-    y_dim <- 1
-    loss_fn <- function(input, target) {
-      nnf_mse_loss(input, target$view(c(-1,1)))
+    lvls <- levels(y)
+    y_dim <- length(lvls)
+    # the model will output softmax values.
+    # so we need to use negative likelihood loss and
+    # pass the log of softmax.
+    loss_fn <- function(input, target, wts = NULL) {
+      nnf_nll_loss(
+        weight = wts,
+        input = torch::torch_log(input),
+        target = target
+      )
     }
 
     if (validation > 0) {
@@ -430,15 +403,8 @@ linear_reg_fit_imp <-
       x <- x[-in_val,, drop = FALSE]
       y <- y[-in_val]
     }
-
-    y_stats <- scale_stats(y)
-    y_stats <- list(mean = 0, sd = 1)
-    y <- scale_y(y, y_stats)
-
-    if (validation > 0) {
-      y_val <- scale_y(y_val, y_stats)
-    }
-    loss_label <- "\tLoss (scaled):"
+    y_stats <- list(mean = NA_real_, sd = NA_real_)
+    loss_label <- "\tLoss:"
 
     if (is.null(batch_size)) {
       batch_size <- nrow(x)
@@ -458,7 +424,7 @@ linear_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
-    model <- linear_reg_module(ncol(x))
+    model <- multinomial_module(ncol(x), y_dim)
 
     # Write a optim wrapper
     if (optimizer == "LBFGS") {
@@ -489,13 +455,14 @@ linear_reg_fit_imp <-
 
     # Optimize parameters
     for (epoch in 1:epochs) {
+
       # training loop
       coro::loop(
         for (batch in dl) {
           cl <- function() {
             optimizer$zero_grad()
             pred <- model(batch$x)
-            loss <- loss_fn(pred, batch$y)
+            loss <- loss_fn(pred, batch$y, class_weights)
             loss$backward()
             loss
           }
@@ -506,10 +473,10 @@ linear_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$tensors$x)
-        loss <- loss_fn(pred, dl_val$dataset$tensors$y)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
       } else {
         pred <- model(dl$dataset$tensors$x)
-        loss <- loss_fn(pred, dl$dataset$tensors$y)
+        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
       }
 
       # calculate losses
@@ -530,7 +497,6 @@ linear_reg_fit_imp <-
         poor_epoch <- 0
         best_epoch <- epoch
       }
-
       loss_prev <- loss_curr
 
       # persists models and coefficients
@@ -550,6 +516,11 @@ linear_reg_fit_imp <-
 
     }
 
+    # ------------------------------------------------------------------------------
+
+    class_weights <- as.numeric(class_weights)
+    names(class_weights) <- lvls
+
     ## ---------------------------------------------------------------------------
 
     list(
@@ -557,31 +528,40 @@ linear_reg_fit_imp <-
       estimates = param_per_epoch,
       loss = loss_vec[1:length(param_per_epoch)],
       best_epoch = best_epoch,
-      dims = list(p = p, n = n, h = 0, y = y_dim, features = colnames(x)),
+      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
       parameters = list(learn_rate = learn_rate,
                         penalty = penalty, validation = validation,
+                        class_weights = class_weights,
                         batch_size = batch_size, momentum = momentum)
     )
   }
 
-
-linear_reg_module <-
+multinomial_module <-
   torch::nn_module(
-    "linear_reg_module",
-    initialize = function(num_pred) {
-      self$fc1 <- torch::nn_linear(num_pred, 1)
+    "multinomial_reg_module",
+    initialize = function(num_pred, num_classes) {
+      self$fc1 <- torch::nn_linear(num_pred, num_classes)
+      self$transform <- torch::nn_softmax(dim = 2)
     },
     forward = function(x) {
-      x %>% self$fc1()
+      x %>%
+        self$fc1() %>%
+        self$transform()
     }
   )
 
 ## -----------------------------------------------------------------------------
 
+get_num_multinomial_reg_coef <- function(x) {
+  model <- x$estimates[[1]]
+  param <- vapply(model, function(.x) prod(dim(.x)), double(1))
+  sum(unlist(param))
+}
+
 #' @export
-print.lantern_linear_reg <- function(x, ...) {
-  cat("Linear regression\n\n")
+print.lantern_multinomial_reg <- function(x, ...) {
+  cat("Multinomial regression\n\n")
   lantern_print(x)
 }
 
@@ -589,9 +569,9 @@ print.lantern_linear_reg <- function(x, ...) {
 
 #' Plot model loss over epochs
 #'
-#' @param object A `lantern_linear_reg` object.
+#' @param object A `lantern_multinomial_reg` object.
 #' @param ... Not currently used
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs.
 #' @export
-autoplot.lantern_linear_reg <- lantern_plot
+autoplot.lantern_multinomial_reg <- lantern_plot

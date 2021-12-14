@@ -50,6 +50,9 @@
 #' @examples
 #' if (torch::torch_is_installed()) {
 #'
+#'  library(recipes)
+#'  library(yardstick)
+#'
 #'  ## -----------------------------------------------------------------------------
 #'  # increase # epochs to get better results
 #'
@@ -89,30 +92,6 @@
 #'  predict(fit, cells_test, type = "prob") %>%
 #'   bind_cols(cells_test) %>%
 #'   roc_auc(class, .pred_PS)
-#'
-#'  # ------------------------------------------------------------------------------
-#'  # multinomial regression
-#'
-#'  data(penguins, package = "modeldata")
-#'
-#'  penguins <- penguins %>% na.omit()
-#'
-#'  set.seed(122)
-#'  in_train <- sample(1:nrow(penguins), 200)
-#'  penguins_train <- penguins[ in_train,]
-#'  penguins_test  <- penguins[-in_train,]
-#'
-#'  rec <- recipe(island ~ ., data = penguins_train) %>%
-#'   step_dummy(species, sex) %>%
-#'   step_normalize(all_predictors())
-#'
-#'  set.seed(3)
-#'  fit <- lantern_logistic_reg(rec, data = penguins_train, epochs = 5)
-#'  fit
-#'
-#'  predict(fit, penguins_test) %>%
-#'   bind_cols(penguins_test) %>%
-#'   conf_mat(island, .pred_class)
 #' }
 #'
 #' @export
@@ -322,6 +301,9 @@ lantern_logistic_reg_bridge <- function(processed, epochs, optimizer,
   ## -----------------------------------------------------------------------------
 
   outcome <- processed$outcomes[[1]]
+  if (length(levels(outcome)) > 2) {
+    rlang::abort("logistic regression is for outcomes with two classes.")
+  }
 
   # ------------------------------------------------------------------------------
 
@@ -566,11 +548,8 @@ logistic_reg_fit_imp <-
       estimates = param_per_epoch,
       loss = loss_vec[1:length(param_per_epoch)],
       best_epoch = best_epoch,
-      loss = loss_vec[1:length(param_per_epoch)],
-      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls),
-
+      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
-      stats = y_stats,
       parameters = list(learn_rate = learn_rate,
                         penalty = penalty, validation = validation,
                         class_weights = class_weights,
@@ -580,7 +559,7 @@ logistic_reg_fit_imp <-
 
 logistic_module <-
   torch::nn_module(
-    "linear_reg_module",
+    "logistic_reg_module",
     initialize = function(num_pred, num_classes) {
       self$fc1 <- torch::nn_linear(num_pred, num_classes)
       self$transform <- torch::nn_softmax(dim = 2)
@@ -602,12 +581,7 @@ get_num_logistic_reg_coef <- function(x) {
 
 #' @export
 print.lantern_logistic_reg <- function(x, ...) {
-  lvl <- get_levels(x)
-  if (length(lvl) == 2) {
-    cat("Logistic regression\n\n")
-  } else {
-    cat("Multinomial regression\n\n")
-  }
+  cat("Logistic regression\n\n")
   lantern_print(x)
 }
 

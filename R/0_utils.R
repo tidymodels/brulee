@@ -118,17 +118,36 @@ coef.lantern_logistic_reg <- function(object, epoch = NULL, ...) {
   slopes <- network_params$fc1.weight[,2] - network_params$fc1.weight[,1]
   int <- network_params$fc1.bias[2] - network_params$fc1.bias[1]
   param <- c(int, slopes)
-  names(param) <- c("(Intercept)", colnames(object$blueprint$ptypes$predictors))
+  names(param) <- c("(Intercept)", object$dims$features)
   param
 }
 
 #' @rdname lantern-coefs
 #' @export
-coef.lantern_linear_reg <- lantern_coefs
+coef.lantern_linear_reg <- function(object, epoch = NULL, ...) {
+  network_params <- lantern_coefs(object, epoch)
+  slopes <- network_params$fc1.weight[1,]
+  int <- network_params$fc1.bias
+  param <- c(int, slopes)
+  names(param) <- c("(Intercept)", object$dims$features)
+  param
+}
 
 #' @rdname lantern-coefs
 #' @export
 coef.lantern_mlp <- lantern_coefs
+
+#' @rdname lantern-coefs
+#' @export
+coef.lantern_multinomial_reg <- function(object, epoch = NULL, ...) {
+  network_params <- lantern_coefs(object, epoch)
+  slopes <- t(network_params$fc1.weight)
+  int <- network_params$fc1.bias
+  param <- rbind(int, slopes)
+  rownames(param) <- c("(Intercept)", object$dims$features)
+  colnames(param) <- object$dims$levels
+  param
+}
 
 
 # ------------------------------------------------------------------------------

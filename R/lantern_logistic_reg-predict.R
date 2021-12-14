@@ -30,10 +30,6 @@ predict.lantern_logistic_reg <- function(object, new_data, type = NULL, epoch = 
  predict_lantern_logistic_reg_bridge(type, object, forged$predictors, epoch = epoch)
 }
 
-mlp_valid_predict_types <- function() {
- c("prob", "class")
-}
-
 # ------------------------------------------------------------------------------
 # Bridge
 

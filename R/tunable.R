@@ -13,7 +13,7 @@ tunable.lantern_mlp <- function(x, ...) {
    list(pkg = "dials", fun = "penalty"),
    list(pkg = "dials", fun = "dropout"),
    list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/5)),
-   list(pkg = "dials", fun = "momentum"),
+   list(pkg = "dials", fun = "momentum", range = c(0.50, 0.95)),
    list(pkg = "dials", fun = "batch_size"),
    list(pkg = "dials", fun = "stop_iter"),
    list(pkg = "dials", fun = "class_weights")
@@ -35,7 +35,7 @@ tunable.lantern_logistic_reg <- function(x, ...) {
    list(pkg = "dials", fun = "epochs", range = c(5L, 100L)),
    list(pkg = "dials", fun = "penalty"),
    list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/5)),
-   list(pkg = "dials", fun = "momentum"),
+   list(pkg = "dials", fun = "momentum", range = c(0.50, 0.95)),
    list(pkg = "dials", fun = "batch_size"),
    list(pkg = "dials", fun = "stop_iter"),
    list(pkg = "dials", fun = "class_weights")
@@ -57,7 +57,7 @@ tunable.lantern_linear_reg <- function(x, ...) {
    list(pkg = "dials", fun = "epochs", range = c(5L, 100L)),
    list(pkg = "dials", fun = "penalty"),
    list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/5)),
-   list(pkg = "dials", fun = "momentum"),
+   list(pkg = "dials", fun = "momentum", range = c(0.50, 0.95)),
    list(pkg = "dials", fun = "batch_size"),
    list(pkg = "dials", fun = "stop_iter")
   ),

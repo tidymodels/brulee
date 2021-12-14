@@ -7,7 +7,9 @@ Authors@R: c(
     person("Daniel", "Falbel", , "daniel@rstudio.com", role = "aut"),
     person("RStudio", role = "cph")
   )
-Description: High-level modeling functions with 'torch'.
+Description: Provides high-level modeling functions to define and train models
+    with 'torch'. Models include linear, logistic, and multinomial regression
+    as well as multilayer perceptrons.
 License: MIT + file LICENSE
 Imports: 
     cli,
