@@ -1,75 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lantern.tidymodels.org/404.html</loc>
+    <loc>https://brulee.tidymodels.org/404.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/CODE_OF_CONDUCT.html</loc>
+    <loc>https://brulee.tidymodels.org/CODE_OF_CONDUCT.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/LICENSE-text.html</loc>
+    <loc>https://brulee.tidymodels.org/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/LICENSE.html</loc>
+    <loc>https://brulee.tidymodels.org/LICENSE.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/authors.html</loc>
+    <loc>https://brulee.tidymodels.org/authors.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/index.html</loc>
+    <loc>https://brulee.tidymodels.org/index.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_linear_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/autoplot.brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_logistic_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/autoplot.brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_mlp.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/autoplot.brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/autoplot.lantern_multinomial_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/autoplot.brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/index.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee-coefs.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern-coefs.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee-internal.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern-internal.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee-package.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern-package.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern_linear_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern_logistic_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern_mlp.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/lantern_multinomial_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/matrix_to_dataset.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/matrix_to_dataset.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/predict.lantern_linear_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/predict.brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/predict.lantern_logistic_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/predict.brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/predict.lantern_mlp.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/predict.brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/predict.lantern_multinomial_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/predict.brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>https://lantern.tidymodels.org/reference/reexports.html</loc>
+    <loc>https://brulee.tidymodels.org/reference/reexports.html</loc>
   </url>
 </urlset>
