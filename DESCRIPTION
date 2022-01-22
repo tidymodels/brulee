@@ -11,7 +11,8 @@ Description: Provides high-level modeling functions to define and train
     models using the 'torch' R package. Models include linear, logistic, and 
     multinomial regression as well as multilayer perceptrons.
 License: MIT + file LICENSE
-URL: https://github.com/tidymodels/brulee
+URL: https://github.com/tidymodels/brulee,
+    https://tidymodels.github.io/brulee/
 BugReports: https://github.com/tidymodels/brulee/issues
 Imports: 
     cli,
