@@ -513,8 +513,8 @@ linear_reg_fit_imp <-
             pred <- model(batch$x)
             loss <- loss_fn(pred, batch$y)
             if (penalty > 0) {
-              l_term <- mixture*l1_term(model) + (1-mixture)*l2_term(model)
-              loss <- loss + penalty*l_term
+              l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
+              loss <- loss + penalty * l_term
             }
             loss$backward()
             loss
