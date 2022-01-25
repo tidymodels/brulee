@@ -70,12 +70,14 @@ model_to_raw <- function(model) {
 # ------------------------------------------------------------------------------
 
 lx_term <- function(norm) {
- function(model) {
-  l <- lapply(model$parameters, function(x) {
-   torch::torch_sum(norm(x))
-  })
-  torch::torch_sum(torch::torch_stack(l))
- }
+  function(model) {
+    is_bias <- grepl("bias", names(model$parameters))
+    coefs <- model$parameters[!is_bias]
+    l <- lapply(coefs, function(x) {
+      torch::torch_sum(norm(x))
+    })
+    torch::torch_sum(torch::torch_stack(l))
+  }
 }
 
 l2_term <- lx_term(function(x) torch::torch_pow(x, 2))
