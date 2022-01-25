@@ -24,6 +24,9 @@
 #'
 #' @inheritParams brulee_mlp
 #'
+#' @param mixture Proportion of Lasso Penalty (type: double, default: 1.0). A
+#'   value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
+#'   indicates ridge regression.
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the rapidity that the model
