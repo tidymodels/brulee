@@ -476,6 +476,7 @@ linear_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- linear_reg_module(ncol(x))
+    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
     # Write a optim wrapper
     if (optimizer == "LBFGS") {
@@ -512,10 +513,6 @@ linear_reg_fit_imp <-
             optimizer$zero_grad()
             pred <- model(batch$x)
             loss <- loss_fn(pred, batch$y)
-            if (penalty > 0) {
-              l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
-              loss <- loss + penalty * l_term
-            }
             loss$backward()
             loss
           }
