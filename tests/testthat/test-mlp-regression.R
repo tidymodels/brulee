@@ -27,7 +27,7 @@ test_that('different fit interfaces', {
   # matrix x
   expect_error({
     set.seed(1)
-    fit_mat <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L)
+    fit_mat <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L, mixture = 0)
   },
   regex = NA
   )

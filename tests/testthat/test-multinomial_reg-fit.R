@@ -19,7 +19,8 @@ test_that("multinomial regression", {
 
   expect_snapshot({
     set.seed(1)
-    fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE)
+    fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE,
+                                  penalty = 0)
   })
 
   expect_snapshot({
@@ -50,7 +51,8 @@ test_that("class weights - multinomial regression", {
   expect_snapshot({
     set.seed(1)
     fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE,
-                                  class_weights = c(a = 12, b = 1, c = 1))
+                                  class_weights = c(a = 12, b = 1, c = 1),
+                                  penalty = 0)
   })
 
   expect_error({

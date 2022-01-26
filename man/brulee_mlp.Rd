@@ -20,6 +20,7 @@ brulee_mlp(x, ...)
   hidden_units = 3L,
   activation = "relu",
   penalty = 0.001,
+  mixture = 1,
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
@@ -38,6 +39,7 @@ brulee_mlp(x, ...)
   hidden_units = 3L,
   activation = "relu",
   penalty = 0.001,
+  mixture = 1,
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
@@ -56,6 +58,7 @@ brulee_mlp(x, ...)
   hidden_units = 3L,
   activation = "relu",
   penalty = 0.001,
+  mixture = 1,
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
@@ -74,6 +77,7 @@ brulee_mlp(x, ...)
   hidden_units = 3L,
   activation = "relu",
   penalty = 0.001,
+  mixture = 1,
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
@@ -118,6 +122,10 @@ can be a character vector with length equals to \code{length(hidden_units)} spec
 the activation for each hidden layer.}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
+
+\item{mixture}{Proportion of Lasso Penalty (type: double, default: 1.0). A
+value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
+indicates ridge regression.}
 
 \item{dropout}{The proportion of parameters set to zero.}
 

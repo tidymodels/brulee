@@ -22,7 +22,7 @@
 #'
 #'   * A __data frame__ containing both the predictors and the outcome.
 #'
-#' @inheritParams brulee_mlp
+#' @inheritParams brulee_linear_reg
 #'
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
