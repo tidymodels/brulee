@@ -126,6 +126,17 @@ parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
 \item{batch_size}{An integer for the number of training set points in each
 batch.}
 
+\item{class_weights}{Numeric class weights (classification only). The value
+can be:
+\itemize{
+\item A named numeric vector (in any order) where the names are the outcome
+factor levels.
+\item An unnamed numeric vector assumed to be in the same order as the outcome
+factor levels.
+\item A single numeric value for the least frequent class in the training data
+and all other classes receive a weight of one.
+}}
+
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
 
