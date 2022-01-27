@@ -3,7 +3,7 @@
     Code
       set.seed(1)
       fit <- brulee_logistic_reg(y ~ ., df, epochs = 2, verbose = TRUE, penalty = 0)
-    Message <message>
+    Message <rlang_message>
       epoch: 1 	Loss: 0.17322 
       epoch: 2 	Loss: 0.17322  x 
 
@@ -25,7 +25,7 @@
       set.seed(1)
       fit_imbal <- brulee_logistic_reg(y ~ ., df_imbal, verbose = TRUE,
       class_weights = 20, optimizer = "SGD", penalty = 0)
-    Message <message>
+    Message <rlang_message>
       epoch:  1 	Loss: 0.32851 
       epoch:  2 	Loss: 0.30178 
       epoch:  3 	Loss: 0.28238 
@@ -53,7 +53,7 @@
       set.seed(1)
       fit <- brulee_logistic_reg(y ~ ., df_imbal, epochs = 2, verbose = TRUE,
       class_weights = c(a = 12, b = 1), penalty = 0)
-    Message <message>
+    Message <rlang_message>
       epoch: 1 	Loss: 0.11313 
       epoch: 2 	Loss: 0.11313  x 
 

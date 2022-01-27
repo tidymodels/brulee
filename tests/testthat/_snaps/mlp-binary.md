@@ -19,7 +19,7 @@
     Code
       set.seed(1)
       fit_imbal <- brulee_mlp(y ~ ., df_imbal, verbose = TRUE, class_weights = 20)
-    Message <message>
+    Message <rlang_message>
       epoch:   1 	Loss: 0.581 
       epoch:   2 	Loss: 0.57786 
       epoch:   3 	Loss: 0.5748 
@@ -127,7 +127,7 @@
       set.seed(1)
       fit <- brulee_mlp(y ~ ., df_imbal, epochs = 2, verbose = TRUE, class_weights = c(
         a = 12, b = 1))
-    Message <message>
+    Message <rlang_message>
       epoch: 1 	Loss: 0.66968 
       epoch: 2 	Loss: 0.66739 
 
