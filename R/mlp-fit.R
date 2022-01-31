@@ -27,9 +27,9 @@
 #' and the predictor term(s) on the right-hand side.
 #' @param epochs An integer for the number of epochs of training.
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
-#' @param mixture Proportion of Lasso Penalty (type: double, default: 1.0). A
+#' @param mixture Proportion of Lasso Penalty (type: double, default: 0.0). A
 #'   value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-#'   indicates ridge regression.
+#'   indicates ridge regression (a.k.a weight decay).
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
@@ -222,7 +222,7 @@ brulee_mlp.data.frame <-
            hidden_units = 3L,
            activation = "relu",
            penalty = 0.001,
-           mixture = 1,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -263,7 +263,7 @@ brulee_mlp.matrix <- function(x,
                               hidden_units = 3L,
                               activation = "relu",
                               penalty = 0.001,
-                              mixture = 1,
+                              mixture = 0,
                               dropout = 0,
                               validation = 0.1,
                               learn_rate = 0.01,
@@ -305,7 +305,7 @@ brulee_mlp.formula <-
            hidden_units = 3L,
            activation = "relu",
            penalty = 0.001,
-           mixture = 1,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -347,7 +347,7 @@ brulee_mlp.recipe <-
            hidden_units = 3L,
            activation = "relu",
            penalty = 0.001,
-           mixture = 1,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -525,7 +525,7 @@ mlp_fit_imp <-
            batch_size = 32,
            hidden_units = 3L,
            penalty = 0.001,
-           mixture = 1,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,

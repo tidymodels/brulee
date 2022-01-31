@@ -18,7 +18,7 @@ brulee_linear_reg(x, ...)
   y,
   epochs = 20L,
   penalty = 0.001,
-  mixture = 1,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -34,7 +34,7 @@ brulee_linear_reg(x, ...)
   y,
   epochs = 20L,
   penalty = 0.001,
-  mixture = 1,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -50,7 +50,7 @@ brulee_linear_reg(x, ...)
   data,
   epochs = 20L,
   penalty = 0.001,
-  mixture = 1,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -66,7 +66,7 @@ brulee_linear_reg(x, ...)
   data,
   epochs = 20L,
   penalty = 0.001,
-  mixture = 1,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -102,9 +102,9 @@ specified as:
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
 
-\item{mixture}{Proportion of Lasso Penalty (type: double, default: 1.0). A
+\item{mixture}{Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression.}
+indicates ridge regression (a.k.a weight decay).}
 
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
