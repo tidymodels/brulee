@@ -14,6 +14,7 @@ glm_fit <- glm(y ~ ., data = df, family = "binomial")
 
 test_that("logistic regression", {
   skip_if_not(torch::torch_is_installed())
+  skip_if(packageVersion("rlang") < "1.0.0")
 
   expect_snapshot({
     set.seed(1)
@@ -38,6 +39,7 @@ test_that("logistic regression", {
 
 test_that("class weights - logistic regression", {
   skip_if_not(torch::torch_is_installed())
+  skip_if(packageVersion("rlang") < "1.0.0")
 
   n <- 1000
   b <- c(8, -3, 5)

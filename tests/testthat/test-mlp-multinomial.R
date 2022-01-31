@@ -16,6 +16,7 @@ df$y <- factor(df$y)
 
 test_that("multinomial mlp", {
   skip_if_not(torch::torch_is_installed())
+  skip_if(packageVersion("rlang") < "1.0.0")
 
   expect_snapshot({
     set.seed(1)
@@ -37,6 +38,7 @@ test_that("multinomial mlp", {
 
 test_that("class weights - mlp", {
   skip_if_not(torch::torch_is_installed())
+  skip_if(packageVersion("rlang") < "1.0.0")
 
 
   expect_snapshot({
