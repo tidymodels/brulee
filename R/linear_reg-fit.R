@@ -55,6 +55,11 @@
 #' model have an `epoch` argument (which defaults to the epoch with the best
 #' loss value).
 #'
+#' The use of the L1 penalty (a.k.a. the lasso penalty) does _not_ force
+#' parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
+#' The zeroing out of parameters is a specific feature the optimization method
+#' used in those packages.
+#'
 #' @seealso [predict.brulee_linear_reg()], [coef.brulee_linear_reg()],
 #' [autoplot.brulee_linear_reg()]
 #'
