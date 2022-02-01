@@ -1,16 +1,10 @@
+url: https://tidymodels.github.io/brulee/
 
 template:
   package: tidytemplate
-  params:
-    theme: tidymodels
-    part_of: <a href="https://tidymodels.org">tidymodels</a>
-    footer: brulee is a part of the <strong>tidymodels</strong> ecosystem, a collection of modeling packages designed with common APIs and a shared philosophy.
-
-development:
-  mode: auto
-
-home:
-  strip_header: true
+  bootstrap: 5
+  bslib:
+    primary: "#CA225E"
 
 figures:
   fig.width: 8
