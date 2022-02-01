@@ -27,6 +27,9 @@
 #' and the predictor term(s) on the right-hand side.
 #' @param epochs An integer for the number of epochs of training.
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
+#' @param mixture Proportion of Lasso Penalty (type: double, default: 0.0). A
+#'   value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
+#'   indicates ridge regression (a.k.a weight decay).
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
@@ -81,6 +84,11 @@
 #' be efficiently tuned. Both the [coef()] and [predict()] methods for this
 #' model have an `epoch` argument (which defaults to the epoch with the best
 #' loss value).
+#'
+#' The use of the L1 penalty (a.k.a. the lasso penalty) does _not_ force
+#' parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
+#' The zeroing out of parameters is a specific feature the optimization method
+#' used in those packages.
 #'
 #' @seealso [predict.brulee_mlp()], [coef.brulee_mlp()], [autoplot.brulee_mlp()]
 #' @return
@@ -214,6 +222,7 @@ brulee_mlp.data.frame <-
            hidden_units = 3L,
            activation = "relu",
            penalty = 0.001,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -232,6 +241,7 @@ brulee_mlp.data.frame <-
       activation = activation,
       learn_rate = learn_rate,
       penalty = penalty,
+      mixture = mixture,
       dropout = dropout,
       validation = validation,
       momentum = momentum,
@@ -253,6 +263,7 @@ brulee_mlp.matrix <- function(x,
                               hidden_units = 3L,
                               activation = "relu",
                               penalty = 0.001,
+                              mixture = 0,
                               dropout = 0,
                               validation = 0.1,
                               learn_rate = 0.01,
@@ -272,6 +283,7 @@ brulee_mlp.matrix <- function(x,
     learn_rate = learn_rate,
     momentum = momentum,
     penalty = penalty,
+    mixture = mixture,
     dropout = dropout,
     validation = validation,
     batch_size = batch_size,
@@ -293,6 +305,7 @@ brulee_mlp.formula <-
            hidden_units = 3L,
            activation = "relu",
            penalty = 0.001,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -312,6 +325,7 @@ brulee_mlp.formula <-
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
+      mixture = mixture,
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
@@ -333,6 +347,7 @@ brulee_mlp.recipe <-
            hidden_units = 3L,
            activation = "relu",
            penalty = 0.001,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -352,6 +367,7 @@ brulee_mlp.recipe <-
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
+      mixture = mixture,
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
@@ -366,7 +382,7 @@ brulee_mlp.recipe <-
 # Bridge
 
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                              learn_rate, momentum, penalty, dropout, class_weights,
+                              learn_rate, momentum, penalty, mixture, dropout, class_weights,
                               validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
@@ -396,6 +412,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   }
   check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
@@ -441,6 +458,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
+      mixture = mixture,
       dropout = dropout,
       validation = validation,
       batch_size = batch_size,
@@ -507,6 +525,7 @@ mlp_fit_imp <-
            batch_size = 32,
            hidden_units = 3L,
            penalty = 0.001,
+           mixture = 0,
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
@@ -591,11 +610,11 @@ mlp_fit_imp <-
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
+    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
     # Write a optim wrapper
     optimizer <-
-      torch::optim_sgd(model$parameters, lr = learn_rate,
-                       weight_decay = penalty, momentum = momentum)
+      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
 
     ## ---------------------------------------------------------------------------
 
@@ -689,7 +708,7 @@ mlp_fit_imp <-
       y_stats = y_stats,
       parameters = list(activation = activation, hidden_units = hidden_units,
                         learn_rate = learn_rate, class_weights = class_weights,
-                        penalty = penalty, dropout = dropout, validation = validation,
+                        penalty = penalty, mixture = mixture, dropout = dropout, validation = validation,
                         batch_size = batch_size, momentum = momentum)
     )
   }

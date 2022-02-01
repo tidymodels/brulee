@@ -18,6 +18,7 @@ brulee_linear_reg(x, ...)
   y,
   epochs = 20L,
   penalty = 0.001,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -33,6 +34,7 @@ brulee_linear_reg(x, ...)
   y,
   epochs = 20L,
   penalty = 0.001,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -48,6 +50,7 @@ brulee_linear_reg(x, ...)
   data,
   epochs = 20L,
   penalty = 0.001,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -63,6 +66,7 @@ brulee_linear_reg(x, ...)
   data,
   epochs = 20L,
   penalty = 0.001,
+  mixture = 0,
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 1,
@@ -97,6 +101,10 @@ specified as:
 \item{epochs}{An integer for the number of epochs of training.}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
+
+\item{mixture}{Proportion of Lasso Penalty (type: double, default: 0.0). A
+value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
+indicates ridge regression (a.k.a weight decay).}
 
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
@@ -166,6 +174,11 @@ The model objects are saved for each epoch so that the number of epochs can
 be efficiently tuned. Both the \code{\link[=coef]{coef()}} and \code{\link[=predict]{predict()}} methods for this
 model have an \code{epoch} argument (which defaults to the epoch with the best
 loss value).
+
+The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
+parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
+The zeroing out of parameters is a specific feature the optimization method
+used in those packages.
 }
 \examples{
 \donttest{

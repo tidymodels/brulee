@@ -51,6 +51,11 @@
 #' model have an `epoch` argument (which defaults to the epoch with the best
 #' loss value).
 #'
+#' The use of the L1 penalty (a.k.a. the lasso penalty) does _not_ force
+#' parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
+#' The zeroing out of parameters is a specific feature the optimization method
+#' used in those packages.
+#'
 #' @seealso [predict.brulee_multinomial_reg()], [coef.brulee_multinomial_reg()],
 #' [autoplot.brulee_multinomial_reg()]
 #'
@@ -114,6 +119,7 @@ brulee_multinomial_reg.data.frame <-
            y,
            epochs = 20L,
            penalty = 0.001,
+           mixture = 0,
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1.0,
@@ -131,6 +137,7 @@ brulee_multinomial_reg.data.frame <-
       optimizer = optimizer,
       learn_rate = learn_rate,
       penalty = penalty,
+      mixture = mixture,
       validation = validation,
       momentum = momentum,
       batch_size = batch_size,
@@ -149,6 +156,7 @@ brulee_multinomial_reg.matrix <- function(x,
                                           y,
                                           epochs = 20L,
                                           penalty = 0.001,
+                                          mixture = 0,
                                           validation = 0.1,
                                           optimizer = "LBFGS",
                                           learn_rate = 1,
@@ -167,6 +175,7 @@ brulee_multinomial_reg.matrix <- function(x,
     learn_rate = learn_rate,
     momentum = momentum,
     penalty = penalty,
+    mixture = mixture,
     validation = validation,
     batch_size = batch_size,
     class_weights = class_weights,
@@ -185,7 +194,7 @@ brulee_multinomial_reg.formula <-
            data,
            epochs = 20L,
            penalty = 0.001,
-
+           mixture = 0,
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
@@ -204,6 +213,7 @@ brulee_multinomial_reg.formula <-
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
+      mixture = mixture,
       validation = validation,
       batch_size = batch_size,
       class_weights = class_weights,
@@ -222,6 +232,7 @@ brulee_multinomial_reg.recipe <-
            data,
            epochs = 20L,
            penalty = 0.001,
+           mixture = 0,
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
@@ -240,6 +251,7 @@ brulee_multinomial_reg.recipe <-
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
+      mixture = mixture,
       validation = validation,
       batch_size = batch_size,
       class_weights = class_weights,
@@ -253,7 +265,8 @@ brulee_multinomial_reg.recipe <-
 # Bridge
 
 brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
-                                          learn_rate, momentum, penalty, class_weights,
+                                          learn_rate, momentum, penalty, mixture,
+                                          class_weights,
                                           validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
@@ -272,6 +285,7 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
     check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
@@ -322,6 +336,7 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
       learn_rate = learn_rate,
       momentum = momentum,
       penalty = penalty,
+      mixture = mixture,
       validation = validation,
       batch_size = batch_size,
       class_weights = class_weights,
@@ -380,6 +395,7 @@ multinomial_reg_fit_imp <-
            epochs = 20L,
            batch_size = 32,
            penalty = 0.001,
+           mixture = 0,
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 1,
@@ -445,6 +461,7 @@ multinomial_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- multinomial_module(ncol(x), y_dim)
+    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
     # Write a optim wrapper
     if (optimizer == "LBFGS") {
@@ -452,8 +469,7 @@ multinomial_reg_fit_imp <-
                                       history_size = 5)
     } else if (optimizer == "SGD") {
       optimizer <-
-        torch::optim_sgd(model$parameters, lr = learn_rate,
-                         weight_decay = penalty, momentum = momentum)
+        torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
     } else {
       rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
     }
@@ -551,7 +567,9 @@ multinomial_reg_fit_imp <-
       dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
       parameters = list(learn_rate = learn_rate,
-                        penalty = penalty, validation = validation,
+                        penalty = penalty,
+                        mixture = mixture,
+                        validation = validation,
                         class_weights = class_weights,
                         batch_size = batch_size, momentum = momentum)
     )
