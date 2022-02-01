@@ -26,26 +26,26 @@
       fit_imbal <- brulee_multinomial_reg(y ~ ., df, verbose = TRUE, class_weights = 20,
       optimizer = "SGD")
     Message <rlang_message>
-      epoch:  1 	Loss: 0.92193 
-      epoch:  2 	Loss: 0.59453 
-      epoch:  3 	Loss: 0.50279 
-      epoch:  4 	Loss: 0.46659 
-      epoch:  5 	Loss: 0.44918 
-      epoch:  6 	Loss: 0.43992 
-      epoch:  7 	Loss: 0.4347 
-      epoch:  8 	Loss: 0.43165 
-      epoch:  9 	Loss: 0.42984 
-      epoch: 10 	Loss: 0.42875 
-      epoch: 11 	Loss: 0.4281 
-      epoch: 12 	Loss: 0.42772 
-      epoch: 13 	Loss: 0.4275 
-      epoch: 14 	Loss: 0.42738 
-      epoch: 15 	Loss: 0.42733 
-      epoch: 16 	Loss: 0.42731 
-      epoch: 17 	Loss: 0.42731  x 
-      epoch: 18 	Loss: 0.42732  x 
-      epoch: 19 	Loss: 0.42734  x 
-      epoch: 20 	Loss: 0.42736  x 
+      epoch:  1 	Loss: 0.92056 
+      epoch:  2 	Loss: 0.59318 
+      epoch:  3 	Loss: 0.50124 
+      epoch:  4 	Loss: 0.46489 
+      epoch:  5 	Loss: 0.44743 
+      epoch:  6 	Loss: 0.43814 
+      epoch:  7 	Loss: 0.43291 
+      epoch:  8 	Loss: 0.42985 
+      epoch:  9 	Loss: 0.42803 
+      epoch: 10 	Loss: 0.42693 
+      epoch: 11 	Loss: 0.42628 
+      epoch: 12 	Loss: 0.42589 
+      epoch: 13 	Loss: 0.42567 
+      epoch: 14 	Loss: 0.42555 
+      epoch: 15 	Loss: 0.42549 
+      epoch: 16 	Loss: 0.42547 
+      epoch: 17 	Loss: 0.42547  x 
+      epoch: 18 	Loss: 0.42549  x 
+      epoch: 19 	Loss: 0.4255  x 
+      epoch: 20 	Loss: 0.42552  x 
 
 ---
 
