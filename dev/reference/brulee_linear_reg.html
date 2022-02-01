@@ -34,6 +34,9 @@
       <ul class="nav navbar-nav navbar-right"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
         <li>
   <a href="https://github.com/tidymodels/brulee/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
@@ -70,6 +73,7 @@
   <span class="va">y</span>,
   epochs <span class="op">=</span> <span class="fl">20L</span>,
   penalty <span class="op">=</span> <span class="fl">0.001</span>,
+  mixture <span class="op">=</span> <span class="fl">0</span>,
   validation <span class="op">=</span> <span class="fl">0.1</span>,
   optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,
   learn_rate <span class="op">=</span> <span class="fl">1</span>,
@@ -86,6 +90,7 @@
   <span class="va">y</span>,
   epochs <span class="op">=</span> <span class="fl">20L</span>,
   penalty <span class="op">=</span> <span class="fl">0.001</span>,
+  mixture <span class="op">=</span> <span class="fl">0</span>,
   validation <span class="op">=</span> <span class="fl">0.1</span>,
   optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,
   learn_rate <span class="op">=</span> <span class="fl">1</span>,
@@ -102,6 +107,7 @@
   <span class="va">data</span>,
   epochs <span class="op">=</span> <span class="fl">20L</span>,
   penalty <span class="op">=</span> <span class="fl">0.001</span>,
+  mixture <span class="op">=</span> <span class="fl">0</span>,
   validation <span class="op">=</span> <span class="fl">0.1</span>,
   optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,
   learn_rate <span class="op">=</span> <span class="fl">1</span>,
@@ -118,6 +124,7 @@
   <span class="va">data</span>,
   epochs <span class="op">=</span> <span class="fl">20L</span>,
   penalty <span class="op">=</span> <span class="fl">0.001</span>,
+  mixture <span class="op">=</span> <span class="fl">0</span>,
   validation <span class="op">=</span> <span class="fl">0.1</span>,
   optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,
   learn_rate <span class="op">=</span> <span class="fl">1</span>,
@@ -149,6 +156,10 @@ specified as:</p><ul><li><p>A <strong>data frame</strong> with 1 numeric column.
 <dd><p>An integer for the number of epochs of training.</p></dd>
 <dt>penalty</dt>
 <dd><p>The amount of weight decay (i.e., L2 regularization).</p></dd>
+<dt>mixture</dt>
+<dd><p>Proportion of Lasso Penalty (type: double, default: 0.0). A
+value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
+indicates ridge regression (a.k.a weight decay).</p></dd>
 <dt>validation</dt>
 <dd><p>The proportion of the data randomly assigned to a
 validation set.</p></dd>
@@ -208,6 +219,10 @@ before training.</p>
 be efficiently tuned. Both the <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods for this
 model have an <code>epoch</code> argument (which defaults to the epoch with the best
 loss value).</p>
+<p>The use of the L1 penalty (a.k.a. the lasso penalty) does <em>not</em> force
+parameters to be strictly zero (as it does in packages such as <span class="pkg">glmnet</span>).
+The zeroing out of parameters is a specific feature the optimization method
+used in those packages.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
@@ -284,7 +299,7 @@ loss value).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .metric .estimator .estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> rmse    standard      0.099<span style="text-decoration: underline;">1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> rmse    standard      0.099<span style="text-decoration: underline;">9</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># }</span></span>
 </code></pre></div>
