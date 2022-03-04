@@ -113,7 +113,7 @@ validation set.}
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
 \item{learn_rate}{A positive number that controls the rapidity that the model
-moves along the descent path. Values less that 0.1 are typical.
+moves along the descent path. Values less than 0.1 are typical.
 (\code{optimizer = "SGD"} only)}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum

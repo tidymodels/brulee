@@ -23,6 +23,7 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -42,6 +43,7 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -61,6 +63,7 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -80,6 +83,7 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   momentum = 0,
   batch_size = NULL,
@@ -96,9 +100,7 @@ brulee_mlp(x, ...)
 \item A \strong{matrix} of predictors.
 \item A \strong{recipe} specifying a set of preprocessing steps
 created from \code{\link[recipes:recipe]{recipes::recipe()}}.
-}
-
-The predictor data should be standardized (e.g. centered or scaled).}
+}}
 
 \item{...}{Not currently used, but required for extensibility.}
 
@@ -132,11 +134,15 @@ indicates ridge regression (a.k.a weight decay).}
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
+\item{optimizer}{The method used in the optimization procedure. Possible choices
+are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
+
 \item{learn_rate}{A positive number that controls the rapidity that the model
-moves along the descent path. Values around 0.1 or less are typical.}
+moves along the descent path. Values less than 0.1 are typical.
+(\code{optimizer = "SGD"} only)}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
-parameter in gradient descent.}
+parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
 batch.}

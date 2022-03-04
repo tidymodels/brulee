@@ -24,13 +24,6 @@
 #'
 #' @inheritParams brulee_mlp
 #'
-#' @param optimizer The method used in the optimization procedure. Possible choices
-#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
-#' @param learn_rate A positive number that controls the rapidity that the model
-#' moves along the descent path. Values less that 0.1 are typical.
-#' (`optimizer = "SGD"` only)
-#' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
-#' parameter in gradient descent.  (`optimizer = "SGD"` only)
 #' @details
 #'
 #' This function fits a linear combination of coefficients and predictors to
@@ -480,15 +473,15 @@ linear_reg_fit_imp <-
     model <- linear_reg_module(ncol(x))
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
-    # Write a optim wrapper
+    # Set optimization method
     if (optimizer == "LBFGS") {
-      optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
-                                      history_size = 5)
+     opt_obj <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                   history_size = 5)
     } else if (optimizer == "SGD") {
-      optimizer <-
-        torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+     opt_obj <-
+      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
     } else {
-      rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+     rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
     }
 
     ## ---------------------------------------------------------------------------
@@ -512,13 +505,13 @@ linear_reg_fit_imp <-
       coro::loop(
         for (batch in dl) {
           cl <- function() {
-            optimizer$zero_grad()
+            opt_obj$zero_grad()
             pred <- model(batch$x)
             loss <- loss_fn(pred, batch$y)
             loss$backward()
             loss
           }
-          optimizer$step(cl)
+          opt_obj$step(cl)
         }
       )
 
@@ -578,9 +571,9 @@ linear_reg_fit_imp <-
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = 0, y = y_dim, features = colnames(x)),
       y_stats = y_stats,
-      parameters = list(learn_rate = learn_rate,
+      parameters = list(optimizer = optimizer, learn_rate = learn_rate,
                         penalty = penalty, mixture = mixture,
-                        validation = validation,
+                        validation = validation, optimizer = optimizer,
                         batch_size = batch_size, momentum = momentum)
     )
   }
