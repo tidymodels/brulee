@@ -17,6 +17,7 @@
       1,000 samples, 2 features, 2 classes 
       class weights a=1, b=1 
       batch size: 900 
+      optimized via LBFGS 
       validation loss after 1 epoch: 0.17322 
 
 # class weights - logistic regression

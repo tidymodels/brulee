@@ -103,12 +103,13 @@ test_that("mlp binary learns something", {
                       epochs = 100L,
                       activation = "relu",
                       hidden_units = 5L,
+                      optimizer = "SGD",
                       learn_rate = 0.1,
                       dropout = 0)
 
   y_ <- predict(model, x)$.pred_class
   expect_true(sum(diag(table(y, y_))) > 950)
-
+  expect_snapshot(print(model))
 })
 
 
@@ -130,7 +131,7 @@ test_that("class weights - mlp", {
   expect_snapshot({
     set.seed(1)
     fit_imbal <- brulee_mlp(y ~ ., df_imbal, verbose = TRUE,
-                            class_weights = 20)
+                            class_weights = 20, learn_rate = 0.1)
   })
 
 
