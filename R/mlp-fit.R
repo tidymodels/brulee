@@ -10,7 +10,6 @@
 #'   * A __recipe__ specifying a set of preprocessing steps
 #'     created from [recipes::recipe()].
 #'
-#'  The predictor data should be standardized (e.g. centered or scaled).
 #'
 #' @param y When `x` is a __data frame__ or __matrix__, `y` is the outcome
 #' specified as:
@@ -37,10 +36,13 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
+#' @param optimizer The method used in the optimization procedure. Possible choices
+#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the rapidity that the model
-#' moves along the descent path. Values around 0.1 or less are typical.
+#' moves along the descent path. Values less than 0.1 are typical.
+#' (`optimizer = "SGD"` only)
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
-#' parameter in gradient descent.
+#' parameter in gradient descent.  (`optimizer = "SGD"` only)
 #' @param dropout The proportion of parameters set to zero.
 #' @param class_weights Numeric class weights (classification only). The value
 #' can be:
@@ -225,6 +227,7 @@ brulee_mlp.data.frame <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
@@ -244,6 +247,7 @@ brulee_mlp.data.frame <-
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       momentum = momentum,
       batch_size = batch_size,
       class_weights = class_weights,
@@ -266,6 +270,7 @@ brulee_mlp.matrix <- function(x,
                               mixture = 0,
                               dropout = 0,
                               validation = 0.1,
+                              optimizer = "LBFGS",
                               learn_rate = 0.01,
                               momentum = 0.0,
                               batch_size = NULL,
@@ -286,6 +291,7 @@ brulee_mlp.matrix <- function(x,
     mixture = mixture,
     dropout = dropout,
     validation = validation,
+    optimizer = optimizer,
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
@@ -308,6 +314,7 @@ brulee_mlp.formula <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
@@ -328,6 +335,7 @@ brulee_mlp.formula <-
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
@@ -350,6 +358,7 @@ brulee_mlp.recipe <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            batch_size = NULL,
@@ -370,6 +379,7 @@ brulee_mlp.recipe <-
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
@@ -383,7 +393,7 @@ brulee_mlp.recipe <-
 
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               learn_rate, momentum, penalty, mixture, dropout, class_weights,
-                              validation, batch_size, stop_iter, verbose, ...) {
+                              validation, optimizer, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -461,6 +471,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
@@ -528,6 +539,7 @@ mlp_fit_imp <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            momentum = 0.0,
            activation = "relu",
@@ -612,9 +624,16 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
-    # Write a optim wrapper
-    optimizer <-
+    # Set optimization method
+    if (optimizer == "LBFGS") {
+     opt_obj <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                   history_size = 5)
+    } else if (optimizer == "SGD") {
+     opt_obj <-
       torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+    } else {
+     rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+    }
 
     ## ---------------------------------------------------------------------------
 
@@ -637,12 +656,14 @@ mlp_fit_imp <-
       # training loop
       coro::loop(
         for (batch in dl) {
+         cl <- function() {
+          opt_obj$zero_grad()
           pred <- model(batch$x)
           loss <- loss_fn(pred, batch$y, class_weights)
-
-          optimizer$zero_grad()
           loss$backward()
-          optimizer$step()
+          loss
+         }
+         opt_obj$step(cl)
         }
       )
 
@@ -706,10 +727,12 @@ mlp_fit_imp <-
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
-      parameters = list(activation = activation, hidden_units = hidden_units,
-                        learn_rate = learn_rate, class_weights = class_weights,
-                        penalty = penalty, mixture = mixture, dropout = dropout, validation = validation,
-                        batch_size = batch_size, momentum = momentum)
+      parameters = list(optimizer = optimizer, activation = activation,
+                        hidden_units = hidden_units, learn_rate = learn_rate,
+                        class_weights = class_weights, penalty = penalty,
+                        mixture = mixture, dropout = dropout,
+                        validation = validation, batch_size = batch_size,
+                        momentum = momentum)
     )
   }
 
