@@ -25,12 +25,20 @@ brulee_print <- function(x, ...) {
         "\n")
   }
   if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
+   cat("penalty:", x$parameters$penalty)
+   if (any(names(x$parameters) == "mixture")) {
+    cat(" (%lasso: ", round(x$parameters$mixture * 100, 1), ")", sep = "")
+   }
+   cat("\n")
   }
   if (any(names(x$parameters) == "dropout")) {
     cat("dropout proportion:", x$parameters$dropout, "\n")
   }
   cat("batch size:", x$parameters$batch_size, "\n")
+
+  if (any(names(x$parameters) == "optimizer")) {
+   cat("optimized via", x$parameters$optimizer, "\n")
+  }
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
