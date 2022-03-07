@@ -27,8 +27,7 @@
 
     Code
       set.seed(1)
-      fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE, class_weights = 20,
-      optimizer = "SGD")
+      fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE, class_weights = 20)
     Message <rlang_message>
       epoch:   1 	Loss: 1.3634 
       epoch:   2 	Loss: 1.3545 
