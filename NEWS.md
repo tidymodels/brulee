@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Limited-memory Broyden–Fletcher–Goldfarb–Shanno (LBFGS) was added as the default optimization method for multilayer perceptron models.
+
 # brulee 0.1.0
 
 * Modeling functions gained a `mixture` argument for the proportion of L1 penalty that is used. (#50)

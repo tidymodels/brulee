@@ -187,8 +187,8 @@ likelihood for classification) at each epoch.
 }
 }
 \description{
-\code{brulee_mlp()} fits neural network models using stochastic gradient
-descent. Multiple layers can be used.
+\code{brulee_mlp()} fits Multilayer Perceptron Models (a.k.a neural networks).
+Multiple layers can be used.
 }
 \details{
 This function fits feed-forward neural network models for regression (when

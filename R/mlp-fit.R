@@ -1,7 +1,7 @@
 #' Fit neural networks
 #'
-#' `brulee_mlp()` fits neural network models using stochastic gradient
-#' descent. Multiple layers can be used.
+#' `brulee_mlp()` fits Multilayer Perceptron Models (a.k.a neural networks).
+#' Multiple layers can be used.
 #'
 #' @param x Depending on the context:
 #'
