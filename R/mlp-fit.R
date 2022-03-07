@@ -37,8 +37,13 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
-#' @param learn_rate A positive number that controls the rapidity that the model
-#' moves along the descent path. Values around 0.1 or less are typical.
+#' @param learn_rate A positive number that controls the initial rapidity that
+#' the model moves along the descent path. Values around 0.1 or less are
+#' typical.
+#' @param rate_schedule A single character value for how the learning rate
+#' should change (if at all) as the optimization proceeds. Possible values are
+#' `"constant"` (the default), `"decay_time"`, `"decay_expo"`, and `"step"`. See
+#' [learn_rate_decay_time()] for more details.
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
 #' parameter in gradient descent.
 #' @param dropout The proportion of parameters set to zero.
@@ -58,7 +63,9 @@
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
 #' @param verbose A logical that prints out the iteration history.
-#' @param ... Not currently used, but required for extensibility.
+#' @param ... Options to pass to the learning rate schedulers via
+#' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
+#' [learn_rate_step()] could be passed here.
 #'
 #' @details
 #'
@@ -226,6 +233,7 @@ brulee_mlp.data.frame <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
+           rate_schedule = "constant",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -240,6 +248,7 @@ brulee_mlp.data.frame <-
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       penalty = penalty,
       mixture = mixture,
       dropout = dropout,
@@ -267,6 +276,7 @@ brulee_mlp.matrix <- function(x,
                               dropout = 0,
                               validation = 0.1,
                               learn_rate = 0.01,
+                              rate_schedule = "constant",
                               momentum = 0.0,
                               batch_size = NULL,
                               class_weights = NULL,
@@ -281,6 +291,7 @@ brulee_mlp.matrix <- function(x,
     hidden_units = hidden_units,
     activation = activation,
     learn_rate = learn_rate,
+    rate_schedule = rate_schedule,
     momentum = momentum,
     penalty = penalty,
     mixture = mixture,
@@ -309,6 +320,7 @@ brulee_mlp.formula <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
+           rate_schedule = "constant",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -323,6 +335,7 @@ brulee_mlp.formula <-
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       momentum = momentum,
       penalty = penalty,
       mixture = mixture,
@@ -351,6 +364,7 @@ brulee_mlp.recipe <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
+           rate_schedule = "constant",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -365,6 +379,7 @@ brulee_mlp.recipe <-
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       momentum = momentum,
       penalty = penalty,
       mixture = mixture,
@@ -382,8 +397,9 @@ brulee_mlp.recipe <-
 # Bridge
 
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                              learn_rate, momentum, penalty, mixture, dropout, class_weights,
-                              validation, batch_size, stop_iter, verbose, ...) {
+                              learn_rate, rate_schedule, momentum, penalty,
+                              mixture, dropout, class_weights, validation,
+                              batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -456,6 +472,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       momentum = momentum,
       penalty = penalty,
       mixture = mixture,
@@ -464,7 +481,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
-      verbose = verbose
+      verbose = verbose,
+      ...
     )
 
   new_brulee_mlp(
@@ -529,6 +547,7 @@ mlp_fit_imp <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
+           rate_schedule = "constant",
            momentum = 0.0,
            activation = "relu",
            class_weights = NULL,
@@ -612,9 +631,8 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
-    # Write a optim wrapper
-    optimizer <-
-      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+    # Update learning rate
+    initial_learn_rate <- learn_rate
 
     ## ---------------------------------------------------------------------------
 
@@ -633,6 +651,11 @@ mlp_fit_imp <-
 
     # Optimize parameters
     for (epoch in 1:epochs) {
+
+     learn_rate <- set_learn_rate(epoch - 1, type = rate_schedule,
+                                  initial = initial_learn_rate, ...)
+     optimizer <-
+      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
 
       # training loop
       coro::loop(

@@ -24,6 +24,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
+  rate_schedule = "constant",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -43,6 +44,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
+  rate_schedule = "constant",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -62,6 +64,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
+  rate_schedule = "constant",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -81,6 +84,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
+  rate_schedule = "constant",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -100,7 +104,9 @@ created from \code{\link[recipes:recipe]{recipes::recipe()}}.
 
 The predictor data should be standardized (e.g. centered or scaled).}
 
-\item{...}{Not currently used, but required for extensibility.}
+\item{...}{Options to pass to the learning rate schedulers via
+\code{\link[=set_learn_rate]{set_learn_rate()}}. For example, the \code{reduction} or \code{steps} arguments to
+\code{\link[=learn_rate_step]{learn_rate_step()}} could be passed here.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
@@ -132,8 +138,14 @@ indicates ridge regression (a.k.a weight decay).}
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
-\item{learn_rate}{A positive number that controls the rapidity that the model
-moves along the descent path. Values around 0.1 or less are typical.}
+\item{learn_rate}{A positive number that controls the initial rapidity that
+the model moves along the descent path. Values around 0.1 or less are
+typical.}
+
+\item{rate_schedule}{A single character value for how the learning rate
+should change (if at all) as the optimization proceeds. Possible values are
+\code{"constant"} (the default), \code{"decay_time"}, \code{"decay_expo"}, and \code{"step"}. See
+\code{\link[=learn_rate_decay_time]{learn_rate_decay_time()}} for more details.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
 parameter in gradient descent.}
