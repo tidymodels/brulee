@@ -106,7 +106,7 @@ The predictor data should be standardized (e.g. centered or scaled).}
 
 \item{...}{Options to pass to the learning rate schedulers via
 \code{\link[=set_learn_rate]{set_learn_rate()}}. For example, the \code{reduction} or \code{steps} arguments to
-\code{\link[=learn_rate_step]{learn_rate_step()}} could be passed here.}
+\code{\link[=schedule_step]{schedule_step()}} could be passed here.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
@@ -144,8 +144,8 @@ typical.}
 
 \item{rate_schedule}{A single character value for how the learning rate
 should change (if at all) as the optimization proceeds. Possible values are
-\code{"constant"} (the default), \code{"decay_time"}, \code{"decay_expo"}, and \code{"step"}. See
-\code{\link[=learn_rate_decay_time]{learn_rate_decay_time()}} for more details.}
+\code{"constant"} (the default), \code{"decay_time"}, \code{"decay_expo"}, \code{"cyclic"} and
+\code{"step"}. See \code{\link[=schedule_decay_time]{schedule_decay_time()}} for more details.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
 parameter in gradient descent.}

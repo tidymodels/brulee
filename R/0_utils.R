@@ -32,6 +32,10 @@ brulee_print <- function(x, ...) {
   }
   cat("batch size:", x$parameters$batch_size, "\n")
 
+  if (all(c("sched", "sched_opt") %in% names(x$parameters))) {
+   cat_schedule(x$parameters)
+  }
+
   if (!is.null(x$loss)) {
     it <- x$best_epoch
     chr_it <- cli::pluralize("{it} epoch{?s}:")
@@ -54,6 +58,17 @@ brulee_print <- function(x, ...) {
     }
   }
   invisible(x)
+}
+
+# ------------------------------------------------------------------------------
+
+cat_schedule <- function(x) {
+ .fn <- paste0("schedule_", x$sched)
+ cl <- rlang::call2(.fn, !!!x$sched_opt)
+ chr_cl <- rlang:::expr_deparse(cl, width = 200)
+
+ cat(gsub("^schedule_", "schedule: ", chr_cl), "\n")
+ invisible(NULL)
 }
 
 # ------------------------------------------------------------------------------

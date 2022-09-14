@@ -108,6 +108,19 @@ schedule_cyclic <- function(epoch, initial = 0.001, largest = 0.1, step_size = 5
 }
 
 
+set_initial_learn_rate <- function(learn_rate, type, ...) {
+ opts <- list(...)
+ if (type == "constant" & all(names(opts) != "initial")) {
+  res <- learn_rate
+ } else if (any(names(opts) == "initial")) {
+  res <- opts$initial
+ } else {
+  fn <- paste0("schedule_", type)
+  res <- formals(fn)$initial
+ }
+ res
+}
+
 #' @export
 #' @rdname schedule_decay_time
 set_learn_rate <- function(epoch, type = "constant", ...) {
@@ -115,6 +128,7 @@ set_learn_rate <- function(epoch, type = "constant", ...) {
  types <- rlang::arg_match0(type, types, arg_nm = "type")
  fn <- paste0("schedule_", type)
  args <- list(...)
+
  cl <- rlang::call2(fn, epoch = epoch, !!!args)
  rlang::eval_tidy(cl)
 }

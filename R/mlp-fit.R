@@ -42,8 +42,8 @@
 #' typical.
 #' @param rate_schedule A single character value for how the learning rate
 #' should change (if at all) as the optimization proceeds. Possible values are
-#' `"constant"` (the default), `"decay_time"`, `"decay_expo"`, and `"step"`. See
-#' [learn_rate_decay_time()] for more details.
+#' `"constant"` (the default), `"decay_time"`, `"decay_expo"`, `"cyclic"` and
+#' `"step"`. See [schedule_decay_time()] for more details.
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
 #' parameter in gradient descent.
 #' @param dropout The proportion of parameters set to zero.
@@ -65,7 +65,7 @@
 #' @param verbose A logical that prints out the iteration history.
 #' @param ... Options to pass to the learning rate schedulers via
 #' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
-#' [learn_rate_step()] could be passed here.
+#' [schedule_step()] could be passed here.
 #'
 #' @details
 #'
@@ -436,6 +436,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
 
+
+
   ## -----------------------------------------------------------------------------
 
   predictors <- processed$predictors
@@ -631,8 +633,11 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
+    # TODO instead, capture ... and override initial for constant scheduler (if
+    # needed) or just have no constant scheduler
+    # TODO propgate this (and saving options) to other functions
     # Update learning rate
-    initial_learn_rate <- learn_rate
+    initial_learn_rate <- set_initial_learn_rate(learn_rate, rate_schedule, ...)
 
     ## ---------------------------------------------------------------------------
 
@@ -729,10 +734,20 @@ mlp_fit_imp <-
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
-      parameters = list(activation = activation, hidden_units = hidden_units,
-                        learn_rate = learn_rate, class_weights = class_weights,
-                        penalty = penalty, mixture = mixture, dropout = dropout, validation = validation,
-                        batch_size = batch_size, momentum = momentum)
+      parameters = list(
+       activation = activation,
+       hidden_units = hidden_units,
+       learn_rate = learn_rate,
+       class_weights = class_weights,
+       penalty = penalty,
+       mixture = mixture,
+       dropout = dropout,
+       validation = validation,
+       batch_size = batch_size,
+       momentum = momentum,
+       sched = rate_schedule,
+       sched_opt = list(initial = initial_learn_rate, ...)
+      )
     )
   }
 

@@ -90,7 +90,7 @@ The predictor data should be standardized (e.g. centered or scaled).}
 
 \item{...}{Options to pass to the learning rate schedulers via
 \code{\link[=set_learn_rate]{set_learn_rate()}}. For example, the \code{reduction} or \code{steps} arguments to
-\code{\link[=learn_rate_step]{learn_rate_step()}} could be passed here.}
+\code{\link[=schedule_step]{schedule_step()}} could be passed here.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
