@@ -8,8 +8,8 @@ Authors@R: c(
     person("RStudio", role = "cph")
   )
 Description: Provides high-level modeling functions to define and train
-    models using the 'torch' R package. Models include linear, logistic, and 
-    multinomial regression as well as multilayer perceptrons.
+    models using the 'torch' R package. Models include linear, logistic,
+    and multinomial regression as well as multilayer perceptrons.
 License: MIT + file LICENSE
 URL: https://github.com/tidymodels/brulee,
     https://tidymodels.github.io/brulee/

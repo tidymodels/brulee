@@ -41,6 +41,7 @@ test_that("class weights - mlp", {
   skip_if(packageVersion("rlang") < "1.0.0")
   skip_on_os("linux")
 
+
   expect_snapshot({
     set.seed(1)
     fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE,
