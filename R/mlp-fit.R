@@ -181,7 +181,7 @@
 #'  predict(fit, ames_test) %>%
 #'    bind_cols(ames_test) %>%
 #'    rmse(Sale_Price, .pred)
-#'  }
+#'
 #'
 #'  # ------------------------------------------------------------------------------
 #'  # classification
@@ -212,6 +212,7 @@
 #'   geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
 #'   geom_point(data = parabolic_te, aes(col = class))
 #'
+#'  }
 #' }
 #' @export
 brulee_mlp <- function(x, ...) {

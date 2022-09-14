@@ -224,6 +224,13 @@ The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
 parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
+\subsection{Learning Rates}{
+
+The learning rate can be set to constant (the default) or dynamically set
+via a learning rate scheduler (via the \code{rate_schedule}). Using
+\code{rate_schedule = 'none'} uses the \code{learn_rate} argument. Otherwise, any
+arguments to the schedulers can be passed via \code{...}.
+}
 }
 \examples{
 \donttest{
@@ -246,8 +253,7 @@ if (torch::torch_is_installed()) {
  set.seed(1)
  fit <-
    brulee_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-               y = ames_train$Sale_Price,
-               penalty = 0.10, batch_size = 2^8)
+               y = ames_train$Sale_Price, penalty = 0.10)
 
  # Using recipe
  library(recipes)
@@ -269,7 +275,7 @@ if (torch::torch_is_installed()) {
 
  set.seed(2)
  fit <- brulee_mlp(ames_rec, data = ames_train, hidden_units = 20,
-                    dropout = 0.05, batch_size = 2^8)
+                    dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
  fit
 
  autoplot(fit)
@@ -288,7 +294,7 @@ if (torch::torch_is_installed()) {
  predict(fit, ames_test) \%>\%
    bind_cols(ames_test) \%>\%
    rmse(Sale_Price, .pred)
- }
+
 
  # ------------------------------------------------------------------------------
  # classification
@@ -319,6 +325,7 @@ if (torch::torch_is_installed()) {
   geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
   geom_point(data = parabolic_te, aes(col = class))
 
+ }
 }
 }
 \seealso{
