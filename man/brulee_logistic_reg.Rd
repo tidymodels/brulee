@@ -194,6 +194,7 @@ The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
 }
 \examples{
+\donttest{
 if (torch::torch_is_installed()) {
 
  library(recipes)
@@ -239,7 +240,7 @@ if (torch::torch_is_installed()) {
   bind_cols(cells_test) \%>\%
   roc_auc(class, .pred_PS)
 }
-
+}
 }
 \seealso{
 \code{\link[=predict.brulee_logistic_reg]{predict.brulee_logistic_reg()}}, \code{\link[=coef.brulee_logistic_reg]{coef.brulee_logistic_reg()}},

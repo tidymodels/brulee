@@ -14,6 +14,7 @@
 #' to be the same as the number of rows in `new_data`.
 #'
 #' @examples
+#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
 #'   library(recipes)
@@ -39,6 +40,7 @@
 #'   predict(fit, penguins_test) %>%
 #'     bind_cols(penguins_test) %>%
 #'     conf_mat(island, .pred_class)
+#' }
 #' }
 #' @export
 predict.brulee_multinomial_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {

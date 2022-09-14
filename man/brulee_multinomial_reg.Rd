@@ -194,6 +194,7 @@ The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
 }
 \examples{
+\donttest{
 if (torch::torch_is_installed()) {
 
   library(recipes)
@@ -219,6 +220,7 @@ if (torch::torch_is_installed()) {
   predict(fit, penguins_test) \%>\%
     bind_cols(penguins_test) \%>\%
     conf_mat(island, .pred_class)
+}
 }
 }
 \seealso{

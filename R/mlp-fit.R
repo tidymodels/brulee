@@ -707,8 +707,8 @@ mlp_fit_imp <-
         lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
       if (verbose) {
-        msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 5),
-                     loss_label, signif(loss_curr, 5), loss_note)
+        msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 3),
+                     loss_label, signif(loss_curr, 3), loss_note)
 
         rlang::inform(msg)
       }

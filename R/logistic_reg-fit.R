@@ -74,6 +74,7 @@
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
+#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
 #'  library(recipes)
@@ -119,7 +120,7 @@
 #'   bind_cols(cells_test) %>%
 #'   roc_auc(class, .pred_PS)
 #' }
-#'
+#' }
 #' @export
 brulee_logistic_reg <- function(x, ...) {
   UseMethod("brulee_logistic_reg")
@@ -561,7 +562,7 @@ logistic_reg_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 5), loss_note)
+                     signif(loss_curr, 3), loss_note)
 
         rlang::inform(msg)
       }
