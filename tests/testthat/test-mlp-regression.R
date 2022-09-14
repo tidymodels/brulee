@@ -316,6 +316,7 @@ test_that("mlp learns something", {
   model <- brulee_mlp(x, y,
                       batch_size = 25,
                       epochs = 50,
+                      optimizer = "SGD",
                       activation = "relu",
                       hidden_units = 5L,
                       learn_rate = 0.1,

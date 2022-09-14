@@ -45,8 +45,7 @@ test_that("class weights - mlp", {
   expect_snapshot({
     set.seed(1)
     fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE,
-                            class_weights = 20,
-                            optimizer = "SGD")
+                            class_weights = 20)
   })
 
 
@@ -58,8 +57,7 @@ test_that("class weights - mlp", {
 
   expect_error({
     set.seed(1)
-    fit_bal <- brulee_mlp(y ~ ., df, learn_rate = 0.1,
-                          optimizer = "SGD")
+    fit_bal <- brulee_mlp(y ~ ., df, learn_rate = 0.1)
   },
   regexp = NA
   )

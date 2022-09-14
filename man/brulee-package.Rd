@@ -6,6 +6,8 @@
 \alias{brulee-package}
 \title{brulee: High-Level Modeling Functions with 'torch'}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Provides high-level modeling functions to define and train models using the 'torch' R package. Models include linear, logistic, and multinomial regression as well as multilayer perceptrons.
 }
 \seealso{
