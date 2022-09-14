@@ -49,22 +49,6 @@ test_that("scheduling functions", {
  expect_snapshot_error(schedule_step(1, reduction = -1))
  expect_snapshot_error(schedule_step(1, steps = -1))
 
-
- # ------------------------------------------------------------------------------
-
- expect_equal(
-  map_dbl(x, schedule_constant),
-  rep(0.1, length(x))
- )
-
- expect_equal(
-  map_dbl(x, schedule_constant, initial = 1/3),
-  rep(1 / 3, length(x))
- )
-
- expect_snapshot_error(schedule_constant(1, initial = -1))
-
-
  # ------------------------------------------------------------------------------
 
  expect_true( all(map_dbl(x[x %% 10 == 0], schedule_cyclic) == 0.001) )
@@ -90,26 +74,25 @@ test_that("scheduling functions", {
 
  # ------------------------------------------------------------------------------
 
+ expect_equal(set_learn_rate(.x, 1, type = "none"), 1)
+ expect_equal(set_learn_rate(.x, 0.01, type = "none", potato = 1), .01)
+
  expect_equal(
   map_dbl(x, schedule_decay_time, initial = 1/3, decay = 7/8),
-  map_dbl(x, ~ set_learn_rate(.x, "decay_time", initial = 1/3, decay = 7/8))
+  map_dbl(x, ~ set_learn_rate(.x, 0.1, "decay_time", initial = 1/3, decay = 7/8))
  )
 
  expect_equal(
   map_dbl(x, schedule_decay_expo, initial = 1/3, decay = 7/8),
-  map_dbl(x, ~ set_learn_rate(.x, "decay_expo", initial = 1/3, decay = 7/8))
+  map_dbl(x, ~ set_learn_rate(.x, 0.1, "decay_expo", initial = 1/3, decay = 7/8))
  )
 
  expect_equal(
   map_dbl(x, schedule_step, initial = 1/3, reduction = 7/8, steps = 3),
-  map_dbl(x, ~ set_learn_rate(.x, "step", initial = 1/3, reduction = 7/8, steps = 3))
+  map_dbl(x, ~ set_learn_rate(.x, 0.1, "step", initial = 1/3, reduction = 7/8, steps = 3))
  )
 
- expect_equal(
-  map_dbl(x, schedule_constant, initial = 1/3),
-  map_dbl(x, ~ set_learn_rate(.x, "constant", initial = 1/3))
- )
-
- expect_snapshot_error(set_learn_rate(1, initial = -1))
+ expect_snapshot_error(set_learn_rate(1, 1, type = "decay_time", initial = -1))
+ expect_snapshot_error(set_learn_rate(1, 1, type = "random"))
 
 })

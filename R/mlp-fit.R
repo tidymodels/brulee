@@ -41,8 +41,8 @@
 #' the model moves along the descent path. Values around 0.1 or less are
 #' typical.
 #' @param rate_schedule A single character value for how the learning rate
-#' should change (if at all) as the optimization proceeds. Possible values are
-#' `"constant"` (the default), `"decay_time"`, `"decay_expo"`, `"cyclic"` and
+#' should change as the optimization proceeds. Possible values are
+#' `"none"` (the default), `"decay_time"`, `"decay_expo"`, `"cyclic"` and
 #' `"step"`. See [schedule_decay_time()] for more details.
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
 #' parameter in gradient descent.
@@ -97,6 +97,13 @@
 #' The zeroing out of parameters is a specific feature the optimization method
 #' used in those packages.
 #'
+#' ## Learning Rates
+#'
+#' The learning rate can be set to constant (the default) or dynamically set
+#' via a learning rate scheduler (via the `rate_schedule`). Using
+#' `rate_schedule = 'none'` uses the `learn_rate` argument. Otherwise, any
+#' arguments to the schedulers can be passed via `...`.
+#'
 #' @seealso [predict.brulee_mlp()], [coef.brulee_mlp()], [autoplot.brulee_mlp()]
 #' @return
 #'
@@ -133,8 +140,7 @@
 #'  set.seed(1)
 #'  fit <-
 #'    brulee_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'                y = ames_train$Sale_Price,
-#'                penalty = 0.10, batch_size = 2^8)
+#'                y = ames_train$Sale_Price, penalty = 0.10)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -156,7 +162,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- brulee_mlp(ames_rec, data = ames_train, hidden_units = 20,
-#'                     dropout = 0.05, batch_size = 2^8)
+#'                     dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -233,7 +239,7 @@ brulee_mlp.data.frame <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
-           rate_schedule = "constant",
+           rate_schedule = "none",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -276,7 +282,7 @@ brulee_mlp.matrix <- function(x,
                               dropout = 0,
                               validation = 0.1,
                               learn_rate = 0.01,
-                              rate_schedule = "constant",
+                              rate_schedule = "none",
                               momentum = 0.0,
                               batch_size = NULL,
                               class_weights = NULL,
@@ -320,7 +326,7 @@ brulee_mlp.formula <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
-           rate_schedule = "constant",
+           rate_schedule = "none",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -364,7 +370,7 @@ brulee_mlp.recipe <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
-           rate_schedule = "constant",
+           rate_schedule = "none",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -549,7 +555,7 @@ mlp_fit_imp <-
            dropout = 0,
            validation = 0.1,
            learn_rate = 0.01,
-           rate_schedule = "constant",
+           rate_schedule = "none",
            momentum = 0.0,
            activation = "relu",
            class_weights = NULL,
@@ -633,12 +639,6 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
-    # TODO instead, capture ... and override initial for constant scheduler (if
-    # needed) or just have no constant scheduler
-    # TODO propgate this (and saving options) to other functions
-    # Update learning rate
-    initial_learn_rate <- set_initial_learn_rate(learn_rate, rate_schedule, ...)
-
     ## ---------------------------------------------------------------------------
 
     loss_prev <- 10^38
@@ -657,10 +657,8 @@ mlp_fit_imp <-
     # Optimize parameters
     for (epoch in 1:epochs) {
 
-     learn_rate <- set_learn_rate(epoch - 1, type = rate_schedule,
-                                  initial = initial_learn_rate, ...)
-     optimizer <-
-      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+     learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
+     optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
 
       # training loop
       coro::loop(
@@ -708,8 +706,8 @@ mlp_fit_imp <-
         lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
       if (verbose) {
-        msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 5), loss_note)
+        msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 5),
+                     loss_label, signif(loss_curr, 5), loss_note)
 
         rlang::inform(msg)
       }
@@ -746,7 +744,7 @@ mlp_fit_imp <-
        batch_size = batch_size,
        momentum = momentum,
        sched = rate_schedule,
-       sched_opt = list(initial = initial_learn_rate, ...)
+       sched_opt = list(...)
       )
     )
   }

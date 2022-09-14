@@ -63,11 +63,15 @@ brulee_print <- function(x, ...) {
 # ------------------------------------------------------------------------------
 
 cat_schedule <- function(x) {
- .fn <- paste0("schedule_", x$sched)
- cl <- rlang::call2(.fn, !!!x$sched_opt)
- chr_cl <- rlang:::expr_deparse(cl, width = 200)
+ if (x$sched == "none") {
+  cat("learn rate:", x$learn_rate, "\n")
+ } else {
+  .fn <- paste0("schedule_", x$sched)
+  cl <- rlang::call2(.fn, !!!x$sched_opt)
+  chr_cl <- rlang::expr_deparse(cl, width = 200)
 
- cat(gsub("^schedule_", "schedule: ", chr_cl), "\n")
+  cat(gsub("^schedule_", "schedule: ", chr_cl), "\n")
+ }
  invisible(NULL)
 }
 

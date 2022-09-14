@@ -14,8 +14,9 @@
 #' @param steps The number of epochs before the learning rate changes.
 #' @param largest The maximum learning rate in the cycle.
 #' @param step_size The half-length of a cycle.
+#' @param learn_rate A constant learning rate (when no scheduler is used),
 #' @param type A single character value for the type of scheduler. Possible
-#' values are: "decay_time", "decay_expo", "constant", "cyclic", and "step".
+#' values are: "decay_time", "decay_expo", "none", "cyclic", and "step".
 #' @param ... Arguments to pass to the individual scheduler functions (e.g.
 #' `reduction`).
 #' @return A numeric value for the updated learning rate.
@@ -39,7 +40,6 @@
 #' iters <- 0:50
 #'
 #' bind_rows(
-#'  tibble(epoch = iters, rate = map_dbl(iters, schedule_constant), type = "constant"),
 #'  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_time), type = "decay_time"),
 #'  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_expo), type = "decay_expo"),
 #'  tibble(epoch = iters, rate = map_dbl(iters, schedule_step), type = "step"),
@@ -61,13 +61,6 @@ schedule_decay_time <- function(epoch, initial = 0.1, decay = 1) {
  check_rate_arg_value(initial)
  check_rate_arg_value(decay)
  initial / (1 + decay * epoch)
-}
-
-#' @export
-#' @rdname schedule_decay_time
-schedule_constant <- function(epoch, initial = 0.1) {
- check_rate_arg_value(initial)
- initial
 }
 
 #' @export
@@ -107,31 +100,27 @@ schedule_cyclic <- function(epoch, initial = 0.001, largest = 0.1, step_size = 5
  initial + ( largest - initial ) * max( 0, 1 - x)
 }
 
-
-set_initial_learn_rate <- function(learn_rate, type, ...) {
- opts <- list(...)
- if (type == "constant" & all(names(opts) != "initial")) {
-  res <- learn_rate
- } else if (any(names(opts) == "initial")) {
-  res <- opts$initial
- } else {
-  fn <- paste0("schedule_", type)
-  res <- formals(fn)$initial
- }
- res
-}
+# Learning rate can be either static (via rate_schedule == "none") or dynamic.
+# Either way, set_learn_rate() figures this out and sets it accordingly.
 
 #' @export
 #' @rdname schedule_decay_time
-set_learn_rate <- function(epoch, type = "constant", ...) {
- types <- c("decay_time", "decay_expo", "constant", "step", "cyclic")
+set_learn_rate <- function(epoch, learn_rate, type = "none", ...) {
+ types <- c("decay_time", "decay_expo", "none", "step", "cyclic")
  types <- rlang::arg_match0(type, types, arg_nm = "type")
+ if (type == "none") {
+  return(learn_rate)
+ }
+
  fn <- paste0("schedule_", type)
  args <- list(...)
 
  cl <- rlang::call2(fn, epoch = epoch, !!!args)
  rlang::eval_tidy(cl)
 }
+
+# ------------------------------------------------------------------------------
+
 check_rate_arg_value <- function(x) {
  nm <- as.character(match.call()$x)
  if (is.null(x) || !is.numeric(x) || length(x) != 1 || any(x <= 0)) {

@@ -24,7 +24,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
-  rate_schedule = "constant",
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -44,7 +44,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
-  rate_schedule = "constant",
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -64,7 +64,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
-  rate_schedule = "constant",
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -84,7 +84,7 @@ brulee_mlp(x, ...)
   dropout = 0,
   validation = 0.1,
   learn_rate = 0.01,
-  rate_schedule = "constant",
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -143,8 +143,8 @@ the model moves along the descent path. Values around 0.1 or less are
 typical.}
 
 \item{rate_schedule}{A single character value for how the learning rate
-should change (if at all) as the optimization proceeds. Possible values are
-\code{"constant"} (the default), \code{"decay_time"}, \code{"decay_expo"}, \code{"cyclic"} and
+should change as the optimization proceeds. Possible values are
+\code{"none"} (the default), \code{"decay_time"}, \code{"decay_expo"}, \code{"cyclic"} and
 \code{"step"}. See \code{\link[=schedule_decay_time]{schedule_decay_time()}} for more details.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum

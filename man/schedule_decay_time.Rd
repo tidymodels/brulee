@@ -2,7 +2,6 @@
 % Please edit documentation in R/schedulers.R
 \name{schedule_decay_time}
 \alias{schedule_decay_time}
-\alias{schedule_constant}
 \alias{schedule_decay_expo}
 \alias{schedule_step}
 \alias{schedule_cyclic}
@@ -11,15 +10,13 @@
 \usage{
 schedule_decay_time(epoch, initial = 0.1, decay = 1)
 
-schedule_constant(epoch, initial = 0.1)
-
 schedule_decay_expo(epoch, initial = 0.1, decay = 1)
 
 schedule_step(epoch, initial = 0.1, reduction = 1/2, steps = 5)
 
 schedule_cyclic(epoch, initial = 0.001, largest = 0.1, step_size = 5)
 
-set_learn_rate(epoch, type = "constant", ...)
+set_learn_rate(epoch, learn_rate, type = "none", ...)
 }
 \arguments{
 \item{epoch}{An integer for the number of training epochs (zero being the
@@ -39,8 +36,10 @@ in the learning rate occurring at every \code{steps} epochs.}
 
 \item{step_size}{The half-length of a cycle.}
 
+\item{learn_rate}{A constant learning rate (when no scheduler is used),}
+
 \item{type}{A single character value for the type of scheduler. Possible
-values are: "decay_time", "decay_expo", "constant", "cyclic", and "step".}
+values are: "decay_time", "decay_expo", "none", "cyclic", and "step".}
 
 \item{...}{Arguments to pass to the individual scheduler functions (e.g.
 \code{reduction}).}
@@ -73,7 +72,6 @@ library(purrr)
 iters <- 0:50
 
 bind_rows(
- tibble(epoch = iters, rate = map_dbl(iters, schedule_constant), type = "constant"),
  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_time), type = "decay_time"),
  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_expo), type = "decay_expo"),
  tibble(epoch = iters, rate = map_dbl(iters, schedule_step), type = "step"),
