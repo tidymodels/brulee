@@ -23,7 +23,7 @@ rec <-
 test_that('different fit interfaces', {
   skip_if(!torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os("linux")
+  skip_on_os(c("windows", "linux", "solaris"))
 
   # matrix x
   expect_error({
@@ -118,7 +118,7 @@ test_that("mlp binary learns something", {
 test_that("class weights - mlp", {
   skip_if_not(torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os("linux")
+  skip_on_os(c("windows", "linux", "solaris"))
 
   set.seed(1)
   df_imbal <- tibble::tibble(

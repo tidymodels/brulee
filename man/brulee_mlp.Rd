@@ -25,6 +25,7 @@ brulee_mlp(x, ...)
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 0.01,
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -45,6 +46,7 @@ brulee_mlp(x, ...)
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 0.01,
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -65,6 +67,7 @@ brulee_mlp(x, ...)
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 0.01,
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -85,6 +88,7 @@ brulee_mlp(x, ...)
   validation = 0.1,
   optimizer = "LBFGS",
   learn_rate = 0.01,
+  rate_schedule = "none",
   momentum = 0,
   batch_size = NULL,
   class_weights = NULL,
@@ -104,7 +108,9 @@ created from \code{\link[recipes:recipe]{recipes::recipe()}}.
 
 The predictor data should be standardized (e.g. centered or scaled).}
 
-\item{...}{Not currently used, but required for extensibility.}
+\item{...}{Options to pass to the learning rate schedulers via
+\code{\link[=set_learn_rate]{set_learn_rate()}}. For example, the \code{reduction} or \code{steps} arguments to
+\code{\link[=schedule_step]{schedule_step()}} could be passed here.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
@@ -139,8 +145,14 @@ validation set.}
 \item{optimizer}{The method used in the optimization procedure. Possible choices
 are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
 
-\item{learn_rate}{A positive number that controls the rapidity that the model
-moves along the descent path. Values around 0.1 or less are typical.}
+\item{learn_rate}{A positive number that controls the initial rapidity that
+the model moves along the descent path. Values around 0.1 or less are
+typical.}
+
+\item{rate_schedule}{A single character value for how the learning rate
+should change as the optimization proceeds. Possible values are
+\code{"none"} (the default), \code{"decay_time"}, \code{"decay_expo"}, \code{"cyclic"} and
+\code{"step"}. See \code{\link[=schedule_decay_time]{schedule_decay_time()}} for more details.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
 parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
@@ -219,6 +231,13 @@ The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
 parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
+\subsection{Learning Rates}{
+
+The learning rate can be set to constant (the default) or dynamically set
+via a learning rate scheduler (via the \code{rate_schedule}). Using
+\code{rate_schedule = 'none'} uses the \code{learn_rate} argument. Otherwise, any
+arguments to the schedulers can be passed via \code{...}.
+}
 }
 \examples{
 \donttest{
@@ -241,8 +260,7 @@ if (torch::torch_is_installed()) {
  set.seed(1)
  fit <-
    brulee_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-               y = ames_train$Sale_Price,
-               penalty = 0.10, batch_size = 2^8)
+               y = ames_train$Sale_Price, penalty = 0.10)
 
  # Using recipe
  library(recipes)
@@ -264,7 +282,7 @@ if (torch::torch_is_installed()) {
 
  set.seed(2)
  fit <- brulee_mlp(ames_rec, data = ames_train, hidden_units = 20,
-                    dropout = 0.05, batch_size = 2^8)
+                    dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
  fit
 
  autoplot(fit)
@@ -283,7 +301,7 @@ if (torch::torch_is_installed()) {
  predict(fit, ames_test) \%>\%
    bind_cols(ames_test) \%>\%
    rmse(Sale_Price, .pred)
- }
+
 
  # ------------------------------------------------------------------------------
  # classification
@@ -314,6 +332,7 @@ if (torch::torch_is_installed()) {
   geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
   geom_point(data = parabolic_te, aes(col = class))
 
+ }
 }
 }
 \seealso{
