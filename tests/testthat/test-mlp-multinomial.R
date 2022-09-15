@@ -17,6 +17,7 @@ df$y <- factor(df$y)
 test_that("multinomial mlp", {
   skip_if_not(torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
+  skip_on_os("linux")
 
   expect_snapshot({
     set.seed(1)
@@ -28,8 +29,7 @@ test_that("multinomial mlp", {
   })
 
   expect_error(
-    fit <- brulee_mlp(y ~ ., df, epochs = 10, learn_rate = 0.1,
-                      optimizer = "SGD"),
+    fit <- brulee_mlp(y ~ ., df, epochs = 10, learn_rate = 0.1),
     regexp = NA
   )
 })
@@ -39,14 +39,13 @@ test_that("multinomial mlp", {
 test_that("class weights - mlp", {
   skip_if_not(torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os("mac")
-  skip_on_os("windows")
+  skip_on_os("linux")
+
 
   expect_snapshot({
     set.seed(1)
     fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE,
-                            class_weights = 20,
-                            optimizer = "SGD")
+                            class_weights = 20)
   })
 
 
@@ -58,8 +57,7 @@ test_that("class weights - mlp", {
 
   expect_error({
     set.seed(1)
-    fit_bal <- brulee_mlp(y ~ ., df, learn_rate = 0.1,
-                          optimizer = "SGD")
+    fit_bal <- brulee_mlp(y ~ ., df, learn_rate = 0.1)
   },
   regexp = NA
   )

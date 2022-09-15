@@ -4,8 +4,8 @@
       set.seed(1)
       fit <- brulee_mlp(y ~ ., df, epochs = 2, verbose = TRUE)
     Message <rlang_message>
-      epoch: 1 	Loss: 1.1435 
-      epoch: 2 	Loss: 1.1429 
+      epoch: 1 learn rate 0.01 	Loss: 1.14 
+      epoch: 2 learn rate 0.01 	Loss: 1.14 
 
 ---
 
@@ -21,115 +21,115 @@
       weight decay: 0.001 
       dropout proportion: 0 
       batch size: 9000 
-      validation loss after 2 epochs: 1.1429 
+      learn rate: 0.01 
+      validation loss after 2 epochs: 1.14 
 
 # class weights - mlp
 
     Code
       set.seed(1)
-      fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE, class_weights = 20,
-      optimizer = "SGD")
+      fit_imbal <- brulee_mlp(y ~ ., df, verbose = TRUE, class_weights = 20)
     Message <rlang_message>
-      epoch:   1 	Loss: 1.3634 
-      epoch:   2 	Loss: 1.3545 
-      epoch:   3 	Loss: 1.3457 
-      epoch:   4 	Loss: 1.3369 
-      epoch:   5 	Loss: 1.3283 
-      epoch:   6 	Loss: 1.3198 
-      epoch:   7 	Loss: 1.3113 
-      epoch:   8 	Loss: 1.303 
-      epoch:   9 	Loss: 1.2947 
-      epoch:  10 	Loss: 1.2866 
-      epoch:  11 	Loss: 1.2786 
-      epoch:  12 	Loss: 1.2706 
-      epoch:  13 	Loss: 1.2627 
-      epoch:  14 	Loss: 1.2549 
-      epoch:  15 	Loss: 1.2472 
-      epoch:  16 	Loss: 1.2396 
-      epoch:  17 	Loss: 1.2321 
-      epoch:  18 	Loss: 1.2247 
-      epoch:  19 	Loss: 1.2173 
-      epoch:  20 	Loss: 1.21 
-      epoch:  21 	Loss: 1.2028 
-      epoch:  22 	Loss: 1.1957 
-      epoch:  23 	Loss: 1.1887 
-      epoch:  24 	Loss: 1.1817 
-      epoch:  25 	Loss: 1.1748 
-      epoch:  26 	Loss: 1.168 
-      epoch:  27 	Loss: 1.1612 
-      epoch:  28 	Loss: 1.1545 
-      epoch:  29 	Loss: 1.1479 
-      epoch:  30 	Loss: 1.1414 
-      epoch:  31 	Loss: 1.1349 
-      epoch:  32 	Loss: 1.1285 
-      epoch:  33 	Loss: 1.1222 
-      epoch:  34 	Loss: 1.1159 
-      epoch:  35 	Loss: 1.1097 
-      epoch:  36 	Loss: 1.1036 
-      epoch:  37 	Loss: 1.0975 
-      epoch:  38 	Loss: 1.0915 
-      epoch:  39 	Loss: 1.0855 
-      epoch:  40 	Loss: 1.0797 
-      epoch:  41 	Loss: 1.0738 
-      epoch:  42 	Loss: 1.0681 
-      epoch:  43 	Loss: 1.0624 
-      epoch:  44 	Loss: 1.0567 
-      epoch:  45 	Loss: 1.0511 
-      epoch:  46 	Loss: 1.0456 
-      epoch:  47 	Loss: 1.0401 
-      epoch:  48 	Loss: 1.0347 
-      epoch:  49 	Loss: 1.0293 
-      epoch:  50 	Loss: 1.024 
-      epoch:  51 	Loss: 1.0187 
-      epoch:  52 	Loss: 1.0135 
-      epoch:  53 	Loss: 1.0083 
-      epoch:  54 	Loss: 1.0032 
-      epoch:  55 	Loss: 0.99815 
-      epoch:  56 	Loss: 0.99315 
-      epoch:  57 	Loss: 0.98819 
-      epoch:  58 	Loss: 0.98328 
-      epoch:  59 	Loss: 0.97842 
-      epoch:  60 	Loss: 0.97361 
-      epoch:  61 	Loss: 0.96884 
-      epoch:  62 	Loss: 0.96412 
-      epoch:  63 	Loss: 0.95945 
-      epoch:  64 	Loss: 0.95483 
-      epoch:  65 	Loss: 0.95024 
-      epoch:  66 	Loss: 0.94571 
-      epoch:  67 	Loss: 0.94122 
-      epoch:  68 	Loss: 0.93677 
-      epoch:  69 	Loss: 0.93237 
-      epoch:  70 	Loss: 0.92801 
-      epoch:  71 	Loss: 0.92369 
-      epoch:  72 	Loss: 0.91942 
-      epoch:  73 	Loss: 0.91518 
-      epoch:  74 	Loss: 0.91099 
-      epoch:  75 	Loss: 0.90684 
-      epoch:  76 	Loss: 0.90273 
-      epoch:  77 	Loss: 0.89866 
-      epoch:  78 	Loss: 0.89462 
-      epoch:  79 	Loss: 0.89063 
-      epoch:  80 	Loss: 0.88667 
-      epoch:  81 	Loss: 0.88276 
-      epoch:  82 	Loss: 0.87888 
-      epoch:  83 	Loss: 0.87504 
-      epoch:  84 	Loss: 0.87123 
-      epoch:  85 	Loss: 0.86746 
-      epoch:  86 	Loss: 0.86373 
-      epoch:  87 	Loss: 0.86004 
-      epoch:  88 	Loss: 0.85637 
-      epoch:  89 	Loss: 0.85275 
-      epoch:  90 	Loss: 0.84916 
-      epoch:  91 	Loss: 0.8456 
-      epoch:  92 	Loss: 0.84208 
-      epoch:  93 	Loss: 0.83859 
-      epoch:  94 	Loss: 0.83514 
-      epoch:  95 	Loss: 0.83171 
-      epoch:  96 	Loss: 0.82832 
-      epoch:  97 	Loss: 0.82497 
-      epoch:  98 	Loss: 0.82164 
-      epoch:  99 	Loss: 0.81835 
-      epoch: 100 	Loss: 0.81509 
+      epoch:   1 learn rate 0.01 	Loss: 1.36 
+      epoch:   2 learn rate 0.01 	Loss: 1.35 
+      epoch:   3 learn rate 0.01 	Loss: 1.35 
+      epoch:   4 learn rate 0.01 	Loss: 1.34 
+      epoch:   5 learn rate 0.01 	Loss: 1.33 
+      epoch:   6 learn rate 0.01 	Loss: 1.32 
+      epoch:   7 learn rate 0.01 	Loss: 1.31 
+      epoch:   8 learn rate 0.01 	Loss: 1.3 
+      epoch:   9 learn rate 0.01 	Loss: 1.29 
+      epoch:  10 learn rate 0.01 	Loss: 1.29 
+      epoch:  11 learn rate 0.01 	Loss: 1.28 
+      epoch:  12 learn rate 0.01 	Loss: 1.27 
+      epoch:  13 learn rate 0.01 	Loss: 1.26 
+      epoch:  14 learn rate 0.01 	Loss: 1.25 
+      epoch:  15 learn rate 0.01 	Loss: 1.25 
+      epoch:  16 learn rate 0.01 	Loss: 1.24 
+      epoch:  17 learn rate 0.01 	Loss: 1.23 
+      epoch:  18 learn rate 0.01 	Loss: 1.22 
+      epoch:  19 learn rate 0.01 	Loss: 1.22 
+      epoch:  20 learn rate 0.01 	Loss: 1.21 
+      epoch:  21 learn rate 0.01 	Loss: 1.2 
+      epoch:  22 learn rate 0.01 	Loss: 1.2 
+      epoch:  23 learn rate 0.01 	Loss: 1.19 
+      epoch:  24 learn rate 0.01 	Loss: 1.18 
+      epoch:  25 learn rate 0.01 	Loss: 1.17 
+      epoch:  26 learn rate 0.01 	Loss: 1.17 
+      epoch:  27 learn rate 0.01 	Loss: 1.16 
+      epoch:  28 learn rate 0.01 	Loss: 1.15 
+      epoch:  29 learn rate 0.01 	Loss: 1.15 
+      epoch:  30 learn rate 0.01 	Loss: 1.14 
+      epoch:  31 learn rate 0.01 	Loss: 1.13 
+      epoch:  32 learn rate 0.01 	Loss: 1.13 
+      epoch:  33 learn rate 0.01 	Loss: 1.12 
+      epoch:  34 learn rate 0.01 	Loss: 1.12 
+      epoch:  35 learn rate 0.01 	Loss: 1.11 
+      epoch:  36 learn rate 0.01 	Loss: 1.1 
+      epoch:  37 learn rate 0.01 	Loss: 1.1 
+      epoch:  38 learn rate 0.01 	Loss: 1.09 
+      epoch:  39 learn rate 0.01 	Loss: 1.09 
+      epoch:  40 learn rate 0.01 	Loss: 1.08 
+      epoch:  41 learn rate 0.01 	Loss: 1.07 
+      epoch:  42 learn rate 0.01 	Loss: 1.07 
+      epoch:  43 learn rate 0.01 	Loss: 1.06 
+      epoch:  44 learn rate 0.01 	Loss: 1.06 
+      epoch:  45 learn rate 0.01 	Loss: 1.05 
+      epoch:  46 learn rate 0.01 	Loss: 1.05 
+      epoch:  47 learn rate 0.01 	Loss: 1.04 
+      epoch:  48 learn rate 0.01 	Loss: 1.03 
+      epoch:  49 learn rate 0.01 	Loss: 1.03 
+      epoch:  50 learn rate 0.01 	Loss: 1.02 
+      epoch:  51 learn rate 0.01 	Loss: 1.02 
+      epoch:  52 learn rate 0.01 	Loss: 1.01 
+      epoch:  53 learn rate 0.01 	Loss: 1.01 
+      epoch:  54 learn rate 0.01 	Loss: 1 
+      epoch:  55 learn rate 0.01 	Loss: 0.998 
+      epoch:  56 learn rate 0.01 	Loss: 0.993 
+      epoch:  57 learn rate 0.01 	Loss: 0.988 
+      epoch:  58 learn rate 0.01 	Loss: 0.983 
+      epoch:  59 learn rate 0.01 	Loss: 0.978 
+      epoch:  60 learn rate 0.01 	Loss: 0.974 
+      epoch:  61 learn rate 0.01 	Loss: 0.969 
+      epoch:  62 learn rate 0.01 	Loss: 0.964 
+      epoch:  63 learn rate 0.01 	Loss: 0.959 
+      epoch:  64 learn rate 0.01 	Loss: 0.955 
+      epoch:  65 learn rate 0.01 	Loss: 0.95 
+      epoch:  66 learn rate 0.01 	Loss: 0.946 
+      epoch:  67 learn rate 0.01 	Loss: 0.941 
+      epoch:  68 learn rate 0.01 	Loss: 0.937 
+      epoch:  69 learn rate 0.01 	Loss: 0.932 
+      epoch:  70 learn rate 0.01 	Loss: 0.928 
+      epoch:  71 learn rate 0.01 	Loss: 0.924 
+      epoch:  72 learn rate 0.01 	Loss: 0.919 
+      epoch:  73 learn rate 0.01 	Loss: 0.915 
+      epoch:  74 learn rate 0.01 	Loss: 0.911 
+      epoch:  75 learn rate 0.01 	Loss: 0.907 
+      epoch:  76 learn rate 0.01 	Loss: 0.903 
+      epoch:  77 learn rate 0.01 	Loss: 0.899 
+      epoch:  78 learn rate 0.01 	Loss: 0.895 
+      epoch:  79 learn rate 0.01 	Loss: 0.891 
+      epoch:  80 learn rate 0.01 	Loss: 0.887 
+      epoch:  81 learn rate 0.01 	Loss: 0.883 
+      epoch:  82 learn rate 0.01 	Loss: 0.879 
+      epoch:  83 learn rate 0.01 	Loss: 0.875 
+      epoch:  84 learn rate 0.01 	Loss: 0.871 
+      epoch:  85 learn rate 0.01 	Loss: 0.867 
+      epoch:  86 learn rate 0.01 	Loss: 0.864 
+      epoch:  87 learn rate 0.01 	Loss: 0.86 
+      epoch:  88 learn rate 0.01 	Loss: 0.856 
+      epoch:  89 learn rate 0.01 	Loss: 0.853 
+      epoch:  90 learn rate 0.01 	Loss: 0.849 
+      epoch:  91 learn rate 0.01 	Loss: 0.846 
+      epoch:  92 learn rate 0.01 	Loss: 0.842 
+      epoch:  93 learn rate 0.01 	Loss: 0.839 
+      epoch:  94 learn rate 0.01 	Loss: 0.835 
+      epoch:  95 learn rate 0.01 	Loss: 0.832 
+      epoch:  96 learn rate 0.01 	Loss: 0.828 
+      epoch:  97 learn rate 0.01 	Loss: 0.825 
+      epoch:  98 learn rate 0.01 	Loss: 0.822 
+      epoch:  99 learn rate 0.01 	Loss: 0.818 
+      epoch: 100 learn rate 0.01 	Loss: 0.815 
 
 ---
 
@@ -138,6 +138,6 @@
       fit <- brulee_mlp(y ~ ., df, epochs = 2, verbose = TRUE, class_weights = c(a = 12,
         b = 1, c = 1))
     Message <rlang_message>
-      epoch: 1 	Loss: 0.72788 
-      epoch: 2 	Loss: 0.72504 
+      epoch: 1 learn rate 0.01 	Loss: 0.728 
+      epoch: 2 learn rate 0.01 	Loss: 0.725 
 

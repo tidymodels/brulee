@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Several learning rate schedulers were added to the modeling functions (#12).
+
 # brulee 0.1.0
 
 * Modeling functions gained a `mixture` argument for the proportion of L1 penalty that is used. (#50)

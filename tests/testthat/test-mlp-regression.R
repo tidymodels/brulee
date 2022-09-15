@@ -24,6 +24,7 @@ ames_rec <-
 test_that('different fit interfaces', {
   skip_if(!torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
+  skip_on_os("linux")
 
   # matrix x
   expect_error({
