@@ -658,6 +658,14 @@ mlp_fit_imp <-
     # Optimize parameters
     for (epoch in 1:epochs) {
 
+     # For future work with other optimizers, see
+     # https://github.com/tidymodels/brulee/pull/56#discussion_r972049108
+     # "Creating a new optimizer every epoch will reset the optimizer state.
+     # For example, SGD with momentum keeps track of the latest update for each
+     # parameter, so it might be OK to just restart.
+     # But other optimizers like Adam, will keep a moving average of updates and
+     # resetting them can interfere in training."
+
      learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
      optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
 
