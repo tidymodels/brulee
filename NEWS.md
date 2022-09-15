@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Several learning rate schedulers were added to the modeling functions (#12).
+
 * An `optimizer` was added to [brulee_mlp()], with a new default being LBFGS instead of stochastic gradient descent. 
 
 # brulee 0.1.0

@@ -30,6 +30,7 @@ Imports:
 Suggests: 
     covr,
     modeldata,
+    purrr,
     recipes,
     spelling,
     testthat,

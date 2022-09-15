@@ -73,6 +73,7 @@
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examples
+#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
 #'   library(recipes)
@@ -98,6 +99,7 @@
 #'   predict(fit, penguins_test) %>%
 #'     bind_cols(penguins_test) %>%
 #'     conf_mat(island, .pred_class)
+#' }
 #' }
 #' @export
 brulee_multinomial_reg <- function(x, ...) {
@@ -541,7 +543,7 @@ multinomial_reg_fit_imp <-
 
       if (verbose) {
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 5), loss_note)
+                     signif(loss_curr, 3), loss_note)
 
         rlang::inform(msg)
       }

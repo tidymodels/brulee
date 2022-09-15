@@ -14,6 +14,7 @@
 #' to be the same as the number of rows in `new_data`.
 #'
 #' @examples
+#' \donttest{
 #' if (torch::torch_is_installed()) {
 #'
 #'   library(recipes)
@@ -43,6 +44,7 @@
 #'     roc_curve(sex, .pred_female) %>%
 #'     autoplot()
 #'
+#' }
 #' }
 #' @export
 predict.brulee_logistic_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {

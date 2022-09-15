@@ -40,7 +40,7 @@ test_that("multinomial regression", {
 test_that("class weights - multinomial regression", {
   skip_if_not(torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-
+  skip_on_os("linux")
 
   expect_snapshot({
     set.seed(1)

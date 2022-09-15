@@ -33,6 +33,7 @@ to be the same as the number of rows in \code{new_data}.
 Predict from a \code{brulee_multinomial_reg}
 }
 \examples{
+\donttest{
 if (torch::torch_is_installed()) {
 
   library(recipes)
@@ -58,5 +59,6 @@ if (torch::torch_is_installed()) {
   predict(fit, penguins_test) \%>\%
     bind_cols(penguins_test) \%>\%
     conf_mat(island, .pred_class)
+}
 }
 }

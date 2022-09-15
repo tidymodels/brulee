@@ -32,28 +32,47 @@ brulee_print <- function(x, ...) {
   }
   cat("batch size:", x$parameters$batch_size, "\n")
 
+  if (all(c("sched", "sched_opt") %in% names(x$parameters))) {
+   cat_schedule(x$parameters)
+  }
+
   if (!is.null(x$loss)) {
     it <- x$best_epoch
     chr_it <- cli::pluralize("{it} epoch{?s}:")
     if(x$parameters$validation > 0) {
       if (is.na(x$y_stats$mean)) {
         cat("validation loss after", chr_it,
-            signif(x$loss[it], 5), "\n")
+            signif(x$loss[it], 3), "\n")
       } else {
         cat("scaled validation loss after", chr_it,
-            signif(x$loss[it], 5), "\n")
+            signif(x$loss[it], 3), "\n")
       }
     } else {
       if (is.na(x$y_stats$mean)) {
         cat("training set loss after", chr_it,
-            signif(x$loss[it], 5), "\n")
+            signif(x$loss[it], 3), "\n")
       } else {
         cat("scaled training set loss after", chr_it,
-            signif(x$loss[it], 5), "\n")
+            signif(x$loss[it], 3), "\n")
       }
     }
   }
   invisible(x)
+}
+
+# ------------------------------------------------------------------------------
+
+cat_schedule <- function(x) {
+ if (x$sched == "none") {
+  cat("learn rate:", x$learn_rate, "\n")
+ } else {
+  .fn <- paste0("schedule_", x$sched)
+  cl <- rlang::call2(.fn, !!!x$sched_opt)
+  chr_cl <- rlang::expr_deparse(cl, width = 200)
+
+  cat(gsub("^schedule_", "schedule: ", chr_cl), "\n")
+ }
+ invisible(NULL)
 }
 
 # ------------------------------------------------------------------------------

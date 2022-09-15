@@ -33,6 +33,7 @@ to be the same as the number of rows in \code{new_data}.
 Predict from a \code{brulee_logistic_reg}
 }
 \examples{
+\donttest{
 if (torch::torch_is_installed()) {
 
   library(recipes)
@@ -62,5 +63,6 @@ if (torch::torch_is_installed()) {
     roc_curve(sex, .pred_female) \%>\%
     autoplot()
 
+}
 }
 }

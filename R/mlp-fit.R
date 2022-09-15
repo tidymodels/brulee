@@ -39,8 +39,13 @@
 #'  the activation for each hidden layer.
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
-#' @param learn_rate A positive number that controls the rapidity that the model
-#' moves along the descent path. Values around 0.1 or less are typical.
+#' @param learn_rate A positive number that controls the initial rapidity that
+#' the model moves along the descent path. Values around 0.1 or less are
+#' typical.
+#' @param rate_schedule A single character value for how the learning rate
+#' should change as the optimization proceeds. Possible values are
+#' `"none"` (the default), `"decay_time"`, `"decay_expo"`, `"cyclic"` and
+#' `"step"`. See [schedule_decay_time()] for more details.
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
 #' parameter in gradient descent.  (`optimizer = "SGD"` only)
 #' @param dropout The proportion of parameters set to zero.
@@ -60,7 +65,9 @@
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
 #' @param verbose A logical that prints out the iteration history.
-#' @param ... Not currently used, but required for extensibility.
+#' @param ... Options to pass to the learning rate schedulers via
+#' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
+#' [schedule_step()] could be passed here.
 #'
 #' @details
 #'
@@ -91,6 +98,13 @@
 #' parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 #' The zeroing out of parameters is a specific feature the optimization method
 #' used in those packages.
+#'
+#' ## Learning Rates
+#'
+#' The learning rate can be set to constant (the default) or dynamically set
+#' via a learning rate scheduler (via the `rate_schedule`). Using
+#' `rate_schedule = 'none'` uses the `learn_rate` argument. Otherwise, any
+#' arguments to the schedulers can be passed via `...`.
 #'
 #' @seealso [predict.brulee_mlp()], [coef.brulee_mlp()], [autoplot.brulee_mlp()]
 #' @return
@@ -128,8 +142,7 @@
 #'  set.seed(1)
 #'  fit <-
 #'    brulee_mlp(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
-#'                y = ames_train$Sale_Price,
-#'                penalty = 0.10, batch_size = 2^8)
+#'                y = ames_train$Sale_Price, penalty = 0.10)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -151,7 +164,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- brulee_mlp(ames_rec, data = ames_train, hidden_units = 20,
-#'                     dropout = 0.05, batch_size = 2^8)
+#'                     dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -170,7 +183,7 @@
 #'  predict(fit, ames_test) %>%
 #'    bind_cols(ames_test) %>%
 #'    rmse(Sale_Price, .pred)
-#'  }
+#'
 #'
 #'  # ------------------------------------------------------------------------------
 #'  # classification
@@ -201,6 +214,7 @@
 #'   geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
 #'   geom_point(data = parabolic_te, aes(col = class))
 #'
+#'  }
 #' }
 #' @export
 brulee_mlp <- function(x, ...) {
@@ -229,6 +243,7 @@ brulee_mlp.data.frame <-
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 0.01,
+           rate_schedule = "none",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -243,6 +258,7 @@ brulee_mlp.data.frame <-
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       penalty = penalty,
       mixture = mixture,
       dropout = dropout,
@@ -272,6 +288,7 @@ brulee_mlp.matrix <- function(x,
                               validation = 0.1,
                               optimizer = "LBFGS",
                               learn_rate = 0.01,
+                              rate_schedule = "none",
                               momentum = 0.0,
                               batch_size = NULL,
                               class_weights = NULL,
@@ -286,6 +303,7 @@ brulee_mlp.matrix <- function(x,
     hidden_units = hidden_units,
     activation = activation,
     learn_rate = learn_rate,
+    rate_schedule = rate_schedule,
     momentum = momentum,
     penalty = penalty,
     mixture = mixture,
@@ -316,6 +334,7 @@ brulee_mlp.formula <-
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 0.01,
+           rate_schedule = "none",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -330,6 +349,7 @@ brulee_mlp.formula <-
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       momentum = momentum,
       penalty = penalty,
       mixture = mixture,
@@ -360,6 +380,7 @@ brulee_mlp.recipe <-
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 0.01,
+           rate_schedule = "none",
            momentum = 0.0,
            batch_size = NULL,
            class_weights = NULL,
@@ -374,6 +395,7 @@ brulee_mlp.recipe <-
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       momentum = momentum,
       penalty = penalty,
       mixture = mixture,
@@ -392,8 +414,9 @@ brulee_mlp.recipe <-
 # Bridge
 
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                              learn_rate, momentum, penalty, mixture, dropout, class_weights,
-                              validation, optimizer, batch_size, stop_iter, verbose, ...) {
+                              learn_rate, rate_schedule, momentum, penalty,
+                              mixture, dropout, class_weights, validation, optimizer,
+                              batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -434,6 +457,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
 
+
+
   ## -----------------------------------------------------------------------------
 
   predictors <- processed$predictors
@@ -470,6 +495,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       hidden_units = hidden_units,
       activation = activation,
       learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
       momentum = momentum,
       penalty = penalty,
       mixture = mixture,
@@ -479,7 +505,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
-      verbose = verbose
+      verbose = verbose,
+      ...
     )
 
   new_brulee_mlp(
@@ -545,6 +572,7 @@ mlp_fit_imp <-
            validation = 0.1,
            optimizer = "LBFGS",
            learn_rate = 0.01,
+           rate_schedule = "none",
            momentum = 0.0,
            activation = "relu",
            class_weights = NULL,
@@ -657,6 +685,17 @@ mlp_fit_imp <-
     # Optimize parameters
     for (epoch in 1:epochs) {
 
+     # For future work with other optimizers, see
+     # https://github.com/tidymodels/brulee/pull/56#discussion_r972049108
+     # "Creating a new optimizer every epoch will reset the optimizer state.
+     # For example, SGD with momentum keeps track of the latest update for each
+     # parameter, so it might be OK to just restart.
+     # But other optimizers like Adam, will keep a moving average of updates and
+     # resetting them can interfere in training."
+
+     learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
+     optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+
       # training loop
       coro::loop(
        for (batch in dl) {
@@ -705,8 +744,8 @@ mlp_fit_imp <-
         lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
       if (verbose) {
-        msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 5), loss_note)
+        msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 3),
+                     loss_label, signif(loss_curr, 3), loss_note)
 
         rlang::inform(msg)
       }
@@ -731,10 +770,21 @@ mlp_fit_imp <-
       best_epoch = best_epoch,
       dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
-      parameters = list(activation = activation, hidden_units = hidden_units,
-                        learn_rate = learn_rate, class_weights = class_weights,
-                        penalty = penalty, mixture = mixture, dropout = dropout, validation = validation,
-                        batch_size = batch_size, momentum = momentum, optimizer = optimizer)
+      parameters = list(
+       activation = activation,
+       hidden_units = hidden_units,
+       learn_rate = learn_rate,
+       class_weights = class_weights,
+       penalty = penalty,
+       mixture = mixture,
+       dropout = dropout,
+       validation = validation,
+       optimizer = optimizer,
+       batch_size = batch_size,
+       momentum = momentum,
+       sched = rate_schedule,
+       sched_opt = list(...)
+      )
     )
   }
 
