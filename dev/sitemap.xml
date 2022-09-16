@@ -1,66 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/CODE_OF_CONDUCT.html</loc>
+    <loc>/dev/CODE_OF_CONDUCT.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>/dev/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/LICENSE.html</loc>
+    <loc>/dev/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>/dev/authors.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>/dev/index.html</loc>
   </url>
   <url>
-    <loc>/news/index.html</loc>
+    <loc>/dev/news/index.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee-autoplot.html</loc>
+    <loc>/dev/reference/brulee-autoplot.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee-coefs.html</loc>
+    <loc>/dev/reference/brulee-coefs.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee-internal.html</loc>
+    <loc>/dev/reference/brulee-internal.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee-package.html</loc>
+    <loc>/dev/reference/brulee-package.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee_linear_reg.html</loc>
+    <loc>/dev/reference/brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee_logistic_reg.html</loc>
+    <loc>/dev/reference/brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee_mlp.html</loc>
+    <loc>/dev/reference/brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>/reference/brulee_multinomial_reg.html</loc>
+    <loc>/dev/reference/brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>/dev/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/matrix_to_dataset.html</loc>
+    <loc>/dev/reference/matrix_to_dataset.html</loc>
   </url>
   <url>
-    <loc>/reference/predict.brulee_linear_reg.html</loc>
+    <loc>/dev/reference/predict.brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>/reference/predict.brulee_logistic_reg.html</loc>
+    <loc>/dev/reference/predict.brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>/reference/predict.brulee_mlp.html</loc>
+    <loc>/dev/reference/predict.brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>/reference/predict.brulee_multinomial_reg.html</loc>
+    <loc>/dev/reference/predict.brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>/reference/reexports.html</loc>
+    <loc>/dev/reference/reexports.html</loc>
+  </url>
+  <url>
+    <loc>/dev/reference/schedule_decay_time.html</loc>
   </url>
 </urlset>
