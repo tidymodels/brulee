@@ -70,6 +70,7 @@ descent. Multiple layers can be used.</p>
 <span>  mixture <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  dropout <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  validation <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,</span>
 <span>  learn_rate <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  rate_schedule <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  momentum <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -91,6 +92,7 @@ descent. Multiple layers can be used.</p>
 <span>  mixture <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  dropout <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  validation <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,</span>
 <span>  learn_rate <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  rate_schedule <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  momentum <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -112,6 +114,7 @@ descent. Multiple layers can be used.</p>
 <span>  mixture <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  dropout <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  validation <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,</span>
 <span>  learn_rate <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  rate_schedule <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  momentum <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -133,6 +136,7 @@ descent. Multiple layers can be used.</p>
 <span>  mixture <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  dropout <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  validation <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  optimizer <span class="op">=</span> <span class="st">"LBFGS"</span>,</span>
 <span>  learn_rate <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  rate_schedule <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  momentum <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -204,6 +208,11 @@ indicates ridge regression (a.k.a weight decay).</p></dd>
 validation set.</p></dd>
 
 
+<dt>optimizer</dt>
+<dd><p>The method used in the optimization procedure. Possible choices
+are 'LBFGS' and 'SGD'. Default is 'LBFGS'.</p></dd>
+
+
 <dt>learn_rate</dt>
 <dd><p>A positive number that controls the initial rapidity that
 the model moves along the descent path. Values around 0.1 or less are
@@ -219,12 +228,12 @@ should change as the optimization proceeds. Possible values are
 
 <dt>momentum</dt>
 <dd><p>A positive number usually on <code>[0.50, 0.99]</code> for the momentum
-parameter in gradient descent.</p></dd>
+parameter in gradient descent.  (<code>optimizer = "SGD"</code> only)</p></dd>
 
 
 <dt>batch_size</dt>
 <dd><p>An integer for the number of training set points in each
-batch.</p></dd>
+batch. (<code>optimizer = "SGD"</code> only)</p></dd>
 
 
 <dt>class_weights</dt>
@@ -406,6 +415,7 @@ arguments to the schedulers can be passed via <code>...</code>.</p>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">parabolic_te</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>col <span class="op">=</span> <span class="va">class</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="op">}</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'batch_size' is only use for the SGD optimizer.</span>
 <span class="r-plt img"><img src="brulee_mlp-1.png" alt="" width="768" height="552"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>

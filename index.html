@@ -110,7 +110,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">bivariate</span>, package <span class="op">=</span> <span class="st">"modeldata"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span></span>
 <span><span class="va">nn_log_biv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brulee_mlp.html">brulee_mlp</a></span><span class="op">(</span><span class="va">Class</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">B</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">bivariate_train</span>, </span>
-<span>                         epochs <span class="op">=</span> <span class="fl">150</span>, hidden_units <span class="op">=</span> <span class="fl">3</span>, batch_size <span class="op">=</span> <span class="fl">64</span><span class="op">)</span></span>
+<span>                         epochs <span class="op">=</span> <span class="fl">150</span>, hidden_units <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># We use the tidymodels semantics to always return a tibble when predicting</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">nn_log_biv</span>, <span class="va">bivariate_test</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
@@ -119,7 +119,7 @@
 <span><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span><span class="co">#&gt;   .metric .estimator .estimate</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 roc_auc binary         0.608</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 roc_auc binary         0.839</span></span></code></pre></div>
 <p>A recipe can also be used if the data require some sort of preprocessing (e.g., indicator variables, transformations, or standardization):</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/tidymodels/recipes" class="external-link">recipes</a></span><span class="op">)</span></span>
@@ -131,7 +131,7 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span></span>
 <span><span class="va">nn_rec_biv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brulee_mlp.html">brulee_mlp</a></span><span class="op">(</span><span class="va">rec</span>, data <span class="op">=</span> <span class="va">bivariate_train</span>, </span>
-<span>                         epochs <span class="op">=</span> <span class="fl">150</span>, hidden_units <span class="op">=</span> <span class="fl">3</span>, batch_size <span class="op">=</span> <span class="fl">64</span><span class="op">)</span></span>
+<span>                         epochs <span class="op">=</span> <span class="fl">150</span>, hidden_units <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># A little better</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">nn_rec_biv</span>, <span class="va">bivariate_test</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
@@ -140,7 +140,7 @@
 <span><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span><span class="co">#&gt;   .metric .estimator .estimate</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 roc_auc binary         0.865</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 roc_auc binary         0.866</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="code-of-conduct">Code of Conduct<a class="anchor" aria-label="anchor" href="#code-of-conduct"></a>

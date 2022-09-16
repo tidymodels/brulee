@@ -174,9 +174,9 @@ are 'LBFGS' and 'SGD'. Default is 'LBFGS'.</p></dd>
 
 
 <dt>learn_rate</dt>
-<dd><p>A positive number that controls the rapidity that the model
-moves along the descent path. Values less that 0.1 are typical.
-(<code>optimizer = "SGD"</code> only)</p></dd>
+<dd><p>A positive number that controls the initial rapidity that
+the model moves along the descent path. Values around 0.1 or less are
+typical.</p></dd>
 
 
 <dt>momentum</dt>
@@ -186,7 +186,7 @@ parameter in gradient descent.  (<code>optimizer = "SGD"</code> only)</p></dd>
 
 <dt>batch_size</dt>
 <dd><p>An integer for the number of training set points in each
-batch.</p></dd>
+batch. (<code>optimizer = "SGD"</code> only)</p></dd>
 
 
 <dt>stop_iter</dt>
