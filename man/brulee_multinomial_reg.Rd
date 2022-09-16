@@ -126,7 +126,7 @@ moves along the descent path. Values around 0.1 or less are typical.
 parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
 
 \item{batch_size}{An integer for the number of training set points in each
-batch.}
+batch. (\code{optimizer = "SGD"} only)}
 
 \item{class_weights}{Numeric class weights (classification only). The value
 can be:

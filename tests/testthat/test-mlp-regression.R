@@ -24,7 +24,7 @@ ames_rec <-
 test_that('different fit interfaces', {
   skip_if(!torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os("linux")
+  skip_on_os(c("windows", "linux", "solaris"))
 
   # matrix x
   expect_error({
@@ -317,6 +317,7 @@ test_that("mlp learns something", {
   model <- brulee_mlp(x, y,
                       batch_size = 25,
                       epochs = 50,
+                      optimizer = "SGD",
                       activation = "relu",
                       hidden_units = 5L,
                       learn_rate = 0.1,

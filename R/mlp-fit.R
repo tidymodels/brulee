@@ -37,6 +37,8 @@
 #'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)` specifying
 #'  the activation for each hidden layer.
+#' @param optimizer The method used in the optimization procedure. Possible choices
+#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the initial rapidity that
 #' the model moves along the descent path. Values around 0.1 or less are
 #' typical.
@@ -45,7 +47,7 @@
 #' `"none"` (the default), `"decay_time"`, `"decay_expo"`, `"cyclic"` and
 #' `"step"`. See [schedule_decay_time()] for more details.
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
-#' parameter in gradient descent.
+#' parameter in gradient descent.  (`optimizer = "SGD"` only)
 #' @param dropout The proportion of parameters set to zero.
 #' @param class_weights Numeric class weights (classification only). The value
 #' can be:
@@ -59,7 +61,7 @@
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
-#'  batch.
+#'  batch. (`optimizer = "SGD"` only)
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
 #' @param verbose A logical that prints out the iteration history.
@@ -239,6 +241,7 @@ brulee_mlp.data.frame <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            rate_schedule = "none",
            momentum = 0.0,
@@ -260,6 +263,7 @@ brulee_mlp.data.frame <-
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       momentum = momentum,
       batch_size = batch_size,
       class_weights = class_weights,
@@ -282,6 +286,7 @@ brulee_mlp.matrix <- function(x,
                               mixture = 0,
                               dropout = 0,
                               validation = 0.1,
+                              optimizer = "LBFGS",
                               learn_rate = 0.01,
                               rate_schedule = "none",
                               momentum = 0.0,
@@ -304,6 +309,7 @@ brulee_mlp.matrix <- function(x,
     mixture = mixture,
     dropout = dropout,
     validation = validation,
+    optimizer = optimizer,
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
@@ -326,6 +332,7 @@ brulee_mlp.formula <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            rate_schedule = "none",
            momentum = 0.0,
@@ -348,6 +355,7 @@ brulee_mlp.formula <-
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
@@ -370,6 +378,7 @@ brulee_mlp.recipe <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            rate_schedule = "none",
            momentum = 0.0,
@@ -392,6 +401,7 @@ brulee_mlp.recipe <-
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
@@ -405,7 +415,7 @@ brulee_mlp.recipe <-
 
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               learn_rate, rate_schedule, momentum, penalty,
-                              mixture, dropout, class_weights, validation,
+                              mixture, dropout, class_weights, validation, optimizer,
                               batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
@@ -424,6 +434,10 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   }
   if (length(hidden_units) != length(activation)) {
     rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
+  }
+
+  if (optimizer == "LBFGS" & !is.null(batch_size)) {
+   rlang::warn("'batch_size' is only use for the SGD optimizer.")
   }
 
   check_integer(epochs, single = TRUE, 1, fn = f_nm)
@@ -487,6 +501,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       mixture = mixture,
       dropout = dropout,
       validation = validation,
+      optimizer = optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
@@ -555,6 +570,7 @@ mlp_fit_imp <-
            mixture = 0,
            dropout = 0,
            validation = 0.1,
+           optimizer = "LBFGS",
            learn_rate = 0.01,
            rate_schedule = "none",
            momentum = 0.0,
@@ -640,6 +656,17 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
+    # Set the optimizer
+    if (optimizer == "LBFGS") {
+     optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
+                                     history_size = 5)
+    } else if (optimizer == "SGD") {
+     optimizer <-
+      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+    } else {
+     rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+    }
+
     ## ---------------------------------------------------------------------------
 
     loss_prev <- 10^38
@@ -671,14 +698,16 @@ mlp_fit_imp <-
 
       # training loop
       coro::loop(
-        for (batch in dl) {
-          pred <- model(batch$x)
-          loss <- loss_fn(pred, batch$y, class_weights)
-
-          optimizer$zero_grad()
-          loss$backward()
-          optimizer$step()
+       for (batch in dl) {
+        cl <- function() {
+         optimizer$zero_grad()
+         pred <- model(batch$x)
+         loss <- loss_fn(pred, batch$y, class_weights)
+         loss$backward()
+         loss
         }
+        optimizer$step(cl)
+       }
       )
 
       # calculate loss on the full datasets
@@ -750,6 +779,7 @@ mlp_fit_imp <-
        mixture = mixture,
        dropout = dropout,
        validation = validation,
+       optimizer = optimizer,
        batch_size = batch_size,
        momentum = momentum,
        sched = rate_schedule,

@@ -23,7 +23,7 @@ rec <-
 test_that('different fit interfaces', {
   skip_if(!torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os("linux")
+  skip_on_os(c("windows", "linux", "solaris"))
 
   # matrix x
   expect_error({
@@ -69,7 +69,7 @@ test_that('predictions', {
   x_df <- as.data.frame(scale(x_df))
 
   set.seed(1)
-  fit_df <- brulee_mlp(x_df, y, epochs = 10L, batch_size = length(y))
+  fit_df <- brulee_mlp(x_df, y, epochs = 10L, batch_size = 32, optimizer = "SGD")
 
   complete_pred <- predict(fit_df, head(x_df))
   expect_true(tibble::is_tibble(complete_pred))
@@ -101,7 +101,6 @@ test_that("mlp binary learns something", {
   y <- as.factor(x > 0)
 
   model <- brulee_mlp(x, y,
-                      batch_size = 50,
                       epochs = 100L,
                       activation = "relu",
                       hidden_units = 5L,
@@ -119,7 +118,7 @@ test_that("mlp binary learns something", {
 test_that("class weights - mlp", {
   skip_if_not(torch::torch_is_installed())
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os("linux")
+  skip_on_os(c("windows", "linux", "solaris"))
 
   set.seed(1)
   df_imbal <- tibble::tibble(

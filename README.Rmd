@@ -60,7 +60,7 @@ library(yardstick)
 data(bivariate, package = "modeldata")
 set.seed(20)
 nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
-                         epochs = 150, hidden_units = 3, batch_size = 64)
+                         epochs = 150, hidden_units = 3)
 
 # We use the tidymodels semantics to always return a tibble when predicting
 predict(nn_log_biv, bivariate_test, type = "prob") %>% 
@@ -80,7 +80,7 @@ rec <-
 
 set.seed(20)
 nn_rec_biv <- brulee_mlp(rec, data = bivariate_train, 
-                         epochs = 150, hidden_units = 3, batch_size = 64)
+                         epochs = 150, hidden_units = 3)
 
 # A little better
 predict(nn_rec_biv, bivariate_test, type = "prob") %>% 
