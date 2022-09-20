@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/tidymodels/brulee/workflows/R-CMD-check/badge.svg)](https://github.com/tidymodels/brulee/actions)
+[![R-CMD-check](https://github.com/tidymodels/brulee/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tidymodels/brulee/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/tidymodels/brulee/branch/main/graph/badge.svg)](https://app.codecov.io/gh/tidymodels/brulee?branch=main)
 [![Lifecycle:
@@ -63,7 +63,7 @@ predict(nn_log_biv, bivariate_test, type = "prob") %>%
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.839
+#> 1 roc_auc binary         0.410
 ```
 
 A recipe can also be used if the data require some sort of preprocessing
@@ -88,7 +88,7 @@ predict(nn_rec_biv, bivariate_test, type = "prob") %>%
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.866
+#> 1 roc_auc binary         0.708
 ```
 
 ## Code of Conduct
