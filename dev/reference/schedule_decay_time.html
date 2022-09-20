@@ -16,7 +16,7 @@ set_learn_rate() is a general interface."><meta property="og:image" content="/lo
     
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.2.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -127,11 +127,11 @@ values are: "decay_time", "decay_expo", "none", "cyclic", and "step".</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The details for how the schedulers change the rates:</p><ul><li><p><code>schedule_decay_time()</code>: \(rate(epoch) = initial/(1 + decay \times epoch)\)</p></li>
-<li><p><code>schedule_decay_expo()</code>: \(initial\exp(-decay \times epoch)\)</p></li>
-<li><p><code>schedule_step()</code>: \(initial \times reduction^{floor(epoch / steps)}\)</p></li>
+<li><p><code>schedule_decay_expo()</code>: \(rate(epoch) = initial\exp(-decay \times epoch)\)</p></li>
+<li><p><code>schedule_step()</code>: \(rate(epoch) = initial \times reduction^{floor(epoch / steps)}\)</p></li>
 <li><p><code>schedule_cyclic()</code>: \(cycle = floor( 1 + (epoch / 2 / step size) )\),
 \(x = abs( ( epoch / step size ) - ( 2 * cycle) + 1 )\), and
-\(rate = initial + ( largest - initial ) * \max( 0, 1 - x)\)</p></li>
+\(rate(epoch) = initial + ( largest - initial ) * \max( 0, 1 - x)\)</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
