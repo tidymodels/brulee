@@ -57,11 +57,11 @@ The \verb{schedule_*()} functions are individual schedulers and
 The details for how the schedulers change the rates:
 \itemize{
 \item \code{schedule_decay_time()}: \eqn{rate(epoch) = initial/(1 + decay \times epoch)}
-\item \code{schedule_decay_expo()}: \eqn{initial\exp(-decay \times epoch)}
-\item \code{schedule_step()}: \eqn{initial \times reduction^{floor(epoch / steps)}}
+\item \code{schedule_decay_expo()}: \eqn{rate(epoch) = initial\exp(-decay \times epoch)}
+\item \code{schedule_step()}: \eqn{rate(epoch) = initial \times reduction^{floor(epoch / steps)}}
 \item \code{schedule_cyclic()}: \eqn{cycle = floor( 1 + (epoch / 2 / step size) )},
 \eqn{x = abs( ( epoch / step size ) - ( 2 * cycle) + 1 )}, and
-\eqn{rate = initial + ( largest - initial ) * \max( 0, 1 - x)}
+\eqn{rate(epoch) = initial + ( largest - initial ) * \max( 0, 1 - x)}
 }
 }
 \examples{
