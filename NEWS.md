@@ -1,3 +1,5 @@
+# brulee (development version)
+
 # brulee 0.2.0
 
 * Several learning rate schedulers were added to the modeling functions (#12).
