@@ -1,69 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/dev/CODE_OF_CONDUCT.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/CODE_OF_CONDUCT.html</loc>
   </url>
   <url>
-    <loc>/dev/LICENSE-text.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/dev/LICENSE.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/dev/authors.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/authors.html</loc>
   </url>
   <url>
-    <loc>/dev/index.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/index.html</loc>
   </url>
   <url>
-    <loc>/dev/news/index.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/news/index.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee-autoplot.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee-autoplot.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee-coefs.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee-coefs.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee-internal.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee-internal.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee-package.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee-package.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee_linear_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee_logistic_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee_mlp.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/brulee_multinomial_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/index.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/index.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/matrix_to_dataset.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/predict.brulee_linear_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_linear_reg.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/predict.brulee_logistic_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_logistic_reg.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/predict.brulee_mlp.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_mlp.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/predict.brulee_multinomial_reg.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_multinomial_reg.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/reexports.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/reexports.html</loc>
   </url>
   <url>
-    <loc>/dev/reference/schedule_decay_time.html</loc>
+    <loc>https://brulee.tidymodels.org/dev/reference/schedule_decay_time.html</loc>
   </url>
 </urlset>
