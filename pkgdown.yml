@@ -2,5 +2,8 @@ pandoc: 2.14.2
 pkgdown: 2.0.6
 pkgdown_sha: ~
 articles: {}
-last_built: 2022-09-20T15:01Z
+last_built: 2022-10-17T20:55Z
+urls:
+  reference: https://brulle.tidymodels.org/reference
+  article: https://brulle.tidymodels.org/articles
 
