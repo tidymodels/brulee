@@ -14,7 +14,7 @@ Provides high-level modeling functions to define and train models using the 'tor
 Useful links:
 \itemize{
   \item \url{https://github.com/tidymodels/brulee}
-  \item \url{https://tidymodels.github.io/brulee/}
+  \item \url{https://brulee.tidymodels.org/}
   \item Report bugs at \url{https://github.com/tidymodels/brulee/issues}
 }
 

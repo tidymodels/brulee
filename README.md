@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# brulee <a href="https://tidymodels.github.io/brulee/"><img src="man/figures/logo.png" align="right" height="139" /></a>
+# brulee <a href="https://brulee.tidymodels.org/"><img src="man/figures/logo.png" align="right" height="139" /></a>
 
 <!-- badges: start -->
 
@@ -16,13 +16,13 @@ The R `brulee` package contains several basic modeling functions that
 use the `torch` package infrastructure, such as:
 
 - [neural
-  networks](https://tidymodels.github.io/brulee/reference/brulee_mlp.html)
+  networks](https://brulee.tidymodels.org/reference/brulee_mlp.html)
 - [linear
-  regression](https://tidymodels.github.io/brulee/reference/brulee_linear_reg.html)
+  regression](https://brulee.tidymodels.org/reference/brulee_linear_reg.html)
 - [logistic
-  regression](https://tidymodels.github.io/brulee/reference/brulee_logistic_reg.html)
+  regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 - [multinomial
-  regression](https://tidymodels.github.io/brulee/reference/brulee_multinomial_reg.html)
+  regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
 
 ## Installation
 
