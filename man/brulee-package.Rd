@@ -20,16 +20,16 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Max Kuhn \email{max@rstudio.com} (\href{https://orcid.org/0000-0003-2402-136X}{ORCID})
+\strong{Maintainer}: Max Kuhn \email{max@posit.co} (\href{https://orcid.org/0000-0003-2402-136X}{ORCID})
 
 Authors:
 \itemize{
-  \item Daniel Falbel \email{daniel@rstudio.com}
+  \item Daniel Falbel \email{daniel@posit.co}
 }
 
 Other contributors:
 \itemize{
-  \item RStudio [copyright holder]
+  \item Posit Software, PBC [copyright holder, funder]
 }
 
 }
