@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# brulee <a href="https://brulee.tidymodels.org/"><img src="man/figures/logo.png" align="right" height="139" /></a>
+# brulee <a href="https://brulee.tidymodels.org/"><img src="man/figures/logo.png" align="right" height="139" alt="a dish of creme brulee on a striped background" /></a>
 
 <!-- badges: start -->
 

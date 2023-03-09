@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# brulee <a href="https://brulee.tidymodels.org/"><img src="man/figures/logo.png" align="right" height="139" /></a>
+# brulee <a href="https://brulee.tidymodels.org/"><img src="man/figures/logo.png" align="right" height="139" alt="a dish of creme brulee on a striped background" /></a>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/tidymodels/brulee/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tidymodels/brulee/actions/workflows/R-CMD-check.yaml)
