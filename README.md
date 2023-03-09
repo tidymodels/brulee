@@ -37,8 +37,8 @@ And the development version from
 [GitHub](https://github.com/tidymodels/brulee) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("tidymodels/brulee")
+# install.packages("pak")
+pak::pak("tidymodels/brulee")
 ```
 
 ## Example
