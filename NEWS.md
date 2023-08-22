@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Fixed bug where `coef()` didn't would error if used on a `brulee_logistic_reg()` that was trained with a recipe. (#66)
+
 # brulee 0.2.0
 
 * Several learning rate schedulers were added to the modeling functions (#12).
