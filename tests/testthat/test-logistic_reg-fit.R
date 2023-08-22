@@ -36,6 +36,35 @@ test_that("logistic regression", {
   expect_equal(sign(coef(fit)), sign(coef(glm_fit)))
 })
 
+test_that("coef works when recipes are used", {
+ skip_if_not(torch::torch_is_installed())
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("recipes")
+ skip_if(packageVersion("rlang") < "1.0.0")
+ skip_on_os(c("windows", "linux", "solaris"))
+
+  data("lending_club", package = "modeldata")
+  lending_club <- head(lending_club, 1000)
+
+  rec <-
+   recipes::recipe(Class ~ revol_util + open_il_24m + emp_length,
+                   data = lending_club) %>%
+   recipes::step_dummy(emp_length, one_hot = TRUE) %>%
+   recipes::step_normalize(recipes::all_predictors())
+
+  fit_rec <- brulee_logistic_reg(rec, lending_club, epochs = 10L)
+
+  coefs <- coef(fit_rec)
+  expect_true(all(is.numeric(coefs)))
+  expect_identical(
+   names(coefs),
+   c(
+    "(Intercept)", "revol_util", "open_il_24m",
+    paste0("emp_length_", levels(lending_club$emp_length))
+   )
+  )
+})
+
 # ------------------------------------------------------------------------------
 
 test_that("class weights - logistic regression", {
