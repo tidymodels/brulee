@@ -3,7 +3,7 @@
     Code
       set.seed(1)
       fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE, penalty = 0)
-    Message <rlang_message>
+    Message
       epoch: 1 	Loss: 1.02 
       epoch: 2 	Loss: 1.02 
 
@@ -25,7 +25,7 @@
       set.seed(1)
       fit_imbal <- brulee_multinomial_reg(y ~ ., df, verbose = TRUE, class_weights = 20,
       optimizer = "SGD")
-    Message <rlang_message>
+    Message
       epoch:  1 	Loss: 0.921 
       epoch:  2 	Loss: 0.593 
       epoch:  3 	Loss: 0.501 
@@ -53,7 +53,7 @@
       set.seed(1)
       fit <- brulee_multinomial_reg(y ~ ., df, epochs = 2, verbose = TRUE,
       class_weights = c(a = 12, b = 1, c = 1), penalty = 0)
-    Message <rlang_message>
+    Message
       epoch: 1 	Loss: 0.384 
       epoch: 2 	Loss: 0.384 
 

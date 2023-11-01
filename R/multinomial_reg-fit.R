@@ -444,6 +444,10 @@ multinomial_reg_fit_imp <-
     y_stats <- list(mean = NA_real_, sd = NA_real_)
     loss_label <- "\tLoss:"
 
+    if (optimizer == "LBFGS" & !is.null(batch_size)) {
+     rlang::warn("'batch_size' is only used for the SGD optimizer.")
+     batch_size <- NULL
+    }
     if (is.null(batch_size)) {
       batch_size <- nrow(x)
     } else {
@@ -464,17 +468,7 @@ multinomial_reg_fit_imp <-
     # Initialize model and optimizer
     model <- multinomial_module(ncol(x), y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
-
-    # Write a optim wrapper
-    if (optimizer == "LBFGS") {
-      optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
-                                      history_size = 5)
-    } else if (optimizer == "SGD") {
-      optimizer <-
-        torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
-    } else {
-      rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
-    }
+    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
     ## ---------------------------------------------------------------------------
 
@@ -498,13 +492,13 @@ multinomial_reg_fit_imp <-
       coro::loop(
         for (batch in dl) {
           cl <- function() {
-            optimizer$zero_grad()
+           optimizer_obj$zero_grad()
             pred <- model(batch$x)
             loss <- loss_fn(pred, batch$y, class_weights)
             loss$backward()
             loss
           }
-          optimizer$step(cl)
+          optimizer_obj$step(cl)
         }
       )
 

@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Fixed a bug in SGD always being used as the optimizer (#61). 
+
 # brulee 0.2.0
 
 * Several learning rate schedulers were added to the modeling functions (#12).
