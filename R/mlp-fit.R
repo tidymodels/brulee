@@ -34,9 +34,9 @@
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
 #' @param activation A string for the activation function. Possible values are
-#'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
-#'  can be a character vector with length equals to `length(hidden_units)` specifying
-#'  the activation for each hidden layer.
+#'  "relu", "elu", "tanh", "sigmoid", and "linear". If `hidden_units` is a
+#'  vector, `activation` can be a character vector with length equals to
+#'  `length(hidden_units)` specifying the activation for each hidden layer.
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the initial rapidity that
@@ -434,6 +434,14 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   }
   if (length(hidden_units) != length(activation)) {
     rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
+  }
+
+  allowed_activation <- c("linear", "relu", "elu", "tanh", "sigmoid", "hardtanh",
+                          "softplus", "leaky_relu", "selu")
+  allowed_activation <- sort(allowed_activation)
+  good_activation <- activation %in% allowed_activation
+  if (!all(good_activation)) {
+   rlang::abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
   }
 
   if (optimizer == "LBFGS" & !is.null(batch_size)) {
@@ -863,14 +871,13 @@ print.brulee_mlp <- function(x, ...) {
 ## -----------------------------------------------------------------------------
 
 get_activation_fn <- function(arg, ...) {
-  if (arg == "relu") {
-    res <- torch::nn_relu(...)
-  } else if (arg == "elu") {
-    res <- torch::nn_elu(...)
-  } else if (arg == "tanh") {
-    res <- torch::nn_tanh(...)
-  } else {
-    res <- identity
-  }
-  res
+
+ if (arg == "linear") {
+  res <- identity
+ } else {
+  cl <- rlang::call2(paste0("nn_", arg), .ns = "torch")
+  res <- rlang::eval_bare(cl)
+ }
+
+ res
 }
