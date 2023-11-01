@@ -248,6 +248,7 @@ brulee_mlp.data.frame <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -268,6 +269,7 @@ brulee_mlp.data.frame <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -293,6 +295,7 @@ brulee_mlp.matrix <- function(x,
                               batch_size = NULL,
                               class_weights = NULL,
                               stop_iter = 5,
+                              device = "cpu",
                               verbose = FALSE,
                               ...) {
   processed <- hardhat::mold(x, y)
@@ -313,6 +316,7 @@ brulee_mlp.matrix <- function(x,
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    device = device,
     verbose = verbose,
     ...
   )
@@ -339,6 +343,7 @@ brulee_mlp.formula <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           device = device,
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -359,6 +364,7 @@ brulee_mlp.formula <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -385,6 +391,7 @@ brulee_mlp.recipe <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -405,6 +412,7 @@ brulee_mlp.recipe <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -416,7 +424,7 @@ brulee_mlp.recipe <-
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               learn_rate, rate_schedule, momentum, penalty,
                               mixture, dropout, class_weights, validation, optimizer,
-                              batch_size, stop_iter, verbose, ...) {
+                              batch_size, stop_iter, device, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -457,7 +465,11 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
 
+  # ------------------------------------------------------------------------------
 
+  if (is.null(device)) {
+   device <- guess_brulee_device()
+  }
 
   ## -----------------------------------------------------------------------------
 
@@ -483,7 +495,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
   lvls <- levels(outcome)
   xtab <- table(outcome)
-  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm, device = device)
 
   ## -----------------------------------------------------------------------------
 
@@ -505,6 +517,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -577,6 +590,7 @@ mlp_fit_imp <-
            activation = "relu",
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
 
@@ -643,7 +657,7 @@ mlp_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
-    ds <- brulee::matrix_to_dataset(x, y)
+    ds <- brulee::matrix_to_dataset(x, y, device = device)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
@@ -654,6 +668,7 @@ mlp_fit_imp <-
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
+    model$to(device = device)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
     # Set the optimizer
