@@ -1,6 +1,5 @@
 test_that("multinomial regression", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 
@@ -63,7 +62,6 @@ test_that("multinomial regression", {
 
 test_that("class weights - multinomial regression", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 

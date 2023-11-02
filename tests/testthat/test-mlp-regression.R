@@ -4,7 +4,6 @@ suppressPackageStartupMessages(library(recipes))
 
 test_that('different fit interfaces', {
  skip_if(!torch::torch_is_installed())
- skip_on_os(c("windows", "linux", "solaris"))
 
  # ------------------------------------------------------------------------------
 

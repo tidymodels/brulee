@@ -1,7 +1,6 @@
 library(purrr)
 
 test_that("scheduling functions", {
- skip_on_os(c("windows", "linux", "solaris"))
 
  x <- 0:100
 

@@ -1,7 +1,6 @@
 
 test_that("multinomial mlp", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os(c("windows", "linux", "solaris"))
 
  # ------------------------------------------------------------------------------
 
@@ -42,7 +41,6 @@ test_that("multinomial mlp", {
 
 test_that("class weights - mlp", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os(c("windows", "linux", "solaris"))
 
  # ------------------------------------------------------------------------------
 

@@ -6,7 +6,6 @@ suppressPackageStartupMessages(library(recipes))
 
 test_that('different mlp fit interfaces', {
  skip_if(!torch::torch_is_installed())
- skip_on_os(c("windows", "linux", "solaris"))
 
  # ------------------------------------------------------------------------------
 
@@ -155,7 +154,6 @@ test_that("mlp binary learns something", {
 
 test_that("class weights - mlp", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os(c("windows", "linux", "solaris"))
 
  # ------------------------------------------------------------------------------
 
