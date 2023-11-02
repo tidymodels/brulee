@@ -65,6 +65,9 @@
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
 #' @param verbose A logical that prints out the iteration history.
+#' @param device A character string or `NULL` (if you want it to guess). Possible
+#' values are `"cpu"`, `"cuda"`, `"mps"`, `"auto"`. The last value uses
+#' [guess_brulee_device()].
 #' @param ... Options to pass to the learning rate schedulers via
 #' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
 #' [schedule_step()] could be passed here.
@@ -465,9 +468,11 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
 
+
   # ------------------------------------------------------------------------------
 
-  if (is.null(device)) {
+  device <- rlang::arg_match(device, c("cpu", "auto", "cuda", "mps"))
+  if (device == "auto") {
    device <- guess_brulee_device()
   }
 
@@ -661,7 +666,7 @@ mlp_fit_imp <-
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
-      ds_val <- brulee::matrix_to_dataset(x_val, y_val)
+      ds_val <- brulee::matrix_to_dataset(x_val, y_val, device = device)
       dl_val <- torch::dataloader(ds_val)
     }
 

@@ -4,7 +4,7 @@
 \alias{matrix_to_dataset}
 \title{Convert data to torch format}
 \usage{
-matrix_to_dataset(x, y)
+matrix_to_dataset(x, y, device)
 }
 \arguments{
 \item{x}{A numeric matrix of predictors.}

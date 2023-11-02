@@ -14,7 +14,7 @@
 #'   matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
 #' }
 #' @export
-matrix_to_dataset <- function(x, y, device) {
+matrix_to_dataset <- function(x, y, device = "cpu") {
   x <- torch::torch_tensor(x, device = device)
   if (is.factor(y)) {
     y <- as.numeric(y)

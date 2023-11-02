@@ -1,7 +1,8 @@
 #' Determine an appropriate computational device for torch
+#'
 #' Uses \pkg{torch} functions to determine if there is a GPU available for use.
 #' @return A character string, one of: `"cpu"`, `"cuda"`, or `"mps"`.
-#' @examplesI
+#' @examples
 #' guess_brulee_device()
 #' @export
 guess_brulee_device <- function() {

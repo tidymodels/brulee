@@ -30,6 +30,7 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -51,6 +52,7 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -72,6 +74,7 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = device,
   verbose = FALSE,
   ...
 )
@@ -93,6 +96,7 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -173,6 +177,9 @@ and all other classes receive a weight of one.
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
+
+\item{device}{A character string or \code{NULL} (if you want it to guess). Possible
+values are \code{"cpu"}, \code{"cuda"}, or \code{"mps"}. See \code{\link[=guess_brulee_device]{guess_brulee_device()}}.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
