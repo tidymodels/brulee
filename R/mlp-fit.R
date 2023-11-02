@@ -201,7 +201,7 @@
 #'  set.seed(2)
 #'  cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
 #'                         epochs = 200L, learn_rate = 0.1, activation = "elu",
-#'                         penalty = 0.1, batch_size = 2^8)
+#'                         penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
 #'  autoplot(cls_fit)
 #'
 #'  grid_points <- seq(-4, 4, length.out = 100)
@@ -435,9 +435,9 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   if (length(hidden_units) != length(activation)) {
     rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
   }
-
   if (optimizer == "LBFGS" & !is.null(batch_size)) {
-   rlang::warn("'batch_size' is only use for the SGD optimizer.")
+   rlang::warn("'batch_size' is only used for the SGD optimizer.")
+   batch_size <- NULL
   }
 
   check_integer(epochs, single = TRUE, 1, fn = f_nm)
@@ -656,16 +656,8 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
-    # Set the optimizer
-    if (optimizer == "LBFGS") {
-     optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
-                                     history_size = 5)
-    } else if (optimizer == "SGD") {
-     optimizer <-
-      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
-    } else {
-     rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
-    }
+    # Set the optimizer (will be set again below)
+    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
     ## ---------------------------------------------------------------------------
 
@@ -694,19 +686,19 @@ mlp_fit_imp <-
      # resetting them can interfere in training."
 
      learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
-     optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+     optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
       # training loop
       coro::loop(
        for (batch in dl) {
         cl <- function() {
-         optimizer$zero_grad()
+         optimizer_obj$zero_grad()
          pred <- model(batch$x)
          loss <- loss_fn(pred, batch$y, class_weights)
          loss$backward()
          loss
         }
-        optimizer$step(cl)
+        optimizer_obj$step(cl)
        }
       )
 
@@ -873,4 +865,15 @@ get_activation_fn <- function(arg, ...) {
     res <- identity
   }
   res
+}
+
+set_optimizer <- function(optimizer, model, learn_rate, momentum) {
+ if (optimizer == "LBFGS") {
+  res <- torch::optim_lbfgs(model$parameters, lr = learn_rate, history_size = 5)
+ } else if (optimizer == "SGD") {
+  res <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+ } else {
+  rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+ }
+ res
 }

@@ -12,5 +12,5 @@
       dropout proportion: 0 
       batch size: 2637 
       learn rate: 0.01 
-      scaled validation loss after 10 epochs: 1.31 
+      scaled validation loss after 10 epochs: 1.1 
 
