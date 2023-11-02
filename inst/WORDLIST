@@ -12,5 +12,6 @@ mlp
 multilayer
 perceptrons
 relu
+sigmoid
 tanh
 tibble
