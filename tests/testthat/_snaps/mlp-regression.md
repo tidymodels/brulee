@@ -1,7 +1,7 @@
 # different fit interfaces
 
     Code
-      fit_mat
+      print(mlp_reg_mat_lbfgs_fit)
     Output
       Multilayer perceptron
       
