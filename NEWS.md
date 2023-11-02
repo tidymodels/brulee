@@ -1,6 +1,6 @@
 # brulee (development version)
 
-* Fixed a bug in SGD always being used as the optimizer (#61). 
+* Fixed a bug where SGD always being used as the optimizer (#61). 
 
 # brulee 0.2.0
 
