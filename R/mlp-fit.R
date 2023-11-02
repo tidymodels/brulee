@@ -102,6 +102,9 @@
 #' The zeroing out of parameters is a specific feature the optimization method
 #' used in those packages.
 #'
+#' If GPU computing is requested via the `device` argument, note that torch
+#' can't set the random number seeds in the GPU.
+#'
 #' ## Learning Rates
 #'
 #' The learning rate can be set to constant (the default) or dynamically set

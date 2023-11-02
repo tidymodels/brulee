@@ -239,6 +239,9 @@ The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
 parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
+
+If GPU computing is requested via the \code{device} argument, note that torch
+can't set the random number seeds in the GPU.
 \subsection{Learning Rates}{
 
 The learning rate can be set to constant (the default) or dynamically set
