@@ -149,6 +149,7 @@ brulee_logistic_reg.data.frame <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -165,6 +166,7 @@ brulee_logistic_reg.data.frame <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -186,6 +188,7 @@ brulee_logistic_reg.matrix <- function(x,
                                        batch_size = NULL,
                                        class_weights = NULL,
                                        stop_iter = 5,
+                                       device = "cpu",
                                        verbose = FALSE,
                                        ...) {
   processed <- hardhat::mold(x, y)
@@ -202,6 +205,7 @@ brulee_logistic_reg.matrix <- function(x,
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    device = device,
     verbose = verbose,
     ...
   )
@@ -224,6 +228,7 @@ brulee_logistic_reg.formula <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -240,6 +245,7 @@ brulee_logistic_reg.formula <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -262,6 +268,7 @@ brulee_logistic_reg.recipe <-
            batch_size = NULL,
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -278,6 +285,7 @@ brulee_logistic_reg.recipe <-
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -288,7 +296,7 @@ brulee_logistic_reg.recipe <-
 
 brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
                                        learn_rate, momentum, penalty, mixture, class_weights,
-                                       validation, batch_size, stop_iter, verbose, ...) {
+                                       validation, batch_size, stop_iter, device, verbose, ...) {
   if(!torch::torch_is_installed()) {
     rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -311,6 +319,13 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
+
+  # ------------------------------------------------------------------------------
+
+  device <- rlang::arg_match(device, c("cpu", "auto", "cuda", "mps"))
+  if (device == "auto") {
+   device <- guess_brulee_device()
+  }
 
   ## -----------------------------------------------------------------------------
 
@@ -362,6 +377,7 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose
     )
 
@@ -423,6 +439,7 @@ logistic_reg_fit_imp <-
            momentum = 0.0,
            class_weights = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
 
@@ -471,17 +488,18 @@ logistic_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
-    ds <- brulee::matrix_to_dataset(x, y)
+    ds <- brulee::matrix_to_dataset(x, y, device = device)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
-      ds_val <- brulee::matrix_to_dataset(x_val, y_val)
+      ds_val <- brulee::matrix_to_dataset(x_val, y_val, device = device)
       dl_val <- torch::dataloader(ds_val)
     }
 
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- logistic_module(ncol(x), y_dim)
+    model$to(device = device)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
     # Write a optim wrapper

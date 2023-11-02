@@ -25,6 +25,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -41,6 +42,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -57,6 +59,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -73,6 +76,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -126,6 +130,10 @@ batch. (\code{optimizer = "SGD"} only)}
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
+
+\item{device}{A character string to denote which processor to use with
+possibles values: \code{"cpu"}, \code{"cuda"}, \code{"mps"}, and \code{"auto"}. The last value
+uses \code{\link[=guess_brulee_device]{guess_brulee_device()}} to make the determination.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 

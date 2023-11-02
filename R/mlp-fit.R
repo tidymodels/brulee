@@ -65,9 +65,9 @@
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
 #' @param verbose A logical that prints out the iteration history.
-#' @param device A character string or `NULL` (if you want it to guess). Possible
-#' values are `"cpu"`, `"cuda"`, `"mps"`, `"auto"`. The last value uses
-#' [guess_brulee_device()].
+#' @param device A character string to denote which processor to use with
+#' possibles values: `"cpu"`, `"cuda"`, `"mps"`, and `"auto"`. The last value
+#' uses [guess_brulee_device()] to make the determination.
 #' @param ... Options to pass to the learning rate schedulers via
 #' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
 #' [schedule_step()] could be passed here.
@@ -467,7 +467,6 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
-
 
   # ------------------------------------------------------------------------------
 
