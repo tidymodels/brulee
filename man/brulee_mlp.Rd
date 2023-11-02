@@ -319,7 +319,7 @@ if (torch::torch_is_installed()) {
  set.seed(2)
  cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
                         epochs = 200L, learn_rate = 0.1, activation = "elu",
-                        penalty = 0.1, batch_size = 2^8)
+                        penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
  autoplot(cls_fit)
 
  grid_points <- seq(-4, 4, length.out = 100)

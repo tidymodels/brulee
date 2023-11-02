@@ -452,11 +452,16 @@ linear_reg_fit_imp <-
     }
     loss_label <- "\tLoss (scaled):"
 
+    if (optimizer == "LBFGS" & !is.null(batch_size)) {
+     rlang::warn("'batch_size' is only used for the SGD optimizer.")
+     batch_size <- NULL
+    }
     if (is.null(batch_size)) {
       batch_size <- nrow(x)
     } else {
       batch_size <- min(batch_size, nrow(x))
     }
+
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
@@ -472,17 +477,7 @@ linear_reg_fit_imp <-
     # Initialize model and optimizer
     model <- linear_reg_module(ncol(x))
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
-
-    # Write a optim wrapper
-    if (optimizer == "LBFGS") {
-      optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
-                                      history_size = 5)
-    } else if (optimizer == "SGD") {
-      optimizer <-
-        torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
-    } else {
-      rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
-    }
+    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
     ## ---------------------------------------------------------------------------
 
@@ -505,13 +500,13 @@ linear_reg_fit_imp <-
       coro::loop(
         for (batch in dl) {
           cl <- function() {
-            optimizer$zero_grad()
+            optimizer_obj$zero_grad()
             pred <- model(batch$x)
             loss <- loss_fn(pred, batch$y)
             loss$backward()
             loss
           }
-          optimizer$step(cl)
+          optimizer_obj$step(cl)
         }
       )
 
