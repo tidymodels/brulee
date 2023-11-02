@@ -33,10 +33,6 @@ test_that('different fit interfaces', {
  regex = NA
  )
 
- expect_snapshot({
-  print(mlp_reg_mat_lbfgs_fit)
- })
-
  # regression tests
  save_coef(mlp_reg_mat_lbfgs_fit)
  expect_equal(

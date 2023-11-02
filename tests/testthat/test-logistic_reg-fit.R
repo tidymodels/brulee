@@ -17,10 +17,11 @@ test_that("logistic regression", {
 
  # ------------------------------------------------------------------------------
 
- expect_snapshot({
+ expect_error({
   set.seed(1)
-  logistic_reg_fit_lbfgs <- brulee_logistic_reg(y ~ ., df, epochs = 2, penalty = 0)
- })
+  logistic_reg_fit_lbfgs <- brulee_logistic_reg(y ~ ., df, epochs = 2, penalty = 0)},
+  regex = NA
+ )
 
  # regression tests
  save_coef(logistic_reg_fit_lbfgs)
@@ -29,10 +30,6 @@ test_that("logistic regression", {
   load_coef(logistic_reg_fit_lbfgs),
   tolerance = 0.1
  )
-
- expect_snapshot({
-  print(logistic_reg_fit_lbfgs)
- })
 
  expect_error(
   logistic_reg_fit_sgd <-

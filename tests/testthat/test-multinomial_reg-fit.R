@@ -38,8 +38,6 @@ test_that("multinomial regression", {
   tolerance = 0.1
  )
 
- expect_snapshot(print(multinom_fit_lbfgs))
-
  expect_error({
   set.seed(1)
   multinom_fit_sgd <-

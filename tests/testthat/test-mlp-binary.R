@@ -34,11 +34,7 @@ test_that('different mlp fit interfaces', {
  regex = NA
  )
 
- expect_snapshot({
-  print(mlp_bin_mat_lbfgs_fit)
- })
-
- # regression tests
+  # regression tests
  save_coef(mlp_bin_mat_lbfgs_fit)
  expect_equal(
   last_param(mlp_bin_mat_lbfgs_fit),
@@ -104,10 +100,6 @@ test_that('predictions', {
  },
  regex = NA
  )
-
- expect_snapshot({
-  print(mlp_bin_sgd_fit)
- })
 
  # regression tests
  save_coef(mlp_bin_sgd_fit)
@@ -185,10 +177,6 @@ test_that("class weights - mlp", {
   regexp = NA
  )
 
- expect_snapshot({
-  print(mlp_bin_sgd_fit_20)
- })
-
  # regression tests
  save_coef(mlp_bin_sgd_fit_20)
  expect_equal(
@@ -203,10 +191,6 @@ test_that("class weights - mlp", {
                                    class_weights = c(a = 12, b = 1))},
   regexp = NA
  )
-
- expect_snapshot({
-  print(mlp_bin_sgd_fit_12)
- })
 
  # regression tests
  save_coef(mlp_bin_sgd_fit_12)

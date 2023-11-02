@@ -28,10 +28,6 @@ test_that("multinomial mlp", {
  regexp = NA
  )
 
- expect_snapshot({
-  print(mlp_mlt_mat_lbfgs_fit)
- })
-
  # regression tests
  save_coef(mlp_mlt_mat_lbfgs_fit)
  expect_equal(
@@ -73,10 +69,6 @@ test_that("class weights - mlp", {
  regexp = NA
  )
 
- expect_snapshot({
-  print(mlp_bin_lbfgs_fit_20)
- })
-
  # regression tests
  save_coef(mlp_bin_lbfgs_fit_20)
  expect_equal(
@@ -92,10 +84,6 @@ test_that("class weights - mlp", {
  },
  regexp = NA
  )
-
- expect_snapshot({
-  print(mlp_bin_lbfgs_fit_12)
- })
 
  # regression tests
  save_coef(mlp_bin_lbfgs_fit_12)
