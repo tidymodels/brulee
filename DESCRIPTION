@@ -22,10 +22,10 @@ Imports:
     ggplot2,
     glue,
     hardhat,
-    rlang,
+    rlang (>= 1.1.1),
     stats,
     tibble,
-    torch (>= 0.6.0),
+    torch (>= 0.11.0),
     utils
 Suggests: 
     covr,
