@@ -126,6 +126,25 @@ test_that('bad args', {
  skip_on_os("mac", arch = "aarch64")
 
 
+ # ------------------------------------------------------------------------------
+
+ data(ames, package = "modeldata")
+
+ ames$Sale_Price <- log10(ames$Sale_Price)
+
+ ames_x_df <- ames[, c("Longitude", "Latitude")]
+ ames_x_df_mixed <- ames[, c("Longitude", "Latitude", "Alley")]
+ ames_x_mat <- as.matrix(ames_x_df)
+ ames_y <- ames$Sale_Price
+ ames_smol <- ames[, c("Longitude", "Latitude", "Alley", "Sale_Price")]
+
+ ames_rec <-
+  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) %>%
+  step_dummy(Alley) %>%
+  step_normalize(all_predictors())
+
+ # ------------------------------------------------------------------------------
+
  expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = NA),
   error = TRUE
