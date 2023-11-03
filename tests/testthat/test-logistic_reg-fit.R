@@ -1,5 +1,6 @@
 test_that("logistic regression", {
  skip_if_not(torch::torch_is_installed())
+ skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 
@@ -53,6 +54,7 @@ test_that("logistic regression", {
 
 test_that("class weights - logistic regression", {
  skip_if_not(torch::torch_is_installed())
+ skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 

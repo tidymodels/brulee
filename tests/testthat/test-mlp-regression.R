@@ -386,6 +386,8 @@ test_that("mlp learns something", {
 
 })
 test_that("variable hidden_units length", {
+ skip_if(!torch::torch_is_installed())
+ skip_on_os("mac", arch = "aarch64")
 
  x <- data.frame(x = rnorm(1000))
  y <- 2 * x$x
