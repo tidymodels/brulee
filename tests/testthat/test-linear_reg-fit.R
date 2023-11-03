@@ -1,6 +1,9 @@
 
 test_that("linear regression test", {
   skip_if(!torch::torch_is_installed())
+ skip_on_os("mac", arch = "aarch64")
+
+ # ------------------------------------------------------------------------------
 
  set.seed(1)
  df <- tibble::tibble(

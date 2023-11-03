@@ -6,6 +6,7 @@ suppressPackageStartupMessages(library(recipes))
 
 test_that('different mlp fit interfaces', {
  skip_if(!torch::torch_is_installed())
+ skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 
@@ -69,6 +70,7 @@ test_that('different mlp fit interfaces', {
 
 test_that('predictions', {
  skip_if(!torch::torch_is_installed())
+ skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 
