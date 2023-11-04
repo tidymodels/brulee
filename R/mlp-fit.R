@@ -33,10 +33,11 @@
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
-#' @param activation A string for the activation function. Possible values are
-#'  "relu", "elu", "tanh", "sigmoid", and "linear". If `hidden_units` is a
-#'  vector, `activation` can be a character vector with length equals to
-#'  `length(hidden_units)` specifying the activation for each hidden layer.
+#' @param activation A character vector for the activation function )such as
+#'  "relu", "tanh", "sigmoid", and so on). See [brulee_activations()] for
+#'  a list of possible values. If `hidden_units` is a vector, `activation`
+#'  can be a character vector with length equals to `length(hidden_units)`
+#'  specifying the activation for each hidden layer.
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the initial rapidity that
