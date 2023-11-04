@@ -44,7 +44,7 @@
       brulee_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA)
     Condition
       Error in `brulee_mlp_bridge()`:
-      ! 'activation' should be one of:  elu, hardtanh, leaky_relu, linear, relu, selu, sigmoid, softplus, tanh
+      ! 'activation' should be one of:  celu, elu, gelu, hardshrink, hardsigmoid, hardtanh, leaky_relu, linear, log_sigmoid, relu, relu6, rrelu, selu, sigmoid, silu, softplus, softshrink, softsign, tanh, tanhshrink
 
 ---
 
