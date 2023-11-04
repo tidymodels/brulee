@@ -436,9 +436,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
     rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
   }
 
-  allowed_activation <- c("linear", "relu", "elu", "tanh", "sigmoid", "hardtanh",
-                          "softplus", "leaky_relu", "selu")
-  allowed_activation <- sort(allowed_activation)
+  allowed_activation <- brulee_activations()
   good_activation <- activation %in% allowed_activation
   if (!all(good_activation)) {
    rlang::abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
@@ -449,13 +447,14 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
    batch_size <- NULL
   }
 
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
-  if (!is.null(batch_size)) {
+  if (!is.null(batch_size) & optimizer == "SGD") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
+
+  check_integer(epochs, single = TRUE, 1, fn = f_nm)
   check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
@@ -465,8 +464,6 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
-
-
 
   ## -----------------------------------------------------------------------------
 
@@ -644,7 +641,7 @@ mlp_fit_imp <-
       loss_label <- "\tLoss:"
     }
 
-    if (is.null(batch_size)) {
+    if (is.null(batch_size) & optimizer == "SGD") {
       batch_size <- nrow(x)
     } else {
       batch_size <- min(batch_size, nrow(x))
@@ -862,18 +859,6 @@ print.brulee_mlp <- function(x, ...) {
 }
 
 ## -----------------------------------------------------------------------------
-
-get_activation_fn <- function(arg, ...) {
-
- if (arg == "linear") {
-  res <- identity
- } else {
-  cl <- rlang::call2(paste0("nn_", arg), .ns = "torch")
-  res <- rlang::eval_bare(cl)
- }
-
- res
-}
 
 set_optimizer <- function(optimizer, model, learn_rate, momentum) {
  if (optimizer == "LBFGS") {
