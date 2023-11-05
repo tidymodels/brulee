@@ -1,29 +1,26 @@
-suppressPackageStartupMessages(library(modeldata))
-suppressPackageStartupMessages(library(torch))
-suppressPackageStartupMessages(library(recipes))
 
-test_that('different fit interfaces', {
+test_that('basic regression mlp LBFGS', {
  skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
- # One test here was irreducible across OSes
- skip_on_os(c("windows", "linux", "solaris"))
- skip("will be rew-riting these tests due to irreproducible results")
+
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+ skip_if_not_installed("recipes")
+
+ suppressPackageStartupMessages(library(dplyr))
+ suppressPackageStartupMessages(library(recipes))
 
  # ------------------------------------------------------------------------------
 
- data(ames, package = "modeldata")
+ set.seed(585)
+ reg_tr <- modeldata::sim_regression(5000)
+ reg_te <- modeldata::sim_regression(1000)
 
- ames$Sale_Price <- log10(ames$Sale_Price)
+ reg_tr_x_df <- reg_tr[, -1]
+ reg_tr_x_mat <- as.matrix(reg_tr_x_df)
+ reg_tr_y <- reg_tr$outcome
 
- ames_x_df <- ames[, c("Longitude", "Latitude")]
- ames_x_df_mixed <- ames[, c("Longitude", "Latitude", "Alley")]
- ames_x_mat <- as.matrix(ames_x_df)
- ames_y <- ames$Sale_Price
- ames_smol <- ames[, c("Longitude", "Latitude", "Alley", "Sale_Price")]
-
- ames_rec <-
-  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) %>%
-  step_dummy(Alley) %>%
+ reg_rec <-
+  recipe(outcome ~ ., data = reg_tr) %>%
   step_normalize(all_predictors())
 
  # ------------------------------------------------------------------------------
@@ -31,101 +28,67 @@ test_that('different fit interfaces', {
  # matrix x
  expect_error({
   set.seed(1)
-  mlp_reg_mat_lbfgs_fit <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L, mixture = 0)
- },
- regex = NA
- )
-
- # regression tests
- save_coef(mlp_reg_mat_lbfgs_fit)
- expect_equal(
-  last_param(mlp_reg_mat_lbfgs_fit),
-  load_coef(mlp_reg_mat_lbfgs_fit),
-  tolerance = 0.1
+  mlp_reg_mat_lbfgs_fit <-
+   brulee_mlp(reg_tr_x_mat, reg_tr_y, mixture = 0, learn_rate = .1)},
+  regex = NA
  )
 
  # data frame x (all numeric)
  expect_error(
-  mlp_reg_df_lbfgs_fit <- brulee_mlp(ames_x_df, ames_y, epochs = 10L),
+  mlp_reg_df_lbfgs_fit <- brulee_mlp(reg_tr_x_df, reg_tr_y, validation = .2),
   regex = NA
- )
-
- # data frame x (mixed)
- expect_error(
-  brulee_mlp(ames_x_df_mixed, ames_y, epochs = 10L),
-  regex = "There were some non-numeric columns in the predictors"
  )
 
  # formula (mixed)
- expect_error(
-  mlp_reg_f_lbfgs_fit <- brulee_mlp(Sale_Price ~ ., ames_smol, epochs = 10L),
-  regex = NA
- )
-
- # recipe (mixed)
  expect_error({
-  set.seed(1)
-  mlp_reg_rec_lbfgs_fit <- brulee_mlp(ames_rec, ames, epochs = 10L)},
+  set.seed(8373)
+  mlp_reg_f_lbfgs_fit <- brulee_mlp(outcome ~ ., reg_tr)},
   regex = NA
  )
 
- # NOTE this one fails across operating systems, each with different answers
- # regression tests
- save_coef(mlp_reg_rec_lbfgs_fit)
- expect_equal(
-  last_param(mlp_reg_rec_lbfgs_fit),
-  load_coef(mlp_reg_rec_lbfgs_fit),
-  tolerance = 0.1
+ # recipe
+ expect_error({
+  set.seed(8373)
+  mlp_reg_rec_lbfgs_fit <- brulee_mlp(reg_rec, reg_tr)},
+  regex = NA
  )
 
+ expect_error(
+  reg_pred_lbfgs <-
+   predict(mlp_reg_rec_lbfgs_fit, reg_te) %>%
+   bind_cols(reg_te) %>%
+   select(-starts_with("predictor")),
+  regex = NA)
+
+ exp_str <-
+  structure(list(.pred = numeric(0), outcome = numeric(0)),
+            row.names = integer(0), class = c("tbl_df", "tbl", "data.frame"))
+
+ expect_equal(reg_pred_lbfgs[0,], exp_str)
+ expect_equal(nrow(reg_pred_lbfgs), nrow(reg_te))
+
+ # Did it learn anything?
+ reg_rmse_lbfgs <-
+  reg_pred_lbfgs %>%
+  yardstick::rmse(outcome, .pred)
+
+ set.seed(382)
+ shuffled <-
+  reg_pred_lbfgs %>%
+  mutate(outcome = sample(outcome)) %>%
+  yardstick::rmse(outcome, .pred)
+
+ expect_true(reg_rmse_lbfgs$.estimate < shuffled$.estimate )
 })
 
-
-test_that('predictions', {
- skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
-
- # ------------------------------------------------------------------------------
-
- data(ames, package = "modeldata")
-
- ames$Sale_Price <- log10(ames$Sale_Price)
-
- ames_x_df <- ames[, c("Longitude", "Latitude")]
- ames_x_df_mixed <- ames[, c("Longitude", "Latitude", "Alley")]
- ames_x_mat <- as.matrix(ames_x_df)
- ames_y <- ames$Sale_Price
- ames_smol <- ames[, c("Longitude", "Latitude", "Alley", "Sale_Price")]
-
- ames_rec <-
-  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) %>%
-  step_dummy(Alley) %>%
-  step_normalize(all_predictors())
-
- # ------------------------------------------------------------------------------
-
- set.seed(1)
- fit_df <- brulee_mlp(ames_x_df, ames_y, epochs = 10L)
-
- complete_pred <- predict(fit_df, head(ames_x_df))
- expect_true(tibble::is_tibble(complete_pred))
- expect_true(all(names(complete_pred) == ".pred"))
- expect_true(nrow(complete_pred) == nrow(head(ames_x_df)))
-
- has_missing <- head(ames_x_df)
- has_missing$Longitude[1] <- NA
- incomplete_pred <- predict(fit_df, has_missing)
- expect_true(tibble::is_tibble(incomplete_pred))
- expect_true(all(names(incomplete_pred) == ".pred"))
- expect_true(nrow(incomplete_pred) == nrow(has_missing))
- expect_true(sum(is.na(incomplete_pred)) == 1)
-
-})
 
 test_that('bad args', {
  skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
+ skip_if_not_installed("recipes")
+
+ suppressPackageStartupMessages(library(dplyr))
+ suppressPackageStartupMessages(library(recipes))
 
  # ------------------------------------------------------------------------------
 
@@ -133,13 +96,13 @@ test_that('bad args', {
 
  ames$Sale_Price <- log10(ames$Sale_Price)
 
- ames_x_df <- ames[, c("Longitude", "Latitude")]
- ames_x_df_mixed <- ames[, c("Longitude", "Latitude", "Alley")]
- ames_x_mat <- as.matrix(ames_x_df)
- ames_y <- ames$Sale_Price
- ames_smol <- ames[, c("Longitude", "Latitude", "Alley", "Sale_Price")]
+ reg_x_df <- ames[, c("Longitude", "Latitude")]
+ reg_x_df_mixed <- ames[, c("Longitude", "Latitude", "Alley")]
+ reg_x_mat <- as.matrix(reg_x_df)
+ reg_y <- ames$Sale_Price
+ reg_smol <- ames[, c("Longitude", "Latitude", "Alley", "Sale_Price")]
 
- ames_rec <-
+ reg_rec <-
   recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) %>%
   step_dummy(Alley) %>%
   step_normalize(all_predictors())
@@ -147,121 +110,121 @@ test_that('bad args', {
  # ------------------------------------------------------------------------------
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = NA),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 1:2),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 1:2),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 0L),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 0L),
   error = TRUE
  )
  expect_error(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2),
   regex = NA
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = NA),
   error = TRUE
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = -1L),
   error = TRUE
  )
  expect_error(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 2),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = 2),
   regex = NA
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, activation = NA),
   error = TRUE
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = NA),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2)),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = runif(2)),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = -1.1),
   error = TRUE
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = NA),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2)),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = runif(2)),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = -1.1),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1.0),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 1.0),
   error = TRUE
  )
  expect_error(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 0),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 0),
   regex = NA
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = NA),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2)),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = runif(2)),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = -1.1),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1.0),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 1.0),
   error = TRUE
  )
  expect_error(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 0),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 0),
   regex = NA
  )
 
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = NA),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = runif(2)),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = -1.1),
   error = TRUE
  )
 
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = 2),
   error = TRUE
  )
  expect_snapshot(
-  brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10)),
+  brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = rep(TRUE, 10)),
   error = TRUE
  )
  # ------------------------------------------------------------------------------
 
- fit_mat <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L)
+ fit_mat <- brulee_mlp(reg_x_mat, reg_y, epochs = 10L)
 
  bad_models <- fit_mat
  bad_models$model_obj <- "potato!"

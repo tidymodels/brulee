@@ -43,6 +43,23 @@ test_that("basic multinomial mlp LBFGS", {
    bind_cols(mnl_te),
   regex = NA)
 
+ fact_str <- structure(integer(0), levels = c("one", "two", "three"), class = "factor")
+ exp_str <-
+  structure(
+   list(.pred_class =
+         fact_str,
+        .pred_one = numeric(0),
+        .pred_two = numeric(0),
+        .pred_three = numeric(0),
+        A = numeric(0),
+        B = numeric(0),
+        class = fact_str),
+   row.names = integer(0),
+   class = c("tbl_df", "tbl", "data.frame"))
+
+ expect_equal(mnl_pred_lbfgs[0,], exp_str)
+ expect_equal(nrow(mnl_pred_lbfgs), nrow(mnl_te))
+
  # Did it learn anything?
  mnl_brier_lbfgs <-
   mnl_pred_lbfgs %>%
@@ -132,6 +149,7 @@ test_that("multinomial mlp class weights", {
    ~  -0.5    +  0.6 * abs(A),
    ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
    ~ -0.6 * A + 0.50 * B -  A * B)
+
  num_class <- length(levels(mnl_tr$class))
  cls_xtab <- table(mnl_tr$class)
  min_class <- names(sort(cls_xtab))[1]

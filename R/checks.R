@@ -188,7 +188,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   if (length(wts) == 1) {
@@ -202,7 +202,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   if (length(lvls) != length(wts)) {
     msg <- paste0("There were ", length(wts), " class weights given but ",
                   length(lvls), " were expected.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   nms <- names(wts)
@@ -212,7 +212,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     if (!identical(sort(nms), sort(lvls))) {
       msg <- paste("Names for class weights should be:",
                    paste0("'", lvls, "'", collapse = ", "))
-      rlang::abort(msg)
+      cli::cli_abort(msg)
     }
     wts <- wts[lvls]
   }

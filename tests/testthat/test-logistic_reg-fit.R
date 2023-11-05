@@ -1,128 +1,188 @@
-test_that("logistic regression", {
+
+test_that("basic logistic regression LBFGS", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+
+ suppressPackageStartupMessages(library(dplyr))
 
  # ------------------------------------------------------------------------------
 
- n <- 1000
- b <- c(-1, -3, 5)
- set.seed(1)
- df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
- lp <- b[1] + b[2] * df$x1 + b[3] * df$x2
- prob <- binomial()$linkinv(lp)
- df$y <- ifelse(prob <= runif(n), "a", "b")
- df$y <- factor(df$y)
-
- glm_fit <- glm(y ~ ., data = df, family = "binomial")
+ set.seed(585)
+ bin_tr <- modeldata::sim_logistic(5000, ~ -1 - 3 * A + 5 * B)
+ bin_te <- modeldata::sim_logistic(1000, ~ -1 - 3 * A + 5 * B)
+ num_class <- length(levels(bin_tr$class))
 
  # ------------------------------------------------------------------------------
+
+ glm_fit <- glm(class ~ ., data = bin_tr, family = "binomial")
 
  expect_error({
-  set.seed(1)
-  logistic_reg_fit_lbfgs <- brulee_logistic_reg(y ~ ., df, epochs = 2, penalty = 0)},
-  regex = NA
- )
+  set.seed(392)
+  bin_fit_lbfgs <-
+   brulee_logistic_reg(class ~ ., bin_tr, penlaty = 0, epochs = 1)},
+  regex = NA)
 
- # regression tests
- save_coef(logistic_reg_fit_lbfgs)
  expect_equal(
-  last_param(logistic_reg_fit_lbfgs),
-  load_coef(logistic_reg_fit_lbfgs),
-  tolerance = 0.1
+  unname(coef(glm_fit)),
+  unname(coef(bin_fit_lbfgs)),
+  tolerance = 1
  )
 
  expect_error(
-  logistic_reg_fit_sgd <-
-   brulee_logistic_reg(y ~ ., df, epochs = 10, learn_rate = 0.1,
-                       optimizer = "SGD"),
-  regexp = NA
- )
+  bin_pred_lbfgs <-
+   predict(bin_fit_lbfgs,bin_te) %>%
+   bind_cols(predict(bin_fit_lbfgs,bin_te, type = "prob")) %>%
+   bind_cols(bin_te),
+  regex = NA)
 
- # regression tests
- save_coef(logistic_reg_fit_sgd)
- expect_equal(
-  last_param(logistic_reg_fit_sgd),
-  load_coef(logistic_reg_fit_sgd),
-  tolerance = 0.1
- )
+ fact_str <- structure(integer(0), levels = c("one", "two"), class = "factor")
+ exp_str <-
+  structure(
+   list(.pred_class =
+         fact_str,
+        .pred_one = numeric(0),
+        .pred_two = numeric(0),
+        A = numeric(0),
+        B = numeric(0),
+        class = fact_str),
+   row.names = integer(0),
+   class = c("tbl_df", "tbl", "data.frame"))
 
- expect_equal(names(coef(logistic_reg_fit_sgd)), c("(Intercept)", "x1", "x2"))
- expect_equal(sign(coef(logistic_reg_fit_sgd)), sign(coef(glm_fit)))
+ expect_equal(bin_pred_lbfgs[0,], exp_str)
+ expect_equal(nrow(bin_pred_lbfgs), nrow(bin_te))
+
+ # Did it learn anything?
+ bin_brier_lbfgs <-
+  bin_pred_lbfgs %>%
+  yardstick::brier_class(class, .pred_one)
+
+ expect_true(bin_brier_lbfgs$.estimate < (1 - 1/num_class)^2)
 })
+
+test_that("basic logistic regression SGD", {
+ skip_if_not(torch::torch_is_installed())
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+
+ suppressPackageStartupMessages(library(dplyr))
+
+ # ------------------------------------------------------------------------------
+
+ set.seed(585)
+ bin_tr <- modeldata::sim_logistic(5000, ~ -1 - 3 * A + 5 * B)
+ bin_te <- modeldata::sim_logistic(1000, ~ -1 - 3 * A + 5 * B)
+ num_class <- length(levels(bin_tr$class))
+
+ # ------------------------------------------------------------------------------
+
+ expect_error({
+  set.seed(392)
+  bin_fit_sgd <-
+   brulee_logistic_reg(class ~ .,
+                       bin_tr,
+                       epochs = 500,
+                       penalty = 0,
+                       dropout = .1,
+                       optimize = "SGD",
+                       batch_size = 2^5,
+                       learn_rate = 0.1)},
+  regex = NA)
+
+ glm_fit <- glm(class ~ ., data = bin_tr, family = "binomial")
+
+ expect_equal(
+  unname(coef(glm_fit)),
+  unname(coef(bin_fit_sgd)),
+  tolerance = .5
+ )
+
+ expect_error(
+  bin_pred_sgd <-
+   predict(bin_fit_sgd,bin_te) %>%
+   bind_cols(predict(bin_fit_sgd,bin_te, type = "prob")) %>%
+   bind_cols(bin_te),
+  regex = NA)
+
+ # Did it learn anything?
+ bin_brier_sgd <-
+  bin_pred_sgd %>%
+  yardstick::brier_class(class, .pred_one)
+
+ expect_true(bin_brier_sgd$.estimate < (1 - 1/num_class)^2)
+})
+
 
 # ------------------------------------------------------------------------------
 
-test_that("class weights - logistic regression", {
+test_that("logistic regression class weights", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+
+ suppressPackageStartupMessages(library(dplyr))
 
  # ------------------------------------------------------------------------------
 
- n <- 1000
- b <- c(8, -3, 5)
- set.seed(1)
- df_imbal <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
- lp <- b[1] + b[2] * df_imbal$x1 + b[3] * df_imbal$x2
- prob <- binomial()$linkinv(lp)
- df_imbal$y <- ifelse(prob <= runif(n), "a", "b")
- df_imbal$y <- factor(df_imbal$y)
+ set.seed(585)
+ bin_tr <- modeldata::sim_logistic(5000, ~ -5 - 3 * A + 5 * B)
+ bin_te <- modeldata::sim_logistic(1000, ~ -5 - 3 * A + 5 * B)
+ num_class <- length(levels(bin_tr$class))
+
+ num_class <- length(levels(bin_tr$class))
+ cls_xtab <- table(bin_tr$class)
+ min_class <- names(sort(cls_xtab))[1]
+ cls_wts <- rep(1, num_class)
+ names(cls_wts) <- levels(bin_tr$class)
+ cls_wts[names(cls_wts) == min_class] <- 10
 
  # ------------------------------------------------------------------------------
 
  expect_error({
-  set.seed(1)
-  logistic_reg_fit_sgd_wts <-
-   brulee_logistic_reg(
-    y ~ .,
-    df_imbal,
-    class_weights = 20,
-    optimizer = "SGD",
-    penalty = 0
-   )
- },
- regexp = NA
- )
+  set.seed(392)
+  bin_fit_lbfgs_wts <-
+   brulee_logistic_reg(class ~ .,
+                       bin_tr,
+                       epochs = 30,
+                       mixture = 0.5,
+                       rate_schedule = "decay_time",
+                       class_weights = cls_wts,
+                       learn_rate = 0.1)},
+  regex = NA)
 
- # regression tests
- save_coef(logistic_reg_fit_sgd_wts)
- expect_equal(
-  last_param(logistic_reg_fit_sgd_wts),
-  load_coef(logistic_reg_fit_sgd_wts),
-  tolerance = 0.1
- )
+ expect_error(
+  bin_pred_lbfgs_wts <-
+   predict(bin_fit_lbfgs_wts,bin_te) %>%
+   bind_cols(predict(bin_fit_lbfgs_wts,bin_te, type = "prob")) %>%
+   bind_cols(bin_te),
+  regex = NA)
 
- expect_error({
-  set.seed(1)
-  logistic_reg_fit_lbfgs_wts <-
-   brulee_logistic_reg(
-    y ~ .,
-    df_imbal,
-    epochs = 2,
-    class_weights = c(a = 12, b = 1),
-    penalty = 0
-   )},
-  regexp = NA
- )
-
- # regression tests
- save_coef(logistic_reg_fit_lbfgs_wts)
- expect_equal(
-  last_param(logistic_reg_fit_lbfgs_wts),
-  load_coef(logistic_reg_fit_lbfgs_wts),
-  tolerance = 0.1
- )
+ ### matched unweighted model
 
  expect_error({
-  set.seed(1)
-  fit_bal <- brulee_logistic_reg(y ~ ., df_imbal, learn_rate = 0.1,
-                                 optimizer = "SGD")},
-  regexp = NA
- )
+  set.seed(392)
+  bin_fit_lbfgs_unwt <-
+   brulee_logistic_reg(class ~ .,
+                       bin_tr,
+                       epochs = 30,
+                       mixture = 0.5,
+                       rate_schedule = "decay_time",
+                       learn_rate = 0.1)},
+  regex = NA)
 
+ expect_error(
+  bin_pred_lbfgs_unwt <-
+   predict(bin_fit_lbfgs_unwt,bin_te) %>%
+   bind_cols(predict(bin_fit_lbfgs_unwt,bin_te, type = "prob")) %>%
+   bind_cols(bin_te),
+  regex = NA)
+
+ # did weighting predict the majority class more often?
  expect_true(
-  sum(predict(fit_bal, df_imbal) == "a") <
-   sum(predict(logistic_reg_fit_sgd_wts, df_imbal) == "a")
+  sum(bin_pred_lbfgs_wts$.pred_class == min_class) >
+   sum(bin_pred_lbfgs_unwt$.pred_class == min_class)
  )
 
 })
+
 

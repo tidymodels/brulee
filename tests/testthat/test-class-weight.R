@@ -20,7 +20,6 @@ test_that("setting class weights", {
  cls_xtab <- table(mnl_tr$class)
  min_class <- names(sort(cls_xtab))[1]
 
-
  cls_wts <- rep(1, num_class)
  names(cls_wts) <- lvls
  cls_wts[names(cls_wts) == min_class] <- 10
