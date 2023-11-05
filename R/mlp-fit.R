@@ -33,10 +33,11 @@
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
-#' @param activation A string for the activation function. Possible values are
-#'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
-#'  can be a character vector with length equals to `length(hidden_units)` specifying
-#'  the activation for each hidden layer.
+#' @param activation A character vector for the activation function )such as
+#'  "relu", "tanh", "sigmoid", and so on). See [brulee_activations()] for
+#'  a list of possible values. If `hidden_units` is a vector, `activation`
+#'  can be a character vector with length equals to `length(hidden_units)`
+#'  specifying the activation for each hidden layer.
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the initial rapidity that
@@ -435,18 +436,26 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   if (length(hidden_units) != length(activation)) {
     rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
   }
+
+  allowed_activation <- brulee_activations()
+  good_activation <- activation %in% allowed_activation
+  if (!all(good_activation)) {
+   rlang::abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
+  }
+
   if (optimizer == "LBFGS" & !is.null(batch_size)) {
    rlang::warn("'batch_size' is only used for the SGD optimizer.")
    batch_size <- NULL
   }
 
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
-  if (!is.null(batch_size)) {
+  if (!is.null(batch_size) & optimizer == "SGD") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
+
+  check_integer(epochs, single = TRUE, 1, fn = f_nm)
   check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
@@ -456,8 +465,6 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
-
-
 
   ## -----------------------------------------------------------------------------
 
@@ -635,7 +642,7 @@ mlp_fit_imp <-
       loss_label <- "\tLoss:"
     }
 
-    if (is.null(batch_size)) {
+    if (is.null(batch_size) & optimizer == "SGD") {
       batch_size <- nrow(x)
     } else {
       batch_size <- min(batch_size, nrow(x))
@@ -853,19 +860,6 @@ print.brulee_mlp <- function(x, ...) {
 }
 
 ## -----------------------------------------------------------------------------
-
-get_activation_fn <- function(arg, ...) {
-  if (arg == "relu") {
-    res <- torch::nn_relu(...)
-  } else if (arg == "elu") {
-    res <- torch::nn_elu(...)
-  } else if (arg == "tanh") {
-    res <- torch::nn_tanh(...)
-  } else {
-    res <- identity
-  }
-  res
-}
 
 set_optimizer <- function(optimizer, model, learn_rate, momentum) {
  if (optimizer == "LBFGS") {

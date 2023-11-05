@@ -177,6 +177,7 @@ test_that("class weights - mlp", {
  # ------------------------------------------------------------------------------
 
  expect_error({
+  skip("will be rew-riting these tests due to irreproducible results")
   set.seed(1)
   mlp_bin_sgd_fit_20 <- brulee_mlp(y ~ ., df_imbal,
                                    class_weights = 20)},

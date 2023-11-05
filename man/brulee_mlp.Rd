@@ -126,10 +126,11 @@ specified as:
 of integers. If a vector of integers, the model will have \code{length(hidden_units)}
 layers each with \code{hidden_units[i]} hidden units.}
 
-\item{activation}{A string for the activation function. Possible values are
-"relu", "elu", "tanh", and "linear". If \code{hidden_units} is a vector, \code{activation}
-can be a character vector with length equals to \code{length(hidden_units)} specifying
-the activation for each hidden layer.}
+\item{activation}{A character vector for the activation function )such as
+"relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
+a list of possible values. If \code{hidden_units} is a vector, \code{activation}
+can be a character vector with length equals to \code{length(hidden_units)}
+specifying the activation for each hidden layer.}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
 

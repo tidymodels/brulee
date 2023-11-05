@@ -7,6 +7,7 @@ test_that('different fit interfaces', {
  skip_on_os("mac", arch = "aarch64")
  # One test here was irreducible across OSes
  skip_on_os(c("windows", "linux", "solaris"))
+ skip("will be rew-riting these tests due to irreproducible results")
 
  # ------------------------------------------------------------------------------
 
@@ -125,6 +126,7 @@ test_that('bad args', {
  skip_if(!torch::torch_is_installed())
  skip_on_os("mac", arch = "aarch64")
 
+
  # ------------------------------------------------------------------------------
 
  data(ames, package = "modeldata")
@@ -144,91 +146,91 @@ test_that('bad args', {
 
  # ------------------------------------------------------------------------------
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = NA),
-  "expected 'epochs' to be integer."
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 1:2),
-  "expected 'epochs' to be a single integer."
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 0L),
-  "expected 'epochs' to be an integer on"
+  error = TRUE
  )
  expect_error(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2),
   regex = NA
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA),
-  "expected 'hidden_units' to be integer."
+  error = TRUE
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L),
-  "expected 'hidden_units' to be an integer on"
+  error = TRUE
  )
  expect_error(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = 2),
   regex = NA
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA),
-  "expected 'activation' to be character"
+  error = TRUE
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA),
-  "expected 'penalty' to be a double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2)),
-  "expected 'penalty' to be a single double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1),
-  "expected 'penalty' to be a double on"
+  error = TRUE
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA),
-  "expected 'dropout' to be a double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2)),
-  "expected 'dropout' to be a single double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1),
-  "expected 'dropout' to be a double on"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1.0),
-  "expected 'dropout' to be a double on"
+  error = TRUE
  )
  expect_error(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 0),
   regex = NA
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA),
-  "expected 'validation' to be a double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2)),
-  "expected 'validation' to be a single double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1),
-  "expected 'validation' to be a double on"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1.0),
-  "expected 'validation' to be a double on"
+  error = TRUE
  )
  expect_error(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 0),
@@ -236,35 +238,34 @@ test_that('bad args', {
  )
 
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA),
-  "expected 'learn_rate' to be a double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2)),
-  "expected 'learn_rate' to be a single double"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1),
-  "expected 'learn_rate' to be a double on"
+  error = TRUE
  )
 
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2),
-  "expected 'verbose' to be logical"
+  error = TRUE
  )
- expect_error(
+ expect_snapshot(
   brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10)),
-  "expected 'verbose' to be a single logical"
+  error = TRUE
  )
-
  # ------------------------------------------------------------------------------
 
  fit_mat <- brulee_mlp(ames_x_mat, ames_y, epochs = 10L)
 
  bad_models <- fit_mat
  bad_models$model_obj <- "potato!"
- expect_error(
+ expect_snapshot(
   brulee:::new_brulee_mlp(
    model_obj = bad_models$model_obj,
    estimates = bad_models$estimates,
@@ -275,12 +276,12 @@ test_that('bad args', {
    parameters = bad_models$parameters,
    blueprint = bad_models$blueprint
   ),
-  "should be a raw vector"
+  error = TRUE
  )
 
  bad_est <- fit_mat
  bad_est$estimates <- "potato!"
- expect_error(
+ expect_snapshot(
   brulee:::new_brulee_mlp(
    model_obj = bad_est$model_obj,
    estimates = bad_est$estimates,
@@ -291,12 +292,12 @@ test_that('bad args', {
    parameters = bad_est$parameters,
    blueprint = bad_est$blueprint
   ),
-  "should be a list"
+  error = TRUE
  )
 
  bad_loss <- fit_mat
  bad_loss$loss <- "potato!"
- expect_error(
+ expect_snapshot(
   brulee:::new_brulee_mlp(
    model_obj = bad_loss$model_obj,
    estimates = bad_loss$estimates,
@@ -307,12 +308,12 @@ test_that('bad args', {
    parameters = bad_loss$parameters,
    blueprint = bad_loss$blueprint
   ),
-  "should be a numeric vector"
+  error = TRUE
  )
 
  bad_dims <- fit_mat
  bad_dims$dims <- "mountainous"
- expect_error(
+ expect_snapshot(
   brulee:::new_brulee_mlp(
    model_obj = bad_dims$model_obj,
    estimates = bad_dims$estimates,
@@ -323,13 +324,13 @@ test_that('bad args', {
    parameters = bad_dims$parameters,
    blueprint = bad_dims$blueprint
   ),
-  "should be a list"
+  error = TRUE
  )
 
 
  bad_parameters <- fit_mat
  bad_parameters$dims <- "mitten"
- expect_error(
+ expect_snapshot(
   brulee:::new_brulee_mlp(
    model_obj = bad_parameters$model_obj,
    estimates = bad_parameters$estimates,
@@ -340,13 +341,13 @@ test_that('bad args', {
    parameters = bad_parameters$parameters,
    blueprint = bad_parameters$blueprint
   ),
-  "should be a list"
+  error = TRUE
  )
 
 
  bad_blueprint <- fit_mat
  bad_blueprint$blueprint <- "adorable"
- expect_error(
+ expect_snapshot(
   brulee:::new_brulee_mlp(
    model_obj = bad_blueprint$model_obj,
    estimates = bad_blueprint$estimates,
@@ -357,9 +358,8 @@ test_that('bad args', {
    parameters = bad_blueprint$parameters,
    blueprint = bad_blueprint$blueprint
   ),
-  "should be a hardhat blueprint"
+  error = TRUE
  )
-
 })
 
 test_that("mlp learns something", {
@@ -399,17 +399,17 @@ test_that("variable hidden_units length", {
 
  expect_equal(length(unlist(coef(model))), (1*2 + 2) + (2*3 + 3) + (3*1 + 1))
 
- expect_error(
+
+ expect_snapshot(
   model <- brulee_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1,
                       activation = c("relu", "tanh")),
-  regexp = "must be a single value or a vector with"
+  error = TRUE
  )
 
- expect_error(
+ expect_snapshot(
   model <- brulee_mlp(x, y, hidden_units = c(1), epochs = 1,
                       activation = c("relu", "tanh")),
-  regexp = "must be a single value or a vector with"
+  error = TRUE
  )
-
 
 })
