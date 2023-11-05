@@ -24,6 +24,14 @@ use the `torch` package infrastructure, such as:
 - [multinomial
   regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
 
+Some interesting features:
+
+- Early stopping based on an internal validation set.
+- L1 and L2 penalization, also dropout.
+- GPU utilization for models.
+- Class-specific weights for cost-sensitive learning.
+- Data frame, matrix, formula, and recipe interfaces for models.
+
 ## Installation
 
 You can install the released version of brulee from
@@ -53,8 +61,9 @@ library(yardstick)
 
 data(bivariate, package = "modeldata")
 set.seed(20)
-nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
-                         epochs = 150, hidden_units = 3)
+nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), 
+                         data = bivariate_train, 
+                         hidden_units = 3)
 
 # We use the tidymodels semantics to always return a tibble when predicting
 predict(nn_log_biv, bivariate_test, type = "prob") %>% 
@@ -63,7 +72,7 @@ predict(nn_log_biv, bivariate_test, type = "prob") %>%
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.410
+#> 1 roc_auc binary         0.838
 ```
 
 A recipe can also be used if the data require some sort of preprocessing
@@ -79,16 +88,15 @@ rec <-
 
 set.seed(20)
 nn_rec_biv <- brulee_mlp(rec, data = bivariate_train, 
-                         epochs = 150, hidden_units = 3)
+                         hidden_units = 3)
 
-# A little better
 predict(nn_rec_biv, bivariate_test, type = "prob") %>% 
   bind_cols(bivariate_test) %>% 
   roc_auc(Class, .pred_One)
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.708
+#> 1 roc_auc binary         0.866
 ```
 
 ## Code of Conduct

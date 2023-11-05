@@ -74,7 +74,7 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  device = device,
+  device = "cpu",
   verbose = FALSE,
   ...
 )

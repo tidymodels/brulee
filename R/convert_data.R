@@ -6,6 +6,9 @@
 #' @param x A numeric matrix of predictors.
 #' @param y A vector. If regression than `y` is numeric. For classification, it
 #'  is a factor.
+#' @param device A character string to denote which processor to use with
+#' possibles values: `"cpu"`, `"cuda"`, `"mps"`, and `"auto"`. The last value
+#' uses [guess_brulee_device()] to make the determination.
 #' @return An R6 index sampler object with classes "training_set",
 #'  "dataset", and "R6".
 #' @details Missing values should be removed before passing data to this function.

@@ -12,3 +12,12 @@ A character vector of values.
 \description{
 Activation functions for neural networks in brulee
 }
+\seealso{
+\code{\link[torch:nn_celu]{torch::nn_celu()}}, \code{\link[torch:nn_elu]{torch::nn_elu()}}, \code{\link[torch:nn_gelu]{torch::nn_gelu()}},
+\code{\link[torch:nn_hardshrink]{torch::nn_hardshrink()}}, \code{\link[torch:nn_hardsigmoid]{torch::nn_hardsigmoid()}}, \code{\link[torch:nn_hardtanh]{torch::nn_hardtanh()}},
+\code{\link[torch:nn_leaky_relu]{torch::nn_leaky_relu()}}, \code{\link[torch:nn_identity]{torch::nn_identity()}}, \code{\link[torch:nn_log_sigmoid]{torch::nn_log_sigmoid()}},
+\code{\link[torch:nn_relu]{torch::nn_relu()}}, \code{\link[torch:nn_relu6]{torch::nn_relu6()}}, \code{\link[torch:nn_rrelu]{torch::nn_rrelu()}}, \code{\link[torch:nn_selu]{torch::nn_selu()}},
+\code{\link[torch:nn_sigmoid]{torch::nn_sigmoid()}}, \code{\link[torch:nn_silu]{torch::nn_silu()}}, \code{\link[torch:nn_softplus]{torch::nn_softplus()}},
+\code{\link[torch:nn_softshrink]{torch::nn_softshrink()}}, \code{\link[torch:nn_softsign]{torch::nn_softsign()}}, \code{\link[torch:nn_tanh]{torch::nn_tanh()}},
+\code{\link[torch:nn_tanhshrink]{torch::nn_tanhshrink()}}
+}

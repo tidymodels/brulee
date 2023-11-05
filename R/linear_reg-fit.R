@@ -91,7 +91,7 @@
 #'  set.seed(1)
 #'  brulee_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
 #'                     y = ames_train$Sale_Price,
-#'                     penalty = 0.10, epochs = 1, batch_size = 64)
+#'                     penalty = 0.10, epochs = 10)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -112,8 +112,7 @@
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 5, batch_size = 32)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 5)
 #'  fit
 #'
 #'  autoplot(fit)
