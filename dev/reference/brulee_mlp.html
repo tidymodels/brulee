@@ -183,10 +183,11 @@ layers each with <code>hidden_units[i]</code> hidden units.</p></dd>
 
 
 <dt>activation</dt>
-<dd><p>A string for the activation function. Possible values are
-"relu", "elu", "tanh", and "linear". If <code>hidden_units</code> is a vector, <code>activation</code>
-can be a character vector with length equals to <code>length(hidden_units)</code> specifying
-the activation for each hidden layer.</p></dd>
+<dd><p>A character vector for the activation function )such as
+"relu", "tanh", "sigmoid", and so on). See <code><a href="brulee_activations.html">brulee_activations()</a></code> for
+a list of possible values. If <code>hidden_units</code> is a vector, <code>activation</code>
+can be a character vector with length equals to <code>length(hidden_units)</code>
+specifying the activation for each hidden layer.</p></dd>
 
 
 <dt>penalty</dt>
