@@ -1,117 +1,199 @@
 
-test_that("multinomial mlp", {
+test_that("basic multinomial mlp LBFGS", {
  skip_if_not(torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
- # One test here was irreducible across OSes
- skip_on_os(c("windows", "linux", "solaris"))
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+
+ suppressPackageStartupMessages(library(dplyr))
 
  # ------------------------------------------------------------------------------
 
- n <- 10000
- b <- cbind(c(8, -3, 5), c(-0.1, 3, 7), c(-2, -5, -5))
-
- set.seed(1)
- df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
-
- mat <- cbind(rep(1, n), as.matrix(df))
- lps <- mat %*% b
- probs <-  binomial()$linkinv(lps)
- probs <- apply(probs, 1, function(x) exp(x)/ sum(exp(x)))
- probs <- t(probs)
- df$y <- apply(probs, 1, function(x) sample(letters[1:3], size = 1, prob = x))
- df$y <- factor(df$y)
+ set.seed(585)
+ mnl_tr <-
+  modeldata::sim_multinomial(
+   1000,
+   ~  -0.5    +  0.6 * abs(A),
+   ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
+   ~ -0.6 * A + 0.50 * B -  A * B)
+ mnl_te <-
+  modeldata::sim_multinomial(
+   200,
+   ~  -0.5    +  0.6 * abs(A),
+   ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
+   ~ -0.6 * A + 0.50 * B -  A * B)
+ num_class <- length(levels(mnl_tr$class))
 
  # ------------------------------------------------------------------------------
 
  expect_error({
-  skip("will be rew-riting these tests due to irreproducible results")
-  set.seed(1)
-  mlp_mlt_mat_lbfgs_fit <- brulee_mlp(y ~ ., df, epochs = 2)
- },
- regexp = NA
- )
+  set.seed(392)
+  mnl_fit_lbfgs <-
+   brulee_mlp(class ~ .,
+              mnl_tr,
+              epochs = 200,
+              hidden_units = 5,
+              rate_schedule = "cyclic",
+              learn_rate = 0.1)},
+  regex = NA)
 
- # NOTE this one fails across operating systems, each with different answers
- # regression tests
- save_coef(mlp_mlt_mat_lbfgs_fit)
- expect_equal(
-  last_param(mlp_mlt_mat_lbfgs_fit),
-  load_coef(mlp_mlt_mat_lbfgs_fit),
-  tolerance = 0.1
- )
+ expect_error(
+  mnl_pred_lbfgs <-
+   predict(mnl_fit_lbfgs, mnl_te) %>%
+   bind_cols(predict(mnl_fit_lbfgs, mnl_te, type = "prob")) %>%
+   bind_cols(mnl_te),
+  regex = NA)
 
+ # Did it learn anything?
+ mnl_brier_lbfgs <-
+  mnl_pred_lbfgs %>%
+  yardstick::brier_class(class, .pred_one, .pred_two, .pred_three)
+
+ expect_true(mnl_brier_lbfgs$.estimate < (1 - 1/num_class)^2)
 })
+
+test_that("basic multinomial mlp SGD", {
+ skip_if_not(torch::torch_is_installed())
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+
+ suppressPackageStartupMessages(library(dplyr))
+
+ # ------------------------------------------------------------------------------
+
+ set.seed(585)
+ mnl_tr <-
+  modeldata::sim_multinomial(
+   1000,
+   ~  -0.5    +  0.6 * abs(A),
+   ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
+   ~ -0.6 * A + 0.50 * B -  A * B)
+ mnl_te <-
+  modeldata::sim_multinomial(
+   200,
+   ~  -0.5    +  0.6 * abs(A),
+   ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
+   ~ -0.6 * A + 0.50 * B -  A * B)
+ num_class <- length(levels(mnl_tr$class))
+
+ # ------------------------------------------------------------------------------
+
+ expect_error({
+  set.seed(392)
+  mnl_fit_sgd <-
+   brulee_mlp(class ~ .,
+              mnl_tr,
+              epochs = 200,
+              penalty = 0,
+              dropout = .1,
+              hidden_units = 5,
+              optimize = "SGD",
+              batch_size = 64,
+              momentum = 0.5,
+              learn_rate = 0.1)},
+  regex = NA)
+
+ expect_error(
+  mnl_pred_sgd <-
+   predict(mnl_fit_sgd, mnl_te) %>%
+   bind_cols(predict(mnl_fit_sgd, mnl_te, type = "prob")) %>%
+   bind_cols(mnl_te),
+  regex = NA)
+
+ # Did it learn anything?
+ mnl_brier_sgd <-
+  mnl_pred_sgd %>%
+  yardstick::brier_class(class, .pred_one, .pred_two, .pred_three)
+
+ expect_true(mnl_brier_sgd$.estimate < (1 - 1/num_class)^2)
+})
+
 
 # ------------------------------------------------------------------------------
 
-test_that("class weights - mlp", {
+test_that("multinomial mlp class weights", {
  skip_if_not(torch::torch_is_installed())
- # One test here was irreducible across OSes
- skip_on_os(c("windows", "linux", "solaris"))
- skip_on_os("mac", arch = "aarch64")
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+
+ suppressPackageStartupMessages(library(dplyr))
 
  # ------------------------------------------------------------------------------
 
- n <- 10000
- b <- cbind(c(8, -3, 5), c(-0.1, 3, 7), c(-2, -5, -5))
-
- set.seed(1)
- df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
-
- mat <- cbind(rep(1, n), as.matrix(df))
- lps <- mat %*% b
- probs <-  binomial()$linkinv(lps)
- probs <- apply(probs, 1, function(x) exp(x)/ sum(exp(x)))
- probs <- t(probs)
- df$y <- apply(probs, 1, function(x) sample(letters[1:3], size = 1, prob = x))
- df$y <- factor(df$y)
+ set.seed(585)
+ mnl_tr <-
+  modeldata::sim_multinomial(
+   1000,
+   ~  -0.5    +  0.6 * abs(A),
+   ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
+   ~ -0.6 * A + 0.50 * B -  A * B)
+ mnl_te <-
+  modeldata::sim_multinomial(
+   200,
+   ~  -0.5    +  0.6 * abs(A),
+   ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, - 2),
+   ~ -0.6 * A + 0.50 * B -  A * B)
+ num_class <- length(levels(mnl_tr$class))
+ cls_xtab <- table(mnl_tr$class)
+ min_class <- names(sort(cls_xtab))[1]
+ cls_wts <- rep(1, num_class)
+ names(cls_wts) <- levels(mnl_tr$class)
+ cls_wts[names(cls_wts) == min_class] <- 10
 
  # ------------------------------------------------------------------------------
 
  expect_error({
-  set.seed(1)
-  mlp_bin_lbfgs_fit_20 <- brulee_mlp(y ~ ., df, class_weights = 20)
- },
- regexp = NA
- )
+  set.seed(392)
+  mnl_fit_lbfgs_wts <-
+   brulee_mlp(class ~ .,
+              mnl_tr,
+              epochs = 30,
+              hidden_units = 5,
+              rate_schedule = "decay_time",
+              class_weights = cls_wts,
+              stop_iter = 100,
+              learn_rate = 0.1)},
+  regex = NA)
 
- # NOTE this one fails across operating systems, each with different answers
- # regression tests
- save_coef(mlp_bin_lbfgs_fit_20)
- expect_equal(
-  last_param(mlp_bin_lbfgs_fit_20),
-  load_coef(mlp_bin_lbfgs_fit_20),
-  tolerance = 0.1
- )
+ expect_error(
+  mnl_pred_lbfgs_wts <-
+   predict(mnl_fit_lbfgs_wts, mnl_te) %>%
+   bind_cols(predict(mnl_fit_lbfgs_wts, mnl_te, type = "prob")) %>%
+   bind_cols(mnl_te),
+  regex = NA)
 
- expect_error({
-  set.seed(1)
-  mlp_bin_lbfgs_fit_12 <- brulee_mlp(y ~ ., df, epochs = 2,
-                                     class_weights = c(a = 12, b = 1, c = 1))
- },
- regexp = NA
- )
+ mnl_brier_lbfgs_wts <-
+  mnl_pred_lbfgs_wts %>%
+  yardstick::brier_class(class, .pred_one, .pred_two, .pred_three)
 
- # regression tests
- save_coef(mlp_bin_lbfgs_fit_12)
- expect_equal(
-  last_param(mlp_bin_lbfgs_fit_12),
-  load_coef(mlp_bin_lbfgs_fit_12),
-  tolerance = 0.1
- )
+ expect_true(mnl_brier_lbfgs_wts$.estimate < (1 - 1/num_class)^2)
+
+ ### matched unweighted model
 
  expect_error({
-  set.seed(1)
-  fit_bal <- brulee_mlp(y ~ ., df, learn_rate = 0.1)
- },
- regexp = NA
+  set.seed(392)
+  mnl_fit_lbfgs_unwt <-
+   brulee_mlp(class ~ .,
+              mnl_tr,
+              epochs = 30,
+              hidden_units = 5,
+              rate_schedule = "decay_time",
+              stop_iter = 100,
+              learn_rate = 0.1)},
+  regex = NA)
+
+ expect_error(
+  mnl_pred_lbfgs_unwt <-
+   predict(mnl_fit_lbfgs_unwt, mnl_te) %>%
+   bind_cols(predict(mnl_fit_lbfgs_unwt, mnl_te, type = "prob")) %>%
+   bind_cols(mnl_te),
+  regex = NA)
+
+ # did weighting predict the majority class more often?
+ expect_true(
+  sum(mnl_pred_lbfgs_wts$.pred_class == min_class) >
+   sum(mnl_pred_lbfgs_unwt$.pred_class == min_class)
  )
 
- expect_true(
-  names(sort(table(predict(fit_bal, df))))[1] == "c"
- )
- expect_true(
-  names(sort(table(predict(mlp_bin_lbfgs_fit_20, df))))[3] == "c"
- )
 })
+
 
