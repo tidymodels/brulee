@@ -57,7 +57,7 @@ predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
-      rlang::abort(
+      cli::cli_abort(
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
@@ -72,7 +72,7 @@ predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
   if (epoch > max_epoch) {
     msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
                  "be made at epoch", epoch, "so last epoch is used.")
-    rlang::warn(msg)
+    cli::cli_warn(msg)
   }
 
   predictions <- predict_function(model, predictors, epoch)

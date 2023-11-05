@@ -419,7 +419,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               mixture, dropout, class_weights, validation, optimizer,
                               batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
-    rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
+    cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
   f_nm <- "brulee_mlp"
@@ -434,17 +434,17 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
     activation <- rep(activation, length(hidden_units))
   }
   if (length(hidden_units) != length(activation)) {
-    rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
+    cli::cli_abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
   }
 
   allowed_activation <- brulee_activations()
   good_activation <- activation %in% allowed_activation
   if (!all(good_activation)) {
-   rlang::abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
+   cli::cli_abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
   }
 
   if (optimizer == "LBFGS" & !is.null(batch_size)) {
-   rlang::warn("'batch_size' is only used for the SGD optimizer.")
+   cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
    batch_size <- NULL
   }
 
@@ -473,7 +473,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
-      rlang::abort(
+      cli::cli_abort(
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
@@ -531,28 +531,28 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 new_brulee_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
                             y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
-    rlang::abort("'model_obj' should be a raw vector.")
+    cli::cli_abort("'model_obj' should be a raw vector.")
   }
   if (!is.list(estimates)) {
-    rlang::abort("'parameters' should be a list")
+    cli::cli_abort("'parameters' should be a list")
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    rlang::abort("'best_epoch' should be an integer")
+    cli::cli_abort("'best_epoch' should be an integer")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    rlang::abort("'loss' should be a numeric vector")
+    cli::cli_abort("'loss' should be a numeric vector")
   }
   if (!is.list(dims)) {
-    rlang::abort("'dims' should be a list")
+    cli::cli_abort("'dims' should be a list")
   }
   if (!is.list(y_stats)) {
-    rlang::abort("'y_stats' should be a list")
+    cli::cli_abort("'y_stats' should be a list")
   }
   if (!is.list(parameters)) {
-    rlang::abort("'parameters' should be a list")
+    cli::cli_abort("'parameters' should be a list")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    rlang::abort("'blueprint' should be a hardhat blueprint")
+    cli::cli_abort("'blueprint' should be a hardhat blueprint")
   }
   hardhat::new_model(model_obj = model_obj,
                      estimates = estimates,
@@ -723,7 +723,7 @@ mlp_fit_imp <-
       loss_vec[epoch] <- loss_curr
 
       if (is.nan(loss_curr)) {
-        rlang::warn("Current loss in NaN. Training wil be stopped.")
+        cli::cli_warn("Current loss in NaN. Training wil be stopped.")
         break()
       }
 
@@ -746,7 +746,7 @@ mlp_fit_imp <-
         msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 3),
                      loss_label, signif(loss_curr, 3), loss_note)
 
-        rlang::inform(msg)
+        cli::cli_inform(msg)
       }
 
       if (poor_epoch == stop_iter) {
@@ -867,7 +867,7 @@ set_optimizer <- function(optimizer, model, learn_rate, momentum) {
  } else if (optimizer == "SGD") {
   res <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
  } else {
-  rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
+  cli::cli_abort(paste0("Unknown optimizer '", optimizer, "'"))
  }
  res
 }

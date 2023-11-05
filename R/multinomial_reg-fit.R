@@ -271,7 +271,7 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
                                           class_weights,
                                           validation, batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
-    rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
+    cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
   f_nm <- "brulee_multinomial_reg"
@@ -300,7 +300,7 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
-      rlang::abort(
+      cli::cli_abort(
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
@@ -318,7 +318,7 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
 
   outcome <- processed$outcomes[[1]]
   if (length(levels(outcome)) < 3) {
-    rlang::abort("multinomial regression is for outcomes with 3+ classes.")
+    cli::cli_abort("multinomial regression is for outcomes with 3+ classes.")
   }
 
   # ------------------------------------------------------------------------------
@@ -361,22 +361,22 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
 new_brulee_multinomial_reg <- function( model_obj, estimates, best_epoch, loss,
                                         dims, y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
-    rlang::abort("'model_obj' should be a raw vector.")
+    cli::cli_abort("'model_obj' should be a raw vector.")
   }
   if (!is.list(estimates)) {
-    rlang::abort("'parameters' should be a list")
+    cli::cli_abort("'parameters' should be a list")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    rlang::abort("'loss' should be a numeric vector")
+    cli::cli_abort("'loss' should be a numeric vector")
   }
   if (!is.list(dims)) {
-    rlang::abort("'dims' should be a list")
+    cli::cli_abort("'dims' should be a list")
   }
   if (!is.list(parameters)) {
-    rlang::abort("'parameters' should be a list")
+    cli::cli_abort("'parameters' should be a list")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    rlang::abort("'blueprint' should be a hardhat blueprint")
+    cli::cli_abort("'blueprint' should be a hardhat blueprint")
   }
   hardhat::new_model(model_obj = model_obj,
                      estimates = estimates,
@@ -445,7 +445,7 @@ multinomial_reg_fit_imp <-
     loss_label <- "\tLoss:"
 
     if (optimizer == "LBFGS" & !is.null(batch_size)) {
-     rlang::warn("'batch_size' is only used for the SGD optimizer.")
+     cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
      batch_size <- NULL
     }
     if (is.null(batch_size)) {
@@ -516,7 +516,7 @@ multinomial_reg_fit_imp <-
       loss_vec[epoch] <- loss_curr
 
       if (is.nan(loss_curr)) {
-        rlang::warn("Current loss in NaN. Training wil be stopped.")
+        cli::cli_warn("Current loss in NaN. Training wil be stopped.")
         break()
       }
 
@@ -539,7 +539,7 @@ multinomial_reg_fit_imp <-
         msg <- paste("epoch:", epoch_chr[epoch], loss_label,
                      signif(loss_curr, 3), loss_note)
 
-        rlang::inform(msg)
+        cli::cli_inform(msg)
       }
 
       if (poor_epoch == stop_iter) {

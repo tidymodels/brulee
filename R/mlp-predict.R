@@ -66,7 +66,7 @@ predict_brulee_mlp_bridge <- function(type, model, predictors, epoch) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
-      rlang::abort(
+      cli::cli_abort(
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
@@ -81,7 +81,7 @@ predict_brulee_mlp_bridge <- function(type, model, predictors, epoch) {
   if (epoch > max_epoch) {
     msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
                  "be made at epoch", epoch, "so last epoch is used.")
-    rlang::warn(msg)
+    cli::cli_warn(msg)
   }
 
   predictions <- predict_function(model, predictors, epoch)
@@ -182,17 +182,17 @@ check_type <- function(model, type) {
     else if (is.numeric(outcome_ptype))
       type <- "numeric"
     else
-      rlang::abort(glue::glue("Unknown outcome type '{class(outcome_ptype)}'"))
+      cli::cli_abort(glue::glue("Unknown outcome type '{class(outcome_ptype)}'"))
   }
 
   type <- rlang::arg_match(type, valid_predict_types())
 
   if (is.factor(outcome_ptype)) {
     if (!type %in% c("prob", "class"))
-      rlang::abort(glue::glue("Outcome is factor and the prediction type is '{type}'."))
+      cli::cli_abort(glue::glue("Outcome is factor and the prediction type is '{type}'."))
   } else if (is.numeric(outcome_ptype)) {
     if (type != "numeric")
-      rlang::abort(glue::glue("Outcome is numeric and the prediction type is '{type}'."))
+      cli::cli_abort(glue::glue("Outcome is numeric and the prediction type is '{type}'."))
   }
 
   type
