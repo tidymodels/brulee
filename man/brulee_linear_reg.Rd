@@ -25,6 +25,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -41,6 +42,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -57,6 +59,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -73,6 +76,7 @@ brulee_linear_reg(x, ...)
   momentum = 0,
   batch_size = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -126,6 +130,10 @@ batch. (\code{optimizer = "SGD"} only)}
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
+
+\item{device}{A character string to denote which processor to use with
+possibles values: \code{"cpu"}, \code{"cuda"}, \code{"mps"}, and \code{"auto"}. The last value
+uses \code{\link[=guess_brulee_device]{guess_brulee_device()}} to make the determination.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
@@ -181,6 +189,9 @@ The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
 parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
+
+If GPU computing is requested via the \code{device} argument, note that torch
+can't set the random number seeds in the GPU.
 }
 \examples{
 \donttest{
@@ -202,7 +213,7 @@ if (torch::torch_is_installed()) {
  set.seed(1)
  brulee_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
                     y = ames_train$Sale_Price,
-                    penalty = 0.10, epochs = 1, batch_size = 64)
+                    penalty = 0.10, epochs = 10)
 
  # Using recipe
  library(recipes)
@@ -223,8 +234,7 @@ if (torch::torch_is_installed()) {
     step_normalize(all_numeric_predictors())
 
  set.seed(2)
- fit <- brulee_linear_reg(ames_rec, data = ames_train,
-                           epochs = 5, batch_size = 32)
+ fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 5)
  fit
 
  autoplot(fit)

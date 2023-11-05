@@ -53,6 +53,8 @@
 #' The zeroing out of parameters is a specific feature the optimization method
 #' used in those packages.
 #'
+#' If GPU computing is requested via the `device` argument, note that torch
+#' can't set the random number seeds in the GPU.
 #' @seealso [predict.brulee_linear_reg()], [coef.brulee_linear_reg()],
 #' [autoplot.brulee_linear_reg()]
 #'
@@ -89,7 +91,7 @@
 #'  set.seed(1)
 #'  brulee_linear_reg(x = as.matrix(ames_train[, c("Longitude", "Latitude")]),
 #'                     y = ames_train$Sale_Price,
-#'                     penalty = 0.10, epochs = 1, batch_size = 64)
+#'                     penalty = 0.10, epochs = 10)
 #'
 #'  # Using recipe
 #'  library(recipes)
@@ -110,8 +112,7 @@
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 5, batch_size = 32)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 5)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -161,6 +162,7 @@ brulee_linear_reg.data.frame <-
            momentum = 0.0,
            batch_size = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, y)
@@ -176,6 +178,7 @@ brulee_linear_reg.data.frame <-
       momentum = momentum,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -196,6 +199,7 @@ brulee_linear_reg.matrix <- function(x,
                                      momentum = 0.0,
                                      batch_size = NULL,
                                      stop_iter = 5,
+                                     device = "cpu",
                                      verbose = FALSE,
                                      ...) {
   processed <- hardhat::mold(x, y)
@@ -211,6 +215,7 @@ brulee_linear_reg.matrix <- function(x,
     validation = validation,
     batch_size = batch_size,
     stop_iter = stop_iter,
+    device = device,
     verbose = verbose,
     ...
   )
@@ -232,6 +237,7 @@ brulee_linear_reg.formula <-
            momentum = 0.0,
            batch_size = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(formula, data)
@@ -247,6 +253,7 @@ brulee_linear_reg.formula <-
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -268,6 +275,7 @@ brulee_linear_reg.recipe <-
            momentum = 0.0,
            batch_size = NULL,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
     processed <- hardhat::mold(x, data)
@@ -283,6 +291,7 @@ brulee_linear_reg.recipe <-
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose,
       ...
     )
@@ -293,7 +302,8 @@ brulee_linear_reg.recipe <-
 
 brulee_linear_reg_bridge <- function(processed, epochs, optimizer,
                                      learn_rate, momentum, penalty, mixture, dropout,
-                                     validation, batch_size, stop_iter, verbose, ...) {
+                                     validation, batch_size, stop_iter, device,
+                                     verbose, ...) {
   if(!torch::torch_is_installed()) {
     cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
@@ -317,6 +327,13 @@ brulee_linear_reg_bridge <- function(processed, epochs, optimizer,
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
+
+  # ------------------------------------------------------------------------------
+
+  device <- rlang::arg_match(device, c("cpu", "auto", "cuda", "mps"))
+  if (device == "auto") {
+   device <- guess_brulee_device()
+  }
 
   ## -----------------------------------------------------------------------------
 
@@ -353,6 +370,7 @@ brulee_linear_reg_bridge <- function(processed, epochs, optimizer,
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
+      device = device,
       verbose = verbose
     )
 
@@ -413,6 +431,7 @@ linear_reg_fit_imp <-
            learn_rate = 1,
            momentum = 0.0,
            stop_iter = 5,
+           device = "cpu",
            verbose = FALSE,
            ...) {
 
@@ -465,17 +484,18 @@ linear_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
-    ds <- brulee::matrix_to_dataset(x, y)
+    ds <- brulee::matrix_to_dataset(x, y, device = device)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
     if (validation > 0) {
-      ds_val <- brulee::matrix_to_dataset(x_val, y_val)
+      ds_val <- brulee::matrix_to_dataset(x_val, y_val, device = device)
       dl_val <- torch::dataloader(ds_val)
     }
 
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- linear_reg_module(ncol(x))
+    model$to(device = device)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
     optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 

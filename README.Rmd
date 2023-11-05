@@ -28,6 +28,14 @@ The R `brulee` package contains several basic modeling functions that use the `t
 * [logistic regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 * [multinomial regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
 
+Some interesting features: 
+
+ * Early stopping based on an internal validation set. 
+ * L1 and L2 penalization, also dropout. 
+ * GPU utilization for models. 
+ * Class-specific weights for cost-sensitive learning. 
+ * Data frame, matrix, formula, and recipe interfaces for models. 
+
 
 ## Installation
 
@@ -59,8 +67,9 @@ library(yardstick)
 
 data(bivariate, package = "modeldata")
 set.seed(20)
-nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
-                         epochs = 150, hidden_units = 3)
+nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), 
+                         data = bivariate_train, 
+                         hidden_units = 3)
 
 # We use the tidymodels semantics to always return a tibble when predicting
 predict(nn_log_biv, bivariate_test, type = "prob") %>% 
@@ -80,9 +89,8 @@ rec <-
 
 set.seed(20)
 nn_rec_biv <- brulee_mlp(rec, data = bivariate_train, 
-                         epochs = 150, hidden_units = 3)
+                         hidden_units = 3)
 
-# A little better
 predict(nn_rec_biv, bivariate_test, type = "prob") %>% 
   bind_cols(bivariate_test) %>% 
   roc_auc(Class, .pred_One)

@@ -26,6 +26,7 @@ brulee_logistic_reg(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -43,6 +44,7 @@ brulee_logistic_reg(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -60,6 +62,7 @@ brulee_logistic_reg(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -77,6 +80,7 @@ brulee_logistic_reg(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  device = "cpu",
   verbose = FALSE,
   ...
 )
@@ -142,6 +146,10 @@ and all other classes receive a weight of one.
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
 
+\item{device}{A character string to denote which processor to use with
+possibles values: \code{"cpu"}, \code{"cuda"}, \code{"mps"}, and \code{"auto"}. The last value
+uses \code{\link[=guess_brulee_device]{guess_brulee_device()}} to make the determination.}
+
 \item{verbose}{A logical that prints out the iteration history.}
 
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
@@ -192,6 +200,9 @@ The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
 parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
+
+If GPU computing is requested via the \code{device} argument, note that torch
+can't set the random number seeds in the GPU.
 }
 \examples{
 \donttest{

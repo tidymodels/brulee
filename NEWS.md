@@ -2,6 +2,12 @@
 
 * Fixed a bug where SGD always being used as the optimizer (#61). 
 
+* Added many more activation functions for `brulee_mlp()` (#74).
+
+* Enabled GPUs for computations (#).
+
+* Rewrote the unit test suite due to irreproducibility issues across operating system (#75).
+
 # brulee 0.2.0
 
 * Several learning rate schedulers were added to the modeling functions (#12).

@@ -177,14 +177,14 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 }
 
 
-check_class_weights <- function(wts, lvls, xtab, fn) {
+check_class_weights <- function(wts, lvls, xtab, fn, device = NULL) {
   if (length(lvls) == 0) {
     return(NULL)
   }
 
   if (is.null(wts)) {
     wts <- rep(1, length(lvls))
-    return(torch::torch_tensor(wts))
+    return(torch::torch_tensor(wts, device = device))
   }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
@@ -218,5 +218,5 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   }
 
 
-  torch::torch_tensor(wts)
+  torch::torch_tensor(wts, device = device)
 }

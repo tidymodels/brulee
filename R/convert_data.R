@@ -6,6 +6,9 @@
 #' @param x A numeric matrix of predictors.
 #' @param y A vector. If regression than `y` is numeric. For classification, it
 #'  is a factor.
+#' @param device A character string to denote which processor to use with
+#' possibles values: `"cpu"`, `"cuda"`, `"mps"`, and `"auto"`. The last value
+#' uses [guess_brulee_device()] to make the determination.
 #' @return An R6 index sampler object with classes "training_set",
 #'  "dataset", and "R6".
 #' @details Missing values should be removed before passing data to this function.
@@ -14,13 +17,13 @@
 #'   matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
 #' }
 #' @export
-matrix_to_dataset <- function(x, y) {
-  x <- torch::torch_tensor(x)
+matrix_to_dataset <- function(x, y, device = "cpu") {
+  x <- torch::torch_tensor(x, device = device)
   if (is.factor(y)) {
     y <- as.numeric(y)
-    y <- torch::torch_tensor(y, dtype = torch_long())
+    y <- torch::torch_tensor(y, dtype = torch_long(), device = device)
   } else {
-    y <- torch::torch_tensor(y)
+    y <- torch::torch_tensor(y, device = device)
   }
   torch::tensor_dataset(x = x, y = y)
 }
