@@ -1,7 +1,7 @@
 # bad args
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = NA)
     Condition
       Error in `check_integer()`:
       ! brulee_mlp() expected 'epochs' to be integer.
@@ -9,7 +9,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 1:2)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 1:2)
     Condition
       Error in `check_integer()`:
       ! brulee_mlp() expected 'epochs' to be a single integer.
@@ -17,7 +17,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 0L)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 0L)
     Condition
       Error in `check_integer()`:
       ! brulee_mlp() expected 'epochs' to be an integer on [1, Inf].
@@ -25,7 +25,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = NA)
     Condition
       Error in `check_integer()`:
       ! brulee_mlp() expected 'hidden_units' to be integer.
@@ -33,7 +33,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, hidden_units = -1L)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = -1L)
     Condition
       Error in `check_integer()`:
       ! brulee_mlp() expected 'hidden_units' to be an integer on [1, Inf].
@@ -41,15 +41,15 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, activation = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, activation = NA)
     Condition
       Error in `brulee_mlp_bridge()`:
-      ! 'activation' should be one of:  celu, elu, gelu, hardshrink, hardsigmoid, hardtanh, leaky_relu, linear, log_sigmoid, relu, relu6, rrelu, selu, sigmoid, silu, softplus, softshrink, softsign, tanh, tanhshrink
+      ! 'activation' should be one of: celu, elu, gelu, hardshrink, hardsigmoid, hardtanh, leaky_relu, linear, log_sigmoid, relu, relu6, rrelu, selu, sigmoid, silu, softplus, softshrink, softsign, tanh, tanhshrink
 
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = NA)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'penalty' to be a double.
@@ -57,7 +57,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = runif(2))
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = runif(2))
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'penalty' to be a single double.
@@ -65,7 +65,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, penalty = -1.1)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = -1.1)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'penalty' to be a double on [0, Inf].
@@ -73,7 +73,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = NA)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'dropout' to be a double.
@@ -81,7 +81,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = runif(2))
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = runif(2))
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'dropout' to be a single double.
@@ -89,7 +89,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = -1.1)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = -1.1)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'dropout' to be a double on [0, 1).
@@ -97,7 +97,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, dropout = 1)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 1)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'dropout' to be a double on [0, 1).
@@ -105,7 +105,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = NA)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'validation' to be a double.
@@ -113,7 +113,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = runif(2))
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = runif(2))
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'validation' to be a single double.
@@ -121,7 +121,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = -1.1)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = -1.1)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'validation' to be a double on [0, 1).
@@ -129,7 +129,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, validation = 1)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 1)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'validation' to be a double on [0, 1).
@@ -137,7 +137,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = NA)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = NA)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'learn_rate' to be a double.
@@ -145,7 +145,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = runif(2))
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = runif(2))
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'learn_rate' to be a single double.
@@ -153,7 +153,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, learn_rate = -1.1)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = -1.1)
     Condition
       Error in `check_double()`:
       ! brulee_mlp() expected 'learn_rate' to be a double on (0, Inf].
@@ -161,7 +161,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = 2)
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = 2)
     Condition
       Error in `check_logical()`:
       ! brulee_mlp() expected 'verbose' to be logical.
@@ -169,7 +169,7 @@
 ---
 
     Code
-      brulee_mlp(ames_x_mat, ames_y, epochs = 2, verbose = rep(TRUE, 10))
+      brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = rep(TRUE, 10))
     Condition
       Error in `check_logical()`:
       ! brulee_mlp() expected 'verbose' to be a single logical.
