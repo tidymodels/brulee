@@ -125,7 +125,7 @@ check_rate_arg_value <- function(x) {
  nm <- as.character(match.call()$x)
  if (is.null(x) || !is.numeric(x) || length(x) != 1 || any(x <= 0)) {
   msg <- paste0("Argument '", nm, "' should be a single positive value.")
-  rlang::abort(msg)
+  cli::cli_abort(msg)
  }
  invisible(NULL)
 }

@@ -7,7 +7,7 @@ check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
       cl_chr <- as.character()
       msg <- paste0(fn, "() removed ", sum(!compl_data), " rows of ",
                     "data due to missing values.")
-      rlang::warn(msg)
+      cli::cli_warn(msg)
     }
   }
   list(x = x, y = y)
@@ -18,14 +18,14 @@ check_data_att <- function(x, y) {
 
   # check matrices/vectors, matrix type, matrix column names
   if (!is.matrix(x) || !is.numeric(x)) {
-    rlang::abort("'x' should be a numeric matrix.")
+    cli::cli_abort("'x' should be a numeric matrix.")
   }
   nms <- colnames(x)
   if (length(nms) != ncol(x)) {
-    rlang::abort("Every column of 'x' should have a name.")
+    cli::cli_abort("Every column of 'x' should have a name.")
   }
   if (!is.vector(y) & !is.factor(y)) {
-    rlang::abort("'y' should be a vector.")
+    cli::cli_abort("'y' should be a vector.")
   }
   invisible(NULL)
 }
@@ -87,12 +87,12 @@ check_integer <-
 
     if (!is.integer(x)) {
       msg <- paste(format_msg(fn, arg), "to be integer.")
-      rlang::abort(msg)
+      cli::cli_abort(msg)
     }
 
     if (single && length(x) > 1) {
       msg <- paste(format_msg(fn, arg), "to be a single integer.")
-      rlang::abort(msg)
+      cli::cli_abort(msg)
     }
 
     out_of_range <- check_rng(x, x_min, x_max, incl)
@@ -101,7 +101,7 @@ check_integer <-
                     " to be an integer on ",
                     ifelse(incl[[1]], "[", "("), x_min, ", ",
                     x_max, ifelse(incl[[2]], "]", ")"), ".")
-      rlang::abort(msg)
+      cli::cli_abort(msg)
     }
 
     invisible(TRUE)
@@ -116,12 +116,12 @@ check_double <- function(x,
 
   if (!is.double(x)) {
     msg <- paste(format_msg(fn, arg), "to be a double.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   if (single && length(x) > 1) {
     msg <- paste(format_msg(fn, arg), "to be a single double.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   out_of_range <- check_rng(x, x_min, x_max, incl)
@@ -130,7 +130,7 @@ check_double <- function(x,
                   " to be a double on ",
                   ifelse(incl[[1]], "[", "("), x_min, ", ",
                   x_max, ifelse(incl[[2]], "]", ")"), ".")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   invisible(TRUE)
@@ -142,18 +142,18 @@ check_character <- function(x, single = TRUE, vals = NULL, fn = NULL) {
 
   if (!is.character(x)) {
     msg <- paste(format_msg(fn, arg), "to be character.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   if (single && length(x) > 1) {
     msg <- paste(format_msg(fn, arg), "to be a single character string.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   if (!is.null(vals)) {
     if (any(!(x %in% vals))) {
       msg <- paste0(format_msg(fn, arg), "  contains an incorrect value.")
-      rlang::abort(msg)
+      cli::cli_abort(msg)
     }
   }
 
@@ -166,12 +166,12 @@ check_logical <- function(x, single = TRUE, fn = NULL) {
 
   if (!is.logical(x)) {
     msg <- paste(format_msg(fn, arg), "to be logical.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   if (single && length(x) > 1) {
     msg <- paste(format_msg(fn, arg), "to be a single logical.")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
   invisible(TRUE)
 }
@@ -188,7 +188,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
-    rlang::abort(msg)
+    cli::cli_abort(msg)
   }
 
   if (length(wts) == 1) {
@@ -202,6 +202,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   if (length(lvls) != length(wts)) {
     msg <- paste0("There were ", length(wts), " class weights given but ",
                   length(lvls), " were expected.")
+    cli::cli_abort(msg)
   }
 
   nms <- names(wts)
@@ -211,7 +212,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     if (!identical(sort(nms), sort(lvls))) {
       msg <- paste("Names for class weights should be:",
                    paste0("'", lvls, "'", collapse = ", "))
-      rlang::abort(msg)
+      cli::cli_abort(msg)
     }
     wts <- wts[lvls]
   }

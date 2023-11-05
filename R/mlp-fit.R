@@ -33,10 +33,11 @@
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
-#' @param activation A string for the activation function. Possible values are
-#'  "relu", "elu", "tanh", and "linear". If `hidden_units` is a vector, `activation`
-#'  can be a character vector with length equals to `length(hidden_units)` specifying
-#'  the activation for each hidden layer.
+#' @param activation A character vector for the activation function )such as
+#'  "relu", "tanh", "sigmoid", and so on). See [brulee_activations()] for
+#'  a list of possible values. If `hidden_units` is a vector, `activation`
+#'  can be a character vector with length equals to `length(hidden_units)`
+#'  specifying the activation for each hidden layer.
 #' @param optimizer The method used in the optimization procedure. Possible choices
 #'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
 #' @param learn_rate A positive number that controls the initial rapidity that
@@ -201,7 +202,7 @@
 #'  set.seed(2)
 #'  cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
 #'                         epochs = 200L, learn_rate = 0.1, activation = "elu",
-#'                         penalty = 0.1, batch_size = 2^8)
+#'                         penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
 #'  autoplot(cls_fit)
 #'
 #'  grid_points <- seq(-4, 4, length.out = 100)
@@ -418,7 +419,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               mixture, dropout, class_weights, validation, optimizer,
                               batch_size, stop_iter, verbose, ...) {
   if(!torch::torch_is_installed()) {
-    rlang::abort("The torch backend has not been installed; use `torch::install_torch()`.")
+    cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
   f_nm <- "brulee_mlp"
@@ -433,20 +434,28 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
     activation <- rep(activation, length(hidden_units))
   }
   if (length(hidden_units) != length(activation)) {
-    rlang::abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
+    cli::cli_abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
+  }
+
+  allowed_activation <- brulee_activations()
+  good_activation <- activation %in% allowed_activation
+  if (!all(good_activation)) {
+   cli::cli_abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
   }
 
   if (optimizer == "LBFGS" & !is.null(batch_size)) {
-   rlang::warn("'batch_size' is only use for the SGD optimizer.")
+   cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
+   batch_size <- NULL
   }
 
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
-  if (!is.null(batch_size)) {
+  if (!is.null(batch_size) & optimizer == "SGD") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
+
+  check_integer(epochs, single = TRUE, 1, fn = f_nm)
   check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
@@ -457,8 +466,6 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   check_logical(verbose, single = TRUE, fn = f_nm)
   check_character(activation, single = FALSE, fn = f_nm)
 
-
-
   ## -----------------------------------------------------------------------------
 
   predictors <- processed$predictors
@@ -466,7 +473,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
-      rlang::abort(
+      cli::cli_abort(
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
@@ -524,28 +531,28 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 new_brulee_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
                             y_stats, parameters, blueprint) {
   if (!inherits(model_obj, "raw")) {
-    rlang::abort("'model_obj' should be a raw vector.")
+    cli::cli_abort("'model_obj' should be a raw vector.")
   }
   if (!is.list(estimates)) {
-    rlang::abort("'parameters' should be a list")
+    cli::cli_abort("'parameters' should be a list")
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    rlang::abort("'best_epoch' should be an integer")
+    cli::cli_abort("'best_epoch' should be an integer")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    rlang::abort("'loss' should be a numeric vector")
+    cli::cli_abort("'loss' should be a numeric vector")
   }
   if (!is.list(dims)) {
-    rlang::abort("'dims' should be a list")
+    cli::cli_abort("'dims' should be a list")
   }
   if (!is.list(y_stats)) {
-    rlang::abort("'y_stats' should be a list")
+    cli::cli_abort("'y_stats' should be a list")
   }
   if (!is.list(parameters)) {
-    rlang::abort("'parameters' should be a list")
+    cli::cli_abort("'parameters' should be a list")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    rlang::abort("'blueprint' should be a hardhat blueprint")
+    cli::cli_abort("'blueprint' should be a hardhat blueprint")
   }
   hardhat::new_model(model_obj = model_obj,
                      estimates = estimates,
@@ -635,7 +642,7 @@ mlp_fit_imp <-
       loss_label <- "\tLoss:"
     }
 
-    if (is.null(batch_size)) {
+    if (is.null(batch_size) & optimizer == "SGD") {
       batch_size <- nrow(x)
     } else {
       batch_size <- min(batch_size, nrow(x))
@@ -656,16 +663,8 @@ mlp_fit_imp <-
     model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
-    # Set the optimizer
-    if (optimizer == "LBFGS") {
-     optimizer <- torch::optim_lbfgs(model$parameters, lr = learn_rate,
-                                     history_size = 5)
-    } else if (optimizer == "SGD") {
-     optimizer <-
-      torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
-    } else {
-     rlang::abort(paste0("Unknown optimizer '", optimizer, "'"))
-    }
+    # Set the optimizer (will be set again below)
+    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
     ## ---------------------------------------------------------------------------
 
@@ -694,19 +693,19 @@ mlp_fit_imp <-
      # resetting them can interfere in training."
 
      learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
-     optimizer <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+     optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
       # training loop
       coro::loop(
        for (batch in dl) {
         cl <- function() {
-         optimizer$zero_grad()
+         optimizer_obj$zero_grad()
          pred <- model(batch$x)
          loss <- loss_fn(pred, batch$y, class_weights)
          loss$backward()
          loss
         }
-        optimizer$step(cl)
+        optimizer_obj$step(cl)
        }
       )
 
@@ -724,7 +723,7 @@ mlp_fit_imp <-
       loss_vec[epoch] <- loss_curr
 
       if (is.nan(loss_curr)) {
-        rlang::warn("Current loss in NaN. Training wil be stopped.")
+        cli::cli_warn("Current loss in NaN. Training wil be stopped.")
         break()
       }
 
@@ -747,7 +746,7 @@ mlp_fit_imp <-
         msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 3),
                      loss_label, signif(loss_curr, 3), loss_note)
 
-        rlang::inform(msg)
+        cli::cli_inform(msg)
       }
 
       if (poor_epoch == stop_iter) {
@@ -862,15 +861,13 @@ print.brulee_mlp <- function(x, ...) {
 
 ## -----------------------------------------------------------------------------
 
-get_activation_fn <- function(arg, ...) {
-  if (arg == "relu") {
-    res <- torch::nn_relu(...)
-  } else if (arg == "elu") {
-    res <- torch::nn_elu(...)
-  } else if (arg == "tanh") {
-    res <- torch::nn_tanh(...)
-  } else {
-    res <- identity
-  }
-  res
+set_optimizer <- function(optimizer, model, learn_rate, momentum) {
+ if (optimizer == "LBFGS") {
+  res <- torch::optim_lbfgs(model$parameters, lr = learn_rate, history_size = 5)
+ } else if (optimizer == "SGD") {
+  res <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+ } else {
+  cli::cli_abort(paste0("Unknown optimizer '", optimizer, "'"))
+ }
+ res
 }

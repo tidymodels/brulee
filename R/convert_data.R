@@ -30,7 +30,7 @@ matrix_to_dataset <- function(x, y) {
 scale_stats <- function(x) {
   res <- list(mean = mean(x, na.rm = TRUE), sd = stats::sd(x, na.rm = TRUE))
   if (res$sd == 0) {
-    rlang::abort("There is no variation in `y`.")
+    cli::cli_abort("There is no variation in `y`.")
   }
   res
 }
