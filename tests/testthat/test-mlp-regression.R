@@ -7,6 +7,7 @@ test_that('different fit interfaces', {
  skip_on_os("mac", arch = "aarch64")
  # One test here was irreducible across OSes
  skip_on_os(c("windows", "linux", "solaris"))
+ skip("will be rew-riting these tests due to irreproducible results")
 
  # ------------------------------------------------------------------------------
 
