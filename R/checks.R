@@ -202,6 +202,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   if (length(lvls) != length(wts)) {
     msg <- paste0("There were ", length(wts), " class weights given but ",
                   length(lvls), " were expected.")
+    rlang::abort(msg)
   }
 
   nms <- names(wts)
