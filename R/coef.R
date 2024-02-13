@@ -58,7 +58,7 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
 #' @export
 coef.brulee_logistic_reg <- function(object, epoch = NULL, ...) {
  network_params <- brulee_coefs(object, epoch)
- slopes <- network_params$fc1.weight[,2] - network_params$fc1.weight[,1]
+ slopes <- network_params$fc1.weight[2, ] - network_params$fc1.weight[1, ]
  int <- network_params$fc1.bias[2] - network_params$fc1.bias[1]
  param <- c(int, slopes)
  names(param) <- c("(Intercept)", object$dims$features)
