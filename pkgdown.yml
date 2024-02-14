@@ -1,8 +1,8 @@
-pandoc: 2.14.2
-pkgdown: 2.0.6
+pandoc: 2.19.2
+pkgdown: 2.0.7
 pkgdown_sha: ~
 articles: {}
-last_built: 2022-10-17T21:09Z
+last_built: 2024-02-14T12:12Z
 urls:
   reference: https://brulee.tidymodels.org/reference
   article: https://brulee.tidymodels.org/articles
