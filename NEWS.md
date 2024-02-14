@@ -1,3 +1,5 @@
+# brulee (development version)
+
 # brulee 0.3.0
 
 * Fixed bug where `coef()` didn't would error if used on a `brulee_logistic_reg()` that was trained with a recipe. (#66)
