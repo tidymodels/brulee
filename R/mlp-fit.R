@@ -33,7 +33,7 @@
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
-#' @param activation A character vector for the activation function )such as
+#' @param activation A character vector for the activation function (such as
 #'  "relu", "tanh", "sigmoid", and so on). See [brulee_activations()] for
 #'  a list of possible values. If `hidden_units` is a vector, `activation`
 #'  can be a character vector with length equals to `length(hidden_units)`
@@ -185,6 +185,15 @@
 #'    bind_cols(ames_test) %>%
 #'    rmse(Sale_Price, .pred)
 #'
+#'  # Using multiple hidden layers and activation functions
+#'  set.seed(2)
+#'  hidden_fit <- brulee_mlp(ames_rec, data = ames_train,
+#'                     hidden_units = c(15L, 17L), activation = c("relu", "elu"),
+#'                     dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
+#'
+#'  predict(hidden_fit, ames_test) %>%
+#'    bind_cols(ames_test) %>%
+#'    rmse(Sale_Price, .pred)
 #'
 #'  # ------------------------------------------------------------------------------
 #'  # classification
