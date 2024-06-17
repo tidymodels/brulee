@@ -3,12 +3,15 @@
 \name{brulee-internal}
 \alias{brulee-internal}
 \alias{tunable.brulee_mlp}
+\alias{tunable.brulee_mlp_two_layer}
 \alias{tunable.brulee_logistic_reg}
 \alias{tunable.brulee_multinomial_reg}
 \alias{tunable.brulee_linear_reg}
 \title{Internal functions and methods}
 \usage{
 \method{tunable}{brulee_mlp}(x, ...)
+
+\method{tunable}{brulee_mlp_two_layer}(x, ...)
 
 \method{tunable}{brulee_logistic_reg}(x, ...)
 
