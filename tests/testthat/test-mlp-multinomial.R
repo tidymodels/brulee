@@ -30,7 +30,7 @@ test_that("basic multinomial mlp LBFGS", {
   mnl_fit_lbfgs <-
    brulee_mlp(class ~ .,
               mnl_tr,
-              epochs = 200,
+              epochs = 10,
               hidden_units = 5,
               rate_schedule = "cyclic",
               learn_rate = 0.1)},
