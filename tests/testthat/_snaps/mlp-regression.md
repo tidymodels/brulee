@@ -258,3 +258,37 @@
       Error in `brulee_mlp_bridge()`:
       ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
 
+# two-layer networks
+
+    Code
+      print(mlp_reg_mat_two_fit)
+    Output
+      Multilayer perceptron
+      
+      c(relu,elu) activation,
+      c(5,10) hidden units,
+      176 model parameters
+      5,000 samples, 20 features, numeric outcome 
+      weight decay: 0.001 
+      dropout proportion: 0 
+      batch size: 4500 
+      learn rate: 0.1 
+      scaled validation loss after 33 epochs: 0.215 
+
+---
+
+    Code
+      print(mlp_reg_mat_two_check_fit)
+    Output
+      Multilayer perceptron
+      
+      c(relu,elu) activation,
+      c(5,10) hidden units,
+      176 model parameters
+      5,000 samples, 20 features, numeric outcome 
+      weight decay: 0.001 
+      dropout proportion: 0 
+      batch size: 4500 
+      learn rate: 0.1 
+      scaled validation loss after 33 epochs: 0.215 
+
