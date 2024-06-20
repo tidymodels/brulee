@@ -224,7 +224,9 @@ specified as:
 
 \item{epochs}{An integer for the number of epochs of training.}
 
-\item{hidden_units}{An integer for the number of hidden units for a second layer.}
+\item{hidden_units}{An integer for the number of hidden units, or a vector
+of integers. If a vector of integers, the model will have \code{length(hidden_units)}
+layers each with \code{hidden_units[i]} hidden units.}
 
 \item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
@@ -284,6 +286,8 @@ and the predictor term(s) on the right-hand side.}
 \itemize{
 \item A \strong{data frame} containing both the predictors and the outcome.
 }}
+
+\item{hidden_units_2}{An integer for the number of hidden units for a second layer.}
 
 \item{activation_2}{A character vector for the activation function for a second layer.}
 }

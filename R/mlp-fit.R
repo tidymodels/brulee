@@ -35,7 +35,7 @@
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
-#' @param hidden_units An integer for the number of hidden units for a second layer.
+#' @param hidden_units_2 An integer for the number of hidden units for a second layer.
 #' @param activation A character vector for the activation function (such as
 #'  "relu", "tanh", "sigmoid", and so on). See [brulee_activations()] for
 #'  a list of possible values. If `hidden_units` is a vector, `activation`
