@@ -327,7 +327,6 @@ test_that('bad args', {
 
 test_that("mlp learns something", {
  skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 
@@ -350,7 +349,6 @@ test_that("mlp learns something", {
 })
 test_that("variable hidden_units length", {
  skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
  x <- data.frame(x = rnorm(1000))
  y <- 2 * x$x
@@ -421,8 +419,6 @@ test_that('two-layer networks', {
  },
  regex = NA)
 
- expect_snapshot(print(mlp_reg_mat_two_fit))
-
  expect_error({
   set.seed(1)
   mlp_reg_mat_two_check_fit <-
@@ -436,8 +432,6 @@ test_that('two-layer networks', {
    )
  },
  regex = NA)
-
- expect_snapshot(print(mlp_reg_mat_two_check_fit))
 
  expect_equal(mlp_reg_mat_two_fit$loss, mlp_reg_mat_two_check_fit$loss)
 

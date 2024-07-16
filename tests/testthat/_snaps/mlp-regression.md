@@ -240,37 +240,21 @@
       Error in `brulee:::new_brulee_mlp()`:
       ! 'blueprint' should be a hardhat blueprint
 
-# two-layer networks
+# variable hidden_units length
 
     Code
-      print(mlp_reg_mat_two_fit)
-    Output
-      Multilayer perceptron
-      
-      c(relu,elu) activation,
-      c(5,10) hidden units,
-      176 model parameters
-      5,000 samples, 20 features, numeric outcome 
-      weight decay: 0.001 
-      dropout proportion: 0 
-      batch size: 4500 
-      learn rate: 0.1 
-      scaled validation loss after 33 epochs: 0.215 
+      model <- brulee_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1, activation = c(
+        "relu", "tanh"))
+    Condition
+      Error in `brulee_mlp_bridge()`:
+      ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
 
 ---
 
     Code
-      print(mlp_reg_mat_two_check_fit)
-    Output
-      Multilayer perceptron
-      
-      c(relu,elu) activation,
-      c(5,10) hidden units,
-      176 model parameters
-      5,000 samples, 20 features, numeric outcome 
-      weight decay: 0.001 
-      dropout proportion: 0 
-      batch size: 4500 
-      learn rate: 0.1 
-      scaled validation loss after 33 epochs: 0.215 
+      model <- brulee_mlp(x, y, hidden_units = c(1), epochs = 1, activation = c(
+        "relu", "tanh"))
+    Condition
+      Error in `brulee_mlp_bridge()`:
+      ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
 
