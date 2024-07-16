@@ -240,24 +240,6 @@
       Error in `brulee:::new_brulee_mlp()`:
       ! 'blueprint' should be a hardhat blueprint
 
-# variable hidden_units length
-
-    Code
-      model <- brulee_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1, activation = c(
-        "relu", "tanh"))
-    Condition
-      Error in `brulee_mlp_bridge()`:
-      ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
-
----
-
-    Code
-      model <- brulee_mlp(x, y, hidden_units = c(1), epochs = 1, activation = c(
-        "relu", "tanh"))
-    Condition
-      Error in `brulee_mlp_bridge()`:
-      ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
-
 # two-layer networks
 
     Code
