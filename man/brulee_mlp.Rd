@@ -7,6 +7,12 @@
 \alias{brulee_mlp.matrix}
 \alias{brulee_mlp.formula}
 \alias{brulee_mlp.recipe}
+\alias{brulee_mlp_two_layer}
+\alias{brulee_mlp_two_layer.default}
+\alias{brulee_mlp_two_layer.data.frame}
+\alias{brulee_mlp_two_layer.matrix}
+\alias{brulee_mlp_two_layer.formula}
+\alias{brulee_mlp_two_layer.recipe}
 \title{Fit neural networks}
 \usage{
 brulee_mlp(x, ...)
@@ -96,6 +102,102 @@ brulee_mlp(x, ...)
   verbose = FALSE,
   ...
 )
+
+brulee_mlp_two_layer(x, ...)
+
+\method{brulee_mlp_two_layer}{default}(x, ...)
+
+\method{brulee_mlp_two_layer}{data.frame}(
+  x,
+  y,
+  epochs = 100L,
+  hidden_units = 3L,
+  hidden_units_2 = 3L,
+  activation = "relu",
+  activation_2 = "relu",
+  penalty = 0.001,
+  mixture = 0,
+  dropout = 0,
+  validation = 0.1,
+  optimizer = "LBFGS",
+  learn_rate = 0.01,
+  rate_schedule = "none",
+  momentum = 0,
+  batch_size = NULL,
+  class_weights = NULL,
+  stop_iter = 5,
+  verbose = FALSE,
+  ...
+)
+
+\method{brulee_mlp_two_layer}{matrix}(
+  x,
+  y,
+  epochs = 100L,
+  hidden_units = 3L,
+  hidden_units_2 = 3L,
+  activation = "relu",
+  activation_2 = "relu",
+  penalty = 0.001,
+  mixture = 0,
+  dropout = 0,
+  validation = 0.1,
+  optimizer = "LBFGS",
+  learn_rate = 0.01,
+  rate_schedule = "none",
+  momentum = 0,
+  batch_size = NULL,
+  class_weights = NULL,
+  stop_iter = 5,
+  verbose = FALSE,
+  ...
+)
+
+\method{brulee_mlp_two_layer}{formula}(
+  formula,
+  data,
+  epochs = 100L,
+  hidden_units = 3L,
+  hidden_units_2 = 3L,
+  activation = "relu",
+  activation_2 = "relu",
+  penalty = 0.001,
+  mixture = 0,
+  dropout = 0,
+  validation = 0.1,
+  optimizer = "LBFGS",
+  learn_rate = 0.01,
+  rate_schedule = "none",
+  momentum = 0,
+  batch_size = NULL,
+  class_weights = NULL,
+  stop_iter = 5,
+  verbose = FALSE,
+  ...
+)
+
+\method{brulee_mlp_two_layer}{recipe}(
+  x,
+  data,
+  epochs = 100L,
+  hidden_units = 3L,
+  hidden_units_2 = 3L,
+  activation = "relu",
+  activation_2 = "relu",
+  penalty = 0.001,
+  mixture = 0,
+  dropout = 0,
+  validation = 0.1,
+  optimizer = "LBFGS",
+  learn_rate = 0.01,
+  rate_schedule = "none",
+  momentum = 0,
+  batch_size = NULL,
+  class_weights = NULL,
+  stop_iter = 5,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{Depending on the context:
@@ -126,7 +228,7 @@ specified as:
 of integers. If a vector of integers, the model will have \code{length(hidden_units)}
 layers each with \code{hidden_units[i]} hidden units.}
 
-\item{activation}{A character vector for the activation function )such as
+\item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
 a list of possible values. If \code{hidden_units} is a vector, \code{activation}
 can be a character vector with length equals to \code{length(hidden_units)}
@@ -184,6 +286,10 @@ and the predictor term(s) on the right-hand side.}
 \itemize{
 \item A \strong{data frame} containing both the predictors and the outcome.
 }}
+
+\item{hidden_units_2}{An integer for the number of hidden units for a second layer.}
+
+\item{activation_2}{A character vector for the activation function for a second layer.}
 }
 \value{
 A \code{brulee_mlp} object with elements:
@@ -202,7 +308,9 @@ likelihood for classification) at each epoch.
 }
 \description{
 \code{brulee_mlp()} fits neural network models using stochastic gradient
-descent. Multiple layers can be used.
+descent. Multiple layers can be used. For working with two-layer networks in
+tidymodels, \code{brulee_mlp_two_layer()} can be helpful for specifying tuning
+parameters as scalars.
 }
 \details{
 This function fits feed-forward neural network models for regression (when
@@ -303,6 +411,15 @@ if (torch::torch_is_installed()) {
    bind_cols(ames_test) \%>\%
    rmse(Sale_Price, .pred)
 
+ # Using multiple hidden layers and activation functions
+ set.seed(2)
+ hidden_fit <- brulee_mlp(ames_rec, data = ames_train,
+                    hidden_units = c(15L, 17L), activation = c("relu", "elu"),
+                    dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
+
+ predict(hidden_fit, ames_test) \%>\%
+   bind_cols(ames_test) \%>\%
+   rmse(Sale_Price, .pred)
 
  # ------------------------------------------------------------------------------
  # classification

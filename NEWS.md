@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Added a convenience function, `brulee_mlp_two_layer()`, to more easily fit two-layer networks with parsnip.  
+
 # brulee 0.3.0
 
 * Fixed bug where `coef()` didn't would error if used on a `brulee_logistic_reg()` that was trained with a recipe. (#66)

@@ -327,7 +327,6 @@ test_that('bad args', {
 
 test_that("mlp learns something", {
  skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
  # ------------------------------------------------------------------------------
 
@@ -350,7 +349,6 @@ test_that("mlp learns something", {
 })
 test_that("variable hidden_units length", {
  skip_if(!torch::torch_is_installed())
- skip_on_os("mac", arch = "aarch64")
 
  x <- data.frame(x = rnorm(1000))
  y <- 2 * x$x
@@ -374,5 +372,110 @@ test_that("variable hidden_units length", {
                       activation = c("relu", "tanh")),
   error = TRUE
  )
+
+})
+
+
+test_that('two-layer networks', {
+ skip_if(!torch::torch_is_installed())
+
+ skip_if_not_installed("modeldata")
+ skip_if_not_installed("yardstick")
+ skip_if_not_installed("recipes")
+
+ suppressPackageStartupMessages(library(dplyr))
+ suppressPackageStartupMessages(library(recipes))
+
+ # ------------------------------------------------------------------------------
+
+ set.seed(585)
+ reg_tr <- modeldata::sim_regression(5000)
+ reg_te <- modeldata::sim_regression(1000)
+
+ reg_tr_x_df <- reg_tr[, -1]
+ reg_tr_x_mat <- as.matrix(reg_tr_x_df)
+ reg_tr_y <- reg_tr$outcome
+
+ reg_rec <-
+  recipe(outcome ~ ., data = reg_tr) %>%
+  step_normalize(all_predictors())
+
+  # ------------------------------------------------------------------------------
+
+ # matrix x
+ expect_error({
+  set.seed(1)
+  mlp_reg_mat_two_fit <-
+   brulee_mlp_two_layer(
+    reg_tr_x_mat,
+    reg_tr_y,
+    mixture = 0,
+    learn_rate = .1,
+    hidden_units = 5,
+    hidden_units_2 = 10,
+    activation = "relu",
+    activation_2 = "elu"
+   )
+ },
+ regex = NA)
+
+ expect_error({
+  set.seed(1)
+  mlp_reg_mat_two_check_fit <-
+   brulee_mlp(
+    reg_tr_x_mat,
+    reg_tr_y,
+    mixture = 0,
+    learn_rate = .1,
+    hidden_units = c(5, 10),
+    activation = c("relu", "elu")
+   )
+ },
+ regex = NA)
+
+ expect_equal(mlp_reg_mat_two_fit$loss, mlp_reg_mat_two_check_fit$loss)
+
+ # data frame x (all numeric)
+ expect_error(
+  mlp_reg_df_two_fit <-
+   brulee_mlp_two_layer(
+    reg_tr_x_df,
+    reg_tr_y,
+    validation = .2,
+    hidden_units = 5,
+    hidden_units_2 = 10,
+    activation = "celu",
+    activation_2 = "gelu"
+   ),
+  regex = NA
+ )
+
+ # formula (mixed)
+ expect_error({
+  set.seed(8373)
+  mlp_reg_f_two_fit <- brulee_mlp_two_layer(
+   outcome ~ .,
+   reg_tr,
+   hidden_units = 5,
+   hidden_units_2 = 10,
+   activation = "hardshrink",
+   activation_2 = "hardsigmoid"
+  )
+ },
+ regex = NA)
+
+ # recipe
+ expect_error({
+  set.seed(8373)
+  mlp_reg_rec_two_fit <- brulee_mlp_two_layer(
+   reg_rec,
+   reg_tr,
+   hidden_units = 5,
+   hidden_units_2 = 10,
+   activation = "hardtanh",
+   activation_2 = "sigmoid"
+  )
+ },
+ regex = NA)
 
 })

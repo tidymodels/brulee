@@ -5,7 +5,6 @@ Lifecycle
 ORCID
 PBC
 SGD
-elu
 extensibility
 funder
 mlp
@@ -15,3 +14,4 @@ relu
 sigmoid
 tanh
 tibble
+tidymodels
