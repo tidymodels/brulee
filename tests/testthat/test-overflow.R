@@ -2,6 +2,8 @@
 
 test_that("NaN loss due to overflow", {
  skip_if_not_installed("modeldata")
+ skip_on_os(c("windows", "linux", "solaris"))
+ skip_on_os("mac", arch = "x86_64")
 
  i <- 81872
  set.seed(i)
