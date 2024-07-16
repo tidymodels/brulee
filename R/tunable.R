@@ -1,3 +1,5 @@
+tune_activations <- c("relu", "tanh", "elu", "log_sigmoid", "tanhshrink")
+
 #' Internal functions and methods
 #' @export
 #' @keywords internal
@@ -9,7 +11,7 @@ tunable.brulee_mlp <- function(x, ...) {
       call_info = list(
          list(pkg = "dials", fun = "epochs", range = c(5L, 500L)),
          list(pkg = "dials", fun = "hidden_units", range = c(2L, 50L)),
-         list(pkg = "dials", fun = "activation"),
+         list(pkg = "dials", fun = "activation", values = tune_activations),
          list(pkg = "dials", fun = "penalty"),
          list(pkg = "dials", fun = "dropout"),
          list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/5)),
@@ -36,8 +38,8 @@ tunable.brulee_mlp_two_layer <- function(x, ...) {
    list(pkg = "dials", fun = "epochs", range = c(5L, 500L)),
    list(pkg = "dials", fun = "hidden_units", range = c(2L, 50L)),
    list(pkg = "dials", fun = "hidden_units", range = c(2L, 50L)),
-   list(pkg = "dials", fun = "activation"),
-   list(pkg = "dials", fun = "activation"),
+   list(pkg = "dials", fun = "activation", values = tune_activations),
+   list(pkg = "dials", fun = "activation", values = tune_activations),
    list(pkg = "dials", fun = "penalty"),
    list(pkg = "dials", fun = "dropout"),
    list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/5)),
