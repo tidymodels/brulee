@@ -736,7 +736,7 @@ mlp_fit_imp <-
    loss_vec[epoch] <- loss_curr
 
    if (is.nan(loss_curr)) {
-    cli::cli_warn("Current loss in NaN. Training wil be stopped.")
+    cli::cli_warn("Loss is NaN at epoch {epoch}. Training is stopped.")
     break()
    }
 
@@ -780,7 +780,8 @@ mlp_fit_imp <-
    estimates = param_per_epoch,
    loss = loss_vec[1:length(param_per_epoch)],
    best_epoch = best_epoch,
-   dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls, features = colnames(x)),
+   dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls,
+               features = colnames(x)),
    y_stats = y_stats,
    parameters = list(
     activation = activation,
