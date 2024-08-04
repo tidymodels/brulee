@@ -414,6 +414,8 @@ linear_reg_fit_imp <-
            momentum = 0.0,
            stop_iter = 5,
            verbose = FALSE,
+           type = "mse",
+           .quant = numeric(0),
            ...) {
 
     torch::torch_manual_seed(sample.int(10^5, 1)) # TODO doesn't give reproducible results
@@ -500,7 +502,7 @@ linear_reg_fit_imp <-
             optimizer_obj$zero_grad()
             pred <- model(batch$x)
 
-            loss <- loss_fn(pred, batch$y)
+            loss <- loss_fn(pred, batch$y, type = type, .quant = .quant)
             loss$backward()
             loss
           }
@@ -512,10 +514,10 @@ linear_reg_fit_imp <-
       # calculate loss on the full datasets
       if (validation > 0) {
         pred <- model(dl_val$dataset$tensors$x)
-        loss <- loss_fn(pred, dl_val$dataset$tensors$y)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y, type = type, .quant = .quant)
       } else {
         pred <- model(dl$dataset$tensors$x)
-        loss <- loss_fn(pred, dl$dataset$tensors$y)
+        loss <- loss_fn(pred, dl$dataset$tensors$y, type = type, .quant = .quant)
       }
 
       # calculate losses
