@@ -37,9 +37,10 @@ tunable.brulee_mlp_two_layer <- function(x, ...) {
   call_info = list(
    list(pkg = "dials", fun = "epochs", range = c(5L, 500L)),
    list(pkg = "dials", fun = "hidden_units", range = c(2L, 50L)),
-   list(pkg = "dials", fun = "hidden_units", range = c(2L, 50L)),
-   list(pkg = "dials", fun = "activation", values = tune_activations),
-   list(pkg = "dials", fun = "activation", values = tune_activations),
+   list(pkg = "dials", fun = "hidden_units_2", range = c(2L, 50L)),
+   list(pkg = "dials", fun = "activation", values = tune_activations,
+        label = ),
+   list(pkg = "dials", fun = "activation_2", values = tune_activations),
    list(pkg = "dials", fun = "penalty"),
    list(pkg = "dials", fun = "dropout"),
    list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/5)),
