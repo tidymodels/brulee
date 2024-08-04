@@ -3,61 +3,61 @@
 # used in print methods
 
 brulee_print <- function(x, ...) {
-  lvl <- get_levels(x)
-  if (is.null(lvl)) {
-    chr_y <- "numeric outcome"
+ lvl <- get_levels(x)
+ if (is.null(lvl)) {
+  chr_y <- "numeric outcome"
+ } else {
+  chr_y <- paste(length(lvl), "classes")
+ }
+ cat(
+  format(x$dims$n, big.mark = ","), "samples,",
+  format(x$dims$p, big.mark = ","), "features,",
+  chr_y, "\n"
+ )
+ if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
+  cat("class weights",
+      paste0(
+       names(x$parameters$class_weights),
+       "=",
+       format(x$parameters$class_weights),
+       collapse = ", "
+      ),
+      "\n")
+ }
+ if (x$parameters$penalty > 0) {
+  cat("weight decay:", x$parameters$penalty, "\n")
+ }
+ if (any(names(x$parameters) == "dropout")) {
+  cat("dropout proportion:", x$parameters$dropout, "\n")
+ }
+ cat("batch size:", x$parameters$batch_size, "\n")
+
+ if (all(c("sched", "sched_opt") %in% names(x$parameters))) {
+  cat_schedule(x$parameters)
+ }
+
+ if (!is.null(x$loss)) {
+  it <- x$best_epoch
+  chr_it <- cli::pluralize("{it} epoch{?s}:")
+  if(x$parameters$validation > 0) {
+   if (is.na(x$y_stats$mean)) {
+    cat("validation loss after", chr_it,
+        signif(x$loss[it], 3), "\n")
+   } else {
+    cat("scaled validation loss after", chr_it,
+        signif(x$loss[it], 3), "\n")
+   }
   } else {
-    chr_y <- paste(length(lvl), "classes")
+   if (is.na(x$y_stats$mean)) {
+    cat("training set loss after", chr_it,
+        signif(x$loss[it], 3), "\n")
+   } else {
+    cat("scaled training set loss after", chr_it,
+        signif(x$loss[it], 3), "\n")
+   }
   }
-  cat(
-    format(x$dims$n, big.mark = ","), "samples,",
-    format(x$dims$p, big.mark = ","), "features,",
-    chr_y, "\n"
-  )
-  if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
-    cat("class weights",
-        paste0(
-          names(x$parameters$class_weights),
-          "=",
-          format(x$parameters$class_weights),
-          collapse = ", "
-        ),
-        "\n")
-  }
-  if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
-  }
-  if (any(names(x$parameters) == "dropout")) {
-    cat("dropout proportion:", x$parameters$dropout, "\n")
-  }
-  cat("batch size:", x$parameters$batch_size, "\n")
-
-  if (all(c("sched", "sched_opt") %in% names(x$parameters))) {
-   cat_schedule(x$parameters)
-  }
-
-  if (!is.null(x$loss)) {
-    it <- x$best_epoch
-    chr_it <- cli::pluralize("{it} epoch{?s}:")
-    if(x$parameters$validation > 0) {
-      if (is.na(x$y_stats$mean)) {
-        cat("validation loss after", chr_it,
-            signif(x$loss[it], 3), "\n")
-      } else {
-        cat("scaled validation loss after", chr_it,
-            signif(x$loss[it], 3), "\n")
-      }
-    } else {
-      if (is.na(x$y_stats$mean)) {
-        cat("training set loss after", chr_it,
-            signif(x$loss[it], 3), "\n")
-      } else {
-        cat("scaled training set loss after", chr_it,
-            signif(x$loss[it], 3), "\n")
-      }
-    }
-  }
-  invisible(x)
+ }
+ invisible(x)
 }
 
 # ------------------------------------------------------------------------------
@@ -79,24 +79,24 @@ cat_schedule <- function(x) {
 
 
 model_to_raw <- function(model) {
-  con <- rawConnection(raw(), open = "w")
-  on.exit({close(con)}, add = TRUE)
-  torch::torch_save(model, con)
-  r <- rawConnectionValue(con)
-  r
+ con <- rawConnection(raw(), open = "w")
+ on.exit({close(con)}, add = TRUE)
+ torch::torch_save(model, con)
+ r <- rawConnectionValue(con)
+ r
 }
 
 # ------------------------------------------------------------------------------
 
 lx_term <- function(norm) {
-  function(model) {
-    is_bias <- grepl("bias", names(model$parameters))
-    coefs <- model$parameters[!is_bias]
-    l <- lapply(coefs, function(x) {
-      torch::torch_sum(norm(x))
-    })
-    torch::torch_sum(torch::torch_stack(l))
-  }
+ function(model) {
+  is_bias <- grepl("bias", names(model$parameters))
+  coefs <- model$parameters[!is_bias]
+  l <- lapply(coefs, function(x) {
+   torch::torch_sum(norm(x))
+  })
+  torch::torch_sum(torch::torch_stack(l))
+ }
 }
 
 l2_term <- lx_term(function(x) torch::torch_pow(x, 2))
@@ -114,4 +114,29 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture) {
   }
   loss
  }
+}
+
+reg_loss_fn <- function(input, target, type = "mse", .quant = numeric(0)) {
+ type <- rlang::arg_match(type, c("mse", "quantile"))
+ if ( type == "mse" ) {
+  res <-  nnf_mse_loss(input, target$view(c(-1,1)))
+ } else if ( type == "quantile" ) {
+  if ( length(.quant) != 1 ) {
+   cli::cli_abort("{.arg .quant} should be a single numeric value.")
+  }
+  res <- quantile_loss(input, target, .quant)
+ }
+ res
+}
+
+quantile_loss <- function(input, target, .quant) {
+ pred <- as.numeric(input)
+ outcome <- as.numeric(target)
+ res <-
+  ifelse(
+   pred <= outcome,
+   .quant * (outcome - pred),
+   (1 - .quant) * (pred - outcome))
+ res <- mean(res, na.rm = TRUE)
+ torch::torch_tensor(res)
 }

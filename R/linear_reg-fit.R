@@ -431,9 +431,6 @@ linear_reg_fit_imp <-
     p <- ncol(x)
 
     y_dim <- 1
-    loss_fn <- function(input, target) {
-      nnf_mse_loss(input, target$view(c(-1,1)))
-    }
 
     if (validation > 0) {
       in_val <- sample(seq_along(y), floor(n * validation))
@@ -476,7 +473,7 @@ linear_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- linear_reg_module(ncol(x))
-    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
+    loss_fn <- make_penalized_loss(reg_loss_fn, model, penalty, mixture)
     optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
     ## ---------------------------------------------------------------------------
@@ -502,6 +499,7 @@ linear_reg_fit_imp <-
           cl <- function() {
             optimizer_obj$zero_grad()
             pred <- model(batch$x)
+
             loss <- loss_fn(pred, batch$y)
             loss$backward()
             loss
@@ -509,6 +507,7 @@ linear_reg_fit_imp <-
           optimizer_obj$step(cl)
         }
       )
+
 
       # calculate loss on the full datasets
       if (validation > 0) {
