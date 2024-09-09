@@ -336,7 +336,7 @@
       [1] "dials"
       
       [[3]]$fun
-      [1] "hidden_units"
+      [1] "hidden_units_2"
       
       [[3]]$range
       [1]  2 50
@@ -358,7 +358,7 @@
       [1] "dials"
       
       [[5]]$fun
-      [1] "activation"
+      [1] "activation_2"
       
       [[5]]$values
       [1] "relu"        "tanh"        "elu"         "log_sigmoid" "tanhshrink" 
