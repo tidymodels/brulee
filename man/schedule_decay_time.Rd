@@ -65,25 +65,24 @@ The details for how the schedulers change the rates:
 }
 }
 \examples{
-library(ggplot2)
-library(dplyr)
-library(purrr)
+if (rlang::is_installed("purrr")) {
+ library(ggplot2)
+ library(dplyr)
+ library(purrr)
 
-iters <- 0:50
+ iters <- 0:50
 
-bind_rows(
- tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_time), type = "decay_time"),
- tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_expo), type = "decay_expo"),
- tibble(epoch = iters, rate = map_dbl(iters, schedule_step), type = "step"),
- tibble(epoch = iters, rate = map_dbl(iters, schedule_cyclic), type = "cyclic")
-) \%>\%
- ggplot(aes(epoch, rate)) +
- geom_line() +
- facet_wrap(~ type)
+ bind_rows(
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_time), type = "decay_time"),
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_expo), type = "decay_expo"),
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_step), type = "step"),
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_cyclic), type = "cyclic")
+ ) \%>\%
+  ggplot(aes(epoch, rate)) +
+  geom_line() +
+  facet_wrap(~ type)
 
-# ------------------------------------------------------------------------------
-# Use with neural network
-
+}
 
 }
 \seealso{

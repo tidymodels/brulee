@@ -1,6 +1,8 @@
-library(purrr)
+
 
 test_that("scheduling functions", {
+ skip_if_not_installed("purrr")
+ library(purrr)
 
  x <- 0:100
 

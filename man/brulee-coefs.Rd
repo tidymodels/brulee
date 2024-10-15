@@ -33,7 +33,7 @@ Extract Model Coefficients
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
 
  data(ames, package = "modeldata")
 
