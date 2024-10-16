@@ -35,7 +35,7 @@ Predict from a \code{brulee_mlp}
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
  # regression example:
 
  data(ames, package = "modeldata")

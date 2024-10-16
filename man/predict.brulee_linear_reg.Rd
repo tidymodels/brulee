@@ -33,7 +33,7 @@ Predict from a \code{brulee_linear_reg}
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
 
  data(ames, package = "modeldata")
 

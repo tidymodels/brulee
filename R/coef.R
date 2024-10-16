@@ -28,7 +28,7 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
 #' a list of arrays.
 #' @examples
 #' \donttest{
-#' if (torch::torch_is_installed()) {
+#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
 #'
 #'  data(ames, package = "modeldata")
 #'

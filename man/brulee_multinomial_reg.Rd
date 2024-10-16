@@ -195,7 +195,7 @@ used in those packages.
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed()) {
+if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
   library(recipes)
   library(yardstick)
