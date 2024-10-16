@@ -350,7 +350,7 @@ arguments to the schedulers can be passed via \code{...}.
 }
 \examples{
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata")))) {
+if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
  ## -----------------------------------------------------------------------------
  # regression examples (increase # epochs to get better results)
