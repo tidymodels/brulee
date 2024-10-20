@@ -443,7 +443,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
  check_number_whole(epochs, min = 1, call = call)
  check_number_whole(stop_iter, min = 1, call = call)
- check_number_decimal(penalty, min = .Machine$double.eps, call = call)
+ check_number_decimal(penalty, min = 0, call = call)
  check_number_decimal(learn_rate, min = .Machine$double.eps, call = call)
  check_number_decimal(momentum, min = 0, call = call)
  check_number_decimal(validation, min = 0, max = 1 -.Machine$double.eps,

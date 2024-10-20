@@ -274,19 +274,15 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
     cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
-  f_nm <- "brulee_multinomial_reg"
   # check values of various argument values
-  if (is.numeric(epochs) & !is.integer(epochs)) {
-    epochs <- as.integer(epochs)
-  }
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
+ check_number_whole(epochs, call = call)
   if (!is.null(batch_size)) {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+   check_number_whole(batch_size, call = call)
   }
-  check_number_decimal(penalty, min = .Machine$double.eps, call = call)
+  check_number_decimal(penalty, min = 0, call = call)
   check_number_decimal(mixture, min = 0, max = 1, call = call)
   check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_number_decimal(momentum, min = 0, call = call)

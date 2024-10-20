@@ -30,30 +30,6 @@ check_data_att <- function(x, y) {
   invisible(NULL)
 }
 
-# TODO these shoudl rm
-format_msg <- function(fn, arg) {
-  if (is.null(fn)) {
-    fn <- "The function"
-  } else {
-    fn <- paste0(fn, "()")
-  }
-  paste0(fn, " expected '", arg, "'")
-}
-
-check_rng <- function(x, x_min, x_max, incl = c(TRUE, TRUE)) {
-  if (incl[[1]]) {
-    pass_low <- x >= x_min
-  } else {
-    pass_low <- x >  x_min
-  }
-  if (incl[[2]]) {
-    pass_high <- x <= x_max
-  } else {
-    pass_high <- x <  x_max
-  }
-  any(!pass_low | !pass_high)
-}
-
 numeric_loss_values <- c("mse", "poisson", "smooth_l1", "l1")
 check_regression_loss <- function(loss_function) {
  loss_function <- rlang::arg_match0(loss_function, numeric_loss_values) # TODO add call
@@ -93,8 +69,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     return(torch::torch_tensor(wts))
   }
   if (!is.numeric(wts)) {
-    msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
-    cli::cli_abort(msg)
+    cli::cli_abort("Class weights should be a numeric vector") # TODO rewrite
   }
 
   if (length(wts) == 1) {
