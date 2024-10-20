@@ -283,7 +283,6 @@ brulee_mlp.data.frame <-
    class_weights = class_weights,
    stop_iter = stop_iter,
    verbose = verbose,
-
    ...
   )
  }
@@ -329,7 +328,6 @@ brulee_mlp.matrix <- function(x,
   class_weights = class_weights,
   stop_iter = stop_iter,
   verbose = verbose,
-  call = rlang::caller_env(),
   ...
  )
 }
@@ -376,7 +374,6 @@ brulee_mlp.formula <-
    class_weights = class_weights,
    stop_iter = stop_iter,
    verbose = verbose,
-
    ...
   )
  }
@@ -449,8 +446,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  check_number_decimal(validation, min = 0, max = 1 -.Machine$double.eps,
                       call = call)
  check_number_decimal(mixture, min = 0, max = 1, call = call)
- check_number_decimal(dropout, min = 0, max = 1, call = call)
- check_logical(verbose, call = call)
+ check_number_decimal(dropout, min = 0, max = 1 -.Machine$double.eps, call = call)
+ check_single_logical(verbose, call = call)
  rate_schedule <- rlang::arg_match(rate_schedule, rate_sched_types,
                                    multiple = TRUE, error_arg = "rate_schedule",
                                    error_call = call)
@@ -477,11 +474,13 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  activation <- rlang::arg_match(activation, brulee_activations(),
                                 multiple = TRUE, error_call = call)
 
- if (length(hidden_units) > length(activation)) {
-  activation <- rep(activation, length(hidden_units))
- } else if (length(hidden_units) < length(activation)) {
-  cli::cli_abort("{.arg activation} must be a single value or a vector with the
-                 same length as {.arg hidden_units}.", call = call)
+ if (length(hidden_units) != length(activation)) {
+  if (length(activation) == 1 & length(hidden_units) > 1) {
+   activation <- rep(activation, length(hidden_units))
+  } else {
+   cli::cli_abort("{length(activation)} activation{?s} {?was/were} given for
+                  {length(hidden_units)} hidden layer{?s}.", call = call)
+  }
  }
 
  ## -----------------------------------------------------------------------------
@@ -586,6 +585,7 @@ new_brulee_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
 ## -----------------------------------------------------------------------------
 # Fit code
 
+# TODO pass call
 mlp_fit_imp <-
  function(x, y,
           epochs = 100L,

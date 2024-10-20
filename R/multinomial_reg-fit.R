@@ -287,7 +287,7 @@ brulee_multinomial_reg_bridge <- function(processed, epochs, optimizer,
   check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
   check_number_decimal(momentum, min = 0, call = call)
   check_number_decimal(learn_rate, min = .Machine$double.eps, call = call)
-  check_logical(verbose, call = call)
+  check_single_logical(verbose, call = call)
 
   ## -----------------------------------------------------------------------------
 

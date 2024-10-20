@@ -308,7 +308,7 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
  check_number_decimal(validation, min = 0, max = 1 -.Machine$double.eps,
                       call = call)
  check_number_decimal(mixture, min = 0, max = 1, call = call)
- check_logical(verbose, call = call)
+ check_single_logical(verbose, call = call)
 
   ## -----------------------------------------------------------------------------
 

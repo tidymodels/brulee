@@ -44,6 +44,19 @@ check_regression_loss <- function(loss_function) {
 
 }
 
+check_single_logical <- function(x, call = rlang::caller_env()) {
+ cl <- match.call()
+ arg_nm <- as.character(cl$x)
+ msg <- "{.arg {arg_nm}} should be a single logical value, not {brulee:::obj_type_friendly(x)}."
+  if (!is.logical(x)) {
+   cli::cli_abort(msg, call = call)
+  }
+ if (length(x) > 1 || any(is.na(x))) {
+  cli::cli_abort(msg, call = call)
+ }
+ invisible(x)
+}
+
 check_number_whole_vec <- function(x, arg, call = rlang::caller_env(), ...) {
  for (i in x) {
   rlang:::check_number_whole(i, arg = arg, call = call, ...)
