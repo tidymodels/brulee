@@ -468,8 +468,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
 
  ###
 
- hidden_units <- check_number_whole_vec(hidden_units, call = call,
-                                        arg = "hidden_units", min = 1)
+ hidden_units <- check_number_whole_vec(hidden_units, call = call, min = 1)
  allowed_activation <- brulee_activations()
  activation <- rlang::arg_match(activation, brulee_activations(),
                                 multiple = TRUE, error_call = call)

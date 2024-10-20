@@ -57,7 +57,10 @@ check_single_logical <- function(x, call = rlang::caller_env()) {
  invisible(x)
 }
 
-check_number_whole_vec <- function(x, arg, call = rlang::caller_env(), ...) {
+check_number_whole_vec <- function(x, call = rlang::caller_env(), ...) {
+ cl <- match.call()
+ arg <- as.character(cl$x)
+
  for (i in x) {
   rlang:::check_number_whole(i, arg = arg, call = call, ...)
  }
@@ -65,7 +68,10 @@ check_number_whole_vec <- function(x, arg, call = rlang::caller_env(), ...) {
  invisible(x)
 }
 
-check_number_decimal_vec <- function(x, arg, call = rlang::caller_env(), ...) {
+check_number_decimal_vec <- function(x, call = rlang::caller_env(), ...) {
+ cl <- match.call()
+ arg <- as.character(cl$x)
+
  for (i in x) {
   rlang:::check_number_decimal(i, arg = arg, call = call, ...)
  }
