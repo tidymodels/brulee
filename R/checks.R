@@ -3,7 +3,7 @@
 check_single_logical <- function(x, call = rlang::caller_env()) {
  cl <- match.call()
  arg_nm <- as.character(cl$x)
- msg <- "{.arg {arg_nm}} should be a single logical value, not {brulee:::obj_type_friendly(x)}."
+ msg <- "{.arg {arg_nm}} should be a single logical value, not {obj_type_friendly(x)}."
  if (!is.logical(x)) {
   cli::cli_abort(msg, call = call)
  }
