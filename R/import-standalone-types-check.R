@@ -501,30 +501,30 @@ check_character <- function(x,
   )
 }
 
-check_logical <- function(x,
-                          ...,
-                          allow_null = FALSE,
-                          arg = caller_arg(x),
-                          call = caller_env()) {
-  if (!missing(x)) {
-    if (is_logical(x)) {
-      return(invisible(NULL))
-    }
-    if (allow_null && is_null(x)) {
-      return(invisible(NULL))
-    }
-  }
-
-  stop_input_type(
-    x,
-    "a logical vector",
-    ...,
-    allow_na = FALSE,
-    allow_null = allow_null,
-    arg = arg,
-    call = call
-  )
-}
+# check_logical <- function(x,
+#                           ...,
+#                           allow_null = FALSE,
+#                           arg = caller_arg(x),
+#                           call = caller_env()) {
+#   if (!missing(x)) {
+#     if (is_logical(x)) {
+#       return(invisible(NULL))
+#     }
+#     if (allow_null && is_null(x)) {
+#       return(invisible(NULL))
+#     }
+#   }
+#
+#   stop_input_type(
+#     x,
+#     "a logical vector",
+#     ...,
+#     allow_na = FALSE,
+#     allow_null = allow_null,
+#     arg = arg,
+#     call = call
+#   )
+# }
 
 check_data_frame <- function(x,
                              ...,
