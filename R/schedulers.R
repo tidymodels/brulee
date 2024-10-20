@@ -100,11 +100,12 @@ schedule_cyclic <- function(epoch, initial = 0.001, largest = 0.1, step_size = 5
 # Learning rate can be either static (via rate_schedule == "none") or dynamic.
 # Either way, set_learn_rate() figures this out and sets it accordingly.
 
+rate_sched_types <- c("decay_time", "decay_expo", "none", "step", "cyclic")
+
 #' @export
 #' @rdname schedule_decay_time
 set_learn_rate <- function(epoch, learn_rate, type = "none", ...) {
- types <- c("decay_time", "decay_expo", "none", "step", "cyclic")
- types <- rlang::arg_match0(type, types, arg_nm = "type")
+ type <- rlang::arg_match0(type, rate_sched_types, arg_nm = "type")
  if (type == "none") {
   return(learn_rate)
  }

@@ -30,7 +30,7 @@ check_data_att <- function(x, y) {
   invisible(NULL)
 }
 
-
+# TODO these shoudl rm
 format_msg <- function(fn, arg) {
   if (is.null(fn)) {
     fn <- "The function"
@@ -56,7 +56,7 @@ check_rng <- function(x, x_min, x_max, incl = c(TRUE, TRUE)) {
 
 numeric_loss_values <- c("mse", "poisson", "smooth_l1", "l1")
 check_regression_loss <- function(loss_function) {
-  check_character(loss_function, single = TRUE, vals = numeric_loss_values)
+ loss_function <- rlang::arg_match0(loss_function, numeric_loss_values) # TODO add call
 
   # TODO return a different format
   dplyr::case_when(
@@ -68,114 +68,20 @@ check_regression_loss <- function(loss_function) {
 
 }
 
-check_classification_loss <- function(x) {
-
+check_number_whole_vec <- function(x, arg, call = rlang::caller_env(), ...) {
+ for (i in x) {
+  rlang:::check_number_whole(i, arg = arg, call = call, ...)
+ }
+ x <- as.integer(x)
+ invisible(x)
 }
 
-check_optimizer <- function(x) {
-
+check_number_decimal_vec <- function(x, arg, call = rlang::caller_env(), ...) {
+ for (i in x) {
+  rlang:::check_number_decimal(i, arg = arg, call = call, ...)
+ }
+ invisible(x)
 }
-
-
-check_integer <-
-  function(x,
-           single = TRUE,
-           x_min = -Inf, x_max = Inf, incl = c(TRUE, TRUE),
-           fn = NULL) {
-    cl <- match.call()
-    arg <- as.character(cl$x)
-
-    if (!is.integer(x)) {
-      msg <- paste(format_msg(fn, arg), "to be integer.")
-      cli::cli_abort(msg)
-    }
-
-    if (single && length(x) > 1) {
-      msg <- paste(format_msg(fn, arg), "to be a single integer.")
-      cli::cli_abort(msg)
-    }
-
-    out_of_range <- check_rng(x, x_min, x_max, incl)
-    if (any(out_of_range)) {
-      msg <- paste0(format_msg(fn, arg),
-                    " to be an integer on ",
-                    ifelse(incl[[1]], "[", "("), x_min, ", ",
-                    x_max, ifelse(incl[[2]], "]", ")"), ".")
-      cli::cli_abort(msg)
-    }
-
-    invisible(TRUE)
-  }
-
-check_double <- function(x,
-                         single = TRUE,
-                         x_min = -Inf, x_max = Inf, incl = c(TRUE, TRUE),
-                         fn = NULL) {
-  cl <- match.call()
-  arg <- as.character(cl$x)
-
-  if (!is.double(x)) {
-    msg <- paste(format_msg(fn, arg), "to be a double.")
-    cli::cli_abort(msg)
-  }
-
-  if (single && length(x) > 1) {
-    msg <- paste(format_msg(fn, arg), "to be a single double.")
-    cli::cli_abort(msg)
-  }
-
-  out_of_range <- check_rng(x, x_min, x_max, incl)
-  if (any(out_of_range)) {
-    msg <- paste0(format_msg(fn, arg),
-                  " to be a double on ",
-                  ifelse(incl[[1]], "[", "("), x_min, ", ",
-                  x_max, ifelse(incl[[2]], "]", ")"), ".")
-    cli::cli_abort(msg)
-  }
-
-  invisible(TRUE)
-}
-
-check_character <- function(x, single = TRUE, vals = NULL, fn = NULL) {
-  cl <- match.call()
-  arg <- as.character(cl$x)
-
-  if (!is.character(x)) {
-    msg <- paste(format_msg(fn, arg), "to be character.")
-    cli::cli_abort(msg)
-  }
-
-  if (single && length(x) > 1) {
-    msg <- paste(format_msg(fn, arg), "to be a single character string.")
-    cli::cli_abort(msg)
-  }
-
-  if (!is.null(vals)) {
-    if (any(!(x %in% vals))) {
-      msg <- paste0(format_msg(fn, arg), "  contains an incorrect value.")
-      cli::cli_abort(msg)
-    }
-  }
-
-  invisible(TRUE)
-}
-
-check_logical <- function(x, single = TRUE, fn = NULL) {
-  cl <- match.call()
-  arg <- as.character(cl$x)
-
-  if (!is.logical(x)) {
-    msg <- paste(format_msg(fn, arg), "to be logical.")
-    cli::cli_abort(msg)
-  }
-
-  if (single && length(x) > 1) {
-    msg <- paste(format_msg(fn, arg), "to be a single logical.")
-    cli::cli_abort(msg)
-  }
-  invisible(TRUE)
-}
-
 
 check_class_weights <- function(wts, lvls, xtab, fn) {
   if (length(lvls) == 0) {

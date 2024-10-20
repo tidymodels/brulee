@@ -287,30 +287,28 @@ brulee_logistic_reg.recipe <-
 # Bridge
 
 brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
-                                       learn_rate, momentum, penalty, mixture, class_weights,
-                                       validation, batch_size, stop_iter, verbose, ...) {
+                                       learn_rate, momentum, penalty, mixture,
+                                       class_weights, validation, batch_size,
+                                       stop_iter, verbose,
+                                       call = rlang::caller_env(), ...) {
   if(!torch::torch_is_installed()) {
     cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
   }
 
-  f_nm <- "brulee_logistic_reg"
-  # check values of various argument values
-  if (is.numeric(epochs) & !is.integer(epochs)) {
-    epochs <- as.integer(epochs)
-  }
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
-  if (!is.null(batch_size)) {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
-      batch_size <- as.integer(batch_size)
-    }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
-  }
-  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
-  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
-  check_logical(verbose, single = TRUE, fn = f_nm)
+ # ------------------------------------------------------------------------------
+
+ if (!is.null(batch_size)) {
+  check_number_whole(epochs, min = 1, call = call)
+ }
+ check_number_whole(epochs, min = 1, call = call)
+ check_number_whole(stop_iter, min = 1, call = call)
+ check_number_decimal(penalty, min = .Machine$double.eps, call = call)
+ check_number_decimal(learn_rate, min = .Machine$double.eps, call = call)
+ check_number_decimal(momentum, min = 0, call = call)
+ check_number_decimal(validation, min = 0, max = 1 -.Machine$double.eps,
+                      call = call)
+ check_number_decimal(mixture, min = 0, max = 1, call = call)
+ check_logical(verbose, call = call)
 
   ## -----------------------------------------------------------------------------
 
@@ -327,11 +325,6 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
       )
     }
   }
-  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
-  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
-  check_logical(verbose, single = TRUE, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 

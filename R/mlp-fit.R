@@ -283,6 +283,7 @@ brulee_mlp.data.frame <-
    class_weights = class_weights,
    stop_iter = stop_iter,
    verbose = verbose,
+
    ...
   )
  }
@@ -328,6 +329,7 @@ brulee_mlp.matrix <- function(x,
   class_weights = class_weights,
   stop_iter = stop_iter,
   verbose = verbose,
+  call = rlang::caller_env(),
   ...
  )
 }
@@ -374,6 +376,7 @@ brulee_mlp.formula <-
    class_weights = class_weights,
    stop_iter = stop_iter,
    verbose = verbose,
+
    ...
   )
  }
@@ -429,55 +432,57 @@ brulee_mlp.recipe <-
 
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               learn_rate, rate_schedule, momentum, penalty,
-                              mixture, dropout, class_weights, validation, optimizer,
-                              batch_size, stop_iter, verbose, ...) {
+                              mixture, dropout, class_weights, validation,
+                              optimizer, batch_size, stop_iter, verbose,
+                              call = rlang::caller_env(), ...) {
  if(!torch::torch_is_installed()) {
   cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
  }
 
- f_nm <- "brulee_mlp"
- # check values of various argument values
- if (is.numeric(epochs) & !is.integer(epochs)) {
-  epochs <- as.integer(epochs)
- }
- if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
-  hidden_units <- as.integer(hidden_units)
- }
- if (length(hidden_units) > 1 && length(activation) == 1) {
-  activation <- rep(activation, length(hidden_units))
- }
- if (length(hidden_units) != length(activation)) {
-  cli::cli_abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
- }
+ # ------------------------------------------------------------------------------
 
- allowed_activation <- brulee_activations()
- good_activation <- activation %in% allowed_activation
- if (!all(good_activation)) {
-  cli::cli_abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
- }
+ check_number_whole(epochs, min = 1, call = call)
+ check_number_whole(stop_iter, min = 1, call = call)
+ check_number_decimal(penalty, min = .Machine$double.eps, call = call)
+ check_number_decimal(learn_rate, min = .Machine$double.eps, call = call)
+ check_number_decimal(momentum, min = 0, call = call)
+ check_number_decimal(validation, min = 0, max = 1 -.Machine$double.eps,
+                      call = call)
+ check_number_decimal(mixture, min = 0, max = 1, call = call)
+ check_number_decimal(dropout, min = 0, max = 1, call = call)
+ check_logical(verbose, call = call)
+ rate_schedule <- rlang::arg_match(rate_schedule, rate_sched_types,
+                                   multiple = TRUE, error_arg = "rate_schedule",
+                                   error_call = call)
 
- if (optimizer == "LBFGS" & !is.null(batch_size)) {
-  cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
-  batch_size <- NULL
+ ###
+
+ if (!is.null(batch_size) & optimizer != "SGD") {
+  cli::cli_warn("{.arg batch_size} is only used with stochastic gradient descent
+                optimizers and will be ignored.", call = call)
  }
 
  if (!is.null(batch_size) & optimizer == "SGD") {
   if (is.numeric(batch_size) & !is.integer(batch_size)) {
    batch_size <- as.integer(batch_size)
   }
-  check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+  check_number_whole(batch_size, min = 1, call = call)
  }
 
- check_integer(epochs, single = TRUE, 1, fn = f_nm)
- check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
- check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
- check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
- check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
- check_logical(verbose, single = TRUE, fn = f_nm)
- check_character(activation, single = FALSE, fn = f_nm)
+ ###
+
+ hidden_units <- check_number_whole_vec(hidden_units, call = call,
+                                        arg = "hidden_units", min = 1)
+ allowed_activation <- brulee_activations()
+ activation <- rlang::arg_match(activation, brulee_activations(),
+                                multiple = TRUE, error_call = call)
+
+ if (length(hidden_units) > length(activation)) {
+  activation <- rep(activation, length(hidden_units))
+ } else if (length(hidden_units) < length(activation)) {
+  cli::cli_abort("{.arg activation} must be a single value or a vector with the
+                 same length as {.arg hidden_units}.", call = call)
+ }
 
  ## -----------------------------------------------------------------------------
 
@@ -963,6 +968,7 @@ brulee_mlp_two_layer.data.frame <-
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+
     ...
    )
   class(res) <- c("brulee_mlp_two_layer", class(res))
@@ -1016,6 +1022,7 @@ brulee_mlp_two_layer.matrix <- function(x,
    class_weights = class_weights,
    stop_iter = stop_iter,
    verbose = verbose,
+
    ...
   )
  class(res) <- c("brulee_mlp_two_layer", class(res))
@@ -1070,6 +1077,7 @@ brulee_mlp_two_layer.formula <-
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+
     ...
    )
   class(res) <- c("brulee_mlp_two_layer", class(res))
@@ -1124,6 +1132,7 @@ brulee_mlp_two_layer.recipe <-
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+
     ...
    )
   class(res) <- c("brulee_mlp_two_layer", class(res))
