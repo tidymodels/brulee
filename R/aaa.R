@@ -1,4 +1,5 @@
 #' @import torch
+#' @import rlang
 #' @importFrom stats complete.cases model.matrix terms
 #' @importFrom utils globalVariables
 #'
