@@ -13,9 +13,7 @@ check_single_logical <- function(x, call = rlang::caller_env()) {
  invisible(x)
 }
 
-check_number_whole_vec <- function(x, call = rlang::caller_env(), ...) {
- cl <- match.call()
- arg <- as.character(cl$x)
+check_number_whole_vec <- function(x, call = rlang::caller_env(), arg = rlang::caller_arg(x), ...) {
 
  for (i in x) {
   check_number_whole(i, arg = arg, call = call, ...)
