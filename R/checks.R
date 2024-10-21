@@ -14,7 +14,7 @@ check_number_decimal_vec <- function(x, call = rlang::caller_env(), ...) {
  arg <- as.character(cl$x)
 
  for (i in x) {
-  check_number_decimal(i, arg = arg, call = call, ...)
+   check_number_decimal(i, arg = arg, call = call, ...)
  }
  invisible(x)
 }
