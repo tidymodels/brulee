@@ -1,3 +1,28 @@
+# Additional type checkers designed for testing argument values.
+
+check_number_whole_vec <- function(x, call = rlang::caller_env(), arg = rlang::caller_arg(x), ...) {
+
+ for (i in x) {
+  check_number_whole(i, arg = arg, call = call, ...)
+ }
+ x <- as.integer(x)
+ invisible(x)
+}
+
+check_number_decimal_vec <- function(x, call = rlang::caller_env(), ...) {
+ cl <- match.call()
+ arg <- as.character(cl$x)
+
+ for (i in x) {
+   check_number_decimal(i, arg = arg, call = call, ...)
+ }
+ invisible(x)
+}
+
+# ------------------------------------------------------------------------------
+# soon to be replaced checkers
+
+
 check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
   compl_data <- complete.cases(x, y)
   if (any(!compl_data)) {
