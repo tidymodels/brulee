@@ -1,19 +1,3 @@
-test_that("checking single logicals", {
- library(rlang)
-
- variable <- "pie"
- expect_snapshot(brulee:::check_single_logical(variable), error = TRUE)
-
- variable <- NA
- expect_snapshot(brulee:::check_single_logical(variable), error = TRUE)
-
- variable <- c(TRUE, FALSE)
- expect_snapshot(brulee:::check_single_logical(variable), error = TRUE)
-
- variable <- TRUE
- expect_silent(brulee:::check_single_logical(variable))
-})
-
 test_that("checking double vectors", {
  library(rlang)
 

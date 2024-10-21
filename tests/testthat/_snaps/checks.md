@@ -1,27 +1,3 @@
-# checking single logicals
-
-    Code
-      brulee:::check_single_logical(variable)
-    Condition
-      Error:
-      ! `variable` should be a single logical value, not the string "pie".
-
----
-
-    Code
-      brulee:::check_single_logical(variable)
-    Condition
-      Error:
-      ! `variable` should be a single logical value, not `NA`.
-
----
-
-    Code
-      brulee:::check_single_logical(variable)
-    Condition
-      Error:
-      ! `variable` should be a single logical value, not a logical vector.
-
 # checking double vectors
 
     Code

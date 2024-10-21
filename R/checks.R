@@ -1,18 +1,5 @@
 # Additional type checkers designed for testing argument values.
 
-check_single_logical <- function(x, call = rlang::caller_env()) {
- cl <- match.call()
- arg_nm <- as.character(cl$x)
- msg <- "{.arg {arg_nm}} should be a single logical value, not {obj_type_friendly(x)}."
- if (!is.logical(x)) {
-  cli::cli_abort(msg, call = call)
- }
- if (length(x) > 1 || any(is.na(x))) {
-  cli::cli_abort(msg, call = call)
- }
- invisible(x)
-}
-
 check_number_whole_vec <- function(x, call = rlang::caller_env(), arg = rlang::caller_arg(x), ...) {
 
  for (i in x) {
