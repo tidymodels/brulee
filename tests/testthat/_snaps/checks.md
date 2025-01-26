@@ -1,23 +1,31 @@
 # checking double vectors
 
     Code
-      brulee:::check_number_decimal_vec(letters)
+      check_number_decimal_vec(letters)
     Condition
-      Error:
-      ! `letters` must be a number, not the string "a".
+      Error in `check_number_decimal_vec()`:
+      ! `letters` should be a double vector.
 
 ---
 
     Code
-      brulee:::check_number_decimal_vec(variable)
+      check_number_decimal_vec(variable)
     Condition
-      Error:
-      ! `variable` must be a number, not a numeric `NA`.
+      Error in `check_number_decimal_vec()`:
+      ! `variable` should not contain missing values.
+
+---
+
+    Code
+      check_number_decimal_vec(variable)
+    Condition
+      Error in `check_number_decimal_vec()`:
+      ! `variable` should be a double vector.
 
 # checking whole number vectors
 
     Code
-      brulee:::check_number_whole_vec(variable)
+      check_number_whole_vec(variable)
     Condition
       Error:
       ! `variable` must be a whole number, not the number 0.5.
@@ -25,7 +33,7 @@
 ---
 
     Code
-      brulee:::check_number_whole_vec(variable)
+      check_number_whole_vec(variable)
     Condition
       Error:
       ! `variable` must be a whole number, not an integer `NA`.
