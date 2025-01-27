@@ -1,9 +1,8 @@
 #' Fit neural networks
 #'
-#' `brulee_mlp()` fits neural network models using stochastic gradient
-#' descent. Multiple layers can be used. For working with two-layer networks in
-#' tidymodels, `brulee_mlp_two_layer()` can be helpful for specifying tuning
-#' parameters as scalars.
+#' `brulee_mlp()` fits neural network models. Multiple layers can be used. For
+#' working with two-layer networks in tidymodels, `brulee_mlp_two_layer()` can
+#' be helpful for specifying tuning parameters as scalars.
 #'
 #' @param x Depending on the context:
 #'

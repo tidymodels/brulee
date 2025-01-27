@@ -307,10 +307,9 @@ likelihood for classification) at each epoch.
 }
 }
 \description{
-\code{brulee_mlp()} fits neural network models using stochastic gradient
-descent. Multiple layers can be used. For working with two-layer networks in
-tidymodels, \code{brulee_mlp_two_layer()} can be helpful for specifying tuning
-parameters as scalars.
+\code{brulee_mlp()} fits neural network models. Multiple layers can be used. For
+working with two-layer networks in tidymodels, \code{brulee_mlp_two_layer()} can
+be helpful for specifying tuning parameters as scalars.
 }
 \details{
 This function fits feed-forward neural network models for regression (when

@@ -2,7 +2,7 @@
 
 * Added a convenience function, `brulee_mlp_two_layer()`, to more easily fit two-layer networks with parsnip.  
 
-* Various changes and improvements to error and wanring messages. 
+* Various changes and improvements to error and warning messages. 
 
 # brulee 0.3.0
 
