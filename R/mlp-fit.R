@@ -452,7 +452,10 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  allowed_activation <- brulee_activations()
  good_activation <- activation %in% allowed_activation
  if (!all(good_activation)) {
-  cli::cli_abort(paste("'activation' should be one of: ", paste0(allowed_activation, collapse = ", ")))
+  cli::cli_abort(
+    "{.arg activation} should be one of: {allowed_activation}, not 
+    {.val {activation}}."
+  )
  }
 
  if (optimizer == "LBFGS" & !is.null(batch_size)) {
