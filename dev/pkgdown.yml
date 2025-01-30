@@ -2,7 +2,7 @@ pandoc: 3.1.11
 pkgdown: 2.1.1
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-01-27T16:40Z
+last_built: 2025-01-30T17:48Z
 urls:
   reference: https://brulee.tidymodels.org/reference
   article: https://brulee.tidymodels.org/articles
