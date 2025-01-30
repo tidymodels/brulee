@@ -15,11 +15,11 @@ brulee_activations <- function() {
 get_activation_fn <- function(arg, ...) {
 
  if (arg == "linear") {
-  res <- identity
- } else {
-  cl <- rlang::call2(paste0("nn_", arg), .ns = "torch")
-  res <- rlang::eval_bare(cl)
+  arg <- "identity"
  }
+
+ cl <- rlang::call2(paste0("nn_", arg), .ns = "torch")
+ res <- rlang::eval_bare(cl)
 
  res
 }
