@@ -226,3 +226,19 @@ test_that("binomial mlp case weights", {
    sum(unweighted_pred$.pred_class == "class_2")
  )
 })
+
+test_that('linear activations', {
+ # See https://github.com/tidymodels/brulee/issues/68
+ skip_if(!torch::torch_is_installed())
+ skip_if_not_installed("modeldata")
+
+ data(bivariate, package = "modeldata")
+ set.seed(20)
+ nn_log_biv <-
+  try(
+   brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train,
+              epochs = 150, hidden_units = 3, activation = "linear"),
+   silent = TRUE)
+ expect_s3_class(nn_log_biv, "brulee_mlp")
+
+})
