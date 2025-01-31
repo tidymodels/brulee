@@ -1,3 +1,5 @@
+# brulee (development version)
+
 # brulee 0.4.0
 
 * Added a convenience function, `brulee_mlp_two_layer()`, to more easily fit two-layer networks with parsnip.  
