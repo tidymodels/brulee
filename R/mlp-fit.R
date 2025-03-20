@@ -453,7 +453,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  good_activation <- activation %in% allowed_activation
  if (!all(good_activation)) {
   cli::cli_abort(
-    "{.arg activation} should be one of: {allowed_activation}, not 
+    "{.arg activation} should be one of: {allowed_activation}, not
     {.val {activation}}."
   )
  }
@@ -685,8 +685,8 @@ mlp_fit_imp <-
 
   loss_prev <- 10^38
   loss_min <- loss_prev
-  poor_epoch <- 0
-  best_epoch <- 1
+  poor_epoch <- 0L
+  best_epoch <- 1L
   loss_vec <- rep(NA_real_, epochs)
   if (verbose) {
    epoch_chr <- format(1:epochs)
@@ -781,7 +781,7 @@ mlp_fit_imp <-
    model_obj = model_to_raw(model),
    estimates = param_per_epoch,
    loss = loss_vec[1:length(param_per_epoch)],
-   best_epoch = best_epoch,
+   best_epoch = as.integer(best_epoch),
    dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls,
                features = colnames(x)),
    y_stats = y_stats,

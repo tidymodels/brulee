@@ -474,8 +474,8 @@ multinomial_reg_fit_imp <-
 
     loss_prev <- 10^38
     loss_min <- loss_prev
-    poor_epoch <- 0
-    best_epoch <- 1
+    poor_epoch <- 0L
+    best_epoch <- 1L
     loss_vec <- rep(NA_real_, epochs)
     if (verbose) {
       epoch_chr <- format(1:epochs)
@@ -559,7 +559,7 @@ multinomial_reg_fit_imp <-
       model_obj = model_to_raw(model),
       estimates = param_per_epoch,
       loss = loss_vec[1:length(param_per_epoch)],
-      best_epoch = best_epoch,
+      best_epoch = as.integer(best_epoch),
       dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
       y_stats = y_stats,
       parameters = list(learn_rate = learn_rate,
