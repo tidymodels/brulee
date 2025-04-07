@@ -1,6 +1,7 @@
-# brulee (development version)
+# brulee (0.5.0)
 
  * Removed a unit test for numerical overflow since it occurs less frequently and has become increasingly more challenging to reproduce.
+ 
 # brulee 0.4.0
 
 * Added a convenience function, `brulee_mlp_two_layer()`, to more easily fit two-layer networks with parsnip.  
