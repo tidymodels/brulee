@@ -3,9 +3,6 @@
 #' @importFrom stats complete.cases model.matrix terms
 #' @importFrom utils globalVariables
 #'
-#' @importFrom dplyr %>%
-#' @export
-dplyr::`%>%`
 
 #' @importFrom ggplot2 autoplot
 #' @export

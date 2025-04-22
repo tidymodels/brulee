@@ -45,7 +45,7 @@
 #'   tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_expo), type = "decay_expo"),
 #'   tibble(epoch = iters, rate = map_dbl(iters, schedule_step), type = "step"),
 #'   tibble(epoch = iters, rate = map_dbl(iters, schedule_cyclic), type = "cyclic")
-#'  ) %>%
+#'  ) |>
 #'   ggplot(aes(epoch, rate)) +
 #'   geom_line() +
 #'   facet_wrap(~ type)

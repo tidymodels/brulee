@@ -100,16 +100,16 @@
 #'  ames_rec <-
 #'   recipe(Sale_Price ~ Bldg_Type + Neighborhood + Year_Built + Gr_Liv_Area +
 #'          Full_Bath + Year_Sold + Lot_Area + Central_Air + Longitude + Latitude,
-#'          data = ames_train) %>%
+#'          data = ames_train) |>
 #'     # Transform some highly skewed predictors
-#'     step_BoxCox(Lot_Area, Gr_Liv_Area) %>%
+#'     step_BoxCox(Lot_Area, Gr_Liv_Area) |>
 #'     # Lump some rarely occurring categories into "other"
-#'     step_other(Neighborhood, threshold = 0.05)  %>%
+#'     step_other(Neighborhood, threshold = 0.05)  |>
 #'     # Encode categorical predictors as binary.
-#'     step_dummy(all_nominal_predictors(), one_hot = TRUE) %>%
+#'     step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
 #'     # Add an interaction effect:
-#'     step_interact(~ starts_with("Central_Air"):Year_Built) %>%
-#'     step_zv(all_predictors()) %>%
+#'     step_interact(~ starts_with("Central_Air"):Year_Built) |>
+#'     step_zv(all_predictors()) |>
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
@@ -121,8 +121,8 @@
 #'
 #'  library(ggplot2)
 #'
-#'  predict(fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
+#'  predict(fit, ames_test) |>
+#'    bind_cols(ames_test) |>
 #'    ggplot(aes(x = .pred, y = Sale_Price)) +
 #'    geom_abline(col = "green") +
 #'    geom_point(alpha = .3) +
@@ -130,8 +130,8 @@
 #'    coord_fixed(ratio = 1)
 #'
 #'  library(yardstick)
-#'  predict(fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
+#'  predict(fit, ames_test) |>
+#'    bind_cols(ames_test) |>
 #'    rmse(Sale_Price, .pred)
 #'
 #'  }
@@ -584,7 +584,7 @@ linear_reg_module <-
       self$fc1 <- torch::nn_linear(num_pred, 1)
     },
     forward = function(x) {
-      x %>% self$fc1()
+      x |> self$fc1()
     }
   )
 

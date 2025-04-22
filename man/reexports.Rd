@@ -3,7 +3,6 @@
 \docType{import}
 \name{reexports}
 \alias{reexports}
-\alias{\%>\%}
 \alias{autoplot}
 \alias{tunable}
 \alias{coef}
@@ -14,8 +13,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{dplyr}{\code{\link[dplyr:reexports]{\%>\%}}}
-
   \item{generics}{\code{\link[generics]{tunable}}}
 
   \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}

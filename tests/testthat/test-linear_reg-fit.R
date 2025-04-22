@@ -38,7 +38,7 @@ test_that("basic linear regression LBFGS", {
 
  expect_error(
   lin_pred_lbfgs <-
-   predict(lin_fit_lbfgs, lin_te) %>%
+   predict(lin_fit_lbfgs, lin_te) |>
    bind_cols(lin_te),
   regex = NA)
 
@@ -57,13 +57,13 @@ test_that("basic linear regression LBFGS", {
 
  # Did it learn anything?
  lin_brier_lbfgs <-
-  lin_pred_lbfgs %>%
+  lin_pred_lbfgs |>
   yardstick::rmse(outcome, .pred)
 
  set.seed(382)
  shuffled <-
-  lin_pred_lbfgs %>%
-  mutate(outcome = sample(outcome)) %>%
+  lin_pred_lbfgs |>
+  mutate(outcome = sample(outcome)) |>
   yardstick::rmse(outcome, .pred)
 
  expect_true(lin_brier_lbfgs$.estimate < shuffled$.estimate )
@@ -117,7 +117,7 @@ test_that("basic Linear regression sgd", {
 
  expect_error(
   lin_pred_sgd <-
-   predict(lin_fit_sgd, lin_te) %>%
+   predict(lin_fit_sgd, lin_te) |>
    bind_cols(lin_te),
   regex = NA)
 
@@ -136,13 +136,13 @@ test_that("basic Linear regression sgd", {
 
  # Did it learn anything?
  lin_brier_sgd <-
-  lin_pred_sgd %>%
+  lin_pred_sgd |>
   yardstick::rmse(outcome, .pred)
 
  set.seed(382)
  shuffled <-
-  lin_pred_sgd %>%
-  mutate(outcome = sample(outcome)) %>%
+  lin_pred_sgd |>
+  mutate(outcome = sample(outcome)) |>
   yardstick::rmse(outcome, .pred)
 
  expect_true(lin_brier_sgd$.estimate < shuffled$.estimate)

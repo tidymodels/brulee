@@ -51,7 +51,7 @@ brulee_plot <- function(object, ...) {
 #'  ames_test  <- ames[-in_train,]
 #'
 #'  ames_rec <-
-#'   recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) %>%
+#'   recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) |>
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
