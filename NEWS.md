@@ -1,6 +1,6 @@
 # brulee (development version)
 
-* Transition from the magrittr pipe to the vase R pipe.
+* Transition from the magrittr pipe to the base R pipe.
 
 # brulee (0.5.0)
 
