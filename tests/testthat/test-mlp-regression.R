@@ -20,7 +20,7 @@ test_that('basic regression mlp LBFGS', {
  reg_tr_y <- reg_tr$outcome
 
  reg_rec <-
-  recipe(outcome ~ ., data = reg_tr) %>%
+  recipe(outcome ~ ., data = reg_tr) |>
   step_normalize(all_predictors())
 
  # ------------------------------------------------------------------------------
@@ -55,8 +55,8 @@ test_that('basic regression mlp LBFGS', {
 
  expect_error(
   reg_pred_lbfgs <-
-   predict(mlp_reg_rec_lbfgs_fit, reg_te) %>%
-   bind_cols(reg_te) %>%
+   predict(mlp_reg_rec_lbfgs_fit, reg_te) |>
+   bind_cols(reg_te) |>
    select(-starts_with("predictor")),
   regex = NA)
 
@@ -69,13 +69,13 @@ test_that('basic regression mlp LBFGS', {
 
  # Did it learn anything?
  reg_rmse_lbfgs <-
-  reg_pred_lbfgs %>%
+  reg_pred_lbfgs |>
   yardstick::rmse(outcome, .pred)
 
  set.seed(382)
  shuffled <-
-  reg_pred_lbfgs %>%
-  mutate(outcome = sample(outcome)) %>%
+  reg_pred_lbfgs |>
+  mutate(outcome = sample(outcome)) |>
   yardstick::rmse(outcome, .pred)
 
  expect_true(reg_rmse_lbfgs$.estimate < shuffled$.estimate )
@@ -103,8 +103,8 @@ test_that('bad args', {
  reg_smol <- ames[, c("Longitude", "Latitude", "Alley", "Sale_Price")]
 
  reg_rec <-
-  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) %>%
-  step_dummy(Alley) %>%
+  recipe(Sale_Price ~ Longitude + Latitude + Alley, data = ames) |>
+  step_dummy(Alley) |>
   step_normalize(all_predictors())
 
  # ------------------------------------------------------------------------------
@@ -397,7 +397,7 @@ test_that('two-layer networks', {
  reg_tr_y <- reg_tr$outcome
 
  reg_rec <-
-  recipe(outcome ~ ., data = reg_tr) %>%
+  recipe(outcome ~ ., data = reg_tr) |>
   step_normalize(all_predictors())
 
   # ------------------------------------------------------------------------------

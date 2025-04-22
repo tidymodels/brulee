@@ -30,7 +30,7 @@ test_that("setting class weights", {
  # ------------------------------------------------------------------------------
 
  expect_equal(
-  brulee:::check_class_weights(1.0, lvls, cls_xtab, "fabulous") %>%
+  brulee:::check_class_weights(1.0, lvls, cls_xtab, "fabulous") |>
    as.numeric(),
   rep(1, num_class)
  )
@@ -41,19 +41,19 @@ test_that("setting class weights", {
  )
 
  expect_equal(
-  brulee:::check_class_weights(NULL, lvls, cls_xtab, "fabulous") %>%
+  brulee:::check_class_weights(NULL, lvls, cls_xtab, "fabulous") |>
    as.numeric(),
   rep(1, num_class)
  )
 
  expect_equal(
-  brulee:::check_class_weights(6.25, lvls, cls_xtab, "fabulous") %>%
+  brulee:::check_class_weights(6.25, lvls, cls_xtab, "fabulous") |>
    as.numeric(),
   c(1, 6.25, 1)
  )
 
  expect_equal(
-  brulee:::check_class_weights(c(1, 6.25, 1), lvls, cls_xtab, "fabulous") %>%
+  brulee:::check_class_weights(c(1, 6.25, 1), lvls, cls_xtab, "fabulous") |>
    as.numeric(),
   c(1, 6.25, 1)
  )

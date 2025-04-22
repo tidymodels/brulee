@@ -22,15 +22,15 @@
 #'
 #'   data(penguins, package = "modeldata")
 #'
-#'   penguins <- penguins %>% na.omit()
+#'   penguins <- penguins |> na.omit()
 #'
 #'   set.seed(122)
 #'   in_train <- sample(1:nrow(penguins), 200)
 #'   penguins_train <- penguins[ in_train,]
 #'   penguins_test  <- penguins[-in_train,]
 #'
-#'   rec <- recipe(sex ~ ., data = penguins_train) %>%
-#'     step_dummy(all_nominal_predictors()) %>%
+#'   rec <- recipe(sex ~ ., data = penguins_train) |>
+#'     step_dummy(all_nominal_predictors()) |>
 #'     step_normalize(all_numeric_predictors())
 #'
 #'   set.seed(3)
@@ -39,9 +39,9 @@
 #'
 #'   predict(fit, penguins_test)
 #'
-#'   predict(fit, penguins_test, type = "prob") %>%
-#'     bind_cols(penguins_test) %>%
-#'     roc_curve(sex, .pred_female) %>%
+#'   predict(fit, penguins_test, type = "prob") |>
+#'     bind_cols(penguins_test) |>
+#'     roc_curve(sex, .pred_female) |>
 #'     autoplot()
 #'
 #' }

@@ -154,16 +154,16 @@
 #'  ames_rec <-
 #'   recipe(Sale_Price ~ Bldg_Type + Neighborhood + Year_Built + Gr_Liv_Area +
 #'          Full_Bath + Year_Sold + Lot_Area + Central_Air + Longitude + Latitude,
-#'          data = ames_train) %>%
+#'          data = ames_train) |>
 #'    # Transform some highly skewed predictors
-#'    step_BoxCox(Lot_Area, Gr_Liv_Area) %>%
+#'    step_BoxCox(Lot_Area, Gr_Liv_Area) |>
 #'    # Lump some rarely occurring categories into "other"
-#'    step_other(Neighborhood, threshold = 0.05)  %>%
+#'    step_other(Neighborhood, threshold = 0.05)  |>
 #'    # Encode categorical predictors as binary.
-#'    step_dummy(all_nominal_predictors(), one_hot = TRUE) %>%
+#'    step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
 #'    # Add an interaction effect:
-#'    step_interact(~ starts_with("Central_Air"):Year_Built) %>%
-#'    step_zv(all_predictors()) %>%
+#'    step_interact(~ starts_with("Central_Air"):Year_Built) |>
+#'    step_zv(all_predictors()) |>
 #'    step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
@@ -175,8 +175,8 @@
 #'
 #'  library(ggplot2)
 #'
-#'  predict(fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
+#'  predict(fit, ames_test) |>
+#'    bind_cols(ames_test) |>
 #'    ggplot(aes(x = .pred, y = Sale_Price)) +
 #'    geom_abline(col = "green") +
 #'    geom_point(alpha = .3) +
@@ -184,8 +184,8 @@
 #'    coord_fixed(ratio = 1)
 #'
 #'  library(yardstick)
-#'  predict(fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
+#'  predict(fit, ames_test) |>
+#'    bind_cols(ames_test) |>
 #'    rmse(Sale_Price, .pred)
 #'
 #'  # Using multiple hidden layers and activation functions
@@ -194,8 +194,8 @@
 #'                     hidden_units = c(15L, 17L), activation = c("relu", "elu"),
 #'                     dropout = 0.05, rate_schedule = "cyclic", step_size = 4)
 #'
-#'  predict(hidden_fit, ames_test) %>%
-#'    bind_cols(ames_test) %>%
+#'  predict(hidden_fit, ames_test) |>
+#'    bind_cols(ames_test) |>
 #'    rmse(Sale_Price, .pred)
 #'
 #'  # ------------------------------------------------------------------------------
@@ -221,8 +221,8 @@
 #'
 #'  grid <- expand.grid(X1 = grid_points, X2 = grid_points)
 #'
-#'  predict(cls_fit, grid, type = "prob") %>%
-#'   bind_cols(grid) %>%
+#'  predict(cls_fit, grid, type = "prob") |>
+#'   bind_cols(grid) |>
 #'   ggplot(aes(X1, X2)) +
 #'   geom_contour(aes(z = .pred_Class1), breaks = 1/2, col = "black") +
 #'   geom_point(data = parabolic_te, aes(col = class))

@@ -222,10 +222,10 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  library(recipes)
 
  cells_rec <-
-  recipe(class ~ ., data = cells_train) \%>\%
+  recipe(class ~ ., data = cells_train) |>
   # Transform some highly skewed predictors
-  step_YeoJohnson(all_numeric_predictors()) \%>\%
-  step_normalize(all_numeric_predictors()) \%>\%
+  step_YeoJohnson(all_numeric_predictors()) |>
+  step_normalize(all_numeric_predictors()) |>
   step_pca(all_numeric_predictors(), num_comp = 10)
 
  set.seed(2)
@@ -236,8 +236,8 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  autoplot(fit)
 
  library(yardstick)
- predict(fit, cells_test, type = "prob") \%>\%
-  bind_cols(cells_test) \%>\%
+ predict(fit, cells_test, type = "prob") |>
+  bind_cols(cells_test) |>
   roc_auc(class, .pred_PS)
 }
 }

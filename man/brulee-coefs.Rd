@@ -48,7 +48,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
  library(recipes)
 
  ames_rec <-
-  recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) \%>\%
+  recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) |>
     step_normalize(all_numeric_predictors())
 
  set.seed(2)

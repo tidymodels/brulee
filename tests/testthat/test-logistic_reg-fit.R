@@ -31,8 +31,8 @@ test_that("basic logistic regression LBFGS", {
 
  expect_error(
   bin_pred_lbfgs <-
-   predict(bin_fit_lbfgs,bin_te) %>%
-   bind_cols(predict(bin_fit_lbfgs,bin_te, type = "prob")) %>%
+   predict(bin_fit_lbfgs,bin_te) |>
+   bind_cols(predict(bin_fit_lbfgs,bin_te, type = "prob")) |>
    bind_cols(bin_te),
   regex = NA)
 
@@ -54,7 +54,7 @@ test_that("basic logistic regression LBFGS", {
 
  # Did it learn anything?
  bin_brier_lbfgs <-
-  bin_pred_lbfgs %>%
+  bin_pred_lbfgs |>
   yardstick::brier_class(class, .pred_one)
 
  expect_true(bin_brier_lbfgs$.estimate < (1 - 1/num_class)^2)
@@ -99,14 +99,14 @@ test_that("basic logistic regression SGD", {
 
  expect_error(
   bin_pred_sgd <-
-   predict(bin_fit_sgd,bin_te) %>%
-   bind_cols(predict(bin_fit_sgd,bin_te, type = "prob")) %>%
+   predict(bin_fit_sgd,bin_te) |>
+   bind_cols(predict(bin_fit_sgd,bin_te, type = "prob")) |>
    bind_cols(bin_te),
   regex = NA)
 
  # Did it learn anything?
  bin_brier_sgd <-
-  bin_pred_sgd %>%
+  bin_pred_sgd |>
   yardstick::brier_class(class, .pred_one)
 
  expect_true(bin_brier_sgd$.estimate < (1 - 1/num_class)^2)
@@ -124,8 +124,8 @@ test_that("coef works when recipes are used", {
 
   rec <-
    recipes::recipe(Class ~ revol_util + open_il_24m + emp_length,
-                   data = lending_club) %>%
-   recipes::step_dummy(emp_length, one_hot = TRUE) %>%
+                   data = lending_club) |>
+   recipes::step_dummy(emp_length, one_hot = TRUE) |>
    recipes::step_normalize(recipes::all_predictors())
 
   fit_rec <- brulee_logistic_reg(rec, lending_club, epochs = 10L)
@@ -181,8 +181,8 @@ test_that("logistic regression class weights", {
 
  expect_error(
   bin_pred_lbfgs_wts <-
-   predict(bin_fit_lbfgs_wts,bin_te) %>%
-   bind_cols(predict(bin_fit_lbfgs_wts,bin_te, type = "prob")) %>%
+   predict(bin_fit_lbfgs_wts,bin_te) |>
+   bind_cols(predict(bin_fit_lbfgs_wts,bin_te, type = "prob")) |>
    bind_cols(bin_te),
   regex = NA)
 
@@ -201,8 +201,8 @@ test_that("logistic regression class weights", {
 
  expect_error(
   bin_pred_lbfgs_unwt <-
-   predict(bin_fit_lbfgs_unwt,bin_te) %>%
-   bind_cols(predict(bin_fit_lbfgs_unwt,bin_te, type = "prob")) %>%
+   predict(bin_fit_lbfgs_unwt,bin_te) |>
+   bind_cols(predict(bin_fit_lbfgs_unwt,bin_te, type = "prob")) |>
    bind_cols(bin_te),
   regex = NA)
 

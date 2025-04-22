@@ -102,10 +102,10 @@
 #'  library(recipes)
 #'
 #'  cells_rec <-
-#'   recipe(class ~ ., data = cells_train) %>%
+#'   recipe(class ~ ., data = cells_train) |>
 #'   # Transform some highly skewed predictors
-#'   step_YeoJohnson(all_numeric_predictors()) %>%
-#'   step_normalize(all_numeric_predictors()) %>%
+#'   step_YeoJohnson(all_numeric_predictors()) |>
+#'   step_normalize(all_numeric_predictors()) |>
 #'   step_pca(all_numeric_predictors(), num_comp = 10)
 #'
 #'  set.seed(2)
@@ -116,8 +116,8 @@
 #'  autoplot(fit)
 #'
 #'  library(yardstick)
-#'  predict(fit, cells_test, type = "prob") %>%
-#'   bind_cols(cells_test) %>%
+#'  predict(fit, cells_test, type = "prob") |>
+#'   bind_cols(cells_test) |>
 #'   roc_auc(class, .pred_PS)
 #' }
 #' }
@@ -597,8 +597,8 @@ logistic_module <-
       self$transform <- torch::nn_softmax(dim = 2)
     },
     forward = function(x) {
-      x %>%
-        self$fc1() %>%
+      x |>
+        self$fc1() |>
         self$transform()
     }
   )

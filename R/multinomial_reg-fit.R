@@ -81,23 +81,23 @@
 #'
 #'   data(penguins, package = "modeldata")
 #'
-#'   penguins <- penguins %>% na.omit()
+#'   penguins <- penguins |> na.omit()
 #'
 #'   set.seed(122)
 #'   in_train <- sample(1:nrow(penguins), 200)
 #'   penguins_train <- penguins[ in_train,]
 #'   penguins_test  <- penguins[-in_train,]
 #'
-#'   rec <- recipe(island ~ ., data = penguins_train) %>%
-#'     step_dummy(species, sex) %>%
+#'   rec <- recipe(island ~ ., data = penguins_train) |>
+#'     step_dummy(species, sex) |>
 #'     step_normalize(all_predictors())
 #'
 #'   set.seed(3)
 #'   fit <- brulee_multinomial_reg(rec, data = penguins_train, epochs = 5)
 #'   fit
 #'
-#'   predict(fit, penguins_test) %>%
-#'     bind_cols(penguins_test) %>%
+#'   predict(fit, penguins_test) |>
+#'     bind_cols(penguins_test) |>
 #'     conf_mat(island, .pred_class)
 #' }
 #' }
@@ -579,8 +579,8 @@ multinomial_module <-
       self$transform <- torch::nn_softmax(dim = 2)
     },
     forward = function(x) {
-      x %>%
-        self$fc1() %>%
+      x |>
+        self$fc1() |>
         self$transform()
     }
   )
