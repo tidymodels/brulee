@@ -1,6 +1,7 @@
 # brulee (development version)
 
 * Transition from the magrittr pipe to the base R pipe.
+* `brulee_mlp()` has two additional parameters, `grad_value_clip` and `grad_value_clip`, that prevent overflow errors (i.e., error messages of `"Loss is NaN at epoch x Training is stopped."`).
 
 # brulee (0.5.0)
 
