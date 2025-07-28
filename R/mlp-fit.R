@@ -68,6 +68,10 @@
 #'  batch. (`optimizer = "SGD"` only)
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
+#' @param grad_norm_clip,grad_value_clip Two numeric values, possibly `Inf`,
+#' that prevents the gradient's values or norm(s) from exceeding the specified
+#' value. This can be helpful if training stops early with the message that
+#' `"Loss is NaN at epoch x Training is stopped."`
 #' @param verbose A logical that prints out the iteration history.
 #' @param ... Options to pass to the learning rate schedulers via
 #' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
@@ -261,6 +265,8 @@ brulee_mlp.data.frame <-
           batch_size = NULL,
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
   processed <- hardhat::mold(x, y)
@@ -281,6 +287,8 @@ brulee_mlp.data.frame <-
    batch_size = batch_size,
    class_weights = class_weights,
    stop_iter = stop_iter,
+   grad_value_clip = grad_value_clip,
+   grad_norm_clip = grad_norm_clip,
    verbose = verbose,
    ...
   )
@@ -306,6 +314,8 @@ brulee_mlp.matrix <- function(x,
                               batch_size = NULL,
                               class_weights = NULL,
                               stop_iter = 5,
+                              grad_value_clip = Inf,
+                              grad_norm_clip = Inf,
                               verbose = FALSE,
                               ...) {
  processed <- hardhat::mold(x, y)
@@ -326,6 +336,8 @@ brulee_mlp.matrix <- function(x,
   batch_size = batch_size,
   class_weights = class_weights,
   stop_iter = stop_iter,
+  grad_value_clip = grad_value_clip,
+  grad_norm_clip = grad_norm_clip,
   verbose = verbose,
   ...
  )
@@ -352,6 +364,8 @@ brulee_mlp.formula <-
           batch_size = NULL,
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
   processed <- hardhat::mold(formula, data)
@@ -372,6 +386,8 @@ brulee_mlp.formula <-
    batch_size = batch_size,
    class_weights = class_weights,
    stop_iter = stop_iter,
+   grad_value_clip = grad_value_clip,
+   grad_norm_clip = grad_norm_clip,
    verbose = verbose,
    ...
   )
@@ -398,6 +414,8 @@ brulee_mlp.recipe <-
           batch_size = NULL,
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
   processed <- hardhat::mold(x, data)
@@ -418,6 +436,8 @@ brulee_mlp.recipe <-
    batch_size = batch_size,
    class_weights = class_weights,
    stop_iter = stop_iter,
+   grad_value_clip = grad_value_clip,
+   grad_norm_clip = grad_norm_clip,
    verbose = verbose,
    ...
   )
@@ -429,7 +449,8 @@ brulee_mlp.recipe <-
 brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
                               learn_rate, rate_schedule, momentum, penalty,
                               mixture, dropout, class_weights, validation, optimizer,
-                              batch_size, stop_iter, verbose, ...) {
+                              batch_size, stop_iter, grad_value_clip, grad_norm_clip,
+                              verbose, ...) {
  if(!torch::torch_is_installed()) {
   cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
  }
@@ -453,7 +474,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  good_activation <- activation %in% allowed_activation
  if (!all(good_activation)) {
   cli::cli_abort(
-    "{.arg activation} should be one of: {allowed_activation}, not 
+    "{.arg activation} should be one of: {allowed_activation}, not
     {.val {activation}}."
   )
  }
@@ -478,6 +499,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+ check_double(grad_norm_clip, single = TRUE, 0, Inf, incl = c(FALSE, TRUE), fn = f_nm)
+ check_double(grad_value_clip, single = TRUE, 0, Inf, incl = c(FALSE, TRUE), fn = f_nm)
  check_logical(verbose, single = TRUE, fn = f_nm)
  check_character(activation, single = FALSE, fn = f_nm)
 
@@ -527,6 +550,8 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
    batch_size = batch_size,
    class_weights = class_weights,
    stop_iter = stop_iter,
+   grad_value_clip = grad_value_clip,
+   grad_norm_clip = grad_norm_clip,
    verbose = verbose,
    ...
   )
@@ -599,6 +624,8 @@ mlp_fit_imp <-
           activation = "relu",
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
 
@@ -718,6 +745,12 @@ mlp_fit_imp <-
       pred <- model(batch$x)
       loss <- loss_fn(pred, batch$y, class_weights)
       loss$backward()
+      if (is.finite(grad_value_clip)) {
+       try(torch::nn_utils_clip_grad_value_(model$parameters, grad_value_clip), silent = TRUE)
+      }
+      if (is.finite(grad_norm_clip)) {
+       try(torch::nn_utils_clip_grad_norm_(model$parameters, grad_norm_clip), silent = TRUE)
+      }
       loss
      }
      optimizer_obj$step(cl)
@@ -797,6 +830,9 @@ mlp_fit_imp <-
     optimizer = optimizer,
     batch_size = batch_size,
     momentum = momentum,
+    stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     sched = rate_schedule,
     sched_opt = list(...)
    )
@@ -940,6 +976,8 @@ brulee_mlp_two_layer.data.frame <-
           batch_size = NULL,
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
   processed <- hardhat::mold(x, y)
@@ -964,6 +1002,8 @@ brulee_mlp_two_layer.data.frame <-
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     ...
    )
@@ -993,6 +1033,8 @@ brulee_mlp_two_layer.matrix <- function(x,
                                         batch_size = NULL,
                                         class_weights = NULL,
                                         stop_iter = 5,
+                                        grad_value_clip = Inf,
+                                        grad_norm_clip = Inf,
                                         verbose = FALSE,
                                         ...) {
  processed <- hardhat::mold(x, y)
@@ -1017,6 +1059,8 @@ brulee_mlp_two_layer.matrix <- function(x,
    batch_size = batch_size,
    class_weights = class_weights,
    stop_iter = stop_iter,
+   grad_value_clip = grad_value_clip,
+   grad_norm_clip = grad_norm_clip,
    verbose = verbose,
    ...
   )
@@ -1047,6 +1091,8 @@ brulee_mlp_two_layer.formula <-
           batch_size = NULL,
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
   processed <- hardhat::mold(formula, data)
@@ -1071,6 +1117,8 @@ brulee_mlp_two_layer.formula <-
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     ...
    )
@@ -1101,6 +1149,8 @@ brulee_mlp_two_layer.recipe <-
           batch_size = NULL,
           class_weights = NULL,
           stop_iter = 5,
+          grad_value_clip = Inf,
+          grad_norm_clip = Inf,
           verbose = FALSE,
           ...) {
   processed <- hardhat::mold(x, data)
@@ -1125,6 +1175,8 @@ brulee_mlp_two_layer.recipe <-
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     ...
    )
