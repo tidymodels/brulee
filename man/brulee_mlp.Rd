@@ -36,8 +36,8 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -59,8 +59,8 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -82,8 +82,8 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -105,8 +105,8 @@ brulee_mlp(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -134,8 +134,8 @@ brulee_mlp_two_layer(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -159,8 +159,8 @@ brulee_mlp_two_layer(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -184,8 +184,8 @@ brulee_mlp_two_layer(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )
@@ -209,8 +209,8 @@ brulee_mlp_two_layer(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
-  grad_value_clip = Inf,
-  grad_norm_clip = Inf,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   ...
 )

@@ -1,7 +1,14 @@
 # brulee (development version)
 
 * Transition from the magrittr pipe to the base R pipe.
-* `brulee_mlp()` has two additional parameters, `grad_value_clip` and `grad_value_clip`, that prevent overflow errors (i.e., error messages of `"Loss is NaN at epoch x Training is stopped."`).
+
+* To try to help avoiding numeric overflow in the loss functions: 
+
+  * Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation. 
+
+  * `brulee_mlp()` has two additional parameters, `grad_value_clip` and `grad_value_clip`, that prevent issues. 
+  
+  * The warning was changed top "Early stopping occurred at epoch {X} due to numerical overflow of the loss function."
 
 # brulee (0.5.0)
 
