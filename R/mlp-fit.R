@@ -700,10 +700,36 @@ mlp_fit_imp <-
    dl_val <- torch::dataloader(ds_val)
   }
 
+  # ------------------------------------------------------------------------------
+  # Return value
+
+  res <-
+   list(
+    dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls,
+                features = colnames(x)),
+    y_stats = y_stats,
+    parameters = list(
+     activation = activation,
+     hidden_units = hidden_units,
+     learn_rate = learn_rate,
+     class_weights = as.numeric(class_weights),
+     penalty = penalty,
+     mixture = mixture,
+     dropout = dropout,
+     validation = validation,
+     optimizer = optimizer,
+     batch_size = batch_size,
+     momentum = momentum,
+     stop_iter = stop_iter,
+     grad_value_clip = grad_value_clip,
+     grad_norm_clip = grad_norm_clip,
+     sched = rate_schedule,
+     sched_opt = list(...)
+    )
+   )
+
   ## ---------------------------------------------------------------------------
   # Initialize model and optimizer
-
-  best_epoch <- 1
 
   model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
   loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
@@ -713,17 +739,43 @@ mlp_fit_imp <-
 
   ## ---------------------------------------------------------------------------
 
-  loss_prev <- 10^38
-  loss_min <- loss_prev
-  poor_epoch <- 0
-  loss_vec <- rep(NA_real_, epochs)
-  if (verbose) {
-   epoch_chr <- format(1:epochs)
+  best_epoch <- 0L
+  poor_epoch <- 0L
+  loss_vec <- rep(NA_real_, epochs + 1)
+
+  if (validation > 0) {
+   pred <- model(dl_val$dataset$tensors$x)
+   loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
+  } else {
+   pred <- model(dl$dataset$tensors$x)
+   loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
   }
 
-  ## -----------------------------------------------------------------------------
+  loss_vec[1] <- loss$item()
+  loss_prev <- loss_curr <- loss_vec[1]
+  loss_min <- loss_prev
 
-  param_per_epoch <- list()
+  if (verbose) {
+   epoch_chr <- gsub(" ", "0", format(0:epochs))
+   msg <- paste("epoch:", epoch_chr[1], "learn rate", signif(learn_rate, 3),
+                loss_label, signif(loss_curr, 3))
+
+    cli::cli_inform(
+     "epoch: {poch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
+   )
+   epoch_chr <- epoch_chr[-1]
+  }
+
+  param_per_epoch <- vector(mode = "list", length = epochs + 1)
+  param_per_epoch[[1]] <-
+   lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+  res$model_obj <- model_to_raw(model)
+  res$estimates <- param_per_epoch[[1]]
+  res$loss <- loss_vec[1]
+  res$best_epoch <- best_epoch
+
+  ## -----------------------------------------------------------------------------
 
   # Optimize parameters
   for (epoch in 1:epochs) {
@@ -770,7 +822,7 @@ mlp_fit_imp <-
 
    # calculate losses
    loss_curr <- loss$item()
-   loss_vec[epoch] <- loss_curr
+   loss_vec[epoch + 1] <- loss_curr
 
    if (is.nan(loss_curr)) {
     cli::cli_warn("Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function.")
@@ -789,15 +841,21 @@ mlp_fit_imp <-
    loss_prev <- loss_curr
 
    # persists models and coefficients
-   param_per_epoch[[epoch]] <-
+   param_per_epoch[[epoch + 1]] <-
     lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
    if (verbose) {
     msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 3),
                  loss_label, signif(loss_curr, 3), loss_note)
-
-    cli::cli_inform(msg)
+    cli::cli_inform(
+     "epoch: {poch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
+    )
    }
+
+   res$model_obj <- model_to_raw(model)
+   res$estimates <- param_per_epoch
+   res$loss <- loss_vec[1:(epoch + 1)]
+   res$best_epoch <- best_epoch
 
    if (poor_epoch == stop_iter) {
     break()
@@ -805,40 +863,10 @@ mlp_fit_imp <-
 
   }
 
-  # ------------------------------------------------------------------------------
-
-  class_weights <- as.numeric(class_weights)
-  names(class_weights) <- lvls
 
   ## ---------------------------------------------------------------------------
 
-  list(
-   model_obj = model_to_raw(model),
-   estimates = param_per_epoch,
-   loss = loss_vec[1:length(param_per_epoch)],
-   best_epoch = best_epoch,
-   dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls,
-               features = colnames(x)),
-   y_stats = y_stats,
-   parameters = list(
-    activation = activation,
-    hidden_units = hidden_units,
-    learn_rate = learn_rate,
-    class_weights = class_weights,
-    penalty = penalty,
-    mixture = mixture,
-    dropout = dropout,
-    validation = validation,
-    optimizer = optimizer,
-    batch_size = batch_size,
-    momentum = momentum,
-    stop_iter = stop_iter,
-    grad_value_clip = grad_value_clip,
-    grad_norm_clip = grad_norm_clip,
-    sched = rate_schedule,
-    sched_opt = list(...)
-   )
-  )
+  res
  }
 
 

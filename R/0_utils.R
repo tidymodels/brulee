@@ -77,6 +77,9 @@ cat_schedule <- function(x) {
 
 # ------------------------------------------------------------------------------
 
+#TODO make sure indicies are good with extra result
+# update print method for class weights and val loss
+# cli update
 
 model_to_raw <- function(model) {
   con <- rawConnection(raw(), open = "w")

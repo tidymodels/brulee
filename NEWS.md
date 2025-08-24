@@ -5,10 +5,12 @@
 * To try to help avoiding numeric overflow in the loss functions: 
 
   * Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation. 
+  
+  * The results always contain the initial results to use as a fallback if there is overflow during the first epoch.
 
   * `brulee_mlp()` has two additional parameters, `grad_value_clip` and `grad_value_clip`, that prevent issues. 
   
-  * The warning was changed top "Early stopping occurred at epoch {X} due to numerical overflow of the loss function."
+  * The warning was changed to "Early stopping occurred at epoch {X} due to numerical overflow of the loss function."
 
 # brulee (0.5.0)
 
