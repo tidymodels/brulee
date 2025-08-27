@@ -33,9 +33,14 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="brulee-development-version">brulee (development version)<a class="anchor" aria-label="anchor" href="#brulee-development-version"></a></h2>
-<ul><li>Transition from the magrittr pipe to the base R pipe.</li>
+<ul><li><p>Transition from the magrittr pipe to the base R pipe.</p></li>
 <li>
-<code><a href="../reference/brulee_mlp.html">brulee_mlp()</a></code> has two additional parameters, <code>grad_value_clip</code> and <code>grad_value_clip</code>, that prevent overflow errors (i.e., error messages of <code>"Loss is NaN at epoch x Training is stopped."</code>).</li>
+<p>To try to help avoiding numeric overflow in the loss functions:</p>
+<ul><li><p>Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation.</p></li>
+<li><p>The results always contain the initial results to use as a fallback if there is overflow during the first epoch.</p></li>
+<li><p><code><a href="../reference/brulee_mlp.html">brulee_mlp()</a></code> has two additional parameters, <code>grad_value_clip</code> and <code>grad_value_clip</code>, that prevent issues.</p></li>
+<li><p>The warning was changed to “Early stopping occurred at epoch {X} due to numerical overflow of the loss function.”</p></li>
+</ul></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="brulee-040">brulee 0.4.0<a class="anchor" aria-label="anchor" href="#brulee-040"></a></h2><p class="text-muted">CRAN release: 2025-01-30</p>
