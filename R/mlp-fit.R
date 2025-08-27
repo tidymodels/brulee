@@ -594,6 +594,11 @@ new_brulee_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
  if (!inherits(blueprint, "hardhat_blueprint")) {
   cli::cli_abort("'blueprint' should be a hardhat blueprint")
  }
+
+ # Save the estimates that have values
+ num_items <- purrr::map_int(estimates, length)
+ estimates <- estimates[num_items > 0]
+
  hardhat::new_model(model_obj = model_obj,
                     estimates = estimates,
                     best_epoch = best_epoch,
@@ -629,7 +634,8 @@ mlp_fit_imp <-
           verbose = FALSE,
           ...) {
 
-  torch::torch_manual_seed(sample.int(10^5, 1))
+  start_seed <- sample.int(10^5, 1)
+  torch::torch_manual_seed(start_seed)
 
   ## ---------------------------------------------------------------------------
   # General data checks:
@@ -702,6 +708,10 @@ mlp_fit_imp <-
 
   ## ---------------------------------------------------------------------------
   # Initialize model and optimizer
+
+  # Reset the seed so that SGD and LBFGS start from the same values
+  torch::torch_manual_seed(start_seed + 1)
+
   model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
   loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
 
@@ -716,7 +726,14 @@ mlp_fit_imp <-
   best_epoch <- 1
   loss_vec <- rep(NA_real_, epochs)
   if (verbose) {
-   epoch_chr <- format(1:epochs)
+   epoch_chr <- gsub(" ", "0", format(0:epochs))
+   msg <- paste("epoch:", epoch_chr[1], "learn rate", signif(learn_rate, 3),
+                loss_label, signif(loss_curr, 3))
+
+    cli::cli_inform(
+     "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
+   )
+   epoch_chr <- epoch_chr[-1]
   }
 
   ## -----------------------------------------------------------------------------
@@ -791,8 +808,10 @@ mlp_fit_imp <-
     lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
    if (verbose) {
-    msg <- paste("epoch:", epoch_chr[epoch], "learn rate", signif(learn_rate, 3),
-                 loss_label, signif(loss_curr, 3), loss_note)
+    cli::cli_inform(
+     "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
+    )
+   }
 
     cli::cli_inform(msg)
    }
@@ -929,7 +948,7 @@ set_optimizer <- function(optimizer, model, learn_rate, momentum) {
  } else if (optimizer == "SGD") {
   res <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
  } else {
-  cli::cli_abort(paste0("Unknown optimizer '", optimizer, "'"))
+  cli::cli_abort(paste0("Unsupported optimizer '", optimizer, "'"))
  }
  res
 }

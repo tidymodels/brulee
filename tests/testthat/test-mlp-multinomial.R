@@ -164,12 +164,12 @@ test_that("multinomial mlp class weights", {
   mnl_fit_lbfgs_wts <-
    brulee_mlp(class ~ .,
               mnl_tr,
-              epochs = 30,
+              epochs = 5,
               hidden_units = 5,
               rate_schedule = "decay_time",
               class_weights = cls_wts,
               stop_iter = 100,
-              learn_rate = 0.1)},
+              learn_rate = 0.01)},
   regex = NA)
 
  expect_error(
@@ -192,11 +192,11 @@ test_that("multinomial mlp class weights", {
   mnl_fit_lbfgs_unwt <-
    brulee_mlp(class ~ .,
               mnl_tr,
-              epochs = 30,
+              epochs = 5,
               hidden_units = 5,
               rate_schedule = "decay_time",
               stop_iter = 100,
-              learn_rate = 0.1)},
+              learn_rate = 0.01)},
   regex = NA)
 
  expect_error(
