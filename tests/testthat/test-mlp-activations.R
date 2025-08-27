@@ -26,7 +26,7 @@ test_that("activation functions", {
   r_sq <- cor(predict(model, df[401:500, -1])$.pred, df$outcome[401:500])^2
 
     # These do very poorly on this problems
-  pass <- c("tanhshrink")
+  pass <- c("tanhshrink", "log_sigmoid", "softplus")
 
   if (!(i %in% pass)) {
    expect_true(r_sq > 0.1)

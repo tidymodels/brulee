@@ -85,7 +85,7 @@ test_that("basic logistic regression SGD", {
                        penalty = 0,
                        dropout = .1,
                        optimize = "SGD",
-                       batch_size = 2^5,
+                       batch_size = 32L,
                        learn_rate = 0.1)},
   regex = NA)
 

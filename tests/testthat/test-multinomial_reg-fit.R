@@ -102,7 +102,7 @@ test_that("basic multinomial regression SGD", {
                           penalty = 0,
                           dropout = .1,
                           optimize = "SGD",
-                          batch_size = 64,
+                          batch_size = 64L,
                           momentum = 0.5,
                           learn_rate = 0.1)},
   regex = NA)

@@ -107,7 +107,7 @@ test_that("basic binomial mlp SGD", {
               dropout = .1,
               hidden_units = 5,
               optimize = "SGD",
-              batch_size = 64,
+              batch_size = 64L,
               momentum = 0.5,
               learn_rate = 0.1)},
   regex = NA)
@@ -123,7 +123,7 @@ test_that("basic binomial mlp SGD", {
               dropout = .1,
               hidden_units = 5,
               optimize = "SGD",
-              batch_size = 64,
+              batch_size = 64L,
               momentum = 0.5,
               learn_rate = 0.1)},
   regex = NA)
