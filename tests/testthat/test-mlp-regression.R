@@ -336,7 +336,7 @@ test_that("mlp learns something", {
 
  set.seed(2)
  model <- brulee_mlp(x, y,
-                     batch_size = 25,
+                     batch_size = 25L,
                      epochs = 50,
                      optimizer = "SGD",
                      activation = "relu",

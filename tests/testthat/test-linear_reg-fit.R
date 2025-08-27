@@ -102,7 +102,7 @@ test_that("basic Linear regression sgd", {
     lin_tr,
     penlaty = 0,
     epochs = 500,
-    batch_size = 2^5,
+    batch_size = 32L,
     learn_rate = 0.1,
     optimizer = "SGD",
     stop_iter = 20
