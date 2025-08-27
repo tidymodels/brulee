@@ -479,17 +479,22 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
  }
 
- if (optimizer == "LBFGS" & !is.null(batch_size)) {
-  cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
-  batch_size <- NULL
+ # if (optimizer == "LBFGS" & !is.null(batch_size)) {
+ #  cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
+ #  batch_size <- NULL
+ # }
+
+ if (optimizer == "SGD") {
+  if (!is.null(batch_size)) {
+   if (is.numeric(batch_size) & !is.integer(batch_size)) {
+    batch_size <- as.integer(batch_size)
+   }
+  } else {
+   batch_size <- 32L
+  }
  }
 
- if (!is.null(batch_size) & optimizer == "SGD") {
-  if (is.numeric(batch_size) & !is.integer(batch_size)) {
-   batch_size <- as.integer(batch_size)
-  }
-  check_integer(batch_size, single = TRUE, 1, fn = f_nm)
- }
+ check_integer(batch_size, single = TRUE, 1, fn = f_nm)
 
  check_integer(epochs, single = TRUE, 1, fn = f_nm)
  check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
@@ -690,6 +695,7 @@ mlp_fit_imp <-
    loss_label <- "\tLoss:"
   }
 
+  # TODO refactor this
   if (is.null(batch_size) & optimizer == "SGD") {
    batch_size <- nrow(x)
   } else {
@@ -722,9 +728,21 @@ mlp_fit_imp <-
 
   loss_prev <- 10^38
   loss_min <- loss_prev
-  poor_epoch <- 0
-  best_epoch <- 1
-  loss_vec <- rep(NA_real_, epochs)
+  best_epoch <- 0L
+  poor_epoch <- 0L
+  loss_vec <- rep(NA_real_, epochs + 1)
+
+  if (validation > 0) {
+   pred <- model(dl_val$dataset$tensors$x)
+   loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
+  } else {
+   pred <- model(dl$dataset$tensors$x)
+   loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
+  }
+
+  loss_vec[1] <- loss$item()
+  loss_prev <- loss_curr <- loss_vec[1]
+
   if (verbose) {
    epoch_chr <- gsub(" ", "0", format(0:epochs))
    msg <- paste("epoch:", epoch_chr[1], "learn rate", signif(learn_rate, 3),
@@ -811,9 +829,6 @@ mlp_fit_imp <-
     cli::cli_inform(
      "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
     )
-   }
-
-    cli::cli_inform(msg)
    }
 
    if (poor_epoch == stop_iter) {
