@@ -17,7 +17,7 @@ brulee_print <- function(x, ...) {
   if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
     cat("class weights",
         paste0(
-          names(x$parameters$class_weights),
+          lvl,
           "=",
           format(x$parameters$class_weights),
           collapse = ", "

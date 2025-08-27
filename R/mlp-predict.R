@@ -119,7 +119,7 @@ predict_brulee_mlp_raw <- function(model, predictors, epoch) {
   # convert from raw format
   module <- revive_model(model$model_obj)
   # get current model parameters
-  estimates <- model$estimates[[epoch]]
+  estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation
   estimates <- lapply(estimates, torch::torch_tensor)
 
