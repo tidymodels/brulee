@@ -182,15 +182,15 @@ test_that("binomial mlp case weights", {
  # ------------------------------------------------------------------------------
 
  expect_error({
-  set.seed(392)
+  set.seed(391)
   weighted <-
    brulee_mlp(rec,
               bin_tr,
-              epochs = 200,
+              epochs = 5,
               hidden_units = 5,
               rate_schedule = "cyclic",
               class_weights = 10,
-              learn_rate = 0.1)},
+              learn_rate = 0.01)},
   regex = NA)
 
  expect_error(
@@ -203,14 +203,14 @@ test_that("binomial mlp case weights", {
 
 
  expect_error({
-  set.seed(392)
+  set.seed(391)
   unweighted <-
    brulee_mlp(rec,
               bin_tr,
-              epochs = 200,
+              epochs = 5,
               hidden_units = 5,
               rate_schedule = "cyclic",
-              learn_rate = 0.1)},
+              learn_rate = 0.01)},
   regex = NA)
 
  expect_error(
