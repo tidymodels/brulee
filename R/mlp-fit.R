@@ -488,6 +488,7 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   if (is.numeric(batch_size) & !is.integer(batch_size)) {
    batch_size <- as.integer(batch_size)
   }
+  batch_size <- as.integer(batch_size)
   check_integer(batch_size, single = TRUE, 1, fn = f_nm)
  }
 
