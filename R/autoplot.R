@@ -1,7 +1,7 @@
 
 # used for autoplots
 brulee_plot <- function(object, ...) {
- x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
+ x <- tibble::tibble(iteration = seq_len(length(object$loss)) - 1, loss = object$loss)
 
  if(object$parameters$validation > 0) {
   if (is.na(object$y_stats$mean)) {
