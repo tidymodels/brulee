@@ -107,7 +107,10 @@ l1_term <- lx_term(function(x) torch::torch_abs(x))
 
 # -------------------------------------------------------------------------
 
-make_penalized_loss <- function(loss_fn, model, penalty, mixture) {
+make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
+ if (!opt_uses_penalty(opt)) {
+  return(loss_fn)
+ }
  force(loss_fn)
  function(...) {
   loss <- loss_fn(...)

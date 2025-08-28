@@ -479,11 +479,6 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
  }
 
- if (optimizer == "LBFGS" & !is.null(batch_size)) {
-  cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
-  batch_size <- NULL
- }
-
  if (!is.null(batch_size) & optimizer == "SGD") {
   if (is.numeric(batch_size) & !is.integer(batch_size)) {
    batch_size <- as.integer(batch_size)
@@ -742,10 +737,13 @@ mlp_fit_imp <-
   torch::torch_manual_seed(start_seed + 1)
 
   model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
-  loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
+
+  mixture <- check_mixture(mixture, optimizer)
+
+  loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
 
   # Set the optimizer (will be set again below)
-  optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
+  optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum, penalty)
 
   ## ---------------------------------------------------------------------------
 
@@ -768,7 +766,7 @@ mlp_fit_imp <-
   if (verbose) {
    epoch_chr <- gsub(" ", "0", format(0:epochs))
    cli::cli_inform(
-    "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
+    "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
    )
    epoch_chr <- epoch_chr[-1]
   }
@@ -796,7 +794,6 @@ mlp_fit_imp <-
    # resetting them can interfere in training."
 
    learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
-   optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
    # training loop
    coro::loop(
@@ -853,7 +850,7 @@ mlp_fit_imp <-
 
    if (verbose) {
     cli::cli_inform(
-     "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label}: {signif(loss_curr, 3)}"
+     "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
     )
    }
 
@@ -962,16 +959,64 @@ print.brulee_mlp <- function(x, ...) {
 
 ## -----------------------------------------------------------------------------
 
-set_optimizer <- function(optimizer, model, learn_rate, momentum) {
+opt_uses_penalty <- function(opt) {
+ vals <- c("ADAM", "ADAMw", "RMSprop", "Adadelta")
+ opt %in% vals
+}
+
+check_mixture <- function(mix, opt) {
+ if (identical(mix, 1.0)) {
+  return(mix)
+ }
+ if (opt_uses_penalty(opt) & !identical(mix, 0.0)) {
+  cli::cli_warn(
+   "For the {opt} optimizer, the penalty need to be a pure L2 penalty (i.e.,
+   {.code mixture} is 0.0}. The value is changed from {signif(mix, 2)} to 0.0.")
+  mix <- 0.0
+ }
+ mix
+}
+
+set_optimizer <- function(optimizer,
+                          model,
+                          learn_rate,
+                          momentum,
+                          penalty) {
  if (optimizer == "LBFGS") {
   res <- torch::optim_lbfgs(model$parameters, lr = learn_rate, history_size = 5)
  } else if (optimizer == "SGD") {
   res <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+ } else if (optimizer == "RMSprop") {
+  res <- torch::optim_rmsprop(
+   model$parameters,
+   lr = learn_rate,
+   momentum = momentum,
+   weight_decay = penalty
+  )
+ } else if (optimizer == "ADAM") {
+  res <- torch::optim_adam(
+   model$parameters,
+   lr = learn_rate,
+   weight_decay = penalty
+  )
+ } else if (optimizer == "ADAMw") {
+  res <- torch::optim_adamw(
+   model$parameters,
+   lr = learn_rate,
+   weight_decay = penalty
+  )
+ } else if (optimizer == "Adadelta") {
+  res <- torch::optim_adadelta(
+   model$parameters,
+   lr = learn_rate,
+   weight_decay = penalty
+  )
  } else {
   cli::cli_abort(paste0("Unsupported optimizer '", optimizer, "'"))
  }
  res
 }
+
 
 init_layer <- function(layer, act) {
  gain_for_rng <- torch::nn_init_calculate_gain(act)
