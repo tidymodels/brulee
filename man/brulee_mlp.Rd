@@ -29,11 +29,11 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -52,11 +52,11 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -75,11 +75,11 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -98,11 +98,11 @@ brulee_mlp(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -127,11 +127,11 @@ brulee_mlp_two_layer(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -152,11 +152,11 @@ brulee_mlp_two_layer(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -177,11 +177,11 @@ brulee_mlp_two_layer(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -202,11 +202,11 @@ brulee_mlp_two_layer(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "SGD",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
-  batch_size = NULL,
+  batch_size = 32L,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -254,7 +254,8 @@ specifying the activation for each hidden layer.}
 
 \item{mixture}{Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression (a.k.a weight decay).}
+indicates ridge regression (a.k.a weight decay). Must be zero for
+optimizers \code{"ADAMw"}, \code{"RMSprop"}, \code{"Adadelta"}.}
 
 \item{dropout}{The proportion of parameters set to zero.}
 
@@ -262,7 +263,9 @@ indicates ridge regression (a.k.a weight decay).}
 validation set.}
 
 \item{optimizer}{The method used in the optimization procedure. Possible choices
-are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
+are \code{"SGD"},  \code{"ADAMw"}, \code{"Adadelta"}, \code{"Adagrad"}, \code{"RMSprop"}, and
+\code{"LBFGS"}. \code{"LBFGS"} is the only second-order method and does not use
+batches.}
 
 \item{learn_rate}{A positive number that controls the initial rapidity that
 the model moves along the descent path. Values around 0.1 or less are
@@ -274,10 +277,11 @@ should change as the optimization proceeds. Possible values are
 \code{"step"}. See \code{\link[=schedule_decay_time]{schedule_decay_time()}} for more details.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
-parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
+parameter in gradient descent.  (optimizers \code{"SGD"},  and \code{"RMSprop"} only,
+ignored otherwise).}
 
 \item{batch_size}{An integer for the number of training set points in each
-batch. (\code{optimizer = "SGD"} only)}
+batch. (\code{optimizer != "LBFGS"} only, ignored otherwise)}
 
 \item{class_weights}{Numeric class weights (classification only). The value
 can be:

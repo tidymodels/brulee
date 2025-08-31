@@ -30,7 +30,8 @@
 #' @param penalty The amount of weight decay (i.e., L2 regularization).
 #' @param mixture Proportion of Lasso Penalty (type: double, default: 0.0). A
 #'   value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-#'   indicates ridge regression (a.k.a weight decay).
+#'   indicates ridge regression (a.k.a weight decay). Must be zero for
+#'   optimizers `"ADAMw"`, `"RMSprop"`, `"Adadelta"`.
 #' @param hidden_units An integer for the number of hidden units, or a vector
 #'   of integers. If a vector of integers, the model will have `length(hidden_units)`
 #'   layers each with `hidden_units[i]` hidden units.
@@ -42,7 +43,9 @@
 #'  specifying the activation for each hidden layer.
 #' @param activation_2  A character vector for the activation function for a second layer.
 #' @param optimizer The method used in the optimization procedure. Possible choices
-#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
+#'   are `"SGD"`,  `"ADAMw"`, `"Adadelta"`, `"Adagrad"`, `"RMSprop"`, and
+#'   `"LBFGS"`. `"LBFGS"` is the only second-order method and does not use
+#'   batches.
 #' @param learn_rate A positive number that controls the initial rapidity that
 #' the model moves along the descent path. Values around 0.1 or less are
 #' typical.
@@ -51,7 +54,8 @@
 #' `"none"` (the default), `"decay_time"`, `"decay_expo"`, `"cyclic"` and
 #' `"step"`. See [schedule_decay_time()] for more details.
 #' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
-#' parameter in gradient descent.  (`optimizer = "SGD"` only)
+#' parameter in gradient descent.  (optimizers `"SGD"`,  and `"RMSprop"` only,
+#' ignored otherwise).
 #' @param dropout The proportion of parameters set to zero.
 #' @param class_weights Numeric class weights (classification only). The value
 #' can be:
@@ -65,7 +69,7 @@
 #' @param validation The proportion of the data randomly assigned to a
 #'  validation set.
 #' @param batch_size An integer for the number of training set points in each
-#'  batch. (`optimizer = "SGD"` only)
+#'  batch. (`optimizer != "LBFGS"` only, ignored otherwise)
 #' @param stop_iter A non-negative integer for how many iterations with no
 #' improvement before stopping.
 #' @param grad_norm_clip,grad_value_clip Two numeric values, possibly `Inf`,
@@ -258,11 +262,11 @@ brulee_mlp.data.frame <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
-          batch_size = NULL,
+          batch_size = 32L,
           class_weights = NULL,
           stop_iter = 5,
           grad_value_clip = 5,
@@ -307,11 +311,11 @@ brulee_mlp.matrix <- function(x,
                               mixture = 0,
                               dropout = 0,
                               validation = 0.1,
-                              optimizer = "LBFGS",
+                              optimizer = "SGD",
                               learn_rate = 0.01,
                               rate_schedule = "none",
                               momentum = 0.0,
-                              batch_size = NULL,
+                              batch_size = 32L,
                               class_weights = NULL,
                               stop_iter = 5,
                               grad_value_clip = 5,
@@ -357,11 +361,11 @@ brulee_mlp.formula <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
-          batch_size = NULL,
+          batch_size = 32L,
           class_weights = NULL,
           stop_iter = 5,
           grad_value_clip = 5,
@@ -407,11 +411,11 @@ brulee_mlp.recipe <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
-          batch_size = NULL,
+          batch_size = 32L,
           class_weights = NULL,
           stop_iter = 5,
           grad_value_clip = 5,
@@ -479,13 +483,20 @@ brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
   )
  }
 
- if (!is.null(batch_size) & optimizer == "SGD") {
+ if (!is.null(batch_size) & optimizer != "LBFGS") {
   if (is.numeric(batch_size) & !is.integer(batch_size)) {
    batch_size <- as.integer(batch_size)
   }
-  batch_size <- as.integer(batch_size)
-  check_integer(batch_size, single = TRUE, 1, fn = f_nm)
  }
+ if (is.null(batch_size) & optimizer != "LBFGS") {
+  batch_size <- 32L
+  if (batch_size >= nrow(processed)) {
+   batch_size <- max(2, ceiling(nrow(processed) / 10))
+   batch_size <- as.integer(batch_size)
+  }
+ }
+
+ check_integer(batch_size, single = TRUE, 1, fn = f_nm)
 
  check_integer(epochs, single = TRUE, 1, fn = f_nm)
  check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
@@ -618,7 +629,7 @@ mlp_fit_imp <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
@@ -686,14 +697,17 @@ mlp_fit_imp <-
    loss_label <- "\tLoss:"
   }
 
-  if (is.null(batch_size) & optimizer == "SGD") {
+  if (optimizer == "LBFGS") {
    batch_size <- nrow(x)
-  } else {
-   batch_size <- min(batch_size, nrow(x))
   }
+
+  batch_size <- min(batch_size, nrow(x))
 
   ## ---------------------------------------------------------------------------
   # Convert to index sampler and data loader
+
+  # Reset the seed so that different optimizers start from the same values
+  torch::torch_manual_seed(start_seed + 1)
   ds <- matrix_to_dataset(x, y)
   dl <- torch::dataloader(ds, batch_size = batch_size)
 
@@ -733,16 +747,14 @@ mlp_fit_imp <-
   ## ---------------------------------------------------------------------------
   # Initialize model and optimizer
 
-  # Reset the seed so that SGD and LBFGS start from the same values
-  torch::torch_manual_seed(start_seed + 1)
-
   model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
 
   mixture <- check_mixture(mixture, optimizer)
 
+  # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
+  # optimizer. See `opt_uses_penalty()` where the determination is made.
   loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
 
-  # Set the optimizer (will be set again below)
   optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum, penalty)
 
   ## ---------------------------------------------------------------------------
@@ -785,15 +797,11 @@ mlp_fit_imp <-
   # Optimize parameters
   for (epoch in 1:epochs) {
 
-   # For future work with other optimizers, see
-   # https://github.com/tidymodels/brulee/pull/56#discussion_r972049108
-   # "Creating a new optimizer every epoch will reset the optimizer state.
-   # For example, SGD with momentum keeps track of the latest update for each
-   # parameter, so it might be OK to just restart.
-   # But other optimizers like Adam, will keep a moving average of updates and
-   # resetting them can interfere in training."
-
    learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
+
+   for (i in seq_along(optimizer_obj$param_groups)) {
+    optimizer_obj$param_groups[[i]]$lr <- learn_rate
+   }
 
    # training loop
    coro::loop(
@@ -813,7 +821,7 @@ mlp_fit_imp <-
      }
      optimizer_obj$step(cl)
     }
-   )
+   ) # end loop over batches
 
    # calculate loss on the full datasets
    if (validation > 0) {
@@ -864,7 +872,6 @@ mlp_fit_imp <-
    }
 
   }
-
 
   ## ---------------------------------------------------------------------------
 
@@ -985,18 +992,17 @@ set_optimizer <- function(optimizer,
  if (optimizer == "LBFGS") {
   res <- torch::optim_lbfgs(model$parameters, lr = learn_rate, history_size = 5)
  } else if (optimizer == "SGD") {
-  res <- torch::optim_sgd(model$parameters, lr = learn_rate, momentum = momentum)
+  res <- torch::optim_sgd(
+   model$parameters,
+   lr = learn_rate,
+   momentum = momentum,
+   nesterov = momentum > 0.0
+  )
  } else if (optimizer == "RMSprop") {
   res <- torch::optim_rmsprop(
    model$parameters,
    lr = learn_rate,
    momentum = momentum,
-   weight_decay = penalty
-  )
- } else if (optimizer == "ADAM") {
-  res <- torch::optim_adam(
-   model$parameters,
-   lr = learn_rate,
    weight_decay = penalty
   )
  } else if (optimizer == "ADAMw") {
@@ -1007,6 +1013,12 @@ set_optimizer <- function(optimizer,
   )
  } else if (optimizer == "Adadelta") {
   res <- torch::optim_adadelta(
+   model$parameters,
+   lr = learn_rate,
+   weight_decay = penalty
+  )
+ } else if (optimizer == "Adagrad") {
+  res <- torch::optim_adagrad(
    model$parameters,
    lr = learn_rate,
    weight_decay = penalty
@@ -1056,11 +1068,11 @@ brulee_mlp_two_layer.data.frame <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
-          batch_size = NULL,
+          batch_size = 32L,
           class_weights = NULL,
           stop_iter = 5,
           grad_value_clip = 5,
@@ -1113,11 +1125,11 @@ brulee_mlp_two_layer.matrix <- function(x,
                                         mixture = 0,
                                         dropout = 0,
                                         validation = 0.1,
-                                        optimizer = "LBFGS",
+                                        optimizer = "SGD",
                                         learn_rate = 0.01,
                                         rate_schedule = "none",
                                         momentum = 0.0,
-                                        batch_size = NULL,
+                                        batch_size = 32L,
                                         class_weights = NULL,
                                         stop_iter = 5,
                                         grad_value_clip = 5,
@@ -1171,11 +1183,11 @@ brulee_mlp_two_layer.formula <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
-          batch_size = NULL,
+          batch_size = 32L,
           class_weights = NULL,
           stop_iter = 5,
           grad_value_clip = 5,
@@ -1229,11 +1241,11 @@ brulee_mlp_two_layer.recipe <-
           mixture = 0,
           dropout = 0,
           validation = 0.1,
-          optimizer = "LBFGS",
+          optimizer = "SGD",
           learn_rate = 0.01,
           rate_schedule = "none",
           momentum = 0.0,
-          batch_size = NULL,
+          batch_size = 32L,
           class_weights = NULL,
           stop_iter = 5,
           grad_value_clip = 5,
