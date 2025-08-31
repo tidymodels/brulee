@@ -47,8 +47,7 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 50, batch_size = 32)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 50)
 #'
 #'  coef(fit)
 #'  coef(fit, epoch = 1)

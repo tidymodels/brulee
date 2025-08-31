@@ -106,23 +106,27 @@ specified as:
 
 \item{mixture}{Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression (a.k.a weight decay).}
+indicates ridge regression (a.k.a weight decay). Must be zero for
+optimizers \code{"ADAMw"}, \code{"RMSprop"}, \code{"Adadelta"}.}
 
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
 \item{optimizer}{The method used in the optimization procedure. Possible choices
-are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
+are \code{"SGD"},  \code{"ADAMw"}, \code{"Adadelta"}, \code{"Adagrad"}, \code{"RMSprop"}, and
+\code{"LBFGS"}. \code{"LBFGS"} is the only second-order method, does not use
+batches, and is the default.}
 
 \item{learn_rate}{A positive number that controls the initial rapidity that
 the model moves along the descent path. Values around 0.1 or less are
 typical.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
-parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
+parameter in gradient descent.  (optimizers \code{"SGD"},  and \code{"RMSprop"} only,
+ignored otherwise).}
 
 \item{batch_size}{An integer for the number of training set points in each
-batch. (\code{optimizer = "SGD"} only)}
+batch. (\code{optimizer != "LBFGS"} only, ignored otherwise)}
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}

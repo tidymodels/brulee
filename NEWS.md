@@ -12,6 +12,12 @@
   
   * The warning was changed to "Early stopping occurred at epoch {X} due to numerical overflow of the loss function."
 
+* Several new optimizers were added: `"ADAMw"`, `"Adadelta"`, `"Adagrad"`, and `"RMSprop"`.
+
+* For neural networks, the default optimizer is now `"SGD"` with a batch size of 32. 
+
+* Mixture parameter values different than zero cannot be used for several optimizers since they require L2 penalties. 
+
 # brulee (0.5.0)
 
  * Removed a unit test for numerical overflow since it occurs less frequently and has become increasingly more challenging to reproduce.
