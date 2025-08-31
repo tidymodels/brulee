@@ -13,7 +13,7 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'

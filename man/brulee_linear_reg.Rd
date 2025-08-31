@@ -187,6 +187,7 @@ The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed()  & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
@@ -230,8 +231,7 @@ if (torch::torch_is_installed()  & rlang::is_installed(c("recipes", "yardstick",
     step_normalize(all_numeric_predictors())
 
  set.seed(2)
- fit <- brulee_linear_reg(ames_rec, data = ames_train,
-                           epochs = 5, batch_size = 32)
+ fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 5)
  fit
 
  autoplot(fit)
@@ -254,6 +254,7 @@ if (torch::torch_is_installed()  & rlang::is_installed(c("recipes", "yardstick",
  }
 
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=predict.brulee_linear_reg]{predict.brulee_linear_reg()}}, \code{\link[=coef.brulee_linear_reg]{coef.brulee_linear_reg()}},

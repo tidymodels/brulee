@@ -373,6 +373,7 @@ arguments to the schedulers can be passed via \code{...}.
 }
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
@@ -476,6 +477,18 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  }
 }
+\dontshow{\}) # examplesIf}
+}
+\references{
+adagrad (adaptive gradient algorithm): Duchi, J., Hazan, E., & Singer, Y.
+(2011). Adaptive subgradient methods for online learning and stochastic
+optimization. \emph{Journal of machine learning research}, 12(7).
+
+adadelta: Zeiler, M. D. (2012). Adadelta: an adaptive learning rate method.
+arXiv preprint arXiv:1212.5701.
+
+ADAMw: Loshchilov, I., & Hutter, F. (2017). Decoupled weight decay
+regularization. arXiv preprint arXiv:1711.05101.
 }
 \seealso{
 \code{\link[=predict.brulee_mlp]{predict.brulee_mlp()}}, \code{\link[=coef.brulee_mlp]{coef.brulee_mlp()}}, \code{\link[=autoplot.brulee_mlp]{autoplot.brulee_mlp()}}

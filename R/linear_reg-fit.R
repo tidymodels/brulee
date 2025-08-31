@@ -72,7 +72,7 @@
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed()  & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
@@ -116,8 +116,7 @@
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 5, batch_size = 32)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 5)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -411,7 +410,7 @@ new_brulee_linear_reg <- function( model_obj, estimates, best_epoch, loss,
 linear_reg_fit_imp <-
  function(x, y,
           epochs = 20L,
-          batch_size = 32,
+          batch_size = NULL,
           penalty = 0.001,
           mixture = 0,
           validation = 0.1,

@@ -198,6 +198,7 @@ The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
@@ -226,6 +227,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
     conf_mat(island, .pred_class)
 }
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=predict.brulee_multinomial_reg]{predict.brulee_multinomial_reg()}}, \code{\link[=coef.brulee_multinomial_reg]{coef.brulee_multinomial_reg()}},

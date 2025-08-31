@@ -12,7 +12,7 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
 #'
@@ -33,8 +33,7 @@
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 50, batch_size = 32)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 50)
 #'
 #'  predict(fit, ames_test)
 #' }

@@ -34,7 +34,7 @@ brulee_plot <- function(object, ...) {
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs. A
 #' vertical line shows the epoch with the best loss value.
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'  library(ggplot2)

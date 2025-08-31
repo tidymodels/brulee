@@ -121,3 +121,13 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
   loss
  }
 }
+
+# adapted from ps:::is_cran_check()
+is_cran_check <- function() {
+ if (identical(Sys.getenv("NOT_CRAN"), "true")) {
+  FALSE
+ } else {
+  Sys.getenv("_R_CHECK_PACKAGE_NAME_", "") != ""
+ }
+}
+

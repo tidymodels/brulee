@@ -32,6 +32,7 @@ to be the same as the number of rows in \code{new_data}.
 Predict from a \code{brulee_linear_reg}
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
 
@@ -52,10 +53,10 @@ if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
     step_normalize(all_numeric_predictors())
 
  set.seed(2)
- fit <- brulee_linear_reg(ames_rec, data = ames_train,
-                           epochs = 50, batch_size = 32)
+ fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 50)
 
  predict(fit, ames_test)
 }
 }
+\dontshow{\}) # examplesIf}
 }

@@ -118,6 +118,19 @@
 #' `rate_schedule = 'none'` uses the `learn_rate` argument. Otherwise, any
 #' arguments to the schedulers can be passed via `...`.
 #'
+#' @references
+#'
+#' adagrad (adaptive gradient algorithm): Duchi, J., Hazan, E., & Singer, Y.
+#' (2011). Adaptive subgradient methods for online learning and stochastic
+#' optimization. _Journal of machine learning research_, 12(7).
+#'
+#' adadelta: Zeiler, M. D. (2012). Adadelta: an adaptive learning rate method.
+#' arXiv preprint arXiv:1212.5701.
+#'
+#' ADAMw: Loshchilov, I., & Hutter, F. (2017). Decoupled weight decay
+#' regularization. arXiv preprint arXiv:1711.05101.
+#'
+#'
 #' @seealso [predict.brulee_mlp()], [coef.brulee_mlp()], [autoplot.brulee_mlp()]
 #' @return
 #'
@@ -133,7 +146,7 @@
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
