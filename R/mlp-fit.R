@@ -252,13 +252,18 @@
 #' }
 #' @export
 brulee_mlp <- function(x, ...) {
- UseMethod("brulee_mlp")
+  UseMethod("brulee_mlp")
 }
 
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp.default <- function(x, ...) {
- stop("`brulee_mlp()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+  stop(
+    "`brulee_mlp()` is not defined for a '",
+    class(x)[1],
+    "'.",
+    call. = FALSE
+  )
 }
 
 # XY method - data frame
@@ -266,98 +271,102 @@ brulee_mlp.default <- function(x, ...) {
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp.data.frame <-
- function(x,
-          y,
-          epochs = 100L,
-          hidden_units = 3L,
-          activation = "relu",
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          batch_size = 32L,
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(x, y)
+  function(
+    x,
+    y,
+    epochs = 100L,
+    hidden_units = 3L,
+    activation = "relu",
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    batch_size = 32L,
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
+    ...
+  ) {
+    processed <- hardhat::mold(x, y)
 
-  brulee_mlp_bridge(
-   processed,
-   epochs = epochs,
-   hidden_units = hidden_units,
-   activation = activation,
-   learn_rate = learn_rate,
-   rate_schedule = rate_schedule,
-   penalty = penalty,
-   mixture = mixture,
-   dropout = dropout,
-   validation = validation,
-   optimizer = optimizer,
-   momentum = momentum,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   grad_value_clip = grad_value_clip,
-   grad_norm_clip = grad_norm_clip,
-   verbose = verbose,
-   ...
-  )
- }
+    brulee_mlp_bridge(
+      processed,
+      epochs = epochs,
+      hidden_units = hidden_units,
+      activation = activation,
+      learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
+      penalty = penalty,
+      mixture = mixture,
+      dropout = dropout,
+      validation = validation,
+      optimizer = optimizer,
+      momentum = momentum,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
+      verbose = verbose,
+      ...
+    )
+  }
 
 # XY method - matrix
 
 #' @export
 #' @rdname brulee_mlp
-brulee_mlp.matrix <- function(x,
-                              y,
-                              epochs = 100L,
-                              hidden_units = 3L,
-                              activation = "relu",
-                              penalty = 0.001,
-                              mixture = 0,
-                              dropout = 0,
-                              validation = 0.1,
-                              optimizer = "SGD",
-                              learn_rate = 0.01,
-                              rate_schedule = "none",
-                              momentum = 0.0,
-                              batch_size = 32L,
-                              class_weights = NULL,
-                              stop_iter = 5,
-                              grad_value_clip = 5,
-                              grad_norm_clip = 5,
-                              verbose = FALSE,
-                              ...) {
- processed <- hardhat::mold(x, y)
-
- brulee_mlp_bridge(
-  processed,
-  epochs = epochs,
-  hidden_units = hidden_units,
-  activation = activation,
-  learn_rate = learn_rate,
-  rate_schedule = rate_schedule,
-  momentum = momentum,
-  penalty = penalty,
-  mixture = mixture,
-  dropout = dropout,
-  validation = validation,
-  optimizer = optimizer,
-  batch_size = batch_size,
-  class_weights = class_weights,
-  stop_iter = stop_iter,
-  grad_value_clip = grad_value_clip,
-  grad_norm_clip = grad_norm_clip,
-  verbose = verbose,
+brulee_mlp.matrix <- function(
+  x,
+  y,
+  epochs = 100L,
+  hidden_units = 3L,
+  activation = "relu",
+  penalty = 0.001,
+  mixture = 0,
+  dropout = 0,
+  validation = 0.1,
+  optimizer = "SGD",
+  learn_rate = 0.01,
+  rate_schedule = "none",
+  momentum = 0.0,
+  batch_size = 32L,
+  class_weights = NULL,
+  stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
+  verbose = FALSE,
   ...
- )
+) {
+  processed <- hardhat::mold(x, y)
+
+  brulee_mlp_bridge(
+    processed,
+    epochs = epochs,
+    hidden_units = hidden_units,
+    activation = activation,
+    learn_rate = learn_rate,
+    rate_schedule = rate_schedule,
+    momentum = momentum,
+    penalty = penalty,
+    mixture = mixture,
+    dropout = dropout,
+    validation = validation,
+    optimizer = optimizer,
+    batch_size = batch_size,
+    class_weights = class_weights,
+    stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
+    verbose = verbose,
+    ...
+  )
 }
 
 # Formula method
@@ -365,690 +374,796 @@ brulee_mlp.matrix <- function(x,
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp.formula <-
- function(formula,
-          data,
-          epochs = 100L,
-          hidden_units = 3L,
-          activation = "relu",
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          batch_size = 32L,
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(formula, data)
+  function(
+    formula,
+    data,
+    epochs = 100L,
+    hidden_units = 3L,
+    activation = "relu",
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    batch_size = 32L,
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
+    ...
+  ) {
+    processed <- hardhat::mold(formula, data)
 
-  brulee_mlp_bridge(
-   processed,
-   epochs = epochs,
-   hidden_units = hidden_units,
-   activation = activation,
-   learn_rate = learn_rate,
-   rate_schedule = rate_schedule,
-   momentum = momentum,
-   penalty = penalty,
-   mixture = mixture,
-   dropout = dropout,
-   validation = validation,
-   optimizer = optimizer,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   grad_value_clip = grad_value_clip,
-   grad_norm_clip = grad_norm_clip,
-   verbose = verbose,
-   ...
-  )
- }
+    brulee_mlp_bridge(
+      processed,
+      epochs = epochs,
+      hidden_units = hidden_units,
+      activation = activation,
+      learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
+      momentum = momentum,
+      penalty = penalty,
+      mixture = mixture,
+      dropout = dropout,
+      validation = validation,
+      optimizer = optimizer,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
+      verbose = verbose,
+      ...
+    )
+  }
 
 # Recipe method
 
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp.recipe <-
- function(x,
-          data,
-          epochs = 100L,
-          hidden_units = 3L,
-          activation = "relu",
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          batch_size = 32L,
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(x, data)
+  function(
+    x,
+    data,
+    epochs = 100L,
+    hidden_units = 3L,
+    activation = "relu",
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    batch_size = 32L,
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
+    ...
+  ) {
+    processed <- hardhat::mold(x, data)
 
-  brulee_mlp_bridge(
-   processed,
-   epochs = epochs,
-   hidden_units = hidden_units,
-   activation = activation,
-   learn_rate = learn_rate,
-   rate_schedule = rate_schedule,
-   momentum = momentum,
-   penalty = penalty,
-   mixture = mixture,
-   dropout = dropout,
-   validation = validation,
-   optimizer = optimizer,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   grad_value_clip = grad_value_clip,
-   grad_norm_clip = grad_norm_clip,
-   verbose = verbose,
-   ...
-  )
- }
+    brulee_mlp_bridge(
+      processed,
+      epochs = epochs,
+      hidden_units = hidden_units,
+      activation = activation,
+      learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
+      momentum = momentum,
+      penalty = penalty,
+      mixture = mixture,
+      dropout = dropout,
+      validation = validation,
+      optimizer = optimizer,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
+      verbose = verbose,
+      ...
+    )
+  }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-brulee_mlp_bridge <- function(processed, epochs, hidden_units, activation,
-                              learn_rate, rate_schedule, momentum, penalty,
-                              mixture, dropout, class_weights, validation, optimizer,
-                              batch_size, stop_iter, grad_value_clip, grad_norm_clip,
-                              verbose, ...) {
- if(!torch::torch_is_installed()) {
-  cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
- }
-
- f_nm <- "brulee_mlp"
- # check values of various argument values
- if (is.numeric(epochs) & !is.integer(epochs)) {
-  epochs <- as.integer(epochs)
- }
- if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
-  hidden_units <- as.integer(hidden_units)
- }
- if (length(hidden_units) > 1 && length(activation) == 1) {
-  activation <- rep(activation, length(hidden_units))
- }
- if (length(hidden_units) != length(activation)) {
-  cli::cli_abort("'activation' must be a single value or a vector with the same length as 'hidden_units'")
- }
-
- allowed_activation <- brulee_activations()
- good_activation <- activation %in% allowed_activation
- if (!all(good_activation)) {
-  cli::cli_abort(
-    "{.arg activation} should be one of: {allowed_activation}, not
-    {.val {activation}}."
-  )
- }
-
- if (!is.null(batch_size) & optimizer != "LBFGS") {
-  if (is.numeric(batch_size) & !is.integer(batch_size)) {
-   batch_size <- as.integer(batch_size)
-  }
- }
- if (is.null(batch_size) & optimizer != "LBFGS") {
-  batch_size <- 32L
-  if (batch_size >= nrow(processed)) {
-   batch_size <- max(2, ceiling(nrow(processed) / 10))
-   batch_size <- as.integer(batch_size)
-  }
- }
-
- check_integer(batch_size, single = TRUE, 1, fn = f_nm)
-
- check_integer(epochs, single = TRUE, 1, fn = f_nm)
- check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
- check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
- check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
- check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
- check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
- check_double(grad_norm_clip, single = TRUE, 0, Inf, incl = c(FALSE, TRUE), fn = f_nm)
- check_double(grad_value_clip, single = TRUE, 0, Inf, incl = c(FALSE, TRUE), fn = f_nm)
- check_logical(verbose, single = TRUE, fn = f_nm)
- check_character(activation, single = FALSE, fn = f_nm)
-
- ## -----------------------------------------------------------------------------
-
- predictors <- processed$predictors
-
- if (!is.matrix(predictors)) {
-  predictors <- as.matrix(predictors)
-  if (is.character(predictors)) {
-   cli::cli_abort(
-    paste(
-     "There were some non-numeric columns in the predictors.",
-     "Please use a formula or recipe to encode all of the predictors as numeric."
+brulee_mlp_bridge <- function(
+  processed,
+  epochs,
+  hidden_units,
+  activation,
+  learn_rate,
+  rate_schedule,
+  momentum,
+  penalty,
+  mixture,
+  dropout,
+  class_weights,
+  validation,
+  optimizer,
+  batch_size,
+  stop_iter,
+  grad_value_clip,
+  grad_norm_clip,
+  verbose,
+  ...
+) {
+  if (!torch::torch_is_installed()) {
+    cli::cli_abort(
+      "The torch backend has not been installed; use `torch::install_torch()`."
     )
-   )
   }
- }
 
- ## -----------------------------------------------------------------------------
+  f_nm <- "brulee_mlp"
+  # check values of various argument values
+  if (is.numeric(epochs) & !is.integer(epochs)) {
+    epochs <- as.integer(epochs)
+  }
+  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+    hidden_units <- as.integer(hidden_units)
+  }
+  if (length(hidden_units) > 1 && length(activation) == 1) {
+    activation <- rep(activation, length(hidden_units))
+  }
+  if (length(hidden_units) != length(activation)) {
+    cli::cli_abort(
+      "'activation' must be a single value or a vector with the same length as 'hidden_units'"
+    )
+  }
 
- outcome <- processed$outcomes[[1]]
+  allowed_activation <- brulee_activations()
+  good_activation <- activation %in% allowed_activation
+  if (!all(good_activation)) {
+    cli::cli_abort(
+      "{.arg activation} should be one of: {allowed_activation}, not
+    {.val {activation}}."
+    )
+  }
 
- # ------------------------------------------------------------------------------
+  if (!is.null(batch_size) & optimizer != "LBFGS") {
+    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+      batch_size <- as.integer(batch_size)
+    }
+  }
+  if (is.null(batch_size) & optimizer != "LBFGS") {
+    batch_size <- 32L
+    if (batch_size >= nrow(processed)) {
+      batch_size <- max(2, ceiling(nrow(processed) / 10))
+      batch_size <- as.integer(batch_size)
+    }
+  }
 
- lvls <- levels(outcome)
- xtab <- table(outcome)
- class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+  check_integer(batch_size, single = TRUE, 1, fn = f_nm)
 
- ## -----------------------------------------------------------------------------
-
- fit <-
-  mlp_fit_imp(
-   x = predictors,
-   y = outcome,
-   epochs = epochs,
-   hidden_units = hidden_units,
-   activation = activation,
-   learn_rate = learn_rate,
-   rate_schedule = rate_schedule,
-   momentum = momentum,
-   penalty = penalty,
-   mixture = mixture,
-   dropout = dropout,
-   validation = validation,
-   optimizer = optimizer,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   grad_value_clip = grad_value_clip,
-   grad_norm_clip = grad_norm_clip,
-   verbose = verbose,
-   ...
+  check_integer(epochs, single = TRUE, 1, fn = f_nm)
+  check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
+  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(
+    validation,
+    single = TRUE,
+    0,
+    1,
+    incl = c(TRUE, FALSE),
+    fn = f_nm
   )
+  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
+  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
+  check_double(
+    grad_norm_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    fn = f_nm
+  )
+  check_double(
+    grad_value_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    fn = f_nm
+  )
+  check_logical(verbose, single = TRUE, fn = f_nm)
+  check_character(activation, single = FALSE, fn = f_nm)
 
- new_brulee_mlp(
-  model_obj = fit$model_obj,
-  estimates = fit$estimates,
-  best_epoch = fit$best_epoch,
-  loss = fit$loss,
-  dims = fit$dims,
-  y_stats = fit$y_stats,
-  parameters = fit$parameters,
-  blueprint = processed$blueprint
- )
+  ## -----------------------------------------------------------------------------
+
+  predictors <- processed$predictors
+
+  if (!is.matrix(predictors)) {
+    predictors <- as.matrix(predictors)
+    if (is.character(predictors)) {
+      cli::cli_abort(
+        paste(
+          "There were some non-numeric columns in the predictors.",
+          "Please use a formula or recipe to encode all of the predictors as numeric."
+        )
+      )
+    }
+  }
+
+  ## -----------------------------------------------------------------------------
+
+  outcome <- processed$outcomes[[1]]
+
+  # ------------------------------------------------------------------------------
+
+  lvls <- levels(outcome)
+  xtab <- table(outcome)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+
+  ## -----------------------------------------------------------------------------
+
+  fit <-
+    mlp_fit_imp(
+      x = predictors,
+      y = outcome,
+      epochs = epochs,
+      hidden_units = hidden_units,
+      activation = activation,
+      learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
+      momentum = momentum,
+      penalty = penalty,
+      mixture = mixture,
+      dropout = dropout,
+      validation = validation,
+      optimizer = optimizer,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
+      verbose = verbose,
+      ...
+    )
+
+  new_brulee_mlp(
+    model_obj = fit$model_obj,
+    estimates = fit$estimates,
+    best_epoch = fit$best_epoch,
+    loss = fit$loss,
+    dims = fit$dims,
+    y_stats = fit$y_stats,
+    parameters = fit$parameters,
+    blueprint = processed$blueprint
+  )
 }
 
-new_brulee_mlp <- function( model_obj, estimates, best_epoch, loss, dims,
-                            y_stats, parameters, blueprint) {
- if (!inherits(model_obj, "raw")) {
-  cli::cli_abort("'model_obj' should be a raw vector.")
- }
- if (!is.list(estimates)) {
-  cli::cli_abort("'parameters' should be a list")
- }
- if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-  cli::cli_abort("'best_epoch' should be an integer")
- }
- if (!is.vector(loss) || !is.numeric(loss)) {
-  cli::cli_abort("'loss' should be a numeric vector")
- }
- if (!is.list(dims)) {
-  cli::cli_abort("'dims' should be a list")
- }
- if (!is.list(y_stats)) {
-  cli::cli_abort("'y_stats' should be a list")
- }
- if (!is.list(parameters)) {
-  cli::cli_abort("'parameters' should be a list")
- }
- if (!inherits(blueprint, "hardhat_blueprint")) {
-  cli::cli_abort("'blueprint' should be a hardhat blueprint")
- }
+new_brulee_mlp <- function(
+  model_obj,
+  estimates,
+  best_epoch,
+  loss,
+  dims,
+  y_stats,
+  parameters,
+  blueprint
+) {
+  if (!inherits(model_obj, "raw")) {
+    cli::cli_abort("'model_obj' should be a raw vector.")
+  }
+  if (!is.list(estimates)) {
+    cli::cli_abort("'parameters' should be a list")
+  }
+  if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
+    cli::cli_abort("'best_epoch' should be an integer")
+  }
+  if (!is.vector(loss) || !is.numeric(loss)) {
+    cli::cli_abort("'loss' should be a numeric vector")
+  }
+  if (!is.list(dims)) {
+    cli::cli_abort("'dims' should be a list")
+  }
+  if (!is.list(y_stats)) {
+    cli::cli_abort("'y_stats' should be a list")
+  }
+  if (!is.list(parameters)) {
+    cli::cli_abort("'parameters' should be a list")
+  }
+  if (!inherits(blueprint, "hardhat_blueprint")) {
+    cli::cli_abort("'blueprint' should be a hardhat blueprint")
+  }
 
- # Save the estimates that have values
- num_items <- purrr::map_int(estimates, length)
- estimates <- estimates[num_items > 0]
+  # Save the estimates that have values
+  num_items <- purrr::map_int(estimates, length)
+  estimates <- estimates[num_items > 0]
 
- hardhat::new_model(model_obj = model_obj,
-                    estimates = estimates,
-                    best_epoch = best_epoch,
-                    loss = loss,
-                    dims = dims,
-                    y_stats = y_stats,
-                    parameters = parameters,
-                    blueprint = blueprint,
-                    class = "brulee_mlp")
+  hardhat::new_model(
+    model_obj = model_obj,
+    estimates = estimates,
+    best_epoch = best_epoch,
+    loss = loss,
+    dims = dims,
+    y_stats = y_stats,
+    parameters = parameters,
+    blueprint = blueprint,
+    class = "brulee_mlp"
+  )
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
 mlp_fit_imp <-
- function(x, y,
-          epochs = 100L,
-          batch_size = 32,
-          hidden_units = 3L,
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          activation = "relu",
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
+  function(
+    x,
+    y,
+    epochs = 100L,
+    batch_size = 32,
+    hidden_units = 3L,
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    activation = "relu",
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
+    ...
+  ) {
+    start_seed <- sample.int(10^5, 1)
+    torch::torch_manual_seed(start_seed)
 
-  start_seed <- sample.int(10^5, 1)
-  torch::torch_manual_seed(start_seed)
+    ## ---------------------------------------------------------------------------
+    # General data checks:
 
-  ## ---------------------------------------------------------------------------
-  # General data checks:
+    check_data_att(x, y)
 
-  check_data_att(x, y)
+    # Check missing values
+    compl_data <- check_missing_data(x, y, "brulee_mlp", verbose)
+    x <- compl_data$x
+    y <- compl_data$y
+    n <- length(y)
+    p <- ncol(x)
 
-  # Check missing values
-  compl_data <- check_missing_data(x, y, "brulee_mlp", verbose)
-  x <- compl_data$x
-  y <- compl_data$y
-  n <- length(y)
-  p <- ncol(x)
-
-  if (is.factor(y)) {
-   lvls <- levels(y)
-   y_dim <- length(lvls)
-   # the model will output softmax values.
-   # so we need to use negative likelihood loss and
-   # pass the log of softmax.
-   loss_fn <- function(input, target, wts = NULL) {
-    nnf_nll_loss(
-     weight = wts,
-     input = torch::torch_log(input),
-     target = target
-    )
-   }
-  } else {
-   y_dim <- 1
-   lvls <- NULL
-   loss_fn <- function(input, target, wts = NULL) {
-    nnf_mse_loss(input, target$view(c(-1,1)))
-   }
-  }
-
-  if (validation > 0) {
-   in_val <- sample(seq_along(y), floor(n * validation))
-   x_val <- x[in_val,, drop = FALSE]
-   y_val <- y[in_val]
-   x <- x[-in_val,, drop = FALSE]
-   y <- y[-in_val]
-  }
-
-  if (!is.factor(y)) {
-   y_stats <- scale_stats(y)
-   y <- scale_y(y, y_stats)
-   if (validation > 0) {
-    y_val <- scale_y(y_val, y_stats)
-   }
-   loss_label <- "\tLoss (scaled):"
-  } else {
-   y_stats <- list(mean = NA_real_, sd = NA_real_)
-   loss_label <- "\tLoss:"
-  }
-
-  if (optimizer == "LBFGS") {
-   batch_size <- nrow(x)
-  }
-
-  batch_size <- min(batch_size, nrow(x))
-
-  ## ---------------------------------------------------------------------------
-  # Convert to index sampler and data loader
-
-  # Reset the seed so that different optimizers start from the same values
-  torch::torch_manual_seed(start_seed + 1)
-  ds <- matrix_to_dataset(x, y)
-  dl <- torch::dataloader(ds, batch_size = batch_size)
-
-  if (validation > 0) {
-   ds_val <- matrix_to_dataset(x_val, y_val)
-   dl_val <- torch::dataloader(ds_val)
-  }
-
-  # ------------------------------------------------------------------------------
-  # Return value
-
-  res <-
-   list(
-    dims = list(p = p, n = n, h = hidden_units, y = y_dim, levels = lvls,
-                features = colnames(x)),
-    y_stats = y_stats,
-    parameters = list(
-     activation = activation,
-     hidden_units = hidden_units,
-     learn_rate = learn_rate,
-     class_weights = as.numeric(class_weights),
-     penalty = penalty,
-     mixture = mixture,
-     dropout = dropout,
-     validation = validation,
-     optimizer = optimizer,
-     batch_size = batch_size,
-     momentum = momentum,
-     stop_iter = stop_iter,
-     grad_value_clip = grad_value_clip,
-     grad_norm_clip = grad_norm_clip,
-     sched = rate_schedule,
-     sched_opt = list(...)
-    )
-   )
-
-  ## ---------------------------------------------------------------------------
-  # Initialize model and optimizer
-
-  model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
-
-  mixture <- check_mixture(mixture, optimizer)
-
-  # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
-  # optimizer. See `opt_uses_penalty()` where the determination is made.
-  loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-
-  optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum, penalty)
-
-  ## ---------------------------------------------------------------------------
-
-  best_epoch <- 0L
-  poor_epoch <- 0L
-  loss_vec <- rep(NA_real_, epochs + 1)
-
-  if (validation > 0) {
-   pred <- model(dl_val$dataset$tensors$x)
-   loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
-  } else {
-   pred <- model(dl$dataset$tensors$x)
-   loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
-  }
-
-  loss_vec[1] <- loss$item()
-  loss_prev <- loss_curr <- loss_vec[1]
-  loss_min <- loss_prev
-
-  if (verbose) {
-   epoch_chr <- gsub(" ", "0", format(0:epochs))
-   cli::cli_inform(
-    "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
-   )
-   epoch_chr <- epoch_chr[-1]
-  }
-
-  param_per_epoch <- vector(mode = "list", length = epochs + 1)
-  param_per_epoch[[1]] <-
-   lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
-
-  res$model_obj <- model_to_raw(model)
-  res$estimates <- param_per_epoch[[1]]
-  res$loss <- loss_vec[1]
-  res$best_epoch <- best_epoch
-
-  ## -----------------------------------------------------------------------------
-
-  # Optimize parameters
-  for (epoch in 1:epochs) {
-
-   learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
-
-   for (i in seq_along(optimizer_obj$param_groups)) {
-    optimizer_obj$param_groups[[i]]$lr <- learn_rate
-   }
-
-   # training loop
-   coro::loop(
-    for (batch in dl) {
-     cl <- function() {
-      optimizer_obj$zero_grad()
-      pred <- model(batch$x)
-      loss <- loss_fn(pred, batch$y, class_weights)
-      loss$backward()
-      if (is.finite(grad_value_clip)) {
-       try(torch::nn_utils_clip_grad_value_(model$parameters, grad_value_clip), silent = TRUE)
+    if (is.factor(y)) {
+      lvls <- levels(y)
+      y_dim <- length(lvls)
+      # the model will output softmax values.
+      # so we need to use negative likelihood loss and
+      # pass the log of softmax.
+      loss_fn <- function(input, target, wts = NULL) {
+        nnf_nll_loss(
+          weight = wts,
+          input = torch::torch_log(input),
+          target = target, #torch_tensor(target, dtype = torch_long())
+        )
       }
-      if (is.finite(grad_norm_clip)) {
-       try(torch::nn_utils_clip_grad_norm_(model$parameters, grad_norm_clip), silent = TRUE)
+    } else {
+      y_dim <- 1
+      lvls <- NULL
+      loss_fn <- function(input, target, wts = NULL) {
+        nnf_mse_loss(input, target$view(c(-1, 1)))
       }
-      loss
-     }
-     optimizer_obj$step(cl)
     }
-   ) # end loop over batches
 
-   # calculate loss on the full datasets
-   if (validation > 0) {
-    pred <- model(dl_val$dataset$tensors$x)
-    loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
-   } else {
-    pred <- model(dl$dataset$tensors$x)
-    loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
-   }
+    if (validation > 0) {
+      in_val <- sample(seq_along(y), floor(n * validation))
+      x_val <- x[in_val, , drop = FALSE]
+      y_val <- y[in_val]
+      x <- x[-in_val, , drop = FALSE]
+      y <- y[-in_val]
+    }
 
-   # calculate losses
-   loss_curr <- loss$item()
-   loss_vec[epoch + 1] <- loss_curr
+    if (!is.factor(y)) {
+      y_stats <- scale_stats(y)
+      y <- scale_y(y, y_stats)
+      if (validation > 0) {
+        y_val <- scale_y(y_val, y_stats)
+      }
+      loss_label <- "\tLoss (scaled):"
+    } else {
+      y_stats <- list(mean = NA_real_, sd = NA_real_)
+      loss_label <- "\tLoss:"
+    }
 
-   if (is.nan(loss_curr)) {
-    cli::cli_warn("Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function.")
-    break()
-   }
+    if (optimizer == "LBFGS") {
+      batch_size <- nrow(x)
+    }
 
-   if (loss_curr >= loss_min) {
-    poor_epoch <- poor_epoch + 1
-    loss_note <- paste0(" ", cli::symbol$cross, " ")
-   } else {
-    loss_min <- loss_curr
-    loss_note <- NULL
-    poor_epoch <- 0
-    best_epoch <- epoch
-   }
-   loss_prev <- loss_curr
+    batch_size <- min(batch_size, nrow(x))
 
-   # persists models and coefficients
-   param_per_epoch[[epoch + 1]] <-
-    lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+    ## ---------------------------------------------------------------------------
+    # Convert to index sampler and data loader
 
-   if (verbose) {
-    cli::cli_inform(
-     "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+    or_dtype <- torch::torch_get_default_dtype()
+    on.exit(torch::torch_set_default_dtype(or_dtype))
+    torch::torch_set_default_dtype(torch::torch_float64())
+
+    # Reset the seed so that different optimizers start from the same values
+    torch::torch_manual_seed(start_seed + 1)
+    ds <- matrix_to_dataset(x, y)
+    dl <- torch::dataloader(ds, batch_size = batch_size)
+
+    if (validation > 0) {
+      ds_val <- matrix_to_dataset(x_val, y_val)
+      dl_val <- torch::dataloader(ds_val)
+    }
+
+    # ------------------------------------------------------------------------------
+    # Return value
+
+    res <-
+      list(
+        dims = list(
+          p = p,
+          n = n,
+          h = hidden_units,
+          y = y_dim,
+          levels = lvls,
+          features = colnames(x)
+        ),
+        y_stats = y_stats,
+        parameters = list(
+          activation = activation,
+          hidden_units = hidden_units,
+          learn_rate = learn_rate,
+          class_weights = as.numeric(class_weights),
+          penalty = penalty,
+          mixture = mixture,
+          dropout = dropout,
+          validation = validation,
+          optimizer = optimizer,
+          batch_size = batch_size,
+          momentum = momentum,
+          stop_iter = stop_iter,
+          grad_value_clip = grad_value_clip,
+          grad_norm_clip = grad_norm_clip,
+          sched = rate_schedule,
+          sched_opt = list(...)
+        )
+      )
+
+    ## ---------------------------------------------------------------------------
+    # Initialize model and optimizer
+
+    d_type <- torch::torch_get_default_dtype()
+    on.exit(torch::torch_set_default_dtype(d_type))
+    torch::torch_set_default_dtype(torch::torch_float64())
+
+    model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
+    mixture <- check_mixture(mixture, optimizer)
+
+    # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
+    # optimizer. See `opt_uses_penalty()` where the determination is made.
+    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
+
+    optimizer_obj <- set_optimizer(
+      optimizer,
+      model,
+      learn_rate,
+      momentum,
+      penalty
     )
-   }
 
-   res$model_obj <- model_to_raw(model)
-   res$estimates <- param_per_epoch
-   res$loss <- loss_vec[1:(epoch + 1)]
-   res$best_epoch <- best_epoch
+    ## ---------------------------------------------------------------------------
 
-   if (poor_epoch == stop_iter) {
-    break()
-   }
+    best_epoch <- 0L
+    poor_epoch <- 0L
+    loss_vec <- rep(NA_real_, epochs + 1)
 
+    if (validation > 0) {
+      pred <- model(dl_val$dataset$tensors$x)
+      loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
+    } else {
+      pred <- model(dl$dataset$tensors$x)
+      loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
+    }
+
+    loss_vec[1] <- loss$item()
+    loss_prev <- loss_curr <- loss_vec[1]
+    loss_min <- loss_prev
+
+    if (verbose) {
+      epoch_chr <- gsub(" ", "0", format(0:epochs))
+      cli::cli_inform(
+        "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+      )
+      epoch_chr <- epoch_chr[-1]
+    }
+
+    param_per_epoch <- vector(mode = "list", length = epochs + 1)
+    param_per_epoch[[1]] <-
+      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+    res$model_obj <- model_to_raw(model)
+    res$estimates <- param_per_epoch[[1]]
+    res$loss <- loss_vec[1]
+    res$best_epoch <- best_epoch
+
+    ## -----------------------------------------------------------------------------
+
+    # Optimize parameters
+    for (epoch in 1:epochs) {
+      learn_rate <- set_learn_rate(
+        epoch - 1,
+        learn_rate,
+        type = rate_schedule,
+        ...
+      )
+
+      for (i in seq_along(optimizer_obj$param_groups)) {
+        optimizer_obj$param_groups[[i]]$lr <- learn_rate
+      }
+
+      # training loop
+      coro::loop(
+        for (batch in dl) {
+          cl <- function() {
+            optimizer_obj$zero_grad()
+            pred <- model(batch$x)
+            loss <- loss_fn(pred, batch$y, class_weights)
+            loss$backward()
+            if (is.finite(grad_value_clip)) {
+              try(
+                torch::nn_utils_clip_grad_value_(
+                  model$parameters,
+                  grad_value_clip
+                ),
+                silent = TRUE
+              )
+            }
+            if (is.finite(grad_norm_clip)) {
+              try(
+                torch::nn_utils_clip_grad_norm_(
+                  model$parameters,
+                  grad_norm_clip
+                ),
+                silent = TRUE
+              )
+            }
+            loss
+          }
+          optimizer_obj$step(cl)
+        }
+      ) # end loop over batches
+
+      # calculate loss on the full datasets
+      if (validation > 0) {
+        pred <- model(dl_val$dataset$tensors$x)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
+      } else {
+        pred <- model(dl$dataset$tensors$x)
+        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
+      }
+
+      # calculate losses
+      loss_curr <- loss$item()
+      loss_vec[epoch + 1] <- loss_curr
+
+      if (is.nan(loss_curr)) {
+        cli::cli_warn(
+          "Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function."
+        )
+        break()
+      }
+
+      if (loss_curr >= loss_min) {
+        poor_epoch <- poor_epoch + 1
+        loss_note <- paste0(" ", cli::symbol$cross, " ")
+      } else {
+        loss_min <- loss_curr
+        loss_note <- NULL
+        poor_epoch <- 0
+        best_epoch <- epoch
+      }
+      loss_prev <- loss_curr
+
+      # persists models and coefficients
+      param_per_epoch[[epoch + 1]] <-
+        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+      if (verbose) {
+        cli::cli_inform(
+          "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+        )
+      }
+
+      res$model_obj <- model_to_raw(model)
+      res$estimates <- param_per_epoch
+      res$loss <- loss_vec[1:(epoch + 1)]
+      res$best_epoch <- best_epoch
+
+      if (poor_epoch == stop_iter) {
+        break()
+      }
+    }
+
+    ## ---------------------------------------------------------------------------
+
+    res
   }
-
-  ## ---------------------------------------------------------------------------
-
-  res
- }
 
 
 mlp_module <-
- torch::nn_module(
-  "mlp_module",
-  initialize = function(num_pred, hidden_units, act_type, dropout, y_dim) {
+  torch::nn_module(
+    "mlp_module",
+    initialize = function(num_pred, hidden_units, act_type, dropout, y_dim) {
+      layers <- list()
 
-   layers <- list()
+      # input layer
+      layers[[1]] <- torch::nn_linear(num_pred, hidden_units[1])
+      layers[[1]] <- init_layer(layers[[1]], "linear")
 
-   # input layer
-   layers[[1]] <- torch::nn_linear(num_pred, hidden_units[1])
-   layers[[1]] <- init_layer(layers[[1]], "linear")
+      layers[[2]] <- get_activation_fn(act_type[1])
 
-   layers[[2]] <- get_activation_fn(act_type[1])
+      # if hidden units is a vector then we add those layers
+      if (length(hidden_units) > 1) {
+        for (i in 2:length(hidden_units)) {
+          layers[[length(layers) + 1]] <- torch::nn_linear(
+            hidden_units[i - 1],
+            hidden_units[i]
+          )
+          layers[[length(layers)]] <- init_layer(
+            layers[[length(layers)]],
+            "linear"
+          )
 
-   # if hidden units is a vector then we add those layers
-   if (length(hidden_units) > 1) {
-    for (i in 2:length(hidden_units)) {
+          layers[[length(layers) + 1]] <- get_activation_fn(act_type[i])
+        }
+      }
 
-     layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[i-1], hidden_units[i])
-     layers[[length(layers)]] <- init_layer(layers[[length(layers)]], "linear")
+      # we only add dropout between the last layer and the output layer
+      if (dropout > 0) {
+        layers[[length(layers) + 1]] <- torch::nn_dropout(p = dropout)
+      }
 
-     layers[[length(layers) + 1]] <- get_activation_fn(act_type[i])
+      # output layer
+      layers[[length(layers) + 1]] <- torch::nn_linear(
+        hidden_units[length(hidden_units)],
+        y_dim
+      )
+      layers[[length(layers)]] <- init_layer(layers[[length(layers)]], "linear")
+
+      # conditionally add the softmax layer
+      if (y_dim > 1) {
+        layers[[length(layers) + 1]] <- torch::nn_softmax(dim = 2)
+      }
+
+      # create a sequential module that calls the layers in the same order.
+      self$model <- torch::nn_sequential(!!!layers)
+    },
+    forward = function(x) {
+      self$model(x)
     }
-   }
-
-   # we only add dropout between the last layer and the output layer
-   if (dropout > 0) {
-    layers[[length(layers) + 1]] <- torch::nn_dropout(p = dropout)
-   }
-
-   # output layer
-   layers[[length(layers) + 1]] <- torch::nn_linear(hidden_units[length(hidden_units)], y_dim)
-   layers[[length(layers)]] <- init_layer(layers[[length(layers)]], "linear")
-
-   # conditionally add the softmax layer
-   if (y_dim > 1) {
-    layers[[length(layers) + 1]] <- torch::nn_softmax(dim = 2)
-   }
-
-   # create a sequential module that calls the layers in the same order.
-   self$model <- torch::nn_sequential(!!!layers)
-
-  },
-  forward = function(x) {
-   self$model(x)
-  }
- )
+  )
 
 ## -----------------------------------------------------------------------------
 
 get_num_mlp_coef <- function(x) {
- length(unlist(x$estimates[[1]]))
+  length(unlist(x$estimates[[1]]))
 }
 
-get_units<- function(x) {
- if (length(x$dims$h) > 1) {
-  res <- paste0("c(", paste(x$dims$h, collapse = ","), ") hidden units,")
- } else {
-  res <- paste(format(x$dims$h, big.mark = ","), "hidden units,")
- }
- res
+get_units <- function(x) {
+  if (length(x$dims$h) > 1) {
+    res <- paste0("c(", paste(x$dims$h, collapse = ","), ") hidden units,")
+  } else {
+    res <- paste(format(x$dims$h, big.mark = ","), "hidden units,")
+  }
+  res
 }
 
 get_acts <- function(x) {
- if (length(x$dims$h) > 1) {
-  res <- paste0("c(", paste(x$parameters$activation, collapse = ","), ") activation,")
- } else {
-  res <- paste(x$parameters$activation, "activation,")
- }
- res
+  if (length(x$dims$h) > 1) {
+    res <- paste0(
+      "c(",
+      paste(x$parameters$activation, collapse = ","),
+      ") activation,"
+    )
+  } else {
+    res <- paste(x$parameters$activation, "activation,")
+  }
+  res
 }
-
 
 
 #' @export
 print.brulee_mlp <- function(x, ...) {
- cat("Multilayer perceptron\n\n")
- cat(
-  get_acts(x), "\n",
-  get_units(x), "\n",
-  format(get_num_mlp_coef(x), big.mark = ","), " model parameters\n",
-  sep = ""
- )
- brulee_print(x, ...)
+  cat("Multilayer perceptron\n\n")
+  cat(
+    get_acts(x),
+    "\n",
+    get_units(x),
+    "\n",
+    format(get_num_mlp_coef(x), big.mark = ","),
+    " model parameters\n",
+    sep = ""
+  )
+  brulee_print(x, ...)
 }
 
 ## -----------------------------------------------------------------------------
 
 opt_uses_penalty <- function(opt) {
- vals <- c("ADAM", "ADAMw", "RMSprop", "Adadelta")
- opt %in% vals
+  vals <- c("ADAM", "ADAMw", "RMSprop", "Adadelta")
+  opt %in% vals
 }
 
 check_mixture <- function(mix, opt) {
- if (identical(mix, 1.0)) {
-  return(mix)
- }
- if (opt_uses_penalty(opt) & !identical(mix, 0.0)) {
-  cli::cli_warn(
-   "For the {opt} optimizer, the penalty need to be a pure L2 penalty (i.e.,
-   {.code mixture} is 0.0}. The value is changed from {signif(mix, 2)} to 0.0.")
-  mix <- 0.0
- }
- mix
+  if (identical(mix, 1.0)) {
+    return(mix)
+  }
+  if (opt_uses_penalty(opt) & !identical(mix, 0.0)) {
+    cli::cli_warn(
+      "For the {opt} optimizer, the penalty need to be a pure L2 penalty (i.e.,
+   {.code mixture} is 0.0}. The value is changed from {signif(mix, 2)} to 0.0."
+    )
+    mix <- 0.0
+  }
+  mix
 }
 
-set_optimizer <- function(optimizer,
-                          model,
-                          learn_rate,
-                          momentum,
-                          penalty) {
- if (optimizer == "LBFGS") {
-  res <- torch::optim_lbfgs(model$parameters, lr = learn_rate, history_size = 5)
- } else if (optimizer == "SGD") {
-  res <- torch::optim_sgd(
-   model$parameters,
-   lr = learn_rate,
-   momentum = momentum,
-   nesterov = momentum > 0.0
-  )
- } else if (optimizer == "RMSprop") {
-  res <- torch::optim_rmsprop(
-   model$parameters,
-   lr = learn_rate,
-   momentum = momentum,
-   weight_decay = penalty
-  )
- } else if (optimizer == "ADAMw") {
-  res <- torch::optim_adamw(
-   model$parameters,
-   lr = learn_rate,
-   weight_decay = penalty
-  )
- } else if (optimizer == "Adadelta") {
-  res <- torch::optim_adadelta(
-   model$parameters,
-   lr = learn_rate,
-   weight_decay = penalty
-  )
- } else if (optimizer == "Adagrad") {
-  res <- torch::optim_adagrad(
-   model$parameters,
-   lr = learn_rate,
-   weight_decay = penalty
-  )
- } else {
-  cli::cli_abort(paste0("Unsupported optimizer '", optimizer, "'"))
- }
- res
+set_optimizer <- function(optimizer, model, learn_rate, momentum, penalty) {
+  if (optimizer == "LBFGS") {
+    res <- torch::optim_lbfgs(
+      model$parameters,
+      lr = learn_rate,
+      history_size = 1
+    )
+  } else if (optimizer == "SGD") {
+    res <- torch::optim_sgd(
+      model$parameters,
+      lr = learn_rate,
+      momentum = momentum,
+      nesterov = momentum > 0.0
+    )
+  } else if (optimizer == "RMSprop") {
+    res <- torch::optim_rmsprop(
+      model$parameters,
+      lr = learn_rate,
+      momentum = momentum,
+      weight_decay = penalty
+    )
+  } else if (optimizer == "ADAMw") {
+    res <- torch::optim_adamw(
+      model$parameters,
+      lr = learn_rate,
+      weight_decay = penalty
+    )
+  } else if (optimizer == "Adadelta") {
+    res <- torch::optim_adadelta(
+      model$parameters,
+      lr = learn_rate,
+      weight_decay = penalty
+    )
+  } else if (optimizer == "Adagrad") {
+    res <- torch::optim_adagrad(
+      model$parameters,
+      lr = learn_rate,
+      weight_decay = penalty
+    )
+  } else {
+    cli::cli_abort(paste0("Unsupported optimizer '", optimizer, "'"))
+  }
+  res
 }
 
 
 init_layer <- function(layer, act) {
- gain_for_rng <- torch::nn_init_calculate_gain(act)
- offset <- sqrt(prod(dim(layer$bias)) + prod(dim(layer$weight)))
- layer$bias <- nn_init_normal_(layer$bias, std = gain_for_rng / offset)
- layer$weight <- nn_init_normal_(layer$weight, std = gain_for_rng / offset)
- layer
+  gain_for_rng <- torch::nn_init_calculate_gain(act)
+  offset <- sqrt(prod(dim(layer$bias)) + prod(dim(layer$weight)))
+  layer$bias <- nn_init_normal_(layer$bias, std = gain_for_rng / offset)
+  layer$weight <- nn_init_normal_(layer$weight, std = gain_for_rng / offset)
+  layer
 }
 
 # ------------------------------------------------------------------------------
@@ -1056,13 +1171,18 @@ init_layer <- function(layer, act) {
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp_two_layer <- function(x, ...) {
- UseMethod("brulee_mlp_two_layer")
+  UseMethod("brulee_mlp_two_layer")
 }
 
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp_two_layer.default <- function(x, ...) {
- stop("`brulee_mlp_two_layer()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+  stop(
+    "`brulee_mlp_two_layer()` is not defined for a '",
+    class(x)[1],
+    "'.",
+    call. = FALSE
+  )
 }
 
 # XY method - data frame
@@ -1070,114 +1190,118 @@ brulee_mlp_two_layer.default <- function(x, ...) {
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp_two_layer.data.frame <-
- function(x,
-          y,
-          epochs = 100L,
-          hidden_units = 3L,
-          hidden_units_2 = 3L,
-          activation = "relu",
-          activation_2 = "relu",
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          batch_size = 32L,
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
+  function(
+    x,
+    y,
+    epochs = 100L,
+    hidden_units = 3L,
+    hidden_units_2 = 3L,
+    activation = "relu",
+    activation_2 = "relu",
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    batch_size = 32L,
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
+    ...
+  ) {
+    processed <- hardhat::mold(x, y)
+
+    hidden_units_all <- c(hidden_units, hidden_units_2)
+    activation_all <- c(activation, activation_2)
+
+    res <-
+      brulee_mlp_bridge(
+        processed,
+        epochs = epochs,
+        hidden_units = hidden_units_all,
+        activation = activation_all,
+        learn_rate = learn_rate,
+        rate_schedule = rate_schedule,
+        penalty = penalty,
+        mixture = mixture,
+        dropout = dropout,
+        validation = validation,
+        optimizer = optimizer,
+        momentum = momentum,
+        batch_size = batch_size,
+        class_weights = class_weights,
+        stop_iter = stop_iter,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
+        verbose = verbose,
+        ...
+      )
+    class(res) <- c("brulee_mlp_two_layer", class(res))
+    res
+  }
+
+# XY method - matrix
+
+#' @export
+#' @rdname brulee_mlp
+brulee_mlp_two_layer.matrix <- function(
+  x,
+  y,
+  epochs = 100L,
+  hidden_units = 3L,
+  hidden_units_2 = 3L,
+  activation = "relu",
+  activation_2 = "relu",
+  penalty = 0.001,
+  mixture = 0,
+  dropout = 0,
+  validation = 0.1,
+  optimizer = "SGD",
+  learn_rate = 0.01,
+  rate_schedule = "none",
+  momentum = 0.0,
+  batch_size = 32L,
+  class_weights = NULL,
+  stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
+  verbose = FALSE,
+  ...
+) {
   processed <- hardhat::mold(x, y)
 
   hidden_units_all <- c(hidden_units, hidden_units_2)
   activation_all <- c(activation, activation_2)
 
   res <-
-   brulee_mlp_bridge(
-    processed,
-    epochs = epochs,
-    hidden_units = hidden_units_all,
-    activation = activation_all,
-    learn_rate = learn_rate,
-    rate_schedule = rate_schedule,
-    penalty = penalty,
-    mixture = mixture,
-    dropout = dropout,
-    validation = validation,
-    optimizer = optimizer,
-    momentum = momentum,
-    batch_size = batch_size,
-    class_weights = class_weights,
-    stop_iter = stop_iter,
-    grad_value_clip = grad_value_clip,
-    grad_norm_clip = grad_norm_clip,
-    verbose = verbose,
-    ...
-   )
+    brulee_mlp_bridge(
+      processed,
+      epochs = epochs,
+      hidden_units = hidden_units_all,
+      activation = activation_all,
+      learn_rate = learn_rate,
+      rate_schedule = rate_schedule,
+      momentum = momentum,
+      penalty = penalty,
+      mixture = mixture,
+      dropout = dropout,
+      validation = validation,
+      optimizer = optimizer,
+      batch_size = batch_size,
+      class_weights = class_weights,
+      stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
+      verbose = verbose,
+      ...
+    )
   class(res) <- c("brulee_mlp_two_layer", class(res))
   res
- }
-
-# XY method - matrix
-
-#' @export
-#' @rdname brulee_mlp
-brulee_mlp_two_layer.matrix <- function(x,
-                                        y,
-                                        epochs = 100L,
-                                        hidden_units = 3L,
-                                        hidden_units_2 = 3L,
-                                        activation = "relu",
-                                        activation_2 = "relu",
-                                        penalty = 0.001,
-                                        mixture = 0,
-                                        dropout = 0,
-                                        validation = 0.1,
-                                        optimizer = "SGD",
-                                        learn_rate = 0.01,
-                                        rate_schedule = "none",
-                                        momentum = 0.0,
-                                        batch_size = 32L,
-                                        class_weights = NULL,
-                                        stop_iter = 5,
-                                        grad_value_clip = 5,
-                                        grad_norm_clip = 5,
-                                        verbose = FALSE,
-                                        ...) {
- processed <- hardhat::mold(x, y)
-
- hidden_units_all <- c(hidden_units, hidden_units_2)
- activation_all <- c(activation, activation_2)
-
- res <-
-  brulee_mlp_bridge(
-   processed,
-   epochs = epochs,
-   hidden_units = hidden_units_all,
-   activation = activation_all,
-   learn_rate = learn_rate,
-   rate_schedule = rate_schedule,
-   momentum = momentum,
-   penalty = penalty,
-   mixture = mixture,
-   dropout = dropout,
-   validation = validation,
-   optimizer = optimizer,
-   batch_size = batch_size,
-   class_weights = class_weights,
-   stop_iter = stop_iter,
-   grad_value_clip = grad_value_clip,
-   grad_norm_clip = grad_norm_clip,
-   verbose = verbose,
-   ...
-  )
- class(res) <- c("brulee_mlp_two_layer", class(res))
- res
 }
 
 # Formula method
@@ -1185,114 +1309,117 @@ brulee_mlp_two_layer.matrix <- function(x,
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp_two_layer.formula <-
- function(formula,
-          data,
-          epochs = 100L,
-          hidden_units = 3L,
-          hidden_units_2 = 3L,
-          activation = "relu",
-          activation_2 = "relu",
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          batch_size = 32L,
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(formula, data)
-
-  hidden_units_all <- c(hidden_units, hidden_units_2)
-  activation_all <- c(activation, activation_2)
-
-  res <-
-   brulee_mlp_bridge(
-    processed,
-    epochs = epochs,
-    hidden_units = hidden_units_all,
-    activation = activation_all,
-    learn_rate = learn_rate,
-    rate_schedule = rate_schedule,
-    momentum = momentum,
-    penalty = penalty,
-    mixture = mixture,
-    dropout = dropout,
-    validation = validation,
-    optimizer = optimizer,
-    batch_size = batch_size,
-    class_weights = class_weights,
-    stop_iter = stop_iter,
-    grad_value_clip = grad_value_clip,
-    grad_norm_clip = grad_norm_clip,
-    verbose = verbose,
+  function(
+    formula,
+    data,
+    epochs = 100L,
+    hidden_units = 3L,
+    hidden_units_2 = 3L,
+    activation = "relu",
+    activation_2 = "relu",
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    batch_size = 32L,
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
     ...
-   )
-  class(res) <- c("brulee_mlp_two_layer", class(res))
-  res
- }
+  ) {
+    processed <- hardhat::mold(formula, data)
+
+    hidden_units_all <- c(hidden_units, hidden_units_2)
+    activation_all <- c(activation, activation_2)
+
+    res <-
+      brulee_mlp_bridge(
+        processed,
+        epochs = epochs,
+        hidden_units = hidden_units_all,
+        activation = activation_all,
+        learn_rate = learn_rate,
+        rate_schedule = rate_schedule,
+        momentum = momentum,
+        penalty = penalty,
+        mixture = mixture,
+        dropout = dropout,
+        validation = validation,
+        optimizer = optimizer,
+        batch_size = batch_size,
+        class_weights = class_weights,
+        stop_iter = stop_iter,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
+        verbose = verbose,
+        ...
+      )
+    class(res) <- c("brulee_mlp_two_layer", class(res))
+    res
+  }
 
 # Recipe method
 
 #' @export
 #' @rdname brulee_mlp
 brulee_mlp_two_layer.recipe <-
- function(x,
-          data,
-          epochs = 100L,
-          hidden_units = 3L,
-          hidden_units_2 = 3L,
-          activation = "relu",
-          activation_2 = "relu",
-          penalty = 0.001,
-          mixture = 0,
-          dropout = 0,
-          validation = 0.1,
-          optimizer = "SGD",
-          learn_rate = 0.01,
-          rate_schedule = "none",
-          momentum = 0.0,
-          batch_size = 32L,
-          class_weights = NULL,
-          stop_iter = 5,
-          grad_value_clip = 5,
-          grad_norm_clip = 5,
-          verbose = FALSE,
-          ...) {
-  processed <- hardhat::mold(x, data)
-
-  hidden_units_all <- c(hidden_units, hidden_units_2)
-  activation_all <- c(activation, activation_2)
-
-  res <-
-   brulee_mlp_bridge(
-    processed,
-    epochs = epochs,
-    hidden_units = hidden_units_all,
-    activation = activation_all,
-    learn_rate = learn_rate,
-    rate_schedule = rate_schedule,
-    momentum = momentum,
-    penalty = penalty,
-    mixture = mixture,
-    dropout = dropout,
-    validation = validation,
-    optimizer = optimizer,
-    batch_size = batch_size,
-    class_weights = class_weights,
-    stop_iter = stop_iter,
-    grad_value_clip = grad_value_clip,
-    grad_norm_clip = grad_norm_clip,
-    verbose = verbose,
+  function(
+    x,
+    data,
+    epochs = 100L,
+    hidden_units = 3L,
+    hidden_units_2 = 3L,
+    activation = "relu",
+    activation_2 = "relu",
+    penalty = 0.001,
+    mixture = 0,
+    dropout = 0,
+    validation = 0.1,
+    optimizer = "SGD",
+    learn_rate = 0.01,
+    rate_schedule = "none",
+    momentum = 0.0,
+    batch_size = 32L,
+    class_weights = NULL,
+    stop_iter = 5,
+    grad_value_clip = 5,
+    grad_norm_clip = 5,
+    verbose = FALSE,
     ...
-   )
-  class(res) <- c("brulee_mlp_two_layer", class(res))
-  res
- }
+  ) {
+    processed <- hardhat::mold(x, data)
 
+    hidden_units_all <- c(hidden_units, hidden_units_2)
+    activation_all <- c(activation, activation_2)
+
+    res <-
+      brulee_mlp_bridge(
+        processed,
+        epochs = epochs,
+        hidden_units = hidden_units_all,
+        activation = activation_all,
+        learn_rate = learn_rate,
+        rate_schedule = rate_schedule,
+        momentum = momentum,
+        penalty = penalty,
+        mixture = mixture,
+        dropout = dropout,
+        validation = validation,
+        optimizer = optimizer,
+        batch_size = batch_size,
+        class_weights = class_weights,
+        stop_iter = stop_iter,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
+        verbose = verbose,
+        ...
+      )
+    class(res) <- c("brulee_mlp_two_layer", class(res))
+    res
+  }
