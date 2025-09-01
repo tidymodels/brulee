@@ -39,20 +39,30 @@
 #' }
 #' }
 #' @export
-predict.brulee_linear_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+predict.brulee_linear_reg <- function(
+  object,
+  new_data,
+  type = NULL,
+  epoch = NULL,
+  ...
+) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_linear_reg_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_linear_reg_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
 predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
-
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -69,8 +79,14 @@ predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
-                 "be made at epoch", epoch, "so last epoch is used.")
+    msg <- paste(
+      "The model fit only",
+      max_epoch,
+      "epochs; predictions cannot",
+      "be made at epoch",
+      epoch,
+      "so last epoch is used."
+    )
     cli::cli_warn(msg)
   }
 
@@ -85,7 +101,6 @@ get_linear_reg_predict_function <- function(type) {
 
 # ------------------------------------------------------------------------------
 # Implementation
-
 
 predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
   # convert from raw format
@@ -108,5 +123,5 @@ predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
 predict_brulee_linear_reg_numeric <- function(model, predictors, epoch) {
   predictions <- predict_brulee_linear_reg_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
-  hardhat::spruce_numeric(predictions[,1])
+  hardhat::spruce_numeric(predictions[, 1])
 }

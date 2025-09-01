@@ -43,20 +43,35 @@
 #' }
 #' }
 #' @export
-predict.brulee_multinomial_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+predict.brulee_multinomial_reg <- function(
+  object,
+  new_data,
+  type = NULL,
+  epoch = NULL,
+  ...
+) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_multinomial_reg_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_multinomial_reg_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_multinomial_reg_bridge <- function(type, model, predictors, epoch) {
-
+predict_brulee_multinomial_reg_bridge <- function(
+  type,
+  model,
+  predictors,
+  epoch
+) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -73,8 +88,14 @@ predict_brulee_multinomial_reg_bridge <- function(type, model, predictors, epoch
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
-                 "be made at epoch", epoch, "so last epoch is used.")
+    msg <- paste(
+      "The model fit only",
+      max_epoch,
+      "epochs; predictions cannot",
+      "be made at epoch",
+      epoch,
+      "so last epoch is used."
+    )
     cli::cli_warn(msg)
   }
 
@@ -86,8 +107,8 @@ predict_brulee_multinomial_reg_bridge <- function(type, model, predictors, epoch
 get_multinomial_reg_predict_function <- function(type) {
   switch(
     type,
-    prob    = predict_brulee_multinomial_reg_prob,
-    class   = predict_brulee_multinomial_reg_class
+    prob = predict_brulee_multinomial_reg_prob,
+    class = predict_brulee_multinomial_reg_class
   )
 }
 

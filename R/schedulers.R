@@ -55,46 +55,51 @@
 #' @export
 
 schedule_decay_time <- function(epoch, initial = 0.1, decay = 1) {
- check_rate_arg_value(initial)
- check_rate_arg_value(decay)
- initial / (1 + decay * epoch)
+  check_rate_arg_value(initial)
+  check_rate_arg_value(decay)
+  initial / (1 + decay * epoch)
 }
 
 #' @export
 #' @rdname schedule_decay_time
 schedule_decay_expo <- function(epoch, initial = 0.1, decay = 1) {
- check_rate_arg_value(initial)
- check_rate_arg_value(decay)
- initial * exp(-decay * epoch)
+  check_rate_arg_value(initial)
+  check_rate_arg_value(decay)
+  initial * exp(-decay * epoch)
 }
 
 #' @export
 #' @rdname schedule_decay_time
-schedule_step <- function(epoch, initial = 0.1, reduction = 1/2, steps = 5) {
- check_rate_arg_value(initial)
- check_rate_arg_value(reduction)
- check_rate_arg_value(steps)
- initial * reduction^floor(epoch / steps)
+schedule_step <- function(epoch, initial = 0.1, reduction = 1 / 2, steps = 5) {
+  check_rate_arg_value(initial)
+  check_rate_arg_value(reduction)
+  check_rate_arg_value(steps)
+  initial * reduction^floor(epoch / steps)
 }
 
 #' @export
 #' @rdname schedule_decay_time
-schedule_cyclic <- function(epoch, initial = 0.001, largest = 0.1, step_size = 5) {
- check_rate_arg_value(initial)
- check_rate_arg_value(largest)
- check_rate_arg_value(step_size)
+schedule_cyclic <- function(
+  epoch,
+  initial = 0.001,
+  largest = 0.1,
+  step_size = 5
+) {
+  check_rate_arg_value(initial)
+  check_rate_arg_value(largest)
+  check_rate_arg_value(step_size)
 
- if (largest < initial) {
-  tmp <- initial
-  largest <- initial
-  initial <- tmp
- } else if (largest == initial) {
-  initial <- initial / 10
- }
+  if (largest < initial) {
+    tmp <- initial
+    largest <- initial
+    initial <- tmp
+  } else if (largest == initial) {
+    initial <- initial / 10
+  }
 
- cycle <- floor( 1 + (epoch / 2 / step_size) )
- x <- abs( ( epoch / step_size ) - ( 2 * cycle) + 1 )
- initial + ( largest - initial ) * max( 0, 1 - x)
+  cycle <- floor(1 + (epoch / 2 / step_size))
+  x <- abs((epoch / step_size) - (2 * cycle) + 1)
+  initial + (largest - initial) * max(0, 1 - x)
 }
 
 # Learning rate can be either static (via rate_schedule == "none") or dynamic.
@@ -103,26 +108,26 @@ schedule_cyclic <- function(epoch, initial = 0.001, largest = 0.1, step_size = 5
 #' @export
 #' @rdname schedule_decay_time
 set_learn_rate <- function(epoch, learn_rate, type = "none", ...) {
- types <- c("decay_time", "decay_expo", "none", "step", "cyclic")
- types <- rlang::arg_match0(type, types, arg_nm = "type")
- if (type == "none") {
-  return(learn_rate)
- }
+  types <- c("decay_time", "decay_expo", "none", "step", "cyclic")
+  types <- rlang::arg_match0(type, types, arg_nm = "type")
+  if (type == "none") {
+    return(learn_rate)
+  }
 
- fn <- paste0("schedule_", type)
- args <- list(...)
+  fn <- paste0("schedule_", type)
+  args <- list(...)
 
- cl <- rlang::call2(fn, epoch = epoch, !!!args)
- rlang::eval_tidy(cl)
+  cl <- rlang::call2(fn, epoch = epoch, !!!args)
+  rlang::eval_tidy(cl)
 }
 
 # ------------------------------------------------------------------------------
 
 check_rate_arg_value <- function(x) {
- nm <- as.character(match.call()$x)
- if (is.null(x) || !is.numeric(x) || length(x) != 1 || any(x <= 0)) {
-  msg <- paste0("Argument '", nm, "' should be a single positive value.")
-  cli::cli_abort(msg)
- }
- invisible(NULL)
+  nm <- as.character(match.call()$x)
+  if (is.null(x) || !is.numeric(x) || length(x) != 1 || any(x <= 0)) {
+    msg <- paste0("Argument '", nm, "' should be a single positive value.")
+    cli::cli_abort(msg)
+  }
+  invisible(NULL)
 }

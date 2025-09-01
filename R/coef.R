@@ -1,20 +1,21 @@
 brulee_coefs <- function(object, epoch = NULL, ...) {
- if (!is.null(epoch) && length(epoch) != 1) {
-  cli::cli_abort("'epoch' should be a single integer.")
- }
- max_epochs <- length(object$estimates)
-
- if (is.null(epoch)) {
-  epoch <- object$best_epoch
- } else {
-  if (epoch > max_epochs) {
-   msg <- glue::glue("There were only {max_epochs} epochs fit. Setting 'epochs' to {max_epochs}.")
-   cli::cli_warn(msg)
-   epoch <- max_epochs
+  if (!is.null(epoch) && length(epoch) != 1) {
+    cli::cli_abort("'epoch' should be a single integer.")
   }
+  max_epochs <- length(object$estimates)
 
- }
- object$estimates[[epoch]]
+  if (is.null(epoch)) {
+    epoch <- object$best_epoch
+  } else {
+    if (epoch > max_epochs) {
+      msg <- glue::glue(
+        "There were only {max_epochs} epochs fit. Setting 'epochs' to {max_epochs}."
+      )
+      cli::cli_warn(msg)
+      epoch <- max_epochs
+    }
+  }
+  object$estimates[[epoch]]
 }
 
 
@@ -56,23 +57,23 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
 #' @name brulee-coefs
 #' @export
 coef.brulee_logistic_reg <- function(object, epoch = NULL, ...) {
- network_params <- brulee_coefs(object, epoch)
- slopes <- network_params$fc1.weight[2, ] - network_params$fc1.weight[1, ]
- int <- network_params$fc1.bias[2] - network_params$fc1.bias[1]
- param <- c(int, slopes)
- names(param) <- c("(Intercept)", object$dims$features)
- param
+  network_params <- brulee_coefs(object, epoch)
+  slopes <- network_params$fc1.weight[2, ] - network_params$fc1.weight[1, ]
+  int <- network_params$fc1.bias[2] - network_params$fc1.bias[1]
+  param <- c(int, slopes)
+  names(param) <- c("(Intercept)", object$dims$features)
+  param
 }
 
 #' @rdname brulee-coefs
 #' @export
 coef.brulee_linear_reg <- function(object, epoch = NULL, ...) {
- network_params <- brulee_coefs(object, epoch)
- slopes <- network_params$fc1.weight[1,]
- int <- network_params$fc1.bias
- param <- c(int, slopes)
- names(param) <- c("(Intercept)", object$dims$features)
- param
+  network_params <- brulee_coefs(object, epoch)
+  slopes <- network_params$fc1.weight[1, ]
+  int <- network_params$fc1.bias
+  param <- c(int, slopes)
+  names(param) <- c("(Intercept)", object$dims$features)
+  param
 }
 
 #' @rdname brulee-coefs
@@ -82,12 +83,11 @@ coef.brulee_mlp <- brulee_coefs
 #' @rdname brulee-coefs
 #' @export
 coef.brulee_multinomial_reg <- function(object, epoch = NULL, ...) {
- network_params <- brulee_coefs(object, epoch)
- slopes <- t(network_params$fc1.weight)
- int <- network_params$fc1.bias
- param <- rbind(int, slopes)
- rownames(param) <- c("(Intercept)", object$dims$features)
- colnames(param) <- object$dims$levels
- param
+  network_params <- brulee_coefs(object, epoch)
+  slopes <- t(network_params$fc1.weight)
+  int <- network_params$fc1.bias
+  param <- rbind(int, slopes)
+  rownames(param) <- c("(Intercept)", object$dims$features)
+  colnames(param) <- object$dims$levels
+  param
 }
-
