@@ -306,7 +306,8 @@ specifying the activation for each hidden layer.</p></dd>
 <dt id="arg-mixture">mixture<a class="anchor" aria-label="anchor" href="#arg-mixture"></a></dt>
 <dd><p>Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression (a.k.a weight decay).</p></dd>
+indicates ridge regression (a.k.a weight decay). Must be zero for
+optimizers <code>"ADAMw"</code>, <code>"RMSprop"</code>, <code>"Adadelta"</code>.</p></dd>
 
 
 <dt id="arg-dropout">dropout<a class="anchor" aria-label="anchor" href="#arg-dropout"></a></dt>
@@ -320,7 +321,9 @@ validation set.</p></dd>
 
 <dt id="arg-optimizer">optimizer<a class="anchor" aria-label="anchor" href="#arg-optimizer"></a></dt>
 <dd><p>The method used in the optimization procedure. Possible choices
-are 'LBFGS' and 'SGD'. Default is 'LBFGS'.</p></dd>
+are <code>"SGD"</code>,  <code>"ADAMw"</code>, <code>"Adadelta"</code>, <code>"Adagrad"</code>, <code>"RMSprop"</code>, and
+<code>"LBFGS"</code>. <code>"LBFGS"</code> is the only second-order method and does not use
+batches.</p></dd>
 
 
 <dt id="arg-learn-rate">learn_rate<a class="anchor" aria-label="anchor" href="#arg-learn-rate"></a></dt>
@@ -338,12 +341,13 @@ should change as the optimization proceeds. Possible values are
 
 <dt id="arg-momentum">momentum<a class="anchor" aria-label="anchor" href="#arg-momentum"></a></dt>
 <dd><p>A positive number usually on <code>[0.50, 0.99]</code> for the momentum
-parameter in gradient descent.  (<code>optimizer = "SGD"</code> only)</p></dd>
+parameter in gradient descent.  (optimizers <code>"SGD"</code>,  and <code>"RMSprop"</code> only,
+ignored otherwise).</p></dd>
 
 
 <dt id="arg-batch-size">batch_size<a class="anchor" aria-label="anchor" href="#arg-batch-size"></a></dt>
 <dd><p>An integer for the number of training set points in each
-batch. (<code>optimizer = "SGD"</code> only)</p></dd>
+batch. (<code>optimizer != "LBFGS"</code> only, ignored otherwise)</p></dd>
 
 
 <dt id="arg-class-weights">class_weights<a class="anchor" aria-label="anchor" href="#arg-class-weights"></a></dt>
@@ -437,6 +441,16 @@ via a learning rate scheduler (via the <code>rate_schedule</code>). Using
 arguments to the schedulers can be passed via <code>...</code>.</p>
 </div>
 
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>adagrad (adaptive gradient algorithm): Duchi, J., Hazan, E., &amp; Singer, Y.
+(2011). Adaptive subgradient methods for online learning and stochastic
+optimization. <em>Journal of machine learning research</em>, 12(7).</p>
+<p>adadelta: Zeiler, M. D. (2012). Adadelta: an adaptive learning rate method.
+arXiv preprint arXiv:1212.5701.</p>
+<p>ADAMw: Loshchilov, I., &amp; Hutter, F. (2017). Decoupled weight decay
+regularization. arXiv preprint arXiv:1711.05101.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -36,11 +36,14 @@
 <ul><li><p>Transition from the magrittr pipe to the base R pipe.</p></li>
 <li>
 <p>To try to help avoiding numeric overflow in the loss functions:</p>
-<ul><li><p>Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation.</p></li>
+<ul><li><p>Tensors are stored as a 64-bit float instead of 32-bit.</p></li>
+<li><p>Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation.</p></li>
 <li><p>The results always contain the initial results to use as a fallback if there is overflow during the first epoch.</p></li>
 <li><p><code><a href="../reference/brulee_mlp.html">brulee_mlp()</a></code> has two additional parameters, <code>grad_value_clip</code> and <code>grad_value_clip</code>, that prevent issues.</p></li>
 <li><p>The warning was changed to “Early stopping occurred at epoch {X} due to numerical overflow of the loss function.”</p></li>
 </ul></li>
+<li><p>Several new SGD optimizers were added: <code>"ADAMw"</code>, <code>"Adadelta"</code>, <code>"Adagrad"</code>, and <code>"RMSprop"</code>.</p></li>
+<li><p>Mixture parameter values different than zero cannot be used for several optimizers since they require L2 penalties.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="brulee-040">brulee 0.4.0<a class="anchor" aria-label="anchor" href="#brulee-040"></a></h2><p class="text-muted">CRAN release: 2025-01-30</p>

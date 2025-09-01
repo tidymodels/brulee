@@ -153,7 +153,8 @@ specified as:</p><ul><li><p>A <strong>data frame</strong> with 1 factor column (
 <dt id="arg-mixture">mixture<a class="anchor" aria-label="anchor" href="#arg-mixture"></a></dt>
 <dd><p>Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression (a.k.a weight decay).</p></dd>
+indicates ridge regression (a.k.a weight decay). Must be zero for
+optimizers <code>"ADAMw"</code>, <code>"RMSprop"</code>, <code>"Adadelta"</code>.</p></dd>
 
 
 <dt id="arg-validation">validation<a class="anchor" aria-label="anchor" href="#arg-validation"></a></dt>
@@ -163,23 +164,26 @@ validation set.</p></dd>
 
 <dt id="arg-optimizer">optimizer<a class="anchor" aria-label="anchor" href="#arg-optimizer"></a></dt>
 <dd><p>The method used in the optimization procedure. Possible choices
-are 'LBFGS' and 'SGD'. Default is 'LBFGS'.</p></dd>
+are <code>"SGD"</code>,  <code>"ADAMw"</code>, <code>"Adadelta"</code>, <code>"Adagrad"</code>, <code>"RMSprop"</code>, and
+<code>"LBFGS"</code>. <code>"LBFGS"</code> is the only second-order method, does not use
+batches, and is the default.</p></dd>
 
 
 <dt id="arg-learn-rate">learn_rate<a class="anchor" aria-label="anchor" href="#arg-learn-rate"></a></dt>
-<dd><p>A positive number that controls the rapidity that the model
-moves along the descent path. Values around 0.1 or less are typical.
-(<code>optimizer = "SGD"</code> only)</p></dd>
+<dd><p>A positive number that controls the initial rapidity that
+the model moves along the descent path. Values around 0.1 or less are
+typical.</p></dd>
 
 
 <dt id="arg-momentum">momentum<a class="anchor" aria-label="anchor" href="#arg-momentum"></a></dt>
 <dd><p>A positive number usually on <code>[0.50, 0.99]</code> for the momentum
-parameter in gradient descent.  (<code>optimizer = "SGD"</code> only)</p></dd>
+parameter in gradient descent.  (optimizers <code>"SGD"</code>,  and <code>"RMSprop"</code> only,
+ignored otherwise).</p></dd>
 
 
 <dt id="arg-batch-size">batch_size<a class="anchor" aria-label="anchor" href="#arg-batch-size"></a></dt>
 <dd><p>An integer for the number of training set points in each
-batch. (<code>optimizer = "SGD"</code> only)</p></dd>
+batch. (<code>optimizer != "LBFGS"</code> only, ignored otherwise)</p></dd>
 
 
 <dt id="arg-class-weights">class_weights<a class="anchor" aria-label="anchor" href="#arg-class-weights"></a></dt>
@@ -282,9 +286,9 @@ used in those packages.</p>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Truth</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Prediction  Biscoe Dream Torgersen</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Biscoe        49     2         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Dream         11    38         6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Torgersen      9     8         7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Biscoe        50     2         3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Dream         12    38         6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Torgersen      7     8         7</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

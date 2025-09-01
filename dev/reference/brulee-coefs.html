@@ -96,15 +96,13 @@ a list of arrays.</p>
 <span class="r-in"><span>    <span class="fu"><a href="https://recipes.tidymodels.org/reference/step_normalize.html" class="external-link">step_normalize</a></span><span class="op">(</span><span class="fu"><a href="https://recipes.tidymodels.org/reference/has_role.html" class="external-link">all_numeric_predictors</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span> <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="brulee_linear_reg.html">brulee_linear_reg</a></span><span class="op">(</span><span class="va">ames_rec</span>, data <span class="op">=</span> <span class="va">ames_train</span>,</span></span>
-<span class="r-in"><span>                           epochs <span class="op">=</span> <span class="fl">50</span>, batch_size <span class="op">=</span> <span class="fl">32</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="brulee_linear_reg.html">brulee_linear_reg</a></span><span class="op">(</span><span class="va">ames_rec</span>, data <span class="op">=</span> <span class="va">ames_train</span>, epochs <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span>, epoch <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'batch_size' is only used for the SGD optimizer.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept)   Longitude    Latitude </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5.22475100 -0.05370794  0.05004640 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5.22474949 -0.05373152  0.05006293 </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
