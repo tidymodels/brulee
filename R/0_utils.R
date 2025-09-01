@@ -126,8 +126,8 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
     loss <- loss_fn(...)
     if (penalty > 0) {
       l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
-      l_term <- torch::torch_tensor(l_term, dtype = torch::torch_float64())
-      penalty <- torch::torch_tensor(penalty, dtype = torch::torch_float64())
+      l_term <- float_64(l_term)
+      penalty <- float_64(penalty)
       loss <- loss + penalty * l_term
     }
     loss
@@ -142,3 +142,8 @@ is_cran_check <- function() {
     Sys.getenv("_R_CHECK_PACKAGE_NAME_", "") != ""
   }
 }
+
+float_64 <- function(x) {
+ torch::torch_tensor(x, dtype = torch::torch_float64())
+}
+

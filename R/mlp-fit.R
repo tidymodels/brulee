@@ -745,7 +745,7 @@ mlp_fit_imp <-
         nnf_nll_loss(
           weight = wts,
           input = torch::torch_log(input),
-          target = target, #torch_tensor(target, dtype = torch_long())
+          target = target,
         )
       }
     } else {

@@ -137,12 +137,12 @@ predict_brulee_mlp_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation
-  estimates <- lapply(estimates, torch::torch_tensor, dtype = torch::torch_float64())
+  estimates <- lapply(estimates, float_64)
 
   # stuff back into the model
   module$load_state_dict(estimates)
   module$eval() # put the model in evaluation mode
-  predictions <- module(torch::torch_tensor(predictors, dtype = torch::torch_float64()))
+  predictions <- module(float_64(predictors))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA

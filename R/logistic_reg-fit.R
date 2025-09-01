@@ -497,7 +497,7 @@ logistic_reg_fit_imp <-
     # pass the log of softmax.
     loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
-        weight = wts,
+        weight = float_64(wts),
         input = torch::torch_log(input),
         target = target
       )
@@ -525,6 +525,11 @@ logistic_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
+
+    or_dtype <- torch::torch_get_default_dtype()
+    on.exit(torch::torch_set_default_dtype(or_dtype))
+    torch::torch_set_default_dtype(torch::torch_float64())
+
     ds <- matrix_to_dataset(x, y)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 

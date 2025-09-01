@@ -4,6 +4,8 @@
 
 * To try to help avoiding numeric overflow in the loss functions: 
 
+  * Tensored are stored as a 64-bit float instead of 32-bit. 
+  
   * Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation. 
   
   * The results always contain the initial results to use as a fallback if there is overflow during the first epoch.
@@ -13,8 +15,6 @@
   * The warning was changed to "Early stopping occurred at epoch {X} due to numerical overflow of the loss function."
 
 * Several new optimizers were added: `"ADAMw"`, `"Adadelta"`, `"Adagrad"`, and `"RMSprop"`.
-
-* For neural networks, the default optimizer is now `"SGD"` with a batch size of 32. 
 
 * Mixture parameter values different than zero cannot be used for several optimizers since they require L2 penalties. 
 

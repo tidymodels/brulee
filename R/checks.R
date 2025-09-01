@@ -241,7 +241,7 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
 
   if (is.null(wts)) {
     wts <- rep(1, length(lvls))
-    return(torch::torch_tensor(wts, dtype = torch_double()))
+    return(float_64(wts))
   }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
@@ -281,5 +281,5 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     wts <- wts[lvls]
   }
 
-  torch::torch_tensor(wts, dtype = torch_double())
+  float_64(wts)
 }

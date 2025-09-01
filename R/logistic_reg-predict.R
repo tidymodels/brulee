@@ -120,12 +120,12 @@ predict_brulee_logistic_reg_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch]]
   # convert to torch representation
-  estimates <- lapply(estimates, torch::torch_tensor)
+  estimates <- lapply(estimates, float_64)
   # stuff back into the model
   module$load_state_dict(estimates)
   # put the model in evaluation mode
   module$eval()
-  predictions <- module(torch::torch_tensor(predictors))
+  predictions <- module(float_64(predictors))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA

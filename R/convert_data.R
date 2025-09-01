@@ -15,12 +15,12 @@
 #' }
 #' @export
 matrix_to_dataset <- function(x, y) {
-  x <- torch::torch_tensor(x, dtype = torch::torch_double())
+  x <- float_64(x)
   if (is.factor(y)) {
     y <- as.numeric(y)
     y <- torch::torch_tensor(y, dtype = torch::torch_long())
   } else {
-    y <- torch::torch_tensor(y, dtype = torch::torch_double())
+    y <- float_64(y)
   }
   torch::tensor_dataset(x = x, y = y)
 }
