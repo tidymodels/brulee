@@ -281,11 +281,11 @@ brulee_mlp.data.frame <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
-    batch_size = 32L,
+    batch_size = NULL,
     class_weights = NULL,
     stop_iter = 5,
     grad_value_clip = 5,
@@ -332,11 +332,11 @@ brulee_mlp.matrix <- function(
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "SGD",
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0.0,
-  batch_size = 32L,
+  batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -384,11 +384,11 @@ brulee_mlp.formula <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
-    batch_size = 32L,
+    batch_size = NULL,
     class_weights = NULL,
     stop_iter = 5,
     grad_value_clip = 5,
@@ -436,11 +436,11 @@ brulee_mlp.recipe <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
-    batch_size = 32L,
+    batch_size = NULL,
     class_weights = NULL,
     stop_iter = 5,
     grad_value_clip = 5,
@@ -533,6 +533,7 @@ brulee_mlp_bridge <- function(
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
+   check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 32L
@@ -542,7 +543,7 @@ brulee_mlp_bridge <- function(
     }
   }
 
-  check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+
 
   check_integer(epochs, single = TRUE, 1, fn = f_nm)
   check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
@@ -708,7 +709,7 @@ mlp_fit_imp <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
@@ -1157,7 +1158,6 @@ set_optimizer <- function(optimizer, model, learn_rate, momentum, penalty) {
   res
 }
 
-
 init_layer <- function(layer, act) {
   gain_for_rng <- torch::nn_init_calculate_gain(act)
   offset <- sqrt(prod(dim(layer$bias)) + prod(dim(layer$weight)))
@@ -1202,11 +1202,11 @@ brulee_mlp_two_layer.data.frame <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
-    batch_size = 32L,
+    batch_size = NULL,
     class_weights = NULL,
     stop_iter = 5,
     grad_value_clip = 5,
@@ -1261,11 +1261,11 @@ brulee_mlp_two_layer.matrix <- function(
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "SGD",
+  optimizer = "LBFGS",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0.0,
-  batch_size = 32L,
+  batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
   grad_value_clip = 5,
@@ -1321,11 +1321,11 @@ brulee_mlp_two_layer.formula <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
-    batch_size = 32L,
+    batch_size = NULL,
     class_weights = NULL,
     stop_iter = 5,
     grad_value_clip = 5,
@@ -1381,11 +1381,11 @@ brulee_mlp_two_layer.recipe <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "SGD",
+    optimizer = "LBFGS",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
-    batch_size = 32L,
+    batch_size = NULL,
     class_weights = NULL,
     stop_iter = 5,
     grad_value_clip = 5,

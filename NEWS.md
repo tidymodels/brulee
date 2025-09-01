@@ -4,7 +4,7 @@
 
 * To try to help avoiding numeric overflow in the loss functions: 
 
-  * Tensored are stored as a 64-bit float instead of 32-bit. 
+  * Tensors are stored as a 64-bit float instead of 32-bit. 
   
   * Starting values were transitioned to using Gaussian distribution (instead of uniform) with a smaller standard deviation. 
   
@@ -14,7 +14,7 @@
   
   * The warning was changed to "Early stopping occurred at epoch {X} due to numerical overflow of the loss function."
 
-* Several new optimizers were added: `"ADAMw"`, `"Adadelta"`, `"Adagrad"`, and `"RMSprop"`.
+* Several new SGD optimizers were added: `"ADAMw"`, `"Adadelta"`, `"Adagrad"`, and `"RMSprop"`.
 
 * Mixture parameter values different than zero cannot be used for several optimizers since they require L2 penalties. 
 
