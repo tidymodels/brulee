@@ -25,12 +25,9 @@
 #' @inheritParams brulee_mlp
 #'
 #' @param optimizer The method used in the optimization procedure. Possible choices
-#'   are 'LBFGS' and 'SGD'. Default is 'LBFGS'.
-#' @param learn_rate A positive number that controls the rapidity that the model
-#' moves along the descent path. Values around 0.1 or less are typical.
-#' (`optimizer = "SGD"` only)
-#' @param momentum A positive number usually on `[0.50, 0.99]` for the momentum
-#' parameter in gradient descent.  (`optimizer = "SGD"` only)
+#'   are `"SGD"`,  `"ADAMw"`, `"Adadelta"`, `"Adagrad"`, `"RMSprop"`, and
+#'   `"LBFGS"`. `"LBFGS"` is the only second-order method, does not use
+#'   batches, and is the default.
 #'
 #' @details
 #'
@@ -73,7 +70,7 @@
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
@@ -129,7 +126,12 @@ brulee_logistic_reg <- function(x, ...) {
 #' @export
 #' @rdname brulee_logistic_reg
 brulee_logistic_reg.default <- function(x, ...) {
-  stop("`brulee_logistic_reg()` is not defined for a '", class(x)[1], "'.", call. = FALSE)
+  stop(
+    "`brulee_logistic_reg()` is not defined for a '",
+    class(x)[1],
+    "'.",
+    call. = FALSE
+  )
 }
 
 # XY method - data frame
@@ -137,20 +139,22 @@ brulee_logistic_reg.default <- function(x, ...) {
 #' @export
 #' @rdname brulee_logistic_reg
 brulee_logistic_reg.data.frame <-
-  function(x,
-           y,
-           epochs = 20L,
-           penalty = 0.001,
-           mixture = 0,
-           validation = 0.1,
-           optimizer = "LBFGS",
-           learn_rate = 1.0,
-           momentum = 0.0,
-           batch_size = NULL,
-           class_weights = NULL,
-           stop_iter = 5,
-           verbose = FALSE,
-           ...) {
+  function(
+    x,
+    y,
+    epochs = 20L,
+    penalty = 0.001,
+    mixture = 0,
+    validation = 0.1,
+    optimizer = "LBFGS",
+    learn_rate = 1.0,
+    momentum = 0.0,
+    batch_size = NULL,
+    class_weights = NULL,
+    stop_iter = 5,
+    verbose = FALSE,
+    ...
+  ) {
     processed <- hardhat::mold(x, y)
 
     brulee_logistic_reg_bridge(
@@ -174,20 +178,22 @@ brulee_logistic_reg.data.frame <-
 
 #' @export
 #' @rdname brulee_logistic_reg
-brulee_logistic_reg.matrix <- function(x,
-                                       y,
-                                       epochs = 20L,
-                                       penalty = 0.001,
-                                       mixture = 0,
-                                       validation = 0.1,
-                                       optimizer = "LBFGS",
-                                       learn_rate = 1,
-                                       momentum = 0.0,
-                                       batch_size = NULL,
-                                       class_weights = NULL,
-                                       stop_iter = 5,
-                                       verbose = FALSE,
-                                       ...) {
+brulee_logistic_reg.matrix <- function(
+  x,
+  y,
+  epochs = 20L,
+  penalty = 0.001,
+  mixture = 0,
+  validation = 0.1,
+  optimizer = "LBFGS",
+  learn_rate = 1,
+  momentum = 0.0,
+  batch_size = NULL,
+  class_weights = NULL,
+  stop_iter = 5,
+  verbose = FALSE,
+  ...
+) {
   processed <- hardhat::mold(x, y)
 
   brulee_logistic_reg_bridge(
@@ -212,20 +218,22 @@ brulee_logistic_reg.matrix <- function(x,
 #' @export
 #' @rdname brulee_logistic_reg
 brulee_logistic_reg.formula <-
-  function(formula,
-           data,
-           epochs = 20L,
-           penalty = 0.001,
-           mixture = 0,
-           validation = 0.1,
-           optimizer = "LBFGS",
-           learn_rate = 1,
-           momentum = 0.0,
-           batch_size = NULL,
-           class_weights = NULL,
-           stop_iter = 5,
-           verbose = FALSE,
-           ...) {
+  function(
+    formula,
+    data,
+    epochs = 20L,
+    penalty = 0.001,
+    mixture = 0,
+    validation = 0.1,
+    optimizer = "LBFGS",
+    learn_rate = 1,
+    momentum = 0.0,
+    batch_size = NULL,
+    class_weights = NULL,
+    stop_iter = 5,
+    verbose = FALSE,
+    ...
+  ) {
     processed <- hardhat::mold(formula, data)
 
     brulee_logistic_reg_bridge(
@@ -250,20 +258,22 @@ brulee_logistic_reg.formula <-
 #' @export
 #' @rdname brulee_logistic_reg
 brulee_logistic_reg.recipe <-
-  function(x,
-           data,
-           epochs = 20L,
-           penalty = 0.001,
-           mixture = 0,
-           validation = 0.1,
-           optimizer = "LBFGS",
-           learn_rate = 1,
-           momentum = 0.0,
-           batch_size = NULL,
-           class_weights = NULL,
-           stop_iter = 5,
-           verbose = FALSE,
-           ...) {
+  function(
+    x,
+    data,
+    epochs = 20L,
+    penalty = 0.001,
+    mixture = 0,
+    validation = 0.1,
+    optimizer = "LBFGS",
+    learn_rate = 1,
+    momentum = 0.0,
+    batch_size = NULL,
+    class_weights = NULL,
+    stop_iter = 5,
+    verbose = FALSE,
+    ...
+  ) {
     processed <- hardhat::mold(x, data)
 
     brulee_logistic_reg_bridge(
@@ -286,11 +296,25 @@ brulee_logistic_reg.recipe <-
 # ------------------------------------------------------------------------------
 # Bridge
 
-brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
-                                       learn_rate, momentum, penalty, mixture, class_weights,
-                                       validation, batch_size, stop_iter, verbose, ...) {
-  if(!torch::torch_is_installed()) {
-    cli::cli_abort("The torch backend has not been installed; use `torch::install_torch()`.")
+brulee_logistic_reg_bridge <- function(
+  processed,
+  epochs,
+  optimizer,
+  learn_rate,
+  momentum,
+  penalty,
+  mixture,
+  class_weights,
+  validation,
+  batch_size,
+  stop_iter,
+  verbose,
+  ...
+) {
+  if (!torch::torch_is_installed()) {
+    cli::cli_abort(
+      "The torch backend has not been installed; use `torch::install_torch()`."
+    )
   }
 
   f_nm <- "brulee_logistic_reg"
@@ -307,7 +331,14 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
   }
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(
+    validation,
+    single = TRUE,
+    0,
+    1,
+    incl = c(TRUE, FALSE),
+    fn = f_nm
+  )
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
@@ -328,7 +359,14 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
     }
   }
   check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(validation, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(
+    validation,
+    single = TRUE,
+    0,
+    1,
+    incl = c(TRUE, FALSE),
+    fn = f_nm
+  )
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
   check_logical(verbose, single = TRUE, fn = f_nm)
@@ -377,8 +415,16 @@ brulee_logistic_reg_bridge <- function(processed, epochs, optimizer,
   )
 }
 
-new_brulee_logistic_reg <- function( model_obj, estimates, best_epoch, loss,
-                                     dims, y_stats, parameters, blueprint) {
+new_brulee_logistic_reg <- function(
+  model_obj,
+  estimates,
+  best_epoch,
+  loss,
+  dims,
+  y_stats,
+  parameters,
+  blueprint
+) {
   if (!inherits(model_obj, "raw")) {
     cli::cli_abort("'model_obj' should be a raw vector.")
   }
@@ -397,35 +443,39 @@ new_brulee_logistic_reg <- function( model_obj, estimates, best_epoch, loss,
   if (!inherits(blueprint, "hardhat_blueprint")) {
     cli::cli_abort("'blueprint' should be a hardhat blueprint")
   }
-  hardhat::new_model(model_obj = model_obj,
-                     estimates = estimates,
-                     best_epoch = best_epoch,
-                     loss = loss,
-                     dims = dims,
-                     y_stats = y_stats,
-                     parameters = parameters,
-                     blueprint = blueprint,
-                     class = "brulee_logistic_reg")
+  hardhat::new_model(
+    model_obj = model_obj,
+    estimates = estimates,
+    best_epoch = best_epoch,
+    loss = loss,
+    dims = dims,
+    y_stats = y_stats,
+    parameters = parameters,
+    blueprint = blueprint,
+    class = "brulee_logistic_reg"
+  )
 }
 
 ## -----------------------------------------------------------------------------
 # Fit code
 
 logistic_reg_fit_imp <-
-  function(x, y,
-           epochs = 20L,
-           batch_size = 32,
-           penalty = 0.001,
-           mixture = 0,
-           validation = 0.1,
-           optimizer = "LBFGS",
-           learn_rate = 1,
-           momentum = 0.0,
-           class_weights = NULL,
-           stop_iter = 5,
-           verbose = FALSE,
-           ...) {
-
+  function(
+    x,
+    y,
+    epochs = 20L,
+    batch_size = NULL,
+    penalty = 0.001,
+    mixture = 0,
+    validation = 0.1,
+    optimizer = "LBFGS",
+    learn_rate = 1,
+    momentum = 0.0,
+    class_weights = NULL,
+    stop_iter = 5,
+    verbose = FALSE,
+    ...
+  ) {
     torch::torch_manual_seed(sample.int(10^5, 1))
 
     ## ---------------------------------------------------------------------------
@@ -447,7 +497,7 @@ logistic_reg_fit_imp <-
     # pass the log of softmax.
     loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
-        weight = wts,
+        weight = float_64(wts),
         input = torch::torch_log(input),
         target = target
       )
@@ -455,17 +505,17 @@ logistic_reg_fit_imp <-
 
     if (validation > 0) {
       in_val <- sample(seq_along(y), floor(n * validation))
-      x_val <- x[in_val,, drop = FALSE]
+      x_val <- x[in_val, , drop = FALSE]
       y_val <- y[in_val]
-      x <- x[-in_val,, drop = FALSE]
+      x <- x[-in_val, , drop = FALSE]
       y <- y[-in_val]
     }
     y_stats <- list(mean = NA_real_, sd = NA_real_)
     loss_label <- "\tLoss:"
 
     if (optimizer == "LBFGS" & !is.null(batch_size)) {
-     cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
-     batch_size <- NULL
+      cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
+      batch_size <- NULL
     }
     if (is.null(batch_size)) {
       batch_size <- nrow(x)
@@ -475,6 +525,11 @@ logistic_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
     # Convert to index sampler and data loader
+
+    or_dtype <- torch::torch_get_default_dtype()
+    on.exit(torch::torch_set_default_dtype(or_dtype))
+    torch::torch_set_default_dtype(torch::torch_float64())
+
     ds <- matrix_to_dataset(x, y)
     dl <- torch::dataloader(ds, batch_size = batch_size)
 
@@ -486,7 +541,7 @@ logistic_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
     model <- logistic_module(ncol(x), y_dim)
-    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture)
+    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
     optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
 
     ## ---------------------------------------------------------------------------
@@ -506,6 +561,11 @@ logistic_reg_fit_imp <-
 
     # Optimize parameters
     for (epoch in 1:epochs) {
+      learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = "none", ...)
+
+      for (i in seq_along(optimizer_obj$param_groups)) {
+        optimizer_obj$param_groups[[i]]$lr <- learn_rate
+      }
 
       # training loop
       coro::loop(
@@ -535,7 +595,9 @@ logistic_reg_fit_imp <-
       loss_vec[epoch] <- loss_curr
 
       if (is.nan(loss_curr)) {
-        cli::cli_warn("Current loss in NaN. Training wil be stopped.")
+        cli::cli_warn(
+          "Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function."
+        )
         break()
       }
 
@@ -555,16 +617,14 @@ logistic_reg_fit_imp <-
         lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
       if (verbose) {
-        msg <- paste("epoch:", epoch_chr[epoch], loss_label,
-                     signif(loss_curr, 3), loss_note)
-
-        cli::cli_inform(msg)
+        cli::cli_inform(
+          "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+        )
       }
 
       if (poor_epoch == stop_iter) {
         break()
       }
-
     }
 
     # ------------------------------------------------------------------------------
@@ -579,13 +639,24 @@ logistic_reg_fit_imp <-
       estimates = param_per_epoch,
       loss = loss_vec[1:length(param_per_epoch)],
       best_epoch = best_epoch,
-      dims = list(p = p, n = n, h = 0, y = y_dim, levels = lvls, features = colnames(x)),
+      dims = list(
+        p = p,
+        n = n,
+        h = 0,
+        y = y_dim,
+        levels = lvls,
+        features = colnames(x)
+      ),
       y_stats = y_stats,
-      parameters = list(learn_rate = learn_rate,
-                        penalty = penalty, mixture = mixture,
-                        validation = validation,
-                        class_weights = class_weights,
-                        batch_size = batch_size, momentum = momentum)
+      parameters = list(
+        learn_rate = learn_rate,
+        penalty = penalty,
+        mixture = mixture,
+        validation = validation,
+        class_weights = class_weights,
+        batch_size = batch_size,
+        momentum = momentum
+      )
     )
   }
 
@@ -616,4 +687,3 @@ print.brulee_logistic_reg <- function(x, ...) {
   cat("Logistic regression\n\n")
   brulee_print(x)
 }
-

@@ -1,26 +1,28 @@
-
 # used for autoplots
 brulee_plot <- function(object, ...) {
- x <- tibble::tibble(iteration = seq(along = object$loss), loss = object$loss)
+  x <- tibble::tibble(
+    iteration = seq_len(length(object$loss)) - 1,
+    loss = object$loss
+  )
 
- if(object$parameters$validation > 0) {
-  if (is.na(object$y_stats$mean)) {
-   lab <- "loss (validation set)"
+  if (object$parameters$validation > 0) {
+    if (is.na(object$y_stats$mean)) {
+      lab <- "loss (validation set)"
+    } else {
+      lab <- "loss (validation set, scaled)"
+    }
   } else {
-   lab <- "loss (validation set, scaled)"
+    if (is.na(object$y_stats$mean)) {
+      lab <- "loss (training set)"
+    } else {
+      lab <- "loss (training set, scaled)"
+    }
   }
- } else {
-  if (is.na(object$y_stats$mean)) {
-   lab <- "loss (training set)"
-  } else {
-   lab <- "loss (training set, scaled)"
-  }
- }
 
- ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
-  ggplot2::geom_line() +
-  ggplot2::labs(y = lab)+
-  ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
+  ggplot2::ggplot(x, ggplot2::aes(x = iteration, y = loss)) +
+    ggplot2::geom_line() +
+    ggplot2::labs(y = lab) +
+    ggplot2::geom_vline(xintercept = object$best_epoch, lty = 2, col = "green")
 }
 
 
@@ -34,7 +36,7 @@ brulee_plot <- function(object, ...) {
 #' @return A `ggplot` object.
 #' @details This function plots the loss function across the available epochs. A
 #' vertical line shows the epoch with the best loss value.
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'  library(ggplot2)
@@ -75,4 +77,3 @@ autoplot.brulee_multinomial_reg <- brulee_plot
 #' @rdname brulee-autoplot
 #' @export
 autoplot.brulee_linear_reg <- brulee_plot
-

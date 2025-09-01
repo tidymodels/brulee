@@ -10,3 +10,5 @@
 ^\.github$
 ^mnist$
 ^revdep$
+^[\.]?air\.toml$
+^\.vscode$

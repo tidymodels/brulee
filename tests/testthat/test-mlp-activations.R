@@ -16,8 +16,10 @@ test_that("activation functions", {
    set.seed(2)
    model <- brulee_mlp(outcome ~ ., data = df[1:400,],
                        activation = i,
-                       learn_rate = 0.05,
-                       hidden_units = 10L)
+                       penalty = 0.1,
+                       learn_rate = 0.1,
+                       epochs = 50L,
+                       hidden_units = 20L)
 
   },
   regex = NA

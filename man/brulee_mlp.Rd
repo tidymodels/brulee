@@ -254,7 +254,8 @@ specifying the activation for each hidden layer.}
 
 \item{mixture}{Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression (a.k.a weight decay).}
+indicates ridge regression (a.k.a weight decay). Must be zero for
+optimizers \code{"ADAMw"}, \code{"RMSprop"}, \code{"Adadelta"}.}
 
 \item{dropout}{The proportion of parameters set to zero.}
 
@@ -262,7 +263,9 @@ indicates ridge regression (a.k.a weight decay).}
 validation set.}
 
 \item{optimizer}{The method used in the optimization procedure. Possible choices
-are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
+are \code{"SGD"},  \code{"ADAMw"}, \code{"Adadelta"}, \code{"Adagrad"}, \code{"RMSprop"}, and
+\code{"LBFGS"}. \code{"LBFGS"} is the only second-order method and does not use
+batches.}
 
 \item{learn_rate}{A positive number that controls the initial rapidity that
 the model moves along the descent path. Values around 0.1 or less are
@@ -274,10 +277,11 @@ should change as the optimization proceeds. Possible values are
 \code{"step"}. See \code{\link[=schedule_decay_time]{schedule_decay_time()}} for more details.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
-parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
+parameter in gradient descent.  (optimizers \code{"SGD"},  and \code{"RMSprop"} only,
+ignored otherwise).}
 
 \item{batch_size}{An integer for the number of training set points in each
-batch. (\code{optimizer = "SGD"} only)}
+batch. (\code{optimizer != "LBFGS"} only, ignored otherwise)}
 
 \item{class_weights}{Numeric class weights (classification only). The value
 can be:
@@ -369,6 +373,7 @@ arguments to the schedulers can be passed via \code{...}.
 }
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
@@ -472,6 +477,18 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  }
 }
+\dontshow{\}) # examplesIf}
+}
+\references{
+adagrad (adaptive gradient algorithm): Duchi, J., Hazan, E., & Singer, Y.
+(2011). Adaptive subgradient methods for online learning and stochastic
+optimization. \emph{Journal of machine learning research}, 12(7).
+
+adadelta: Zeiler, M. D. (2012). Adadelta: an adaptive learning rate method.
+arXiv preprint arXiv:1212.5701.
+
+ADAMw: Loshchilov, I., & Hutter, F. (2017). Decoupled weight decay
+regularization. arXiv preprint arXiv:1711.05101.
 }
 \seealso{
 \code{\link[=predict.brulee_mlp]{predict.brulee_mlp()}}, \code{\link[=coef.brulee_mlp]{coef.brulee_mlp()}}, \code{\link[=autoplot.brulee_mlp]{autoplot.brulee_mlp()}}

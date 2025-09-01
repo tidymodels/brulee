@@ -21,7 +21,7 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
 #'  # regression example:
@@ -49,7 +49,13 @@
 #' }
 #' }
 #' @export
-predict.brulee_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+predict.brulee_mlp <- function(
+  object,
+  new_data,
+  type = NULL,
+  epoch = NULL,
+  ...
+) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
@@ -62,7 +68,6 @@ predict.brulee_mlp <- function(object, new_data, type = NULL, epoch = NULL, ...)
 # Bridge
 
 predict_brulee_mlp_bridge <- function(type, model, predictors, epoch) {
-
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -79,8 +84,14 @@ predict_brulee_mlp_bridge <- function(type, model, predictors, epoch) {
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
-                 "be made at epoch", epoch, "so last epoch is used.")
+    msg <- paste(
+      "The model fit only",
+      max_epoch,
+      "epochs; predictions cannot",
+      "be made at epoch",
+      epoch,
+      "so last epoch is used."
+    )
     cli::cli_warn(msg)
   }
 
@@ -93,8 +104,8 @@ get_mlp_predict_function <- function(type) {
   switch(
     type,
     numeric = predict_brulee_mlp_numeric,
-    prob    = predict_brulee_mlp_prob,
-    class   = predict_brulee_mlp_class
+    prob = predict_brulee_mlp_prob,
+    class = predict_brulee_mlp_class
   )
 }
 
@@ -110,7 +121,12 @@ add_intercept <- function(x) {
 
 revive_model <- function(model) {
   con <- rawConnection(model)
-  on.exit({close(con)}, add = TRUE)
+  on.exit(
+    {
+      close(con)
+    },
+    add = TRUE
+  )
   module <- torch::torch_load(con)
   module
 }
@@ -121,12 +137,12 @@ predict_brulee_mlp_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation
-  estimates <- lapply(estimates, torch::torch_tensor)
+  estimates <- lapply(estimates, float_64)
 
   # stuff back into the model
   module$load_state_dict(estimates)
   module$eval() # put the model in evaluation mode
-  predictions <- module(torch::torch_tensor(predictors))
+  predictions <- module(float_64(predictors))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA
@@ -136,7 +152,7 @@ predict_brulee_mlp_raw <- function(model, predictors, epoch) {
 predict_brulee_mlp_numeric <- function(model, predictors, epoch) {
   predictions <- predict_brulee_mlp_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
-  hardhat::spruce_numeric(predictions[,1])
+  hardhat::spruce_numeric(predictions[, 1])
 }
 
 predict_brulee_mlp_prob <- function(model, predictors, epoch) {
@@ -155,10 +171,11 @@ predict_brulee_mlp_class <- function(model, predictors, epoch) {
 # a which max alternative that returns NA if any
 # value is NA
 which.max2 <- function(x) {
-  if (any(is.na(x)))
+  if (any(is.na(x))) {
     NA
-  else
+  } else {
     which.max(x)
+  }
 }
 
 # get levels from a model object
@@ -173,26 +190,34 @@ valid_predict_types <- function() {
 }
 
 check_type <- function(model, type) {
-
   outcome_ptype <- model$blueprint$ptypes$outcomes[[1]]
 
   if (is.null(type)) {
-    if (is.factor(outcome_ptype))
+    if (is.factor(outcome_ptype)) {
       type <- "class"
-    else if (is.numeric(outcome_ptype))
+    } else if (is.numeric(outcome_ptype)) {
       type <- "numeric"
-    else
-      cli::cli_abort(glue::glue("Unknown outcome type '{class(outcome_ptype)}'"))
+    } else {
+      cli::cli_abort(glue::glue(
+        "Unknown outcome type '{class(outcome_ptype)}'"
+      ))
+    }
   }
 
   type <- rlang::arg_match(type, valid_predict_types())
 
   if (is.factor(outcome_ptype)) {
-    if (!type %in% c("prob", "class"))
-      cli::cli_abort(glue::glue("Outcome is factor and the prediction type is '{type}'."))
+    if (!type %in% c("prob", "class")) {
+      cli::cli_abort(glue::glue(
+        "Outcome is factor and the prediction type is '{type}'."
+      ))
+    }
   } else if (is.numeric(outcome_ptype)) {
-    if (type != "numeric")
-      cli::cli_abort(glue::glue("Outcome is numeric and the prediction type is '{type}'."))
+    if (type != "numeric") {
+      cli::cli_abort(glue::glue(
+        "Outcome is numeric and the prediction type is '{type}'."
+      ))
+    }
   }
 
   type

@@ -33,6 +33,7 @@ This function plots the loss function across the available epochs. A
 vertical line shows the epoch with the best loss value.
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
  library(ggplot2)
@@ -58,4 +59,5 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  autoplot(fit)
 }
 }
+\dontshow{\}) # examplesIf}
 }

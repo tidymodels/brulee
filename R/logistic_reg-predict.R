@@ -13,7 +13,7 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
@@ -47,20 +47,30 @@
 #' }
 #' }
 #' @export
-predict.brulee_logistic_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+predict.brulee_logistic_reg <- function(
+  object,
+  new_data,
+  type = NULL,
+  epoch = NULL,
+  ...
+) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_logistic_reg_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_logistic_reg_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
 predict_brulee_logistic_reg_bridge <- function(type, model, predictors, epoch) {
-
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -77,8 +87,14 @@ predict_brulee_logistic_reg_bridge <- function(type, model, predictors, epoch) {
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
-                 "be made at epoch", epoch, "so last epoch is used.")
+    msg <- paste(
+      "The model fit only",
+      max_epoch,
+      "epochs; predictions cannot",
+      "be made at epoch",
+      epoch,
+      "so last epoch is used."
+    )
     cli::cli_warn(msg)
   }
 
@@ -90,8 +106,8 @@ predict_brulee_logistic_reg_bridge <- function(type, model, predictors, epoch) {
 get_logistic_reg_predict_function <- function(type) {
   switch(
     type,
-    prob    = predict_brulee_logistic_reg_prob,
-    class   = predict_brulee_logistic_reg_class
+    prob = predict_brulee_logistic_reg_prob,
+    class = predict_brulee_logistic_reg_class
   )
 }
 
@@ -104,12 +120,12 @@ predict_brulee_logistic_reg_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch]]
   # convert to torch representation
-  estimates <- lapply(estimates, torch::torch_tensor)
+  estimates <- lapply(estimates, float_64)
   # stuff back into the model
   module$load_state_dict(estimates)
   # put the model in evaluation mode
   module$eval()
-  predictions <- module(torch::torch_tensor(predictors))
+  predictions <- module(float_64(predictors))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA

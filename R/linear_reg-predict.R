@@ -12,7 +12,7 @@
 #' A tibble of predictions. The number of rows in the tibble is guaranteed
 #' to be the same as the number of rows in `new_data`.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
 #'
@@ -33,27 +33,36 @@
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train,
-#'                            epochs = 50, batch_size = 32)
+#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 50)
 #'
 #'  predict(fit, ames_test)
 #' }
 #' }
 #' @export
-predict.brulee_linear_reg <- function(object, new_data, type = NULL, epoch = NULL, ...) {
+predict.brulee_linear_reg <- function(
+  object,
+  new_data,
+  type = NULL,
+  epoch = NULL,
+  ...
+) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_linear_reg_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_linear_reg_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
 predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
-
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -70,8 +79,14 @@ predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    msg <- paste("The model fit only", max_epoch, "epochs; predictions cannot",
-                 "be made at epoch", epoch, "so last epoch is used.")
+    msg <- paste(
+      "The model fit only",
+      max_epoch,
+      "epochs; predictions cannot",
+      "be made at epoch",
+      epoch,
+      "so last epoch is used."
+    )
     cli::cli_warn(msg)
   }
 
@@ -87,19 +102,18 @@ get_linear_reg_predict_function <- function(type) {
 # ------------------------------------------------------------------------------
 # Implementation
 
-
 predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
   # convert from raw format
   module <- revive_model(model$model_obj)
   # get current model parameters
   estimates <- model$estimates[[epoch]]
   # convert to torch representation
-  estimates <- lapply(estimates, torch::torch_tensor)
+  estimates <- lapply(estimates, float_64)
   # stuff back into the model
   module$load_state_dict(estimates)
   # put the model in evaluation mode
   module$eval()
-  predictions <- module(torch::torch_tensor(predictors))
+  predictions <- module(float_64(predictors))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA
@@ -109,5 +123,5 @@ predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
 predict_brulee_linear_reg_numeric <- function(model, predictors, epoch) {
   predictions <- predict_brulee_linear_reg_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
-  hardhat::spruce_numeric(predictions[,1])
+  hardhat::spruce_numeric(predictions[, 1])
 }

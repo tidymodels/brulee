@@ -110,23 +110,27 @@ specified as:
 
 \item{mixture}{Proportion of Lasso Penalty (type: double, default: 0.0). A
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
-indicates ridge regression (a.k.a weight decay).}
+indicates ridge regression (a.k.a weight decay). Must be zero for
+optimizers \code{"ADAMw"}, \code{"RMSprop"}, \code{"Adadelta"}.}
 
 \item{validation}{The proportion of the data randomly assigned to a
 validation set.}
 
 \item{optimizer}{The method used in the optimization procedure. Possible choices
-are 'LBFGS' and 'SGD'. Default is 'LBFGS'.}
+are \code{"SGD"},  \code{"ADAMw"}, \code{"Adadelta"}, \code{"Adagrad"}, \code{"RMSprop"}, and
+\code{"LBFGS"}. \code{"LBFGS"} is the only second-order method, does not use
+batches, and is the default.}
 
-\item{learn_rate}{A positive number that controls the rapidity that the model
-moves along the descent path. Values around 0.1 or less are typical.
-(\code{optimizer = "SGD"} only)}
+\item{learn_rate}{A positive number that controls the initial rapidity that
+the model moves along the descent path. Values around 0.1 or less are
+typical.}
 
 \item{momentum}{A positive number usually on \verb{[0.50, 0.99]} for the momentum
-parameter in gradient descent.  (\code{optimizer = "SGD"} only)}
+parameter in gradient descent.  (optimizers \code{"SGD"},  and \code{"RMSprop"} only,
+ignored otherwise).}
 
 \item{batch_size}{An integer for the number of training set points in each
-batch. (\code{optimizer = "SGD"} only)}
+batch. (\code{optimizer != "LBFGS"} only, ignored otherwise)}
 
 \item{class_weights}{Numeric class weights (classification only). The value
 can be:
@@ -194,6 +198,7 @@ The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
@@ -241,6 +246,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
   roc_auc(class, .pred_PS)
 }
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=predict.brulee_logistic_reg]{predict.brulee_logistic_reg()}}, \code{\link[=coef.brulee_logistic_reg]{coef.brulee_logistic_reg()}},
