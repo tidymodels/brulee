@@ -24,7 +24,9 @@ encodings then formats the results for consumption by \code{torch}.
 Missing values should be removed before passing data to this function.
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 if (torch::torch_is_installed()) {
   matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
 }
+\dontshow{\}) # examplesIf}
 }

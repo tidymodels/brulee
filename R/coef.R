@@ -27,7 +27,7 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
 #' @param ... Not currently used.
 #' @return For logistic/linear regression, a named vector. For neural networks,
 #' a list of arrays.
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
 #'

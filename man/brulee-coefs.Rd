@@ -32,6 +32,7 @@ a list of arrays.
 Extract Model Coefficients
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
 
@@ -58,4 +59,5 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
  coef(fit, epoch = 1)
 }
 }
+\dontshow{\}) # examplesIf}
 }
