@@ -1,4 +1,4 @@
-# brulee (development version)
+# brulee 0.6.0
 
 * Transition from the magrittr pipe to the base R pipe.
 
@@ -18,7 +18,7 @@
 
 * Mixture parameter values different than zero cannot be used for several optimizers since they require L2 penalties. 
 
-# brulee (0.5.0)
+# brulee 0.5.0
 
  * Removed a unit test for numerical overflow since it occurs less frequently and has become increasingly more challenging to reproduce.
  
