@@ -22,7 +22,7 @@ brulee_print <- function(x, ...) {
       paste0(
         lvl,
         "=",
-        format(x$parameters$class_weights),
+        format(x$parameters$class_weights, digits = 3),
         collapse = ", "
       ),
       "\n"
