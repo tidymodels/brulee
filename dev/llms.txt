@@ -1,0 +1,150 @@
+# brulee
+
+The R `brulee` package contains several basic modeling functions that
+use the `torch` package infrastructure, such as:
+
+- [neural
+  networks](https://brulee.tidymodels.org/reference/brulee_mlp.html)
+- [linear
+  regression](https://brulee.tidymodels.org/reference/brulee_linear_reg.html)
+- [logistic
+  regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
+- [multinomial
+  regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
+
+## Installation
+
+You can install the released version of brulee from
+[CRAN](https://CRAN.R-project.org) with:
+
+``` r
+install.packages("brulee")
+```
+
+And the development version from
+[GitHub](https://github.com/tidymodels/brulee) with:
+
+``` r
+# install.packages("pak")
+pak::pak("tidymodels/brulee")
+```
+
+## Example
+
+`brulee` has formula, x/y, and recipe user interfaces for each function.
+For example:
+
+``` r
+library(brulee)
+library(recipes)
+library(yardstick)
+
+data(bivariate, package = "modeldata")
+set.seed(20)
+nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
+                         epochs = 150, hidden_units = 3)
+
+# We use the tidymodels semantics to always return a tibble when predicting
+predict(nn_log_biv, bivariate_test, type = "prob") |> 
+  bind_cols(bivariate_test) |> 
+  roc_auc(Class, .pred_One)
+#> # A tibble: 1 × 3
+#>   .metric .estimator .estimate
+#>   <chr>   <chr>          <dbl>
+#> 1 roc_auc binary         0.840
+```
+
+A recipe can also be used if the data require some sort of preprocessing
+(e.g., indicator variables, transformations, or standardization):
+
+``` r
+library(recipes)
+
+rec <- 
+  recipe(Class ~ ., data = bivariate_train) |>  
+  step_YeoJohnson(all_numeric_predictors()) |> 
+  step_normalize(all_numeric_predictors())
+
+set.seed(20)
+nn_rec_biv <- brulee_mlp(rec, data = bivariate_train, 
+                         epochs = 150, hidden_units = 3)
+
+# A little better
+predict(nn_rec_biv, bivariate_test, type = "prob") |> 
+  bind_cols(bivariate_test) |> 
+  roc_auc(Class, .pred_One)
+#> # A tibble: 1 × 3
+#>   .metric .estimator .estimate
+#>   <chr>   <chr>          <dbl>
+#> 1 roc_auc binary         0.862
+```
+
+## Code of Conduct
+
+Please note that the brulee project is released with a [Contributor Code
+of
+Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
+
+# Package index
+
+## All functions
+
+- [`autoplot(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  [`autoplot(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  [`autoplot(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  [`autoplot(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  : Plot model loss over epochs
+
+- [`coef(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
+  [`coef(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
+  [`coef(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
+  [`coef(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
+  : Extract Model Coefficients
+
+- [`brulee_activations()`](https://brulee.tidymodels.org/dev/reference/brulee_activations.md)
+  : Activation functions for neural networks in brulee
+
+- [`brulee_linear_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_linear_reg.md)
+  : Fit a linear regression model
+
+- [`brulee_logistic_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_logistic_reg.md)
+  : Fit a logistic regression model
+
+- [`brulee_mlp()`](https://brulee.tidymodels.org/dev/reference/brulee_mlp.md)
+  [`brulee_mlp_two_layer()`](https://brulee.tidymodels.org/dev/reference/brulee_mlp.md)
+  : Fit neural networks
+
+- [`brulee_multinomial_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_multinomial_reg.md)
+  : Fit a multinomial regression model
+
+- [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
+  : Convert data to torch format
+
+- [`predict(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_linear_reg.md)
+  :
+
+  Predict from a `brulee_linear_reg`
+
+- [`predict(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_logistic_reg.md)
+  :
+
+  Predict from a `brulee_logistic_reg`
+
+- [`predict(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_mlp.md)
+  :
+
+  Predict from a `brulee_mlp`
+
+- [`predict(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_multinomial_reg.md)
+  :
+
+  Predict from a `brulee_multinomial_reg`
+
+- [`schedule_decay_time()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
+  [`schedule_decay_expo()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
+  [`schedule_step()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
+  [`schedule_cyclic()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
+  [`set_learn_rate()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
+  : Change the learning rate over time
+
