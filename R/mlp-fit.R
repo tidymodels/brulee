@@ -719,14 +719,14 @@ mlp_fit_imp <-
       }
     }
 
-    if (validation > 0) {
-      in_val <- sample(seq_along(y), floor(n * validation))
-      x_val <- x[in_val, , drop = FALSE]
-      y_val <- y[in_val]
-      x <- x[-in_val, , drop = FALSE]
-      y <- y[-in_val]
-    }
+    # Split validation set
+    val_split <- split_validation(x, y, validation)
+    x <- val_split$x_train
+    y <- val_split$y_train
+    x_val <- val_split$x_val
+    y_val <- val_split$y_val
 
+    # Scale outcomes for regression
     if (!is.factor(y)) {
       y_stats <- scale_stats(y)
       y <- scale_y(y, y_stats)
@@ -739,10 +739,10 @@ mlp_fit_imp <-
       loss_label <- "\tLoss:"
     }
 
+    # Determine batch size (MLP-specific logic for LBFGS)
     if (optimizer == "LBFGS") {
       batch_size <- nrow(x)
     }
-
     batch_size <- min(batch_size, nrow(x))
 
     ## ---------------------------------------------------------------------------
@@ -754,13 +754,10 @@ mlp_fit_imp <-
 
     # Reset the seed so that different optimizers start from the same values
     torch::torch_manual_seed(start_seed + 1)
-    ds <- matrix_to_dataset(x, y)
-    dl <- torch::dataloader(ds, batch_size = batch_size)
 
-    if (validation > 0) {
-      ds_val <- matrix_to_dataset(x_val, y_val)
-      dl_val <- torch::dataloader(ds_val)
-    }
+    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
+    dl <- torch_data$dl
+    dl_val <- torch_data$dl_val
 
     # ------------------------------------------------------------------------------
     # Return value
@@ -855,101 +852,36 @@ mlp_fit_imp <-
 
     ## -----------------------------------------------------------------------------
 
-    # Optimize parameters
-    for (epoch in 1:epochs) {
-      learn_rate <- set_learn_rate(
-        epoch - 1,
-        learn_rate,
-        type = rate_schedule,
-        ...
-      )
+    # Run training loop
+    training_result <- run_training_loop(
+      model = model,
+      dl = dl,
+      dl_val = dl_val,
+      loss_fn = loss_fn,
+      optimizer_obj = optimizer_obj,
+      epochs = epochs,
+      learn_rate = learn_rate,
+      stop_iter = stop_iter,
+      validation = validation,
+      class_weights = class_weights,
+      loss_label = loss_label,
+      verbose = verbose,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
+      rate_schedule = rate_schedule,
+      ...
+    )
 
-      for (i in seq_along(optimizer_obj$param_groups)) {
-        optimizer_obj$param_groups[[i]]$lr <- learn_rate
-      }
+    # Prepend initial parameters and loss to match MLP's original behavior
+    param_per_epoch <- c(list(param_per_epoch[[1]]), training_result$param_per_epoch)
+    loss_vec <- c(loss_vec[1], training_result$loss_vec)
+    best_epoch <- training_result$best_epoch
 
-      # training loop
-      coro::loop(
-        for (batch in dl) {
-          cl <- function() {
-            optimizer_obj$zero_grad()
-            pred <- model(batch$x)
-            loss <- loss_fn(pred, batch$y, class_weights)
-            loss$backward()
-            if (is.finite(grad_value_clip)) {
-              try(
-                torch::nn_utils_clip_grad_value_(
-                  model$parameters,
-                  grad_value_clip
-                ),
-                silent = TRUE
-              )
-            }
-            if (is.finite(grad_norm_clip)) {
-              try(
-                torch::nn_utils_clip_grad_norm_(
-                  model$parameters,
-                  grad_norm_clip
-                ),
-                silent = TRUE
-              )
-            }
-            loss
-          }
-          optimizer_obj$step(cl)
-        }
-      ) # end loop over batches
-
-      # calculate loss on the full datasets
-      if (validation > 0) {
-        pred <- model(dl_val$dataset$tensors$x)
-        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
-      } else {
-        pred <- model(dl$dataset$tensors$x)
-        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
-      }
-
-      # calculate losses
-      loss_curr <- loss$item()
-      loss_vec[epoch + 1] <- loss_curr
-
-      if (is.nan(loss_curr)) {
-        cli::cli_warn(
-          "Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function."
-        )
-        break()
-      }
-
-      if (loss_curr >= loss_min) {
-        poor_epoch <- poor_epoch + 1
-        loss_note <- paste0(" ", cli::symbol$cross, " ")
-      } else {
-        loss_min <- loss_curr
-        loss_note <- NULL
-        poor_epoch <- 0
-        best_epoch <- epoch
-      }
-      loss_prev <- loss_curr
-
-      # persists models and coefficients
-      param_per_epoch[[epoch + 1]] <-
-        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
-
-      if (verbose) {
-        cli::cli_inform(
-          "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
-        )
-      }
-
-      res$model_obj <- model_to_raw(model)
-      res$estimates <- param_per_epoch
-      res$loss <- loss_vec[1:(epoch + 1)]
-      res$best_epoch <- best_epoch
-
-      if (poor_epoch == stop_iter) {
-        break()
-      }
-    }
+    # Update result object
+    res$model_obj <- model_to_raw(model)
+    res$estimates <- param_per_epoch
+    res$loss <- loss_vec
+    res$best_epoch <- best_epoch
 
     ## ---------------------------------------------------------------------------
 

@@ -471,40 +471,30 @@ logistic_reg_fit_imp <-
       )
     }
 
-    if (validation > 0) {
-      in_val <- sample(seq_along(y), floor(n * validation))
-      x_val <- x[in_val, , drop = FALSE]
-      y_val <- y[in_val]
-      x <- x[-in_val, , drop = FALSE]
-      y <- y[-in_val]
-    }
+    # Split validation set
+    val_split <- split_validation(x, y, validation)
+    x <- val_split$x_train
+    y <- val_split$y_train
+    x_val <- val_split$x_val
+    y_val <- val_split$y_val
+
     y_stats <- list(mean = NA_real_, sd = NA_real_)
     loss_label <- "\tLoss:"
 
-    if (optimizer == "LBFGS" & !is.null(batch_size)) {
-      cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
-      batch_size <- NULL
-    }
-    if (is.null(batch_size)) {
-      batch_size <- nrow(x)
-    } else {
-      batch_size <- min(batch_size, nrow(x))
-    }
+    # Determine batch size
+    batch_size <- determine_batch_size(batch_size, optimizer, nrow(x))
 
     ## ---------------------------------------------------------------------------
-    # Convert to index sampler and data loader
+    # Set torch dtype for both data and model
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
     torch::torch_set_default_dtype(torch::torch_float64())
 
-    ds <- matrix_to_dataset(x, y)
-    dl <- torch::dataloader(ds, batch_size = batch_size)
-
-    if (validation > 0) {
-      ds_val <- matrix_to_dataset(x_val, y_val)
-      dl_val <- torch::dataloader(ds_val)
-    }
+    # Convert to index sampler and data loader
+    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
+    dl <- torch_data$dl
+    dl_val <- torch_data$dl_val
 
     ## ---------------------------------------------------------------------------
     # Initialize model and optimizer
@@ -514,86 +504,22 @@ logistic_reg_fit_imp <-
 
     ## ---------------------------------------------------------------------------
 
-    loss_prev <- 10^38
-    loss_min <- loss_prev
-    poor_epoch <- 0
-    best_epoch <- 1
-    loss_vec <- rep(NA_real_, epochs)
-    if (verbose) {
-      epoch_chr <- format(1:epochs)
-    }
-
-    ## -----------------------------------------------------------------------------
-
-    param_per_epoch <- list()
-
-    # Optimize parameters
-    for (epoch in 1:epochs) {
-      learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = "none", ...)
-
-      for (i in seq_along(optimizer_obj$param_groups)) {
-        optimizer_obj$param_groups[[i]]$lr <- learn_rate
-      }
-
-      # training loop
-      coro::loop(
-        for (batch in dl) {
-          cl <- function() {
-            optimizer_obj$zero_grad()
-            pred <- model(batch$x)
-            loss <- loss_fn(pred, batch$y, class_weights)
-            loss$backward()
-            loss
-          }
-          optimizer_obj$step(cl)
-        }
-      )
-
-      # calculate loss on the full datasets
-      if (validation > 0) {
-        pred <- model(dl_val$dataset$tensors$x)
-        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
-      } else {
-        pred <- model(dl$dataset$tensors$x)
-        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
-      }
-
-      # calculate losses
-      loss_curr <- loss$item()
-      loss_vec[epoch] <- loss_curr
-
-      if (is.nan(loss_curr)) {
-        cli::cli_warn(
-          "Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function."
-        )
-        break()
-      }
-
-      if (loss_curr >= loss_min) {
-        poor_epoch <- poor_epoch + 1
-        loss_note <- paste0(" ", cli::symbol$cross, " ")
-      } else {
-        loss_min <- loss_curr
-        loss_note <- NULL
-        poor_epoch <- 0
-        best_epoch <- epoch
-      }
-      loss_prev <- loss_curr
-
-      # persists models and coefficients
-      param_per_epoch[[epoch]] <-
-        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
-
-      if (verbose) {
-        cli::cli_inform(
-          "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
-        )
-      }
-
-      if (poor_epoch == stop_iter) {
-        break()
-      }
-    }
+    # Run training loop
+    training_result <- run_training_loop(
+      model = model,
+      dl = dl,
+      dl_val = dl_val,
+      loss_fn = loss_fn,
+      optimizer_obj = optimizer_obj,
+      epochs = epochs,
+      learn_rate = learn_rate,
+      stop_iter = stop_iter,
+      validation = validation,
+      class_weights = class_weights,
+      loss_label = loss_label,
+      verbose = verbose,
+      ...
+    )
 
     # ------------------------------------------------------------------------------
 
@@ -604,9 +530,9 @@ logistic_reg_fit_imp <-
 
     list(
       model_obj = model_to_raw(model),
-      estimates = param_per_epoch,
-      loss = loss_vec[1:length(param_per_epoch)],
-      best_epoch = best_epoch,
+      estimates = training_result$param_per_epoch,
+      loss = training_result$loss_vec,
+      best_epoch = training_result$best_epoch,
       dims = list(
         p = p,
         n = n,
