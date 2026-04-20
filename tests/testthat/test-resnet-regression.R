@@ -246,3 +246,49 @@ test_that("resnet argument validation", {
     "block_units"
   )
 })
+
+test_that("resnet with vector hidden_units and block_units", {
+  skip_if_not_installed("recipes")
+  skip_if_not_installed("torch")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 100
+  x <- matrix(rnorm(n * 2), ncol = 2)
+  colnames(x) <- c("x1", "x2")
+  y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
+
+  # Test with different hidden_units per block
+  set.seed(1)
+  fit <- brulee_resnet(
+    x = x,
+    y = y,
+    hidden_units = c(8, 10, 12),  # Different internal dimensions per block
+    num_layers = 3,
+    block_units = c(5, 6, 7),     # Different block widths
+    epochs = 3,
+    verbose = FALSE
+  )
+
+  expect_s3_class(fit, "brulee_resnet")
+
+  # Verify prediction works
+  pred <- predict(fit, x)
+  expect_equal(nrow(pred), nrow(x))
+
+  # Test with single values (should replicate)
+  set.seed(1)
+  fit2 <- brulee_resnet(
+    x = x,
+    y = y,
+    hidden_units = 10,  # Will be replicated to c(10, 10, 10)
+    num_layers = 3,
+    block_units = 5,    # Will be replicated to c(5, 5, 5)
+    epochs = 3,
+    verbose = FALSE
+  )
+
+  expect_s3_class(fit2, "brulee_resnet")
+  pred2 <- predict(fit2, x)
+  expect_equal(nrow(pred2), nrow(x))
+})

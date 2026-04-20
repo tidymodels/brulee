@@ -855,16 +855,25 @@ resnet_fit_imp <-
 resnet_block_module <-
   torch::nn_module(
     "resnet_block_module",
-    initialize = function(blk_width, d_hidden, dropout, act_type) {
-      self$bn1 <- torch::nn_batch_norm1d(blk_width)
-      self$linear1 <- torch::nn_linear(blk_width, d_hidden)
+    initialize = function(blk_width_in, blk_width_out, d_hidden, dropout, act_type) {
+      self$bn1 <- torch::nn_batch_norm1d(blk_width_in)
+      self$linear1 <- torch::nn_linear(blk_width_in, d_hidden)
       self$act1 <- get_activation_fn(act_type)
       self$bn2 <- torch::nn_batch_norm1d(d_hidden)
-      self$linear2 <- torch::nn_linear(d_hidden, blk_width)
+      self$linear2 <- torch::nn_linear(d_hidden, blk_width_out)
       self$act2 <- get_activation_fn(act_type)
       self$dropout <- torch::nn_dropout(dropout)
+
+      # Projection layer if input/output dimensions differ
+      if (blk_width_in != blk_width_out) {
+        self$proj <- torch::nn_linear(blk_width_in, blk_width_out)
+      } else {
+        self$proj <- NULL
+      }
     },
     forward = function(x) {
+      identity <- x
+
       z <- x |>
         self$bn1() |>
         self$act1() |>
@@ -875,7 +884,13 @@ resnet_block_module <-
         self$act2() |>
         self$linear2() |>
         self$dropout()
-      x + z
+
+      # Apply projection to identity if needed
+      if (!is.null(self$proj)) {
+        identity <- self$proj(identity)
+      }
+
+      identity + z
     }
   )
 
@@ -891,20 +906,46 @@ resnet_module <-
       dropout,
       y_dim
     ) {
-      # Input projection: num_pred -> blk_width
-      self$linear_in <- torch::nn_linear(num_pred, blk_width)
+      # Ensure blk_width and d_hidden are vectors
+      if (length(blk_width) == 1 && num_blocks > 1) {
+        blk_width <- rep(blk_width, num_blocks)
+      }
+      if (length(d_hidden) == 1 && num_blocks > 1) {
+        d_hidden <- rep(d_hidden, num_blocks)
+      }
+      # Ensure act_type is a vector
+      if (length(act_type) == 1 && num_blocks > 1) {
+        act_type <- rep(act_type, num_blocks)
+      }
+
+      # Input projection: num_pred -> blk_width[1]
+      self$linear_in <- torch::nn_linear(num_pred, blk_width[1])
 
       # Residual blocks
-      self$blocks <- torch::nn_module_list(
-        lapply(seq_len(num_blocks), function(.) {
-          resnet_block_module(blk_width, d_hidden, dropout, act_type)
-        })
-      )
+      self$blocks <- torch::nn_module_list()
+      for (i in seq_len(num_blocks)) {
+        # Determine input width for this block
+        if (i == 1) {
+          blk_width_in <- blk_width[1]
+        } else {
+          blk_width_in <- blk_width[i - 1]
+        }
+        blk_width_out <- blk_width[i]
 
-      # Prediction head
-      self$bn_out <- torch::nn_batch_norm1d(blk_width)
-      self$act_out <- get_activation_fn(act_type)
-      self$linear_out <- torch::nn_linear(blk_width, y_dim)
+        block <- resnet_block_module(
+          blk_width_in = blk_width_in,
+          blk_width_out = blk_width_out,
+          d_hidden = d_hidden[i],
+          dropout = dropout,
+          act_type = act_type[i]
+        )
+        self$blocks$append(block)
+      }
+
+      # Prediction head (from last block width to output)
+      self$bn_out <- torch::nn_batch_norm1d(blk_width[num_blocks])
+      self$act_out <- get_activation_fn(act_type[num_blocks])
+      self$linear_out <- torch::nn_linear(blk_width[num_blocks], y_dim)
 
       # For classification (y_dim > 1), add softmax
       self$y_dim <- y_dim
@@ -921,9 +962,8 @@ resnet_module <-
         self$act_out() |>
         self$linear_out()
 
-      if (self$y_dim == 1L) {
-        x <- torch::torch_squeeze(x, dim = 2L)
-      } else {
+      # For classification, add softmax
+      if (self$y_dim > 1L) {
         x <- torch::nn_softmax(dim = 2)(x)
       }
 
