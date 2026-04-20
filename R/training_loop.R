@@ -38,12 +38,15 @@ split_validation <- function(x, y, validation) {
 #' @keywords internal
 #' @noRd
 determine_batch_size <- function(batch_size, optimizer, n_rows) {
-  # LBFGS doesn't use batches
-  if (optimizer == "LBFGS" && !is.null(batch_size)) {
-    cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
-    return(NULL)
+  # LBFGS doesn't use batches - set batch size to full dataset
+  if (optimizer == "LBFGS") {
+    if (!is.null(batch_size)) {
+      cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
+    }
+    return(n_rows)
   }
 
+  # For other optimizers
   if (is.null(batch_size)) {
     return(n_rows)
   }
