@@ -144,6 +144,5 @@ is_cran_check <- function() {
 }
 
 float_64 <- function(x) {
- torch::torch_tensor(x, dtype = torch::torch_float64())
+  torch::torch_tensor(x, dtype = torch::torch_float64())
 }
-

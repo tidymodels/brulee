@@ -873,7 +873,10 @@ mlp_fit_imp <-
     )
 
     # Prepend initial parameters and loss to match MLP's original behavior
-    param_per_epoch <- c(list(param_per_epoch[[1]]), training_result$param_per_epoch)
+    param_per_epoch <- c(
+      list(param_per_epoch[[1]]),
+      training_result$param_per_epoch
+    )
     loss_vec <- c(loss_vec[1], training_result$loss_vec)
     best_epoch <- training_result$best_epoch
 

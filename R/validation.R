@@ -166,3 +166,35 @@ validate_mlp_args <- function(
     grad_norm_clip = grad_norm_clip
   )
 }
+
+#' Validate ResNet-specific arguments
+#'
+#' @param num_layers Number of layers per residual block
+#' @param block_units Number of units per layer within a block
+#' @param fn Function name for error messages
+#'
+#' @return List of validated arguments
+#' @keywords internal
+#' @noRd
+validate_resnet_args <- function(
+  num_layers,
+  block_units,
+  fn = NULL
+) {
+  # Coerce to integer if needed
+  if (is.numeric(num_layers) & !is.integer(num_layers)) {
+    num_layers <- as.integer(num_layers)
+  }
+  if (is.numeric(block_units) & !is.integer(block_units)) {
+    block_units <- as.integer(block_units)
+  }
+
+  # Validate
+  check_integer(num_layers, single = TRUE, 1, fn = fn)
+  check_integer(block_units, single = FALSE, 2, fn = fn)
+
+  list(
+    num_layers = num_layers,
+    block_units = block_units
+  )
+}

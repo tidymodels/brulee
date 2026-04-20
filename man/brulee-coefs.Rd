@@ -6,6 +6,7 @@
 \alias{coef.brulee_linear_reg}
 \alias{coef.brulee_mlp}
 \alias{coef.brulee_multinomial_reg}
+\alias{coef.brulee_resnet}
 \title{Extract Model Coefficients}
 \usage{
 \method{coef}{brulee_logistic_reg}(object, epoch = NULL, ...)
@@ -15,6 +16,8 @@
 \method{coef}{brulee_mlp}(object, epoch = NULL, ...)
 
 \method{coef}{brulee_multinomial_reg}(object, epoch = NULL, ...)
+
+\method{coef}{brulee_resnet}(object, epoch = NULL, ...)
 }
 \arguments{
 \item{object}{A model fit from \pkg{brulee}.}
