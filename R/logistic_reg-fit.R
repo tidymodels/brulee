@@ -343,10 +343,8 @@ brulee_logistic_reg_bridge <- function(
 
   ## -----------------------------------------------------------------------------
 
-  outcome <- processed$outcomes[[1]]
-  if (length(levels(outcome)) > 2) {
-    cli::cli_abort("logistic regression is for outcomes with two classes.")
-  }
+  # Validate outcome
+  outcome <- validate_binary_outcome(processed$outcomes[[1]], fn = f_nm)
 
   # ------------------------------------------------------------------------------
 

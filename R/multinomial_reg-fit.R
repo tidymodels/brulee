@@ -323,10 +323,8 @@ brulee_multinomial_reg_bridge <- function(
 
   ## -----------------------------------------------------------------------------
 
-  outcome <- processed$outcomes[[1]]
-  if (length(levels(outcome)) < 3) {
-    cli::cli_abort("multinomial regression is for outcomes with 3+ classes.")
-  }
+  # Validate outcome
+  outcome <- validate_multiclass_outcome(processed$outcomes[[1]], fn = f_nm)
 
   # ------------------------------------------------------------------------------
 

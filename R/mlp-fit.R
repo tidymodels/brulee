@@ -558,7 +558,8 @@ brulee_mlp_bridge <- function(
 
   ## -----------------------------------------------------------------------------
 
-  outcome <- processed$outcomes[[1]]
+  # Validate outcome (MLP accepts both numeric and factor)
+  outcome <- validate_mlp_outcome(processed$outcomes[[1]], fn = f_nm)
 
   # ------------------------------------------------------------------------------
 

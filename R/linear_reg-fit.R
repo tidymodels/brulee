@@ -356,7 +356,8 @@ brulee_linear_reg_bridge <- function(
 
   ## -----------------------------------------------------------------------------
 
-  outcome <- processed$outcomes[[1]]
+  # Validate outcome
+  outcome <- validate_numeric_outcome(processed$outcomes[[1]], fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 
