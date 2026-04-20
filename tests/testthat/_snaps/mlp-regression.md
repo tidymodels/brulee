@@ -43,7 +43,7 @@
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, activation = NA)
     Condition
-      Error in `brulee_mlp_bridge()`:
+      Error in `validate_mlp_args()`:
       ! `activation` should be one of: celu, elu, gelu, hardshrink, hardsigmoid, hardtanh, leaky_relu, linear, log_sigmoid, relu, relu6, rrelu, selu, sigmoid, silu, softplus, softshrink, softsign, tanh, and tanhshrink, not NA.
 
 ---
@@ -246,7 +246,7 @@
       model <- brulee_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1, activation = c(
         "relu", "tanh"))
     Condition
-      Error in `brulee_mlp_bridge()`:
+      Error in `validate_mlp_args()`:
       ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
 
 ---
@@ -255,6 +255,6 @@
       model <- brulee_mlp(x, y, hidden_units = c(1), epochs = 1, activation = c(
         "relu", "tanh"))
     Condition
-      Error in `brulee_mlp_bridge()`:
+      Error in `validate_mlp_args()`:
       ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
 

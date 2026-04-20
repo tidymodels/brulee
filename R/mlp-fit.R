@@ -504,36 +504,27 @@ brulee_mlp_bridge <- function(
   }
 
   f_nm <- "brulee_mlp"
-  # check values of various argument values
-  if (is.numeric(epochs) & !is.integer(epochs)) {
-    epochs <- as.integer(epochs)
-  }
-  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
-    hidden_units <- as.integer(hidden_units)
-  }
-  if (length(hidden_units) > 1 && length(activation) == 1) {
-    activation <- rep(activation, length(hidden_units))
-  }
-  if (length(hidden_units) != length(activation)) {
-    cli::cli_abort(
-      "'activation' must be a single value or a vector with the same length as 'hidden_units'"
-    )
-  }
 
-  allowed_activation <- brulee_activations()
-  good_activation <- activation %in% allowed_activation
-  if (!all(good_activation)) {
-    cli::cli_abort(
-      "{.arg activation} should be one of: {allowed_activation}, not
-    {.val {activation}}."
-    )
-  }
+  # Validate MLP-specific arguments
+  mlp_validated <- validate_mlp_args(
+    hidden_units = hidden_units,
+    activation = activation,
+    dropout = dropout,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
+    fn = f_nm
+  )
 
+  # Extract validated/coerced values
+  hidden_units <- mlp_validated$hidden_units
+  activation <- mlp_validated$activation
+
+  # Handle batch_size special logic for MLP (optimizer-dependent)
   if (!is.null(batch_size) & optimizer != "LBFGS") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
-   check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 32L
@@ -543,57 +534,27 @@ brulee_mlp_bridge <- function(
     }
   }
 
+  # Validate common arguments
+  validated <- validate_common_args(
+    epochs = epochs,
+    batch_size = batch_size,
+    penalty = penalty,
+    mixture = mixture,
+    validation = validation,
+    momentum = momentum,
+    learn_rate = learn_rate,
+    verbose = verbose,
+    fn = f_nm
+  )
 
-
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
-  check_integer(hidden_units, single = FALSE, 1, fn = f_nm)
-  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
-  check_double(
-    validation,
-    single = TRUE,
-    0,
-    1,
-    incl = c(TRUE, FALSE),
-    fn = f_nm
-  )
-  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
-  check_double(
-    grad_norm_clip,
-    single = TRUE,
-    0,
-    Inf,
-    incl = c(FALSE, TRUE),
-    fn = f_nm
-  )
-  check_double(
-    grad_value_clip,
-    single = TRUE,
-    0,
-    Inf,
-    incl = c(FALSE, TRUE),
-    fn = f_nm
-  )
-  check_logical(verbose, single = TRUE, fn = f_nm)
-  check_character(activation, single = FALSE, fn = f_nm)
+  # Extract validated/coerced values
+  epochs <- validated$epochs
+  batch_size <- validated$batch_size
 
   ## -----------------------------------------------------------------------------
 
-  predictors <- processed$predictors
-
-  if (!is.matrix(predictors)) {
-    predictors <- as.matrix(predictors)
-    if (is.character(predictors)) {
-      cli::cli_abort(
-        paste(
-          "There were some non-numeric columns in the predictors.",
-          "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
-      )
-    }
-  }
+  # Process predictors
+  predictors <- process_predictors(processed$predictors, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 

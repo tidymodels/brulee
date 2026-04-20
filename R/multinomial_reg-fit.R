@@ -298,58 +298,28 @@ brulee_multinomial_reg_bridge <- function(
   }
 
   f_nm <- "brulee_multinomial_reg"
-  # check values of various argument values
-  if (is.numeric(epochs) & !is.integer(epochs)) {
-    epochs <- as.integer(epochs)
-  }
-  check_integer(epochs, single = TRUE, 1, fn = f_nm)
-  if (!is.null(batch_size)) {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
-      batch_size <- as.integer(batch_size)
-    }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
-  }
-  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(mixture, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(
-    validation,
-    single = TRUE,
-    0,
-    1,
-    incl = c(TRUE, FALSE),
+
+  # Validate common arguments
+  validated <- validate_common_args(
+    epochs = epochs,
+    batch_size = batch_size,
+    penalty = penalty,
+    mixture = mixture,
+    validation = validation,
+    momentum = momentum,
+    learn_rate = learn_rate,
+    verbose = verbose,
     fn = f_nm
   )
-  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
-  check_logical(verbose, single = TRUE, fn = f_nm)
+
+  # Extract validated/coerced values
+  epochs <- validated$epochs
+  batch_size <- validated$batch_size
 
   ## -----------------------------------------------------------------------------
 
-  predictors <- processed$predictors
-
-  if (!is.matrix(predictors)) {
-    predictors <- as.matrix(predictors)
-    if (is.character(predictors)) {
-      cli::cli_abort(
-        paste(
-          "There were some non-numeric columns in the predictors.",
-          "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
-      )
-    }
-  }
-  check_double(penalty, single = TRUE, 0, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(
-    validation,
-    single = TRUE,
-    0,
-    1,
-    incl = c(TRUE, FALSE),
-    fn = f_nm
-  )
-  check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), fn = f_nm)
-  check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = f_nm)
-  check_logical(verbose, single = TRUE, fn = f_nm)
+  # Process predictors
+  predictors <- process_predictors(processed$predictors, fn = f_nm)
 
   ## -----------------------------------------------------------------------------
 
