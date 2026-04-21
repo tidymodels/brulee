@@ -977,16 +977,8 @@ get_acts <- function(x) {
 
 #' @export
 print.brulee_mlp <- function(x, ...) {
-  cat("Multilayer perceptron\n\n")
-  cat(
-    get_acts(x),
-    "\n",
-    get_units(x),
-    "\n",
-    format(get_num_mlp_coef(x), big.mark = ","),
-    " model parameters\n",
-    sep = ""
-  )
+  cat(cli::style_bold("Multilayer perceptron"), "\n\n", sep = "")
+
   brulee_print(x, ...)
 }
 
@@ -1007,7 +999,14 @@ check_mixture <- function(mix, opt) {
   mix
 }
 
-set_optimizer <- function(optimizer, model, learn_rate, momentum, penalty, mixture = 0) {
+set_optimizer <- function(
+  optimizer,
+  model,
+  learn_rate,
+  momentum,
+  penalty,
+  mixture = 0
+) {
   # Determine if weight_decay should be used:
   # - ADAMw always uses weight_decay (and check_mixture enforces mixture = 0)
   # - Other optimizers (except LBFGS) use weight_decay only for pure L2 (mixture = 0)

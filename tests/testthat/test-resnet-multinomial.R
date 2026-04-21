@@ -11,8 +11,7 @@ test_that("resnet multinomial classification - data.frame interface", {
   )
   # Create 3 classes
   df$y <- factor(
-    ifelse(df$x1 > 0.5, "A",
-           ifelse(df$x2 > 0, "B", "C"))
+    ifelse(df$x1 > 0.5, "A", ifelse(df$x2 > 0, "B", "C"))
   )
 
   set.seed(1)
@@ -57,8 +56,7 @@ test_that("resnet multinomial classification - formula interface", {
     x2 = rnorm(n)
   )
   df$y <- factor(
-    ifelse(df$x1 > 0.5, "A",
-           ifelse(df$x2 > 0, "B", "C"))
+    ifelse(df$x1 > 0.5, "A", ifelse(df$x2 > 0, "B", "C"))
   )
 
   set.seed(1)
@@ -92,8 +90,7 @@ test_that("resnet multinomial classification - recipe interface", {
     x2 = rnorm(n)
   )
   df$y <- factor(
-    ifelse(df$x1 > 0.5, "A",
-           ifelse(df$x2 > 0, "B", "C"))
+    ifelse(df$x1 > 0.5, "A", ifelse(df$x2 > 0, "B", "C"))
   )
 
   rec <- recipe(y ~ ., data = df) %>%
@@ -128,8 +125,7 @@ test_that("resnet multinomial classification - class weights", {
     x2 = rnorm(n)
   )
   df$y <- factor(
-    ifelse(df$x1 > 0.5, "A",
-           ifelse(df$x2 > 0, "B", "C"))
+    ifelse(df$x1 > 0.5, "A", ifelse(df$x2 > 0, "B", "C"))
   )
 
   set.seed(1)

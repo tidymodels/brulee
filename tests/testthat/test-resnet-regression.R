@@ -191,9 +191,9 @@ test_that("resnet print method works", {
     verbose = FALSE
   )
 
-  expect_output(print(fit), "Residual network")
-  expect_output(print(fit), "residual blocks")
-  expect_output(print(fit), "layers per block")
+  print_output <- capture.output(capture.output(print(fit), type = "message"))
+  expect_true(any(grepl("Residual network", print_output)))
+  expect_true(any(grepl("Block Units", print_output)))
 })
 
 test_that("resnet autoplot works", {
@@ -236,13 +236,27 @@ test_that("resnet argument validation", {
 
   # num_layers must be >= 1
   expect_error(
-    brulee_resnet(x, y, hidden_units = 2, num_layers = 0, block_units = 5, epochs = 2),
+    brulee_resnet(
+      x,
+      y,
+      hidden_units = 2,
+      num_layers = 0,
+      block_units = 5,
+      epochs = 2
+    ),
     "num_layers"
   )
 
   # block_units must be >= 2
   expect_error(
-    brulee_resnet(x, y, hidden_units = 2, num_layers = 2, block_units = 1, epochs = 2),
+    brulee_resnet(
+      x,
+      y,
+      hidden_units = 2,
+      num_layers = 2,
+      block_units = 1,
+      epochs = 2
+    ),
     "block_units"
   )
 })
@@ -263,9 +277,9 @@ test_that("resnet with vector hidden_units and block_units", {
   fit <- brulee_resnet(
     x = x,
     y = y,
-    hidden_units = c(8, 10, 12),  # Different internal dimensions per block
+    hidden_units = c(8, 10, 12), # Different internal dimensions per block
     num_layers = 3,
-    block_units = c(5, 6, 7),     # Different block widths
+    block_units = c(5, 6, 7), # Different block widths
     epochs = 3,
     verbose = FALSE
   )
@@ -281,9 +295,9 @@ test_that("resnet with vector hidden_units and block_units", {
   fit2 <- brulee_resnet(
     x = x,
     y = y,
-    hidden_units = 10,  # Will be replicated to c(10, 10, 10)
+    hidden_units = 10, # Will be replicated to c(10, 10, 10)
     num_layers = 3,
-    block_units = 5,    # Will be replicated to c(5, 5, 5)
+    block_units = 5, # Will be replicated to c(5, 5, 5)
     epochs = 3,
     verbose = FALSE
   )

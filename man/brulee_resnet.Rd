@@ -144,11 +144,11 @@ of integers. If a vector of integers, the model will have
 a single integer is passed and \code{num_layers > 1}, the value is used for all
 layers.}
 
-\item{num_layers}{An integer for the number of layers within each residual block.
-Must be >= 1.}
+\item{num_layers}{An integer for the number of layers within each residual
+block. Must be >= 1.}
 
-\item{block_units}{An integer for the number of hidden units in each layer
-within a residual block. Must be >= 2.}
+\item{block_units}{An integer for the size of the representation that is
+produced by the batch normalization within a residual block. Must be >= 2.}
 
 \item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for

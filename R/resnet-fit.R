@@ -8,10 +8,10 @@
 #'   `length(hidden_units)` layers each with `hidden_units[i]` hidden units. If
 #'   a single integer is passed and `num_layers > 1`, the value is used for all
 #'   layers.
-#' @param num_layers An integer for the number of layers within each residual block.
-#'   Must be >= 1.
-#' @param block_units An integer for the number of hidden units in each layer
-#'   within a residual block. Must be >= 2.
+#' @param num_layers An integer for the number of layers within each residual
+#'   block. Must be >= 1.
+#' @param block_units An integer for the size of the representation that is
+#'   produced by the batch normalization within a residual block. Must be >= 2.
 #'
 #' @details
 #'
@@ -1010,19 +1010,6 @@ get_num_resnet_coef <- function(x) {
 
 #' @export
 print.brulee_resnet <- function(x, ...) {
-  cat("Residual network (ResNet)\n\n")
-  cat(
-    x$parameters$activation,
-    " activation,\n",
-    x$dims$num_blocks,
-    " residual blocks,\n",
-    x$dims$num_layers,
-    " layers per block,\n",
-    x$dims$block_units,
-    " units per layer,\n",
-    format(get_num_resnet_coef(x), big.mark = ","),
-    " model parameters\n",
-    sep = ""
-  )
+  cat(cli::style_bold("Residual network (ResNet)"), "\n\n", sep = "")
   brulee_print(x, ...)
 }

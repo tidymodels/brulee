@@ -3,82 +3,126 @@
 
 brulee_print <- function(x, ...) {
   lvl <- get_levels(x)
-  if (is.null(lvl)) {
-    chr_y <- "numeric outcome"
-  } else {
-    chr_y <- paste(length(lvl), "classes")
+
+  n <- format(x$dims$n, big.mark = ",")
+  p <- format(x$dims$p, big.mark = ",")
+
+  data_lst <-
+    c(
+      " " = "Samples: {n}",
+      " " = "Predictors: {p}"
+    )
+  if (!is.null(lvl)) {
+    data_lst <- c(data_lst, " " = "Classes: {.val {lvl}}")
   }
-  cat(
-    format(x$dims$n, big.mark = ","),
-    "samples,",
-    format(x$dims$p, big.mark = ","),
-    "features,",
-    chr_y,
-    "\n"
-  )
-  if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
-    cat(
-      "class weights",
-      paste0(
-        lvl,
-        "=",
-        format(x$parameters$class_weights, digits = 3),
-        collapse = ", "
-      ),
-      "\n"
+  cli::cli_bullets(data_lst)
+
+  cat("\n")
+
+  param_lst <-
+    c(
+      " " = "Activation: {.val {x$parameters$activation}}",
+      " " = "# Hidden Units: {x$parameters$hidden_units}"
+    )
+  if (inherits(x, "brulee_resnet")) {
+    param_lst <- c(param_lst, " " = "# Block Units: {x$parameters$block_units}")
+  }
+
+  param_lst <-
+    c(
+      param_lst,
+      c(
+        " " = "Learning Rate: {signif(x$parameters$learn_rate, 3)}, Schedule:
+        {.val {x$parameters$sched}}",
+        " " = "Stopping iterations: {x$parameters$stop_iter}"
+      )
+    )
+  if (x$parameters$validation > 0) {
+    param_lst <- c(
+      param_lst,
+      " " = "% Validation: {signif(x$parameters$validation, 3)}"
+    )
+  }
+  if (x$parameters$dropout > 0) {
+    param_lst <- c(
+      param_lst,
+      " " = "Dropout: {signif(x$parameters$penalty, 3)}"
     )
   }
   if (x$parameters$penalty > 0) {
-    cat("weight decay:", x$parameters$penalty, "\n")
+    param_lst <- c(
+      param_lst,
+      " " = "Penalty: {signif(x$parameters$penalty, 3)},
+        {round(x$parameters$mixture * 100, 1)}% L1"
+    )
   }
-  if (any(names(x$parameters) == "dropout")) {
-    cat("dropout proportion:", x$parameters$dropout, "\n")
+  if (x$parameters$momentum > 0) {
+    param_lst <- c(
+      param_lst,
+      " " = "Momentum: {signif(x$parameters$momentum, 3)}"
+    )
   }
-  cat("batch size:", x$parameters$batch_size, "\n")
 
-  if (all(c("sched", "sched_opt") %in% names(x$parameters))) {
-    cat_schedule(x$parameters)
+  param_lst <- c(param_lst, " " = "Optimizer: {.val {x$parameters$optimizer}}")
+  if (x$parameters$optimizer != "LBFGS") {
+    param_lst <- c(param_lst, " " = "Batch Size: {x$parameters$batch_size}")
   }
+
+  if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
+    if (!all(x$parameters$class_weights == 1.0)) {
+      # fmt: skip
+      weights_str <-
+     paste0(lvl, "=", format(x$parameters$class_weights, digits = 3),
+            collapse = ", ")
+      param_lst <- c(param_lst, " " = "Class Weights: {weights_str}")
+    }
+  }
+
+  cli::cli_bullets(param_lst)
+
+  n_params <- format(get_num_resnet_coef(x), big.mark = ",")
+
+  res_list <- c(" " = "# Parameters: {n_params}")
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
-    chr_it <- cli::pluralize("{it} epoch{?s}:")
+    loss_val <- signif(x$loss[it], 3)
+    epoch_str <- cli::pluralize("{it} epoch{?s}")
+
     if (x$parameters$validation > 0) {
       if (is.na(x$y_stats$mean)) {
-        cat("validation loss after", chr_it, signif(x$loss[it], 3), "\n")
+        res_list <- c(
+          res_list,
+          " " = "validation loss after {epoch_str}: {loss_val}"
+        )
       } else {
-        cat("scaled validation loss after", chr_it, signif(x$loss[it], 3), "\n")
+        res_list <- c(
+          res_list,
+          " " = "scaled validation loss after {epoch_str}: {loss_val}"
+        )
       }
     } else {
       if (is.na(x$y_stats$mean)) {
-        cat("training set loss after", chr_it, signif(x$loss[it], 3), "\n")
+        res_list <- c(
+          res_list,
+          " " = "training set loss after {epoch_str}: {loss_val}"
+        )
       } else {
-        cat(
-          "scaled training set loss after",
-          chr_it,
-          signif(x$loss[it], 3),
-          "\n"
+        res_list <- c(
+          res_list,
+          " " = "scaled training set loss after {epoch_str}: {loss_val}"
         )
       }
     }
   }
+
+  cat("\n")
+  cli::cli_bullets(res_list)
+
   invisible(x)
 }
 
 # ------------------------------------------------------------------------------
-
-cat_schedule <- function(x) {
-  if (x$sched == "none") {
-    cat("learn rate:", x$learn_rate, "\n")
-  } else {
-    .fn <- paste0("schedule_", x$sched)
-    cl <- rlang::call2(.fn, !!!x$sched_opt)
-    chr_cl <- rlang::expr_deparse(cl, width = 200)
-
-    cat(gsub("^schedule_", "schedule: ", chr_cl), "\n")
-  }
-  invisible(NULL)
-}
 
 # ------------------------------------------------------------------------------
 

@@ -7,7 +7,7 @@ test_that("penalty affects model parameters during training", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 200)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # Train with no penalty
   set.seed(123)
@@ -66,7 +66,7 @@ test_that("L1 penalty encourages sparsity more than L2", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 200)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   penalty_val <- 1
 
@@ -125,7 +125,7 @@ test_that("penalty consistency across epochs", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 200)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   set.seed(123)
   fit <- brulee_mlp(
@@ -159,7 +159,7 @@ test_that("extreme penalty values behave reasonably", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 150)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # Very small penalty should behave similar to no penalty
   set.seed(123)
@@ -203,8 +203,8 @@ test_that("extreme penalty values behave reasonably", {
     class ~ .,
     data = parabolic_tr,
     hidden_units = 2,
-    epochs = 20L,  # Fewer epochs for large penalty
-    learn_rate = 0.01,  # Lower learning rate for stability
+    epochs = 20L, # Fewer epochs for large penalty
+    learn_rate = 0.01, # Lower learning rate for stability
     activation = "elu",
     penalty = 1000,
     mixture = 0,
@@ -225,7 +225,7 @@ test_that("penalty works correctly with validation split", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 300)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # With validation split
   set.seed(123)
@@ -277,7 +277,7 @@ test_that("penalty works with different batch sizes", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 200)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   batch_sizes <- c(32, 64, 128)
 
@@ -327,7 +327,7 @@ test_that("penalty parameter is stored correctly in model object", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 150)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   penalty_val <- 0.456
   mixture_val <- 0.3

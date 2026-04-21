@@ -8,17 +8,20 @@ test_that("penalty works with all optimizers and mixture values", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 300)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # Test parameters
   optimizers <- c("SGD", "LBFGS", "ADAMw", "RMSprop", "Adadelta", "Adagrad")
-  mixture_values <- c(0, 0.5, 1)  # L2, elastic net, L1
+  mixture_values <- c(0, 0.5, 1) # L2, elastic net, L1
   penalty_values <- c(0, 0.1, 10)
 
   # For each optimizer
   for (opt in optimizers) {
     # Skip long-running combinations for CRAN
-    if (identical(Sys.getenv("NOT_CRAN"), "false") && opt %in% c("Adadelta", "Adagrad")) {
+    if (
+      identical(Sys.getenv("NOT_CRAN"), "false") &&
+        opt %in% c("Adadelta", "Adagrad")
+    ) {
       next
     }
 
@@ -151,7 +154,7 @@ test_that("ADAMw enforces pure L2 penalty", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 300)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # ADAMw with mixture = 0 should work fine
   expect_no_error({
@@ -172,22 +175,25 @@ test_that("ADAMw enforces pure L2 penalty", {
   })
 
   # ADAMw with mixture != 0 should warn and convert to 0
-  expect_warning({
-    set.seed(123)
-    fit_adamw_mixed <- brulee_mlp(
-      class ~ .,
-      data = parabolic_tr,
-      hidden_units = 2,
-      epochs = 50L,
-      learn_rate = 0.01,
-      activation = "elu",
-      penalty = 0.1,
-      mixture = 0.5,
-      batch_size = 256,
-      optimizer = "ADAMw",
-      verbose = FALSE
-    )
-  }, regexp = "pure L2 penalty")
+  expect_warning(
+    {
+      set.seed(123)
+      fit_adamw_mixed <- brulee_mlp(
+        class ~ .,
+        data = parabolic_tr,
+        hidden_units = 2,
+        epochs = 50L,
+        learn_rate = 0.01,
+        activation = "elu",
+        penalty = 0.1,
+        mixture = 0.5,
+        batch_size = 256,
+        optimizer = "ADAMw",
+        verbose = FALSE
+      )
+    },
+    regexp = "pure L2 penalty"
+  )
 
   # The warning case should produce same result as mixture = 0
   expect_equal(fit_adamw_l2$loss, fit_adamw_mixed$loss)
@@ -200,7 +206,7 @@ test_that("penalty magnitude affects regularization strength", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 300)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # Test with SGD - different penalty values should produce different results
   set.seed(123)
@@ -265,7 +271,7 @@ test_that("L1 vs L2 vs elastic net produce different results", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 300)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   penalty_val <- 1
 
@@ -330,7 +336,7 @@ test_that("LBFGS penalty works correctly", {
   data("parabolic", package = "modeldata")
   set.seed(1)
   in_train <- sample(1:nrow(parabolic), 200)
-  parabolic_tr <- parabolic[in_train,]
+  parabolic_tr <- parabolic[in_train, ]
 
   # LBFGS with no penalty
   set.seed(123)
