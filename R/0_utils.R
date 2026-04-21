@@ -118,9 +118,16 @@ l1_term <- lx_term(function(x) torch::torch_abs(x))
 # -------------------------------------------------------------------------
 
 make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
-  if (!opt_uses_penalty(opt)) {
+  # ADAMw always uses weight_decay in the optimizer (not in loss)
+  if (opt == "ADAMw") {
     return(loss_fn)
   }
+  # Pure L2 (mixture = 0) can be handled by optimizer's weight_decay, except LBFGS
+  if (identical(mixture, 0.0) && opt != "LBFGS") {
+    return(loss_fn)
+  }
+  # L1 or elastic net (mixture > 0) must be added to loss
+  # LBFGS always needs penalty in loss (no weight_decay support)
   force(loss_fn)
   function(...) {
     loss <- loss_fn(...)

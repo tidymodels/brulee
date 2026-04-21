@@ -247,6 +247,19 @@ The network consists of \code{hidden_units} residual blocks. Each block contains
 \code{num_layers} layers, with each layer having \code{block_units} hidden units.
 Skip connections add the block input to the block output.
 
+This model is similar to the approach described in Equation 2 of Gorishniy
+\emph{et al}. (2021). It uses a series of blocks, where batch normalization is
+applied first. These values are connected to a layer of hidden units via a
+nonlinear activation (ReLU by default), and new representation values are
+created from them and a skip connection from the normalized values.
+
+In this implementation, batch normalization does not require the same number
+of outputs as inputs (though that is the default). Fewer outputs, called
+block units here, can result in a "bottleneck" architecture described in He
+\emph{et al}. (2016) if the units are set to \code{narrow -> wide -> narrow}.
+Alternatively, an approach similar to Sandler \emph{et al}. (2018) called the
+"inverted residual block (\code{wide -> narrow -> wide}) can be specified.
+
 When the outcome is a number, the function internally standardizes the
 outcome data to have mean zero and a standard deviation of one. The prediction
 function creates predictions on the original scale.
@@ -349,7 +362,17 @@ and pattern recognition} (pp. 770-778).
 He, K., Zhang, X., Ren, S., & Sun, J. (2016). Identity mappings in deep
 residual networks. In \emph{European conference on computer vision} (pp. 630-645).
 Springer, Cham.
+
+Gorishniy, Y., Rubachev, I., Khrulkov, V., & Babenko, A. (2021).
+Revisiting deep learning models for tabular data. \emph{Advances in neural
+information processing systems}, 34, 18932-18943.
+
+Sandler, M., Howard, A., Zhu, M., Zhmoginov, A., & Chen, L. C. (2018).
+Mobilenetv2: Inverted residuals and linear bottlenecks. In \emph{Proceedings of
+the IEEE conference on computer vision and pattern recognition} (pp.
+4510-4520).
 }
 \seealso{
-\code{\link[=predict.brulee_resnet]{predict.brulee_resnet()}}, \code{\link[=coef.brulee_resnet]{coef.brulee_resnet()}}, \code{\link[=autoplot.brulee_resnet]{autoplot.brulee_resnet()}}
+\code{\link[=predict.brulee_resnet]{predict.brulee_resnet()}}, \code{\link[=coef.brulee_resnet]{coef.brulee_resnet()}},
+\code{\link[=autoplot.brulee_resnet]{autoplot.brulee_resnet()}}
 }

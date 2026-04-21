@@ -480,7 +480,7 @@ multinomial_reg_fit_imp <-
     # Initialize model and optimizer
     model <- multinomial_module(ncol(x), y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
+    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum, penalty, mixture)
 
     ## ---------------------------------------------------------------------------
 

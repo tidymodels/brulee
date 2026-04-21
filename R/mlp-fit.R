@@ -804,7 +804,7 @@ mlp_fit_imp <-
     mixture <- check_mixture(mixture, optimizer)
 
     # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
-    # optimizer. See `opt_uses_penalty()` where the determination is made.
+    # optimizer depending on whether it's pure L2 (mixture = 0) or has L1 component.
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
 
     optimizer_obj <- set_optimizer(
@@ -812,7 +812,8 @@ mlp_fit_imp <-
       model,
       learn_rate,
       momentum,
-      penalty
+      penalty,
+      mixture
     )
 
     ## ---------------------------------------------------------------------------
@@ -991,26 +992,34 @@ print.brulee_mlp <- function(x, ...) {
 
 ## -----------------------------------------------------------------------------
 
-opt_uses_penalty <- function(opt) {
-  vals <- c("ADAM", "ADAMw", "RMSprop", "Adadelta")
-  opt %in% vals
-}
-
 check_mixture <- function(mix, opt) {
   if (identical(mix, 1.0)) {
     return(mix)
   }
-  if (opt_uses_penalty(opt) & !identical(mix, 0.0)) {
+  # ADAMw requires pure L2 penalty (mixture = 0)
+  if (opt == "ADAMw" & !identical(mix, 0.0)) {
     cli::cli_warn(
-      "For the {opt} optimizer, the penalty need to be a pure L2 penalty (i.e.,
-   {.code mixture} is 0.0}. The value is changed from {signif(mix, 2)} to 0.0."
+      "For the {opt} optimizer, the penalty needs to be a pure L2 penalty (i.e.,
+   {.code mixture} is 0.0). The value is changed from {signif(mix, 2)} to 0.0."
     )
     mix <- 0.0
   }
   mix
 }
 
-set_optimizer <- function(optimizer, model, learn_rate, momentum, penalty) {
+set_optimizer <- function(optimizer, model, learn_rate, momentum, penalty, mixture = 0) {
+  # Determine if weight_decay should be used:
+  # - ADAMw always uses weight_decay (and check_mixture enforces mixture = 0)
+  # - Other optimizers (except LBFGS) use weight_decay only for pure L2 (mixture = 0)
+  # - LBFGS doesn't support weight_decay, penalty is always in loss
+
+  weight_decay <- 0.0
+  if (optimizer != "LBFGS") {
+    if (optimizer == "ADAMw" || identical(mixture, 0.0)) {
+      weight_decay <- penalty
+    }
+  }
+
   if (optimizer == "LBFGS") {
     res <- torch::optim_lbfgs(
       model$parameters,
@@ -1022,32 +1031,33 @@ set_optimizer <- function(optimizer, model, learn_rate, momentum, penalty) {
       model$parameters,
       lr = learn_rate,
       momentum = momentum,
-      nesterov = momentum > 0.0
+      nesterov = momentum > 0.0,
+      weight_decay = weight_decay
     )
   } else if (optimizer == "RMSprop") {
     res <- torch::optim_rmsprop(
       model$parameters,
       lr = learn_rate,
       momentum = momentum,
-      weight_decay = penalty
+      weight_decay = weight_decay
     )
   } else if (optimizer == "ADAMw") {
     res <- torch::optim_adamw(
       model$parameters,
       lr = learn_rate,
-      weight_decay = penalty
+      weight_decay = weight_decay
     )
   } else if (optimizer == "Adadelta") {
     res <- torch::optim_adadelta(
       model$parameters,
       lr = learn_rate,
-      weight_decay = penalty
+      weight_decay = weight_decay
     )
   } else if (optimizer == "Adagrad") {
     res <- torch::optim_adagrad(
       model$parameters,
       lr = learn_rate,
-      weight_decay = penalty
+      weight_decay = weight_decay
     )
   } else {
     cli::cli_abort(paste0("Unsupported optimizer '", optimizer, "'"))

@@ -25,6 +25,19 @@
 #' `num_layers` layers, with each layer having `block_units` hidden units.
 #' Skip connections add the block input to the block output.
 #'
+#' This model is similar to the approach described in Equation 2 of Gorishniy
+#' _et al_. (2021). It uses a series of blocks, where batch normalization is
+#' applied first. These values are connected to a layer of hidden units via a
+#' nonlinear activation (ReLU by default), and new representation values are
+#' created from them and a skip connection from the normalized values.
+#'
+#' In this implementation, batch normalization does not require the same number
+#' of outputs as inputs (though that is the default). Fewer outputs, called
+#' block units here, can result in a "bottleneck" architecture described in He
+#' _et al_. (2016) if the units are set to `narrow -> wide -> narrow`.
+#' Alternatively, an approach similar to Sandler _et al_. (2018) called the
+#' "inverted residual block (`wide -> narrow -> wide`) can be specified.
+#'
 #' When the outcome is a number, the function internally standardizes the
 #' outcome data to have mean zero and a standard deviation of one. The prediction
 #' function creates predictions on the original scale.
@@ -65,8 +78,18 @@
 #' residual networks. In _European conference on computer vision_ (pp. 630-645).
 #' Springer, Cham.
 #'
+#' Gorishniy, Y., Rubachev, I., Khrulkov, V., & Babenko, A. (2021).
+#' Revisiting deep learning models for tabular data. _Advances in neural
+#' information processing systems_, 34, 18932-18943.
 #'
-#' @seealso [predict.brulee_resnet()], [coef.brulee_resnet()], [autoplot.brulee_resnet()]
+#' Sandler, M., Howard, A., Zhu, M., Zhmoginov, A., & Chen, L. C. (2018).
+#' Mobilenetv2: Inverted residuals and linear bottlenecks. In _Proceedings of
+#' the IEEE conference on computer vision and pattern recognition_ (pp.
+#' 4510-4520).
+#'
+#' @seealso [predict.brulee_resnet()], [coef.brulee_resnet()],
+#' [autoplot.brulee_resnet()]
+#'
 #' @return
 #'
 #' A `brulee_resnet` object with elements:
@@ -758,7 +781,7 @@ resnet_fit_imp <-
     mixture <- check_mixture(mixture, optimizer)
 
     # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
-    # optimizer. See `opt_uses_penalty()` where the determination is made.
+    # optimizer depending on whether it's pure L2 (mixture = 0) or has L1 component.
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
 
     optimizer_obj <- set_optimizer(
@@ -766,7 +789,8 @@ resnet_fit_imp <-
       model,
       learn_rate,
       momentum,
-      penalty
+      penalty,
+      mixture
     )
 
     ## ---------------------------------------------------------------------------
@@ -855,7 +879,13 @@ resnet_fit_imp <-
 resnet_block_module <-
   torch::nn_module(
     "resnet_block_module",
-    initialize = function(blk_width_in, blk_width_out, d_hidden, dropout, act_type) {
+    initialize = function(
+      blk_width_in,
+      blk_width_out,
+      d_hidden,
+      dropout,
+      act_type
+    ) {
       self$bn1 <- torch::nn_batch_norm1d(blk_width_in)
       self$linear1 <- torch::nn_linear(blk_width_in, d_hidden)
       self$act1 <- get_activation_fn(act_type)
