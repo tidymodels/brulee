@@ -7,16 +7,14 @@
 #'   in each layer. The length of this vector determines the number of layers.
 #'   Each value must be >= 1.
 #' @param batch_norm_units An integer vector specifying the intermediate dimension
-#'   within each layer, creating a bottleneck architecture. Must have the same
-#'   length as `hidden_units`. Each value must be >= 2. Smaller values create
-#'   narrower bottlenecks, while values matching the input dimension preserve
-#'   dimensions through the layer.
+#'   within each layer. Must have the same length as `hidden_units`. Each value
+#'   must be >= 2.
 #' @param residual_at An integer vector specifying which layer indices should
 #'   have residual (skip) connections. For example, `residual_at = c(2, 4)`
-#'   creates residual connections at layers 2 and 4, forming two residual blocks
-#'   (layers 1-2 and 3-4). If `NULL` (default), a residual connection is placed
-#'   at the last layer, making the entire network one residual block. Use
-#'   `integer(0)` for no residual connections (feedforward only).
+#'   creates residual connections after layers 2 and 4, forming two residual
+#'   blocks (layers 1-2 and 3-4). If `NULL` (default), a residual connection
+#'   is placed at the last layer, making the entire network one residual block.
+#'   Use `integer(0)` for no residual connections (i.e., feedforward only).
 #'
 #' @details
 #'
@@ -35,9 +33,9 @@
 #'
 #' Each layer follows this pattern:
 #' - Batch normalization (input dimension)
-#' - Linear transformation (input dimension → `batch_norm_units[i]`)
+#' - Linear transformation (input dimension -> `batch_norm_units[i]`)
 #' - Activation function (ReLU by default)
-#' - Linear transformation (`batch_norm_units[i]` → `hidden_units[i]`)
+#' - Linear transformation (`batch_norm_units[i]` -> `hidden_units[i]`)
 #' - Activation function
 #' - Dropout (if specified)
 #'
@@ -53,13 +51,14 @@
 #' - `residual_at = NULL` (default) creates one block spanning all layers
 #' - `residual_at = integer(0)` creates no residual connections (pure feedforward)
 #'
-#' ## Bottleneck Architecture
+#' ## Learning Rates
 #'
-#' The `batch_norm_units` parameter controls the intermediate dimension within each
-#' layer, creating a bottleneck architecture similar to He _et al_. (2016).
-#' Setting `batch_norm_units[i]` smaller than both the input and output dimensions
-#' creates a narrow bottleneck, while larger values create an inverted residual
-#' structure similar to Sandler _et al_. (2018).
+#' The learning rate can be set to constant (the default) or dynamically set
+#' via a learning rate scheduler (via the `rate_schedule`). Using
+#' `rate_schedule = 'none'` uses the `learn_rate` argument. Otherwise, any
+#' arguments to the schedulers can be passed via `...`.
+#'
+#' ## Other Notes
 #'
 #' When the outcome is a number, the function internally standardizes the
 #' outcome data to have mean zero and a standard deviation of one. The prediction
@@ -83,13 +82,6 @@
 #' parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 #' The zeroing out of parameters is a specific feature the optimization method
 #' used in those packages.
-#'
-#' ## Learning Rates
-#'
-#' The learning rate can be set to constant (the default) or dynamically set
-#' via a learning rate scheduler (via the `rate_schedule`). Using
-#' `rate_schedule = 'none'` uses the `learn_rate` argument. Otherwise, any
-#' arguments to the schedulers can be passed via `...`.
 #'
 #' @references
 #'
@@ -179,9 +171,9 @@
 #'  set.seed(2)
 #'  cls_fit <- brulee_resnet(class ~ ., data = parabolic_tr,
 #'                           hidden_units = c(8, 5), batch_norm_units = c(6, 4),
-#'                           residual_at = 2,
+#'                           residual_at = 1:2,
 #'                           epochs = 200L, learn_rate = 0.1, activation = "elu",
-#'                           penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
+#'                           penalty = 0.1, batch_size = 2^8)
 #'  autoplot(cls_fit)
 #'
 #'  predict(cls_fit, parabolic_te, type = "prob") |>
@@ -206,7 +198,7 @@ brulee_resnet.default <- function(x, ...) {
   )
 }
 
-# XY method - data frame
+# XY method - data frameste
 
 #' @export
 #' @rdname brulee_resnet
@@ -223,7 +215,7 @@ brulee_resnet.data.frame <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "LBFGS",
+    optimizer = "ADAMw",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
@@ -278,7 +270,7 @@ brulee_resnet.matrix <- function(
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "ADAMw",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0.0,
@@ -334,7 +326,7 @@ brulee_resnet.formula <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "LBFGS",
+    optimizer = "ADAMw",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
@@ -390,7 +382,7 @@ brulee_resnet.recipe <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "LBFGS",
+    optimizer = "ADAMw",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
@@ -637,7 +629,7 @@ resnet_fit_imp <-
     mixture = 0,
     dropout = 0,
     validation = 0.1,
-    optimizer = "LBFGS",
+    optimizer = "ADAMw",
     learn_rate = 0.01,
     rate_schedule = "none",
     momentum = 0.0,
@@ -1008,7 +1000,7 @@ resnet_module <-
         # Check if this is the start of a residual block
         if (residual_idx <= length(self$residual_at)) {
           if (i == block_start_idx) {
-            identity <- x  # Save identity at block start
+            identity <- x # Save identity at block start
           }
         }
 
@@ -1016,9 +1008,10 @@ resnet_module <-
         x <- self$layers[[i]](x)
 
         # Check if this is the end of a residual block
-        if (residual_idx <= length(self$residual_at) &&
-            i == self$residual_at[residual_idx]) {
-
+        if (
+          residual_idx <= length(self$residual_at) &&
+            i == self$residual_at[residual_idx]
+        ) {
           # Apply projection if needed
           proj_key <- as.character(i)
           if (proj_key %in% names(self$projection_layers)) {

@@ -25,7 +25,7 @@ brulee_resnet(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "ADAMw",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
@@ -50,7 +50,7 @@ brulee_resnet(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "ADAMw",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
@@ -75,7 +75,7 @@ brulee_resnet(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "ADAMw",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
@@ -100,7 +100,7 @@ brulee_resnet(x, ...)
   mixture = 0,
   dropout = 0,
   validation = 0.1,
-  optimizer = "LBFGS",
+  optimizer = "ADAMw",
   learn_rate = 0.01,
   rate_schedule = "none",
   momentum = 0,
@@ -143,17 +143,15 @@ in each layer. The length of this vector determines the number of layers.
 Each value must be >= 1.}
 
 \item{batch_norm_units}{An integer vector specifying the intermediate dimension
-within each layer, creating a bottleneck architecture. Must have the same
-length as \code{hidden_units}. Each value must be >= 2. Smaller values create
-narrower bottlenecks, while values matching the input dimension preserve
-dimensions through the layer.}
+within each layer. Must have the same length as \code{hidden_units}. Each value
+must be >= 2.}
 
 \item{residual_at}{An integer vector specifying which layer indices should
 have residual (skip) connections. For example, \code{residual_at = c(2, 4)}
-creates residual connections at layers 2 and 4, forming two residual blocks
-(layers 1-2 and 3-4). If \code{NULL} (default), a residual connection is placed
-at the last layer, making the entire network one residual block. Use
-\code{integer(0)} for no residual connections (feedforward only).}
+creates residual connections after layers 2 and 4, forming two residual
+blocks (layers 1-2 and 3-4). If \code{NULL} (default), a residual connection
+is placed at the last layer, making the entire network one residual block.
+Use \code{integer(0)} for no residual connections (i.e., feedforward only).}
 
 \item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
@@ -257,9 +255,9 @@ layers via the \code{residual_at} parameter.
 Each layer follows this pattern:
 \itemize{
 \item Batch normalization (input dimension)
-\item Linear transformation (input dimension → \code{batch_norm_units[i]})
+\item Linear transformation (input dimension -> \code{batch_norm_units[i]})
 \item Activation function (ReLU by default)
-\item Linear transformation (\code{batch_norm_units[i]} → \code{hidden_units[i]})
+\item Linear transformation (\code{batch_norm_units[i]} -> \code{hidden_units[i]})
 \item Activation function
 \item Dropout (if specified)
 }
@@ -280,13 +278,15 @@ The \code{residual_at} parameter defines where skip connections occur:
 }
 }
 
-\subsection{Bottleneck Architecture}{
+\subsection{Learning Rates}{
 
-The \code{batch_norm_units} parameter controls the intermediate dimension within each
-layer, creating a bottleneck architecture similar to He \emph{et al}. (2016).
-Setting \code{batch_norm_units[i]} smaller than both the input and output dimensions
-creates a narrow bottleneck, while larger values create an inverted residual
-structure similar to Sandler \emph{et al}. (2018).
+The learning rate can be set to constant (the default) or dynamically set
+via a learning rate scheduler (via the \code{rate_schedule}). Using
+\code{rate_schedule = 'none'} uses the \code{learn_rate} argument. Otherwise, any
+arguments to the schedulers can be passed via \code{...}.
+}
+
+\subsection{Other Notes}{
 
 When the outcome is a number, the function internally standardizes the
 outcome data to have mean zero and a standard deviation of one. The prediction
@@ -310,14 +310,6 @@ The use of the L1 penalty (a.k.a. the lasso penalty) does \emph{not} force
 parameters to be strictly zero (as it does in packages such as \pkg{glmnet}).
 The zeroing out of parameters is a specific feature the optimization method
 used in those packages.
-}
-
-\subsection{Learning Rates}{
-
-The learning rate can be set to constant (the default) or dynamically set
-via a learning rate scheduler (via the \code{rate_schedule}). Using
-\code{rate_schedule = 'none'} uses the \code{learn_rate} argument. Otherwise, any
-arguments to the schedulers can be passed via \code{...}.
 }
 }
 \examples{
@@ -373,9 +365,9 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  set.seed(2)
  cls_fit <- brulee_resnet(class ~ ., data = parabolic_tr,
                           hidden_units = c(8, 5), batch_norm_units = c(6, 4),
-                          residual_at = 2,
+                          residual_at = 1:2,
                           epochs = 200L, learn_rate = 0.1, activation = "elu",
-                          penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
+                          penalty = 0.1, batch_size = 2^8)
  autoplot(cls_fit)
 
  predict(cls_fit, parabolic_te, type = "prob") |>

@@ -25,7 +25,10 @@ brulee_print <- function(x, ...) {
       " " = "# Hidden Units: {x$parameters$hidden_units}"
     )
   if (inherits(x, "brulee_resnet")) {
-    param_lst <- c(param_lst, " " = "# BatchNorm Outputs: {x$parameters$batch_norm_units}")
+    param_lst <- c(
+      param_lst,
+      " " = "# BatchNorm Outputs: {x$parameters$batch_norm_units}"
+    )
   }
 
   param_lst <-
