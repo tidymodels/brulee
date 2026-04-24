@@ -193,7 +193,7 @@ test_that("resnet print method works", {
 
   print_output <- capture.output(capture.output(print(fit), type = "message"))
   expect_true(any(grepl("Residual network", print_output)))
-  expect_true(any(grepl("Block Units", print_output)))
+  expect_true(any(grepl("BatchNorm", print_output)))
 })
 
 test_that("resnet autoplot works", {
