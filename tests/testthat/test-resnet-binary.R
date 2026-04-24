@@ -15,9 +15,8 @@ test_that("resnet binary classification - data.frame interface", {
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
-    hidden_units = 2,
-    num_layers = 2,
-    block_units = 5,
+    hidden_units = c(5, 3),
+    block_units = c(4, 4),
     epochs = 5,
     verbose = FALSE
   )
@@ -54,9 +53,8 @@ test_that("resnet binary classification - formula interface", {
   fit <- brulee_resnet(
     y ~ x1 + x2,
     data = df,
-    hidden_units = 2,
-    num_layers = 2,
-    block_units = 5,
+    hidden_units = c(5, 3),
+    block_units = c(4, 4),
     epochs = 3,
     verbose = FALSE
   )
@@ -89,9 +87,8 @@ test_that("resnet binary classification - recipe interface", {
   fit <- brulee_resnet(
     rec,
     data = df,
-    hidden_units = 2,
-    num_layers = 2,
-    block_units = 5,
+    hidden_units = c(5, 3),
+    block_units = c(4, 4),
     epochs = 3,
     verbose = FALSE
   )
@@ -123,9 +120,8 @@ test_that("resnet binary classification - class weights", {
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
-    hidden_units = 2,
-    num_layers = 1,
-    block_units = 5,
+    hidden_units = c(5, 3),
+    block_units = c(4, 4),
     class_weights = c(A = 1, B = 2),
     epochs = 3,
     verbose = FALSE

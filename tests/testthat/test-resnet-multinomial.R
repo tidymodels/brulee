@@ -18,9 +18,8 @@ test_that("resnet multinomial classification - data.frame interface", {
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
-    hidden_units = 2,
-    num_layers = 2,
-    block_units = 5,
+    hidden_units = c(8, 5),
+    block_units = c(6, 4),
     epochs = 5,
     verbose = FALSE
   )
@@ -63,9 +62,8 @@ test_that("resnet multinomial classification - formula interface", {
   fit <- brulee_resnet(
     y ~ x1 + x2,
     data = df,
-    hidden_units = 2,
-    num_layers = 2,
-    block_units = 5,
+    hidden_units = c(8, 5),
+    block_units = c(6, 4),
     epochs = 3,
     verbose = FALSE
   )
@@ -100,9 +98,8 @@ test_that("resnet multinomial classification - recipe interface", {
   fit <- brulee_resnet(
     rec,
     data = df,
-    hidden_units = 2,
-    num_layers = 2,
-    block_units = 5,
+    hidden_units = c(8, 5),
+    block_units = c(6, 4),
     epochs = 3,
     verbose = FALSE
   )
@@ -132,9 +129,8 @@ test_that("resnet multinomial classification - class weights", {
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
-    hidden_units = 2,
-    num_layers = 1,
-    block_units = 5,
+    hidden_units = c(8, 5),
+    block_units = c(6, 4),
     class_weights = c(A = 1, B = 2, C = 1),
     epochs = 3,
     verbose = FALSE

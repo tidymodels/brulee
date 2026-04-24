@@ -234,30 +234,41 @@ test_that("resnet argument validation", {
   colnames(x) <- c("x1", "x2")
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
-  # num_layers must be >= 1
-  expect_error(
-    brulee_resnet(
-      x,
-      y,
-      hidden_units = 2,
-      num_layers = 0,
-      block_units = 5,
-      epochs = 2
-    ),
-    "num_layers"
-  )
-
   # block_units must be >= 2
   expect_error(
     brulee_resnet(
       x,
       y,
-      hidden_units = 2,
-      num_layers = 2,
-      block_units = 1,
+      hidden_units = c(5, 10),
+      block_units = c(1, 1),
       epochs = 2
     ),
     "block_units"
+  )
+
+  # block_units and hidden_units lengths must match
+  expect_error(
+    brulee_resnet(
+      x,
+      y,
+      hidden_units = c(5, 10),
+      block_units = c(3, 4, 5),
+      epochs = 2
+    ),
+    "block_units.*hidden_units"
+  )
+
+  # residual_at values must be valid layer indices
+  expect_error(
+    brulee_resnet(
+      x,
+      y,
+      hidden_units = c(5, 10),
+      block_units = c(3, 4),
+      residual_at = 5,
+      epochs = 2
+    ),
+    "residual_at"
   )
 })
 
@@ -272,32 +283,32 @@ test_that("resnet with vector hidden_units and block_units", {
   colnames(x) <- c("x1", "x2")
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
-  # Test with different hidden_units per block
+  # Test with different hidden_units and block_units per layer
   set.seed(1)
   fit <- brulee_resnet(
     x = x,
     y = y,
-    hidden_units = c(8, 10, 12), # Different internal dimensions per block
-    num_layers = 3,
+    hidden_units = c(8, 10, 12), # Different dimensions per layer
     block_units = c(5, 6, 7), # Different block widths
+    residual_at = 3, # Single residual block
     epochs = 3,
     verbose = FALSE
   )
 
   expect_s3_class(fit, "brulee_resnet")
+  expect_equal(fit$parameters$residual_at, 3)
 
   # Verify prediction works
   pred <- predict(fit, x)
   expect_equal(nrow(pred), nrow(x))
 
-  # Test with single values (should replicate)
+  # Test with single layer
   set.seed(1)
   fit2 <- brulee_resnet(
     x = x,
     y = y,
-    hidden_units = 10, # Will be replicated to c(10, 10, 10)
-    num_layers = 3,
-    block_units = 5, # Will be replicated to c(5, 5, 5)
+    hidden_units = 10,
+    block_units = 5,
     epochs = 3,
     verbose = FALSE
   )

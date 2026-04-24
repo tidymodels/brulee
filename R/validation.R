@@ -169,32 +169,131 @@ validate_mlp_args <- function(
 
 #' Validate ResNet-specific arguments
 #'
-#' @param num_layers Number of layers per residual block
-#' @param block_units Number of units per layer within a block
+#' @param hidden_units Vector of hidden units per layer
+#' @param block_units Vector of block units per layer
+#' @param residual_at Vector of layer indices where residual connections occur
+#' @param activation Vector of activation functions
+#' @param dropout Dropout proportion
+#' @param grad_value_clip Value for gradient clipping
+#' @param grad_norm_clip Norm for gradient clipping
 #' @param fn Function name for error messages
 #'
 #' @return List of validated arguments
 #' @keywords internal
 #' @noRd
 validate_resnet_args <- function(
-  num_layers,
+  hidden_units,
   block_units,
+  residual_at = NULL,
+  activation,
+  dropout,
+  grad_value_clip,
+  grad_norm_clip,
   fn = NULL
 ) {
-  # Coerce to integer if needed
-  if (is.numeric(num_layers) & !is.integer(num_layers)) {
-    num_layers <- as.integer(num_layers)
+  # Coerce hidden_units to integer if needed
+  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+    hidden_units <- as.integer(hidden_units)
   }
+
+  # Coerce block_units to integer if needed
   if (is.numeric(block_units) & !is.integer(block_units)) {
     block_units <- as.integer(block_units)
   }
 
-  # Validate
-  check_integer(num_layers, single = TRUE, 1, fn = fn)
+  # Validate basic types
+  check_integer(hidden_units, single = FALSE, 1, fn = fn)
   check_integer(block_units, single = FALSE, 2, fn = fn)
 
+  num_layers <- length(hidden_units)
+
+  # Validate lengths match
+  if (length(block_units) != num_layers) {
+    cli::cli_abort(
+      "The length of {.arg block_units} ({length(block_units)}) must match the length of {.arg hidden_units} ({num_layers})."
+    )
+  }
+
+  # Expand activation if single value
+  if (length(activation) == 1 && num_layers > 1) {
+    activation <- rep(activation, num_layers)
+  }
+
+  if (length(activation) != num_layers) {
+    cli::cli_abort(
+      "The length of {.arg activation} ({length(activation)}) must match the length of {.arg hidden_units} ({num_layers})."
+    )
+  }
+
+  # Validate activation values
+  allowed_activation <- brulee_activations()
+  good_activation <- activation %in% allowed_activation
+  if (!all(good_activation)) {
+    cli::cli_abort(
+      "{.arg activation} should be one of: {allowed_activation}, not {.val {activation}}."
+    )
+  }
+
+  # Validate residual_at
+  if (!is.null(residual_at)) {
+    # Coerce to integer
+    if (is.numeric(residual_at) && !is.integer(residual_at)) {
+      residual_at <- as.integer(residual_at)
+    }
+
+    # Check type and range
+    check_integer(residual_at, single = FALSE, 1, fn = fn)
+
+    if (any(residual_at > num_layers)) {
+      cli::cli_abort(
+        "All values in {.arg residual_at} must be between 1 and {num_layers} (the number of layers)."
+      )
+    }
+
+    # Check for duplicates
+    if (any(duplicated(residual_at))) {
+      cli::cli_warn(
+        "{.arg residual_at} contains duplicate values. Removing duplicates."
+      )
+      residual_at <- unique(residual_at)
+    }
+
+    # Sort for consistency
+    if (is.unsorted(residual_at)) {
+      residual_at <- sort(residual_at)
+    }
+  } else {
+    # Default: make entire network one residual block
+    residual_at <- num_layers
+  }
+
+  # Validate dropout and gradient clipping
+  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = fn)
+  check_double(
+    grad_norm_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    fn = fn
+  )
+  check_double(
+    grad_value_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    fn = fn
+  )
+  check_character(activation, single = FALSE, fn = fn)
+
   list(
-    num_layers = num_layers,
-    block_units = block_units
+    hidden_units = hidden_units,
+    block_units = block_units,
+    residual_at = residual_at,
+    activation = activation,
+    dropout = dropout,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip
   )
 }

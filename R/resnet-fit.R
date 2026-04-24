@@ -3,15 +3,20 @@
 #' `brulee_resnet()` fits residual network models with skip connections.
 #'
 #' @inheritParams brulee_mlp
-#' @param hidden_units An integer for the number of hidden units, or a vector
-#'   of integers. If a vector of integers, the model will have
-#'   `length(hidden_units)` layers each with `hidden_units[i]` hidden units. If
-#'   a single integer is passed and `num_layers > 1`, the value is used for all
-#'   layers.
-#' @param num_layers An integer for the number of layers within each residual
-#'   block. Must be >= 1.
-#' @param block_units An integer for the size of the representation that is
-#'   produced by the batch normalization within a residual block. Must be >= 2.
+#' @param hidden_units An integer vector specifying the number of hidden units
+#'   in each layer. The length of this vector determines the number of layers.
+#'   Each value must be >= 1.
+#' @param block_units An integer vector specifying the intermediate dimension
+#'   within each layer, creating a bottleneck architecture. Must have the same
+#'   length as `hidden_units`. Each value must be >= 2. Smaller values create
+#'   narrower bottlenecks, while values matching the input dimension preserve
+#'   dimensions through the layer.
+#' @param residual_at An integer vector specifying which layer indices should
+#'   have residual (skip) connections. For example, `residual_at = c(2, 4)`
+#'   creates residual connections at layers 2 and 4, forming two residual blocks
+#'   (layers 1-2 and 3-4). If `NULL` (default), a residual connection is placed
+#'   at the last layer, making the entire network one residual block. Use
+#'   `integer(0)` for no residual connections (feedforward only).
 #'
 #' @details
 #'
@@ -21,22 +26,40 @@
 #'  to flow more easily through deep networks. For regression, the mean squared
 #'  error is optimized and cross-entropy is the loss function for classification.
 #'
-#' The network consists of `hidden_units` residual blocks. Each block contains
-#' `num_layers` layers, with each layer having `block_units` hidden units.
-#' Skip connections add the block input to the block output.
+#' ## Architecture
 #'
-#' This model is similar to the approach described in Equation 2 of Gorishniy
-#' _et al_. (2021). It uses a series of blocks, where batch normalization is
-#' applied first. These values are connected to a layer of hidden units via a
-#' nonlinear activation (ReLU by default), and new representation values are
-#' created from them and a skip connection from the normalized values.
+#' The network consists of a sequence of layers, each with batch normalization,
+#' two linear transformations (with an intermediate bottleneck dimension), and
+#' activation functions. Residual (skip) connections can be placed at specified
+#' layers via the `residual_at` parameter.
 #'
-#' In this implementation, batch normalization does not require the same number
-#' of outputs as inputs (though that is the default). Fewer outputs, called
-#' block units here, can result in a "bottleneck" architecture described in He
-#' _et al_. (2016) if the units are set to `narrow -> wide -> narrow`.
-#' Alternatively, an approach similar to Sandler _et al_. (2018) called the
-#' "inverted residual block (`wide -> narrow -> wide`) can be specified.
+#' Each layer follows this pattern:
+#' - Batch normalization (input dimension)
+#' - Linear transformation (input dimension → `block_units[i]`)
+#' - Activation function (ReLU by default)
+#' - Linear transformation (`block_units[i]` → `hidden_units[i]`)
+#' - Activation function
+#' - Dropout (if specified)
+#'
+#' When a residual connection is specified at layer `i` via `residual_at`, the
+#' output of layer `i` is added to the input from the start of that residual
+#' block. If dimensions don't match, a linear projection is automatically added.
+#'
+#' ## Residual Blocks
+#'
+#' The `residual_at` parameter defines where skip connections occur:
+#' - `residual_at = 3` creates one block spanning layers 1-3
+#' - `residual_at = c(2, 4)` creates two blocks: layers 1-2 and layers 3-4
+#' - `residual_at = NULL` (default) creates one block spanning all layers
+#' - `residual_at = integer(0)` creates no residual connections (pure feedforward)
+#'
+#' ## Bottleneck Architecture
+#'
+#' The `block_units` parameter controls the intermediate dimension within each
+#' layer, creating a bottleneck architecture similar to He _et al_. (2016).
+#' Setting `block_units[i]` smaller than both the input and output dimensions
+#' creates a narrow bottleneck, while larger values create an inverted residual
+#' structure similar to Sandler _et al_. (2018).
 #'
 #' When the outcome is a number, the function internally standardizes the
 #' outcome data to have mean zero and a standard deviation of one. The prediction
@@ -129,7 +152,8 @@
 #'
 #'  set.seed(2)
 #'  fit <- brulee_resnet(ames_rec, data = ames_train,
-#'                       hidden_units = 3, num_layers = 2, block_units = 10,
+#'                       hidden_units = c(20, 10), block_units = c(15, 8),
+#'                       residual_at = 2,
 #'                       epochs = 50, batch_size = 32)
 #'  fit
 #'
@@ -154,7 +178,8 @@
 #'
 #'  set.seed(2)
 #'  cls_fit <- brulee_resnet(class ~ ., data = parabolic_tr,
-#'                           hidden_units = 2, num_layers = 2, block_units = 5,
+#'                           hidden_units = c(8, 5), block_units = c(6, 4),
+#'                           residual_at = 2,
 #'                           epochs = 200L, learn_rate = 0.1, activation = "elu",
 #'                           penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
 #'  autoplot(cls_fit)
@@ -191,8 +216,8 @@ brulee_resnet.data.frame <-
     y,
     epochs = 100L,
     hidden_units = 3L,
-    num_layers = 2L,
     block_units = 10L,
+    residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
     mixture = 0,
@@ -216,8 +241,8 @@ brulee_resnet.data.frame <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      num_layers = num_layers,
       block_units = block_units,
+      residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
       rate_schedule = rate_schedule,
@@ -246,8 +271,8 @@ brulee_resnet.matrix <- function(
   y,
   epochs = 100L,
   hidden_units = 3L,
-  num_layers = 2L,
   block_units = 10L,
+  residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
   mixture = 0,
@@ -271,8 +296,8 @@ brulee_resnet.matrix <- function(
     processed,
     epochs = epochs,
     hidden_units = hidden_units,
-    num_layers = num_layers,
     block_units = block_units,
+    residual_at = residual_at,
     activation = activation,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
@@ -302,8 +327,8 @@ brulee_resnet.formula <-
     data,
     epochs = 100L,
     hidden_units = 3L,
-    num_layers = 2L,
     block_units = 10L,
+    residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
     mixture = 0,
@@ -327,8 +352,8 @@ brulee_resnet.formula <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      num_layers = num_layers,
       block_units = block_units,
+      residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
       rate_schedule = rate_schedule,
@@ -358,8 +383,8 @@ brulee_resnet.recipe <-
     data,
     epochs = 100L,
     hidden_units = 3L,
-    num_layers = 2L,
     block_units = 10L,
+    residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
     mixture = 0,
@@ -383,8 +408,8 @@ brulee_resnet.recipe <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      num_layers = num_layers,
       block_units = block_units,
+      residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
       rate_schedule = rate_schedule,
@@ -411,8 +436,8 @@ brulee_resnet_bridge <- function(
   processed,
   epochs,
   hidden_units,
-  num_layers,
   block_units,
+  residual_at,
   activation,
   learn_rate,
   rate_schedule,
@@ -438,35 +463,11 @@ brulee_resnet_bridge <- function(
 
   f_nm <- "brulee_resnet"
 
-  if (length(hidden_units) == 1 & num_layers > 1) {
-    hidden_units <- rep(hidden_units, num_layers)
-  }
-
-  if (length(block_units) == 1 & num_layers > 1) {
-    block_units <- rep(block_units, num_layers)
-  }
-
-  if (length(hidden_units) != length(block_units)) {
-    cli::cli_abort(
-      "The lengths of {.arg hidden_units} ({length(hidden_units)} and
-    {.arg block_units}  ({length(block_units)} should be the same."
-    )
-  }
-
   # Validate ResNet-specific arguments
   resnet_validated <- validate_resnet_args(
-    num_layers = num_layers,
-    block_units = block_units,
-    fn = f_nm
-  )
-
-  # Extract validated/coerced values
-  num_layers <- resnet_validated$num_layers
-  block_units <- resnet_validated$block_units
-
-  # Validate hidden_units, activation, dropout, gradient clipping
-  resnet_mlp_validated <- validate_mlp_args(
     hidden_units = hidden_units,
+    block_units = block_units,
+    residual_at = residual_at,
     activation = activation,
     dropout = dropout,
     grad_value_clip = grad_value_clip,
@@ -475,8 +476,10 @@ brulee_resnet_bridge <- function(
   )
 
   # Extract validated/coerced values
-  hidden_units <- resnet_mlp_validated$hidden_units
-  activation <- resnet_mlp_validated$activation
+  hidden_units <- resnet_validated$hidden_units
+  block_units <- resnet_validated$block_units
+  residual_at <- resnet_validated$residual_at
+  activation <- resnet_validated$activation
 
   # Handle batch_size special logic (same as MLP)
   if (!is.null(batch_size) & optimizer != "LBFGS") {
@@ -534,8 +537,8 @@ brulee_resnet_bridge <- function(
       y = outcome,
       epochs = epochs,
       hidden_units = hidden_units,
-      num_layers = num_layers,
       block_units = block_units,
+      residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
       rate_schedule = rate_schedule,
@@ -628,8 +631,8 @@ resnet_fit_imp <-
     epochs = 100L,
     batch_size = 32,
     hidden_units = 3L,
-    num_layers = 2L,
     block_units = 10L,
+    residual_at = NULL,
     penalty = 0.001,
     mixture = 0,
     dropout = 0,
@@ -648,6 +651,13 @@ resnet_fit_imp <-
   ) {
     start_seed <- sample.int(10^5, 1)
     torch::torch_manual_seed(start_seed)
+
+    ## ---------------------------------------------------------------------------
+    # Handle residual_at default
+
+    if (is.null(residual_at)) {
+      residual_at <- length(hidden_units)
+    }
 
     ## ---------------------------------------------------------------------------
     # General data checks:
@@ -731,8 +741,7 @@ resnet_fit_imp <-
           p = p,
           n = n,
           h = hidden_units,
-          num_blocks = hidden_units,
-          num_layers = num_layers,
+          num_layers = length(hidden_units),
           block_units = block_units,
           y = y_dim,
           levels = lvls,
@@ -742,8 +751,8 @@ resnet_fit_imp <-
         parameters = list(
           activation = activation,
           hidden_units = hidden_units,
-          num_layers = num_layers,
           block_units = block_units,
+          residual_at = residual_at,
           learn_rate = learn_rate,
           class_weights = as.numeric(class_weights),
           penalty = penalty,
@@ -770,10 +779,10 @@ resnet_fit_imp <-
 
     model <- resnet_module(
       num_pred = ncol(x),
-      blk_width = block_units,
-      d_hidden = hidden_units,
-      num_blocks = num_layers,
-      act_type = activation,
+      block_units = block_units,
+      hidden_units = hidden_units,
+      residual_at = residual_at,
+      activation = activation,
       dropout = dropout,
       y_dim = y_dim
     )
@@ -876,51 +885,31 @@ resnet_fit_imp <-
   }
 
 
-resnet_block_module <-
+resnet_layer_module <-
   torch::nn_module(
-    "resnet_block_module",
+    "resnet_layer_module",
     initialize = function(
-      blk_width_in,
-      blk_width_out,
-      d_hidden,
-      dropout,
-      act_type
+      input_dim,
+      block_units,
+      hidden_units,
+      activation,
+      dropout
     ) {
-      self$bn1 <- torch::nn_batch_norm1d(blk_width_in)
-      self$linear1 <- torch::nn_linear(blk_width_in, d_hidden)
-      self$act1 <- get_activation_fn(act_type)
-      self$bn2 <- torch::nn_batch_norm1d(d_hidden)
-      self$linear2 <- torch::nn_linear(d_hidden, blk_width_out)
-      self$act2 <- get_activation_fn(act_type)
+      self$bn <- torch::nn_batch_norm1d(input_dim)
+      self$linear1 <- torch::nn_linear(input_dim, block_units)
+      self$act1 <- get_activation_fn(activation)
+      self$linear2 <- torch::nn_linear(block_units, hidden_units)
+      self$act2 <- get_activation_fn(activation)
       self$dropout <- torch::nn_dropout(dropout)
-
-      # Projection layer if input/output dimensions differ
-      if (blk_width_in != blk_width_out) {
-        self$proj <- torch::nn_linear(blk_width_in, blk_width_out)
-      } else {
-        self$proj <- NULL
-      }
     },
     forward = function(x) {
-      identity <- x
-
-      z <- x |>
-        self$bn1() |>
-        self$act1() |>
+      x |>
+        self$bn() |>
         self$linear1() |>
-        self$dropout()
-      z <- z |>
-        self$bn2() |>
-        self$act2() |>
+        self$act1() |>
         self$linear2() |>
+        self$act2() |>
         self$dropout()
-
-      # Apply projection to identity if needed
-      if (!is.null(self$proj)) {
-        identity <- self$proj(identity)
-      }
-
-      identity + z
     }
   )
 
@@ -929,70 +918,129 @@ resnet_module <-
     "resnet_module",
     initialize = function(
       num_pred,
-      blk_width,
-      d_hidden,
-      num_blocks,
-      act_type,
+      block_units,
+      hidden_units,
+      residual_at,
+      activation,
       dropout,
       y_dim
     ) {
-      # Ensure blk_width and d_hidden are vectors
-      if (length(blk_width) == 1 && num_blocks > 1) {
-        blk_width <- rep(blk_width, num_blocks)
-      }
-      if (length(d_hidden) == 1 && num_blocks > 1) {
-        d_hidden <- rep(d_hidden, num_blocks)
-      }
-      # Ensure act_type is a vector
-      if (length(act_type) == 1 && num_blocks > 1) {
-        act_type <- rep(act_type, num_blocks)
+      num_layers <- length(hidden_units)
+
+      # Validate lengths match
+      if (length(block_units) != num_layers) {
+        stop("block_units and hidden_units must have the same length")
       }
 
-      # Input projection: num_pred -> blk_width[1]
-      self$linear_in <- torch::nn_linear(num_pred, blk_width[1])
+      # Ensure activation is a vector
+      if (length(activation) == 1 && num_layers > 1) {
+        activation <- rep(activation, num_layers)
+      }
 
-      # Residual blocks
-      self$blocks <- torch::nn_module_list()
-      for (i in seq_len(num_blocks)) {
-        # Determine input width for this block
-        if (i == 1) {
-          blk_width_in <- blk_width[1]
-        } else {
-          blk_width_in <- blk_width[i - 1]
-        }
-        blk_width_out <- blk_width[i]
+      if (length(activation) != num_layers) {
+        stop("activation must be length 1 or match the number of layers")
+      }
 
-        block <- resnet_block_module(
-          blk_width_in = blk_width_in,
-          blk_width_out = blk_width_out,
-          d_hidden = d_hidden[i],
-          dropout = dropout,
-          act_type = act_type[i]
+      # Store configuration
+      self$num_layers <- num_layers
+      self$residual_at <- residual_at
+      self$hidden_units <- hidden_units
+
+      # Build layers
+      self$layers <- torch::nn_module_list()
+
+      current_dim <- num_pred
+      for (i in seq_len(num_layers)) {
+        layer <- resnet_layer_module(
+          input_dim = current_dim,
+          block_units = block_units[i],
+          hidden_units = hidden_units[i],
+          activation = activation[i],
+          dropout = dropout
         )
-        self$blocks$append(block)
+        self$layers$append(layer)
+        current_dim <- hidden_units[i]
       }
 
-      # Prediction head (from last block width to output)
-      self$bn_out <- torch::nn_batch_norm1d(blk_width[num_blocks])
-      self$act_out <- get_activation_fn(act_type[num_blocks])
-      self$linear_out <- torch::nn_linear(blk_width[num_blocks], y_dim)
+      # Build projection layers for residual connections
+      # Store which layers need projections and their dimensions
+      self$projection_layers <- list()
 
-      # For classification (y_dim > 1), add softmax
+      if (length(residual_at) > 0) {
+        # Determine residual block boundaries
+        block_starts <- c(1, residual_at[seq_len(length(residual_at) - 1)] + 1)
+        block_ends <- residual_at
+
+        for (i in seq_along(block_starts)) {
+          start_idx <- block_starts[i]
+          end_idx <- block_ends[i]
+
+          # Determine input dimension to this block
+          if (start_idx == 1) {
+            identity_dim <- num_pred
+          } else {
+            identity_dim <- hidden_units[start_idx - 1]
+          }
+
+          output_dim <- hidden_units[end_idx]
+
+          # Create projection if dimensions don't match
+          if (identity_dim != output_dim) {
+            proj_name <- paste0("proj_", end_idx)
+            self[[proj_name]] <- torch::nn_linear(identity_dim, output_dim)
+            self$projection_layers[[as.character(end_idx)]] <- proj_name
+          }
+        }
+      }
+
+      # Output layers
+      self$bn_out <- torch::nn_batch_norm1d(current_dim)
+      self$linear_out <- torch::nn_linear(current_dim, y_dim)
       self$y_dim <- y_dim
     },
-    forward = function(x) {
-      x <- self$linear_in(x)
 
-      for (i in seq_along(self$blocks)) {
-        x <- self$blocks[[i]](x)
+    forward = function(x) {
+      identity <- NULL
+      block_start_idx <- 1
+      residual_idx <- 1
+
+      for (i in seq_len(self$num_layers)) {
+        # Check if this is the start of a residual block
+        if (residual_idx <= length(self$residual_at)) {
+          if (i == block_start_idx) {
+            identity <- x  # Save identity at block start
+          }
+        }
+
+        # Apply layer
+        x <- self$layers[[i]](x)
+
+        # Check if this is the end of a residual block
+        if (residual_idx <= length(self$residual_at) &&
+            i == self$residual_at[residual_idx]) {
+
+          # Apply projection if needed
+          proj_key <- as.character(i)
+          if (proj_key %in% names(self$projection_layers)) {
+            proj_name <- self$projection_layers[[proj_key]]
+            identity <- self[[proj_name]](identity)
+          }
+
+          # Residual addition
+          x <- x + identity
+
+          # Update for next block
+          residual_idx <- residual_idx + 1
+          block_start_idx <- i + 1
+          identity <- NULL
+        }
       }
 
+      # Output head
       x <- x |>
         self$bn_out() |>
-        self$act_out() |>
         self$linear_out()
 
-      # For classification, add softmax
       if (self$y_dim > 1L) {
         x <- torch::nn_softmax(dim = 2)(x)
       }
