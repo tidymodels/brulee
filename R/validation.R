@@ -170,7 +170,7 @@ validate_mlp_args <- function(
 #' Validate ResNet-specific arguments
 #'
 #' @param hidden_units Vector of hidden units per layer
-#' @param block_units Vector of block units per layer
+#' @param batch_norm_units Vector of BatchNorm output dimensions per layer
 #' @param residual_at Vector of layer indices where residual connections occur
 #' @param activation Vector of activation functions
 #' @param dropout Dropout proportion
@@ -183,7 +183,7 @@ validate_mlp_args <- function(
 #' @noRd
 validate_resnet_args <- function(
   hidden_units,
-  block_units,
+  batch_norm_units,
   residual_at = NULL,
   activation,
   dropout,
@@ -196,21 +196,21 @@ validate_resnet_args <- function(
     hidden_units <- as.integer(hidden_units)
   }
 
-  # Coerce block_units to integer if needed
-  if (is.numeric(block_units) & !is.integer(block_units)) {
-    block_units <- as.integer(block_units)
+  # Coerce batch_norm_units to integer if needed
+  if (is.numeric(batch_norm_units) & !is.integer(batch_norm_units)) {
+    batch_norm_units <- as.integer(batch_norm_units)
   }
 
   # Validate basic types
   check_integer(hidden_units, single = FALSE, 1, fn = fn)
-  check_integer(block_units, single = FALSE, 2, fn = fn)
+  check_integer(batch_norm_units, single = FALSE, 2, fn = fn)
 
   num_layers <- length(hidden_units)
 
   # Validate lengths match
-  if (length(block_units) != num_layers) {
+  if (length(batch_norm_units) != num_layers) {
     cli::cli_abort(
-      "The length of {.arg block_units} ({length(block_units)}) must match the length of {.arg hidden_units} ({num_layers})."
+      "The length of {.arg batch_norm_units} ({length(batch_norm_units)}) must match the length of {.arg hidden_units} ({num_layers})."
     )
   }
 
@@ -289,7 +289,7 @@ validate_resnet_args <- function(
 
   list(
     hidden_units = hidden_units,
-    block_units = block_units,
+    batch_norm_units = batch_norm_units,
     residual_at = residual_at,
     activation = activation,
     dropout = dropout,
