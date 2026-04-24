@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* ResNet models can now be fit via `brulee_resnet()`. 
+
 # brulee 0.6.0
 
 * Transition from the magrittr pipe to the base R pipe.
