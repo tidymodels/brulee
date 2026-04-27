@@ -14,7 +14,8 @@
 #'   creates residual connections after layers 2 and 4, forming two residual
 #'   blocks (layers 1-2 and 3-4). If `NULL` (default), a residual connection
 #'   is placed at the last layer, making the entire network one residual block.
-#'   Use `integer(0)` for no residual connections (i.e., feedforward only).
+#'   Use `integer(0)` for no residual connections (i.e., a purely feed-forward
+#'   model only).
 #'
 #' @details
 #'
@@ -49,7 +50,8 @@
 #' - `residual_at = 3` creates one block spanning layers 1-3
 #' - `residual_at = c(2, 4)` creates two blocks: layers 1-2 and layers 3-4
 #' - `residual_at = NULL` (default) creates one block spanning all layers
-#' - `residual_at = integer(0)` creates no residual connections (pure feedforward)
+#' - `residual_at = integer(0)` creates no residual connections (a purely
+#'    feed-forward model)
 #'
 #' ## Learning Rates
 #'
@@ -480,13 +482,6 @@ brulee_resnet_bridge <- function(
     }
     check_integer(batch_size, single = TRUE, 1, fn = f_nm)
   }
-  if (is.null(batch_size) & optimizer != "LBFGS") {
-    batch_size <- 32L
-    if (batch_size >= nrow(processed)) {
-      batch_size <- max(2, ceiling(nrow(processed) / 10))
-      batch_size <- as.integer(batch_size)
-    }
-  }
 
   # Validate common arguments
   validated <- validate_common_args(
@@ -509,6 +504,14 @@ brulee_resnet_bridge <- function(
 
   # Process predictors
   predictors <- process_predictors(processed$predictors, fn = f_nm)
+
+  if (is.null(batch_size) & optimizer != "LBFGS") {
+    batch_size <- 32L
+    if (batch_size >= nrow(predictors)) {
+      batch_size <- max(2, ceiling(nrow(predictors) / 10))
+      batch_size <- as.integer(batch_size)
+    }
+  }
 
   ## -----------------------------------------------------------------------------
 
