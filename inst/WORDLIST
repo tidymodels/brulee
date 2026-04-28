@@ -12,9 +12,12 @@ Khrulkov
 LBFGS
 Lifecycle
 Loshchilov
+MLP
 Mobilenetv
 ORCID
 PBC
+RLN
+RMSprop
 ReLU
 Ren
 ResNet
@@ -22,6 +25,8 @@ ResNets
 Rubachev
 SGD
 Sandler
+Segal
+Shavitt
 Springer
 Zeiler
 Zhang

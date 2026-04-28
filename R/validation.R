@@ -297,3 +297,59 @@ validate_resnet_args <- function(
     grad_norm_clip = grad_norm_clip
   )
 }
+
+#' Validate RLN-specific arguments
+#'
+#' @param hidden_units Number of units in the single hidden layer
+#' @param norm Regularization norm (1 or 2)
+#' @param avg_reg Target mean of log-scale lambda coefficients
+#' @param rln_learn_rate Step size for lambda updates
+#' @param activation Activation function name
+#' @param fn Function name for error messages
+#'
+#' @return List of validated/coerced arguments
+#' @keywords internal
+#' @noRd
+validate_rln_args <- function(
+  hidden_units,
+  norm,
+  avg_reg,
+  rln_learn_rate,
+  activation,
+  fn = NULL
+) {
+  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+    hidden_units <- as.integer(hidden_units)
+  }
+  check_integer(hidden_units, single = TRUE, 1, fn = fn)
+
+  if (is.numeric(norm) & !is.integer(norm)) {
+    norm <- as.integer(norm)
+  }
+  if (!norm %in% c(1L, 2L)) {
+    cli::cli_abort("{.arg norm} must be 1 (L1) or 2 (L2), not {.val {norm}}.")
+  }
+
+  check_double(avg_reg, single = TRUE, fn = fn)
+  if (!is.finite(avg_reg)) {
+    cli::cli_abort("{.arg avg_reg} must be a finite number.")
+  }
+
+  check_double(rln_learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = fn)
+
+  allowed_activation <- brulee_activations()
+  if (!activation %in% allowed_activation) {
+    cli::cli_abort(
+      "{.arg activation} should be one of: {allowed_activation}, not {.val {activation}}."
+    )
+  }
+  check_character(activation, single = TRUE, fn = fn)
+
+  list(
+    hidden_units = hidden_units,
+    norm = norm,
+    avg_reg = avg_reg,
+    rln_learn_rate = rln_learn_rate,
+    activation = activation
+  )
+}
