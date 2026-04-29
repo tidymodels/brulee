@@ -731,7 +731,11 @@ get_num_rln_coef <- function(x) {
 
 #' @export
 print.brulee_rln <- function(x, ...) {
-  cat(cli::style_bold("Regularization Learning Network (RLN)"), "\n\n", sep = "")
+  cat(
+    cli::style_bold("Regularization Learning Network (RLN)"),
+    "\n\n",
+    sep = ""
+  )
 
   n <- format(x$dims$n, big.mark = ",")
   p <- format(x$dims$p, big.mark = ",")
@@ -756,7 +760,9 @@ print.brulee_rln <- function(x, ...) {
   ))
 
   if (x$parameters$validation > 0) {
-    cli::cli_bullets(c(" " = "% Validation: {signif(x$parameters$validation, 3)}"))
+    cli::cli_bullets(c(
+      " " = "% Validation: {signif(x$parameters$validation, 3)}"
+    ))
   }
 
   cli::cli_bullets(c(" " = "Optimizer: {.val {x$parameters$optimizer}}"))
@@ -775,9 +781,15 @@ print.brulee_rln <- function(x, ...) {
     loss_val <- signif(x$loss[it], 3)
     epoch_str <- cli::pluralize("{it} epoch{?s}")
     if (x$parameters$validation > 0) {
-      res_list <- c(res_list, " " = "scaled validation loss after {epoch_str}: {loss_val}")
+      res_list <- c(
+        res_list,
+        " " = "scaled validation loss after {epoch_str}: {loss_val}"
+      )
     } else {
-      res_list <- c(res_list, " " = "scaled training loss after {epoch_str}: {loss_val}")
+      res_list <- c(
+        res_list,
+        " " = "scaled training loss after {epoch_str}: {loss_val}"
+      )
     }
   }
 
