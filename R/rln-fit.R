@@ -60,7 +60,10 @@
 #'
 #' By default, training halts when the validation loss increases for at least
 #' `stop_iter` consecutive iterations. If `validation = 0` the training set
-#' loss is used.
+#' loss is used. The default for `stop_iter` is higher for RLN than for other
+#' brulee models (20 vs 5) because the sparsification process takes
+#' approximately 10-20 epochs to stabilize (Shavitt & Segal, 2018); stopping
+#' too early prevents the per-weight regularization from taking effect.
 #'
 #' Predictors should all be numeric and on comparable scales. Use a recipe
 #' with `step_normalize()` to standardize them before training.
@@ -156,7 +159,7 @@ brulee_rln.data.frame <- function(
   rate_schedule = "none",
   momentum = 0.0,
   batch_size = NULL,
-  stop_iter = 5,
+  stop_iter = 20,
   verbose = FALSE,
   ...
 ) {
@@ -200,7 +203,7 @@ brulee_rln.matrix <- function(
   rate_schedule = "none",
   momentum = 0.0,
   batch_size = NULL,
-  stop_iter = 5,
+  stop_iter = 20,
   verbose = FALSE,
   ...
 ) {
@@ -244,7 +247,7 @@ brulee_rln.formula <- function(
   rate_schedule = "none",
   momentum = 0.0,
   batch_size = NULL,
-  stop_iter = 5,
+  stop_iter = 20,
   verbose = FALSE,
   ...
 ) {
@@ -288,7 +291,7 @@ brulee_rln.recipe <- function(
   rate_schedule = "none",
   momentum = 0.0,
   batch_size = NULL,
-  stop_iter = 5,
+  stop_iter = 20,
   verbose = FALSE,
   ...
 ) {
@@ -499,7 +502,7 @@ rln_fit_imp <- function(
   rate_schedule = "none",
   momentum = 0.0,
   activation = "relu",
-  stop_iter = 5,
+  stop_iter = 20,
   verbose = FALSE,
   ...
 ) {
