@@ -201,6 +201,17 @@ applies a single global penalty, RLN learns a separate regularization
 coefficient for each weight in the hidden layer. After each gradient step,
 the per-weight coefficients (lambdas) are updated and projected to keep
 their mean at \code{avg_reg}.
+\subsection{Why Use RLN?}{
+
+RLNs are designed for tabular datasets where interpretability matters. The
+per-weight regularization tends to produce very sparse networks. The
+original paper reports eliminating up to ~99.8\% of network edges and ~82\% of
+input features. This sparsity makes it easier to identify which inputs the
+network considers important, and the resulting models are competitive with
+gradient boosted trees. The best results in the paper are achieved by
+ensembling RLNs with GBTs.
+}
+
 \subsection{Architecture}{
 
 The network is a single-hidden-layer MLP:
