@@ -198,9 +198,11 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
     loss <- loss_fn(...)
     if (penalty > 0) {
       l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
-      l_term <- float_64(l_term)
-      penalty <- float_64(penalty)
-      loss <- loss + penalty * l_term
+      # Create penalty tensor on the same device as l_term
+      # l_term is already float64 from model parameters, on the correct device
+      penalty_tensor <- torch::torch_tensor(penalty, dtype = torch::torch_float64(),
+                                            device = l_term$device)
+      loss <- loss + penalty_tensor * l_term
     }
     loss
   }
