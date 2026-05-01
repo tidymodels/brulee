@@ -215,6 +215,21 @@ is_cran_check <- function() {
   }
 }
 
-float_64 <- function(x, device = "cpu") {
-  torch::torch_tensor(x, dtype = torch::torch_float64(), device = device)
+float_64 <- function(x, device = NULL) {
+  if (is.null(device)) {
+    # Let torch_tensor use the current device context (from with_device)
+    torch::torch_tensor(x, dtype = torch::torch_float64())
+  } else {
+    # Explicitly specify device when provided
+    torch::torch_tensor(x, dtype = torch::torch_float64(), device = device)
+  }
+}
+
+# Convert class weights to tensor on current device
+# Returns NULL if weights are NULL, otherwise converts to float64 tensor
+weights_to_tensor <- function(wts) {
+  if (is.null(wts)) {
+    return(NULL)
+  }
+  float_64(wts)
 }

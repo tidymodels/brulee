@@ -29,33 +29,34 @@ test_that("setting class weights", {
 
   # ------------------------------------------------------------------------------
 
-  expect_equal(
-    brulee:::check_class_weights(1.0, lvls, cls_xtab, "fabulous") |>
-      as.numeric(),
-    rep(1, num_class)
-  )
+  expected_default <- rep(1, num_class)
+  names(expected_default) <- lvls
 
-  expect_s3_class(
+  expect_equal(
     brulee:::check_class_weights(1.0, lvls, cls_xtab, "fabulous"),
-    "torch_tensor"
+    expected_default
+  )
+
+  expect_type(
+    brulee:::check_class_weights(1.0, lvls, cls_xtab, "fabulous"),
+    "double"
   )
 
   expect_equal(
-    brulee:::check_class_weights(NULL, lvls, cls_xtab, "fabulous") |>
-      as.numeric(),
-    rep(1, num_class)
+    brulee:::check_class_weights(NULL, lvls, cls_xtab, "fabulous"),
+    expected_default
+  )
+
+  expected_weighted <- c(1, 6.25, 1)
+  names(expected_weighted) <- lvls
+  expect_equal(
+    brulee:::check_class_weights(6.25, lvls, cls_xtab, "fabulous"),
+    expected_weighted
   )
 
   expect_equal(
-    brulee:::check_class_weights(6.25, lvls, cls_xtab, "fabulous") |>
-      as.numeric(),
-    c(1, 6.25, 1)
-  )
-
-  expect_equal(
-    brulee:::check_class_weights(c(1, 6.25, 1), lvls, cls_xtab, "fabulous") |>
-      as.numeric(),
-    c(1, 6.25, 1)
+    brulee:::check_class_weights(c(1, 6.25, 1), lvls, cls_xtab, "fabulous"),
+    expected_weighted
   )
 
   expect_null(

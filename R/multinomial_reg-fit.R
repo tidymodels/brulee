@@ -462,7 +462,7 @@ multinomial_reg_fit_imp <-
     # pass the log of softmax.
     loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
-        weight = wts,
+        weight = weights_to_tensor(wts),
         input = torch::torch_log(input),
         target = target
       )
