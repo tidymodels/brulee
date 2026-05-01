@@ -2,6 +2,7 @@ ADAMw
 Adadelta
 Babenko
 CMD
+CUDA
 Cham
 Codecov
 Duchi
@@ -12,6 +13,7 @@ Khrulkov
 LBFGS
 Lifecycle
 Loshchilov
+MPS
 Mobilenetv
 ORCID
 PBC
@@ -29,6 +31,7 @@ Zhmoginov
 Zhu
 adadelta
 adagrad
+dtype
 extensibility
 funder
 magrittr

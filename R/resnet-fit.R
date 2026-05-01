@@ -227,6 +227,7 @@ brulee_resnet.data.frame <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, y)
@@ -252,6 +253,7 @@ brulee_resnet.data.frame <-
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -282,6 +284,7 @@ brulee_resnet.matrix <- function(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -307,6 +310,7 @@ brulee_resnet.matrix <- function(
     grad_value_clip = grad_value_clip,
     grad_norm_clip = grad_norm_clip,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -338,6 +342,7 @@ brulee_resnet.formula <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(formula, data)
@@ -363,6 +368,7 @@ brulee_resnet.formula <-
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -394,6 +400,7 @@ brulee_resnet.recipe <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, data)
@@ -419,6 +426,7 @@ brulee_resnet.recipe <-
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -447,6 +455,7 @@ brulee_resnet_bridge <- function(
   grad_value_clip,
   grad_norm_clip,
   verbose,
+  device,
   ...
 ) {
   if (!torch::torch_is_installed()) {
@@ -454,6 +463,9 @@ brulee_resnet_bridge <- function(
       "The torch backend has not been installed; use `torch::install_torch()`."
     )
   }
+
+  # Guess device if not specified
+  device <- guess_brulee_device(device)
 
   f_nm <- "brulee_resnet"
 
@@ -549,6 +561,7 @@ brulee_resnet_bridge <- function(
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
 
@@ -560,6 +573,7 @@ brulee_resnet_bridge <- function(
     dims = fit$dims,
     y_stats = fit$y_stats,
     parameters = fit$parameters,
+    device = fit$device,
     blueprint = processed$blueprint
   )
 }
@@ -572,6 +586,7 @@ new_brulee_resnet <- function(
   dims,
   y_stats,
   parameters,
+  device,
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
@@ -611,6 +626,7 @@ new_brulee_resnet <- function(
     dims = dims,
     y_stats = y_stats,
     parameters = parameters,
+    device = device,
     blueprint = blueprint,
     class = "brulee_resnet"
   )
@@ -642,6 +658,7 @@ resnet_fit_imp <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = "cpu",
     ...
   ) {
     start_seed <- sample.int(10^5, 1)
@@ -714,18 +731,20 @@ resnet_fit_imp <-
     batch_size <- min(batch_size, nrow(x))
 
     ## ---------------------------------------------------------------------------
-    # Convert to index sampler and data loader
+    # Set torch dtype for both data and model
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
     torch::torch_set_default_dtype(torch::torch_float64())
 
-    # Reset the seed so that different optimizers start from the same values
-    torch::torch_manual_seed(start_seed + 1)
+    # Set device context for training
+    training_output <- torch::with_device(device = device, {
+      # Reset the seed so that different optimizers start from the same values
+      torch::torch_manual_seed(start_seed + 1)
 
-    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
-    dl <- torch_data$dl
-    dl_val <- torch_data$dl_val
+      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
+      dl <- torch_data$dl
+      dl_val <- torch_data$dl_val
 
     # ------------------------------------------------------------------------------
     # Return value
@@ -862,21 +881,27 @@ resnet_fit_imp <-
     loss_vec <- c(loss_vec[1], training_result$loss_vec)
     best_epoch <- training_result$best_epoch
 
-    # Update result object
-    res$model_obj <- model_to_raw(model)
-    res$estimates <- param_per_epoch
-    res$loss <- loss_vec
-    res$best_epoch <- best_epoch
+      # Update result object
+      res$model_obj <- model_to_raw(model)
+      res$estimates <- param_per_epoch
+      res$loss <- loss_vec
+      res$best_epoch <- best_epoch
+
+      res
+    })
 
     ## ---------------------------------------------------------------------------
 
     # Add names back to class_weights
-    res$parameters$class_weights <- as.numeric(class_weights)
-    names(res$parameters$class_weights) <- lvls
+    training_output$parameters$class_weights <- as.numeric(class_weights)
+    names(training_output$parameters$class_weights) <- lvls
+
+    # Add device to result
+    training_output$device <- device
 
     ## ---------------------------------------------------------------------------
 
-    res
+    training_output
   }
 
 

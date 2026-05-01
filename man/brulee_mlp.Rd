@@ -39,6 +39,7 @@ brulee_mlp(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -62,6 +63,7 @@ brulee_mlp(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -85,6 +87,7 @@ brulee_mlp(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -108,6 +111,7 @@ brulee_mlp(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -137,6 +141,7 @@ brulee_mlp_two_layer(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -162,6 +167,7 @@ brulee_mlp_two_layer(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -187,6 +193,7 @@ brulee_mlp_two_layer(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -212,6 +219,7 @@ brulee_mlp_two_layer(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 }
@@ -303,6 +311,13 @@ value. This can be helpful if training stops early with the message that
 \code{"Loss is NaN at epoch x Training is stopped."}}
 
 \item{verbose}{A logical that prints out the iteration history.}
+
+\item{device}{A character string specifying the device to use for computation.
+Options are \code{"cpu"}, \code{"cuda"} (NVIDIA GPU), or \code{"mps"} (Apple Silicon GPU).
+When \code{device = NULL} (default), the function automatically selects \code{"cuda"} if
+available, otherwise defaults to \code{"cpu"}. Note: MPS is not automatically
+selected because it doesn't support float64 dtype required by brulee. Users can
+explicitly set \code{device = "mps"} if they modify their code to use float32.}
 
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}
@@ -460,9 +475,9 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  parabolic_te <- parabolic[-in_train,]
 
  set.seed(2)
- cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
-                        epochs = 200L, learn_rate = 0.1, activation = "elu",
-                        penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
+ cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 4,
+                        epochs = 50L, learn_rate = 0.1,
+                        penalty = 0.01, batch_size = 2^8, optimizer = "SGD")
  autoplot(cls_fit)
 
  grid_points <- seq(-4, 4, length.out = 100)

@@ -19,11 +19,16 @@ brulee_print <- function(x, ...) {
 
   cat("\n")
 
-  param_lst <-
-    c(
+  param_lst <- c()
+
+  # Neural network specific parameters
+  if (!is.null(x$parameters$activation)) {
+    param_lst <- c(
+      param_lst,
       " " = "Activation: {.val {x$parameters$activation}}",
       " " = "# Hidden Units: {x$parameters$hidden_units}"
     )
+  }
   if (inherits(x, "brulee_resnet")) {
     param_lst <- c(
       param_lst,
@@ -31,22 +36,29 @@ brulee_print <- function(x, ...) {
     )
   }
 
-  param_lst <-
-    c(
+  # Common parameters
+  if (!is.null(x$parameters$sched)) {
+    param_lst <- c(
       param_lst,
-      c(
-        " " = "Learning Rate: {signif(x$parameters$learn_rate, 3)}, Schedule:
-        {.val {x$parameters$sched}}",
-        " " = "Stopping iterations: {x$parameters$stop_iter}"
-      )
+      " " = "Learning Rate: {signif(x$parameters$learn_rate, 3)}, Schedule:
+        {.val {x$parameters$sched}}"
     )
+  } else {
+    param_lst <- c(
+      param_lst,
+      " " = "Learning Rate: {signif(x$parameters$learn_rate, 3)}"
+    )
+  }
+  if (!is.null(x$parameters$stop_iter)) {
+    param_lst <- c(param_lst, " " = "Stopping iterations: {x$parameters$stop_iter}")
+  }
   if (x$parameters$validation > 0) {
     param_lst <- c(
       param_lst,
       " " = "% Validation: {signif(x$parameters$validation, 3)}"
     )
   }
-  if (x$parameters$dropout > 0) {
+  if (!is.null(x$parameters$dropout) && x$parameters$dropout > 0) {
     param_lst <- c(
       param_lst,
       " " = "Dropout: {signif(x$parameters$penalty, 3)}"
@@ -66,9 +78,15 @@ brulee_print <- function(x, ...) {
     )
   }
 
-  param_lst <- c(param_lst, " " = "Optimizer: {.val {x$parameters$optimizer}}")
-  if (x$parameters$optimizer != "LBFGS") {
-    param_lst <- c(param_lst, " " = "Batch Size: {x$parameters$batch_size}")
+  if (!is.null(x$parameters$optimizer)) {
+    param_lst <- c(param_lst, " " = "Optimizer: {.val {x$parameters$optimizer}}")
+    if (x$parameters$optimizer != "LBFGS") {
+      param_lst <- c(param_lst, " " = "Batch Size: {x$parameters$batch_size}")
+    }
+  }
+
+  if (!is.null(x$device)) {
+    param_lst <- c(param_lst, " " = "Device: {.val {x$device}}")
   }
 
   if (!is.null(x$dims$levels) && !is.null(x$parameters$class_weights)) {
@@ -197,6 +215,6 @@ is_cran_check <- function() {
   }
 }
 
-float_64 <- function(x) {
-  torch::torch_tensor(x, dtype = torch::torch_float64())
+float_64 <- function(x, device = "cpu") {
+  torch::torch_tensor(x, dtype = torch::torch_float64(), device = device)
 }

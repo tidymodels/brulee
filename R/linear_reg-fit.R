@@ -173,6 +173,7 @@ brulee_linear_reg.data.frame <-
     batch_size = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, y)
@@ -189,6 +190,7 @@ brulee_linear_reg.data.frame <-
       batch_size = batch_size,
       stop_iter = stop_iter,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -210,6 +212,7 @@ brulee_linear_reg.matrix <- function(
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -226,6 +229,7 @@ brulee_linear_reg.matrix <- function(
     batch_size = batch_size,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -248,6 +252,7 @@ brulee_linear_reg.formula <-
     batch_size = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(formula, data)
@@ -264,6 +269,7 @@ brulee_linear_reg.formula <-
       batch_size = batch_size,
       stop_iter = stop_iter,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -286,6 +292,7 @@ brulee_linear_reg.recipe <-
     batch_size = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, data)
@@ -302,6 +309,7 @@ brulee_linear_reg.recipe <-
       batch_size = batch_size,
       stop_iter = stop_iter,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -322,6 +330,7 @@ brulee_linear_reg_bridge <- function(
   batch_size,
   stop_iter,
   verbose,
+  device,
   ...
 ) {
   if (!torch::torch_is_installed()) {
@@ -329,6 +338,9 @@ brulee_linear_reg_bridge <- function(
       "The torch backend has not been installed; use `torch::install_torch()`."
     )
   }
+
+  # Guess device if not specified
+  device <- guess_brulee_device(device)
 
   f_nm <- "brulee_linear_reg"
 
@@ -374,7 +386,8 @@ brulee_linear_reg_bridge <- function(
       validation = validation,
       batch_size = batch_size,
       stop_iter = stop_iter,
-      verbose = verbose
+      verbose = verbose,
+      device = device
     )
 
   new_brulee_linear_reg(
@@ -385,6 +398,7 @@ brulee_linear_reg_bridge <- function(
     dims = fit$dims,
     y_stats = fit$y_stats,
     parameters = fit$parameters,
+    device = fit$device,
     blueprint = processed$blueprint
   )
 }
@@ -397,6 +411,7 @@ new_brulee_linear_reg <- function(
   dims,
   y_stats,
   parameters,
+  device,
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
@@ -425,6 +440,7 @@ new_brulee_linear_reg <- function(
     dims = dims,
     y_stats = y_stats,
     parameters = parameters,
+    device = device,
     blueprint = blueprint,
     class = "brulee_linear_reg"
   )
@@ -447,6 +463,7 @@ linear_reg_fit_imp <-
     momentum = 0.0,
     stop_iter = 5,
     verbose = FALSE,
+    device = "cpu",
     ...
   ) {
     torch::torch_manual_seed(sample.int(10^5, 1)) # TODO doesn't give reproducible results
@@ -495,50 +512,58 @@ linear_reg_fit_imp <-
     on.exit(torch::torch_set_default_dtype(or_dtype))
     torch::torch_set_default_dtype(torch::torch_float64())
 
-    # Convert to index sampler and data loader
-    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
-    dl <- torch_data$dl
-    dl_val <- torch_data$dl_val
+    # Set device context for training
+    training_output <- torch::with_device(device = device, {
+      # Convert to index sampler and data loader
+      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
+      dl <- torch_data$dl
+      dl_val <- torch_data$dl_val
 
-    ## ---------------------------------------------------------------------------
-    # Initialize model and optimizer
-    model <- linear_reg_module(ncol(x))
-    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-    optimizer_obj <- set_optimizer(
-      optimizer,
-      model,
-      learn_rate,
-      momentum,
-      penalty,
-      mixture
-    )
+      ## -------------------------------------------------------------------------
+      # Initialize model and optimizer
+      model <- linear_reg_module(ncol(x))
+      loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
+      optimizer_obj <- set_optimizer(
+        optimizer,
+        model,
+        learn_rate,
+        momentum,
+        penalty,
+        mixture
+      )
 
-    ## ---------------------------------------------------------------------------
+      ## -------------------------------------------------------------------------
 
-    # Run training loop
-    training_result <- run_training_loop(
-      model = model,
-      dl = dl,
-      dl_val = dl_val,
-      loss_fn = loss_fn,
-      optimizer_obj = optimizer_obj,
-      epochs = epochs,
-      learn_rate = learn_rate,
-      stop_iter = stop_iter,
-      validation = validation,
-      class_weights = NULL,
-      loss_label = loss_label,
-      verbose = verbose,
-      ...
-    )
+      # Run training loop
+      training_result <- run_training_loop(
+        model = model,
+        dl = dl,
+        dl_val = dl_val,
+        loss_fn = loss_fn,
+        optimizer_obj = optimizer_obj,
+        epochs = epochs,
+        learn_rate = learn_rate,
+        stop_iter = stop_iter,
+        validation = validation,
+        class_weights = NULL,
+        loss_label = loss_label,
+        verbose = verbose,
+        ...
+      )
+
+      list(
+        model = model,
+        training_result = training_result
+      )
+    })
 
     ## ---------------------------------------------------------------------------
 
     list(
-      model_obj = model_to_raw(model),
-      estimates = training_result$param_per_epoch,
-      loss = training_result$loss_vec,
-      best_epoch = training_result$best_epoch,
+      model_obj = model_to_raw(training_output$model),
+      estimates = training_output$training_result$param_per_epoch,
+      loss = training_output$training_result$loss_vec,
+      best_epoch = training_output$training_result$best_epoch,
       dims = list(p = p, n = n, h = 0, y = y_dim, features = colnames(x)),
       y_stats = y_stats,
       parameters = list(
@@ -548,7 +573,8 @@ linear_reg_fit_imp <-
         validation = validation,
         batch_size = batch_size,
         momentum = momentum
-      )
+      ),
+      device = device
     )
   }
 

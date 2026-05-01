@@ -35,6 +35,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -60,6 +61,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -85,6 +87,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -110,6 +113,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 }
@@ -213,6 +217,13 @@ value. This can be helpful if training stops early with the message that
 \code{"Loss is NaN at epoch x Training is stopped."}}
 
 \item{verbose}{A logical that prints out the iteration history.}
+
+\item{device}{A character string specifying the device to use for computation.
+Options are \code{"cpu"}, \code{"cuda"} (NVIDIA GPU), or \code{"mps"} (Apple Silicon GPU).
+When \code{device = NULL} (default), the function automatically selects \code{"cuda"} if
+available, otherwise defaults to \code{"cpu"}. Note: MPS is not automatically
+selected because it doesn't support float64 dtype required by brulee. Users can
+explicitly set \code{device = "mps"} if they modify their code to use float32.}
 
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}

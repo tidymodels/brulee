@@ -103,17 +103,20 @@ get_linear_reg_predict_function <- function(type) {
 # Implementation
 
 predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
+  # Get safe device (fallback to CPU if trained device unavailable)
+  device <- get_safe_device(model$device)
+
   # convert from raw format
-  module <- revive_model(model$model_obj)
+  module <- revive_model(model$model_obj, device)
   # get current model parameters
   estimates <- model$estimates[[epoch]]
-  # convert to torch representation
-  estimates <- lapply(estimates, float_64)
+  # convert to torch representation on correct device
+  estimates <- lapply(estimates, float_64, device = device)
   # stuff back into the model
   module$load_state_dict(estimates)
   # put the model in evaluation mode
   module$eval()
-  predictions <- module(float_64(predictors))
+  predictions <- module(float_64(predictors, device))
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA
