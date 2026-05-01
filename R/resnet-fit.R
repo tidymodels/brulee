@@ -742,7 +742,7 @@ resnet_fit_imp <-
       # Reset the seed so that different optimizers start from the same values
       torch::torch_manual_seed(start_seed + 1)
 
-      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
+      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation, device = device)
       dl <- torch_data$dl
       dl_val <- torch_data$dl_val
 

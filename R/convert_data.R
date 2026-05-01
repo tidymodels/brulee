@@ -14,13 +14,17 @@
 #'   matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
 #' }
 #' @export
-matrix_to_dataset <- function(x, y) {
-  x <- float_64(x)
+matrix_to_dataset <- function(x, y, device = NULL) {
+  x <- float_64(x, device = device)
   if (is.factor(y)) {
     y <- as.numeric(y)
-    y <- torch::torch_tensor(y, dtype = torch::torch_long())
+    if (is.null(device)) {
+      y <- torch::torch_tensor(y, dtype = torch::torch_long())
+    } else {
+      y <- torch::torch_tensor(y, dtype = torch::torch_long(), device = device)
+    }
   } else {
-    y <- float_64(y)
+    y <- float_64(y, device = device)
   }
   torch::tensor_dataset(x = x, y = y)
 }

@@ -511,7 +511,7 @@ logistic_reg_fit_imp <-
     # Set device context for training
     training_output <- torch::with_device(device = device, {
       # Convert to index sampler and data loader
-      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
+      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation, device = device)
       dl <- torch_data$dl
       dl_val <- torch_data$dl_val
 
