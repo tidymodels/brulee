@@ -518,6 +518,7 @@ logistic_reg_fit_imp <-
       ## -------------------------------------------------------------------------
       # Initialize model and optimizer
       model <- logistic_module(ncol(x), y_dim)
+      model$to(device = device)  # Move model to the correct device
       loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
       optimizer_obj <- set_optimizer(
         optimizer,

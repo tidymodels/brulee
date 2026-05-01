@@ -522,6 +522,7 @@ linear_reg_fit_imp <-
       ## -------------------------------------------------------------------------
       # Initialize model and optimizer
       model <- linear_reg_module(ncol(x))
+      model$to(device = device)  # Move model to the correct device
       loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
       optimizer_obj <- set_optimizer(
         optimizer,

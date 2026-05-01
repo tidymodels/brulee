@@ -800,6 +800,7 @@ resnet_fit_imp <-
       dropout = dropout,
       y_dim = y_dim
     )
+    model$to(device = device)  # Move model to the correct device
 
     mixture <- check_mixture(mixture, optimizer)
 

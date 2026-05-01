@@ -829,6 +829,7 @@ mlp_fit_imp <-
       torch::torch_set_default_dtype(torch::torch_float64())
 
       model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
+      model$to(device = device)  # Move model to the correct device
       mixture <- check_mixture(mixture, optimizer)
 
       # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
