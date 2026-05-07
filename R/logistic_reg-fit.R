@@ -500,7 +500,14 @@ logistic_reg_fit_imp <-
     # Initialize model and optimizer
     model <- logistic_module(ncol(x), y_dim)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-    optimizer_obj <- set_optimizer(optimizer, model, learn_rate, momentum)
+    optimizer_obj <- set_optimizer(
+      optimizer,
+      model,
+      learn_rate,
+      momentum,
+      penalty,
+      mixture
+    )
 
     ## ---------------------------------------------------------------------------
 
@@ -578,6 +585,6 @@ get_num_logistic_reg_coef <- function(x) {
 
 #' @export
 print.brulee_logistic_reg <- function(x, ...) {
-  cat("Logistic regression\n\n")
+  cat(cli::style_bold("Logistic regression"), "\n\n", sep = "")
   brulee_print(x)
 }

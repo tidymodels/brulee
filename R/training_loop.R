@@ -66,7 +66,14 @@ determine_batch_size <- function(batch_size, optimizer, n_rows) {
 #' @return List with dl (training dataloader) and dl_val (validation dataloader)
 #' @keywords internal
 #' @noRd
-setup_torch_data <- function(x_train, y_train, x_val, y_val, batch_size, validation) {
+setup_torch_data <- function(
+  x_train,
+  y_train,
+  x_val,
+  y_val,
+  batch_size,
+  validation
+) {
   # Create training dataloader
   ds <- matrix_to_dataset(x_train, y_train)
   dl <- torch::dataloader(ds, batch_size = batch_size)
@@ -138,7 +145,12 @@ run_training_loop <- function(
   # Main training loop
   for (epoch in 1:epochs) {
     # Update learning rate
-    learn_rate <- set_learn_rate(epoch - 1, learn_rate, type = rate_schedule, ...)
+    learn_rate <- set_learn_rate(
+      epoch - 1,
+      learn_rate,
+      type = rate_schedule,
+      ...
+    )
 
     for (i in seq_along(optimizer_obj$param_groups)) {
       optimizer_obj$param_groups[[i]]$lr <- learn_rate

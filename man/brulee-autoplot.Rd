@@ -6,6 +6,7 @@
 \alias{autoplot.brulee_logistic_reg}
 \alias{autoplot.brulee_multinomial_reg}
 \alias{autoplot.brulee_linear_reg}
+\alias{autoplot.brulee_resnet}
 \title{Plot model loss over epochs}
 \usage{
 \method{autoplot}{brulee_mlp}(object, ...)
@@ -15,6 +16,8 @@
 \method{autoplot}{brulee_multinomial_reg}(object, ...)
 
 \method{autoplot}{brulee_linear_reg}(object, ...)
+
+\method{autoplot}{brulee_resnet}(object, ...)
 }
 \arguments{
 \item{object}{A \code{brulee_mlp}, \code{brulee_logistic_reg},

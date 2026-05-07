@@ -12,3 +12,5 @@
 ^revdep$
 ^[\.]?air\.toml$
 ^\.vscode$
+^\.positai$
+^\.claude$
