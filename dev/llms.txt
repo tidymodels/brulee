@@ -11,6 +11,8 @@ use the `torch` package infrastructure, such as:
   regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 - [multinomial
   regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
+- [residual networks
+  (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
 
 ## Installation
 
@@ -18,6 +20,7 @@ You can install the released version of brulee from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
+
 install.packages("brulee")
 ```
 
@@ -25,6 +28,7 @@ And the development version from
 [GitHub](https://github.com/tidymodels/brulee) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("tidymodels/brulee")
 ```
@@ -35,6 +39,7 @@ pak::pak("tidymodels/brulee")
 For example:
 
 ``` r
+
 library(brulee)
 library(recipes)
 library(yardstick)
@@ -58,6 +63,7 @@ A recipe can also be used if the data require some sort of preprocessing
 (e.g., indicator variables, transformations, or standardization):
 
 ``` r
+
 library(recipes)
 
 rec <- 
@@ -94,12 +100,14 @@ By contributing to this project, you agree to abide by its terms.
   [`autoplot(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  [`autoplot(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   : Plot model loss over epochs
 
 - [`coef(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   [`coef(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   [`coef(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   [`coef(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
+  [`coef(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   : Extract Model Coefficients
 
 - [`brulee_activations()`](https://brulee.tidymodels.org/dev/reference/brulee_activations.md)
@@ -117,6 +125,9 @@ By contributing to this project, you agree to abide by its terms.
 
 - [`brulee_multinomial_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_multinomial_reg.md)
   : Fit a multinomial regression model
+
+- [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md)
+  : Fit residual neural networks (ResNet)
 
 - [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
   : Convert data to torch format
@@ -140,6 +151,11 @@ By contributing to this project, you agree to abide by its terms.
   :
 
   Predict from a `brulee_multinomial_reg`
+
+- [`predict(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_resnet.md)
+  :
+
+  Predict from a `brulee_resnet`
 
 - [`schedule_decay_time()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_decay_expo()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)

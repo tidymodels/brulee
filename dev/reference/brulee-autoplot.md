@@ -16,6 +16,9 @@ autoplot(object, ...)
 
 # S3 method for class 'brulee_linear_reg'
 autoplot(object, ...)
+
+# S3 method for class 'brulee_resnet'
+autoplot(object, ...)
 ```
 
 ## Arguments

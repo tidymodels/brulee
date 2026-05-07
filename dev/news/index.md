@@ -2,6 +2,9 @@
 
 ## brulee (development version)
 
+- ResNet models can now be fit via
+  [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md).
+
 ## brulee 0.6.0
 
 CRAN release: 2025-09-02

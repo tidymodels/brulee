@@ -16,6 +16,9 @@ coef(object, epoch = NULL, ...)
 
 # S3 method for class 'brulee_multinomial_reg'
 coef(object, epoch = NULL, ...)
+
+# S3 method for class 'brulee_resnet'
+coef(object, epoch = NULL, ...)
 ```
 
 ## Arguments

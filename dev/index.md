@@ -11,6 +11,8 @@ use the `torch` package infrastructure, such as:
   regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 - [multinomial
   regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
+- [residual networks
+  (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
 
 ## Installation
 
@@ -18,6 +20,7 @@ You can install the released version of brulee from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
+
 install.packages("brulee")
 ```
 
@@ -25,6 +28,7 @@ And the development version from
 [GitHub](https://github.com/tidymodels/brulee) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("tidymodels/brulee")
 ```
@@ -35,6 +39,7 @@ pak::pak("tidymodels/brulee")
 For example:
 
 ``` r
+
 library(brulee)
 library(recipes)
 library(yardstick)
@@ -58,6 +63,7 @@ A recipe can also be used if the data require some sort of preprocessing
 (e.g., indicator variables, transformations, or standardization):
 
 ``` r
+
 library(recipes)
 
 rec <- 

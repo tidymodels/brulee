@@ -76,8 +76,8 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 }
 #>            Truth
 #> Prediction  Biscoe Dream Torgersen
-#>   Biscoe        50     2         3
+#>   Biscoe        48     2         3
 #>   Dream         12    38         6
-#>   Torgersen      7     8         7
+#>   Torgersen      9     8         7
 # }
 ```

@@ -6,12 +6,14 @@
   [`autoplot(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  [`autoplot(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   : Plot model loss over epochs
 
 - [`coef(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   [`coef(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   [`coef(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   [`coef(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
+  [`coef(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-coefs.md)
   : Extract Model Coefficients
 
 - [`brulee_activations()`](https://brulee.tidymodels.org/dev/reference/brulee_activations.md)
@@ -29,6 +31,9 @@
 
 - [`brulee_multinomial_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_multinomial_reg.md)
   : Fit a multinomial regression model
+
+- [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md)
+  : Fit residual neural networks (ResNet)
 
 - [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
   : Convert data to torch format
@@ -52,6 +57,11 @@
   :
 
   Predict from a `brulee_multinomial_reg`
+
+- [`predict(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_resnet.md)
+  :
+
+  Predict from a `brulee_resnet`
 
 - [`schedule_decay_time()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_decay_expo()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
