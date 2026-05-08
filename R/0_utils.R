@@ -29,6 +29,7 @@ brulee_print <- function(x, ...) {
       " " = "# Hidden Units: {x$parameters$hidden_units}"
     )
   }
+
   if (inherits(x, "brulee_resnet")) {
     param_lst <- c(
       param_lst,
@@ -52,12 +53,14 @@ brulee_print <- function(x, ...) {
   if (!is.null(x$parameters$stop_iter)) {
     param_lst <- c(param_lst, " " = "Stopping iterations: {x$parameters$stop_iter}")
   }
+
   if (x$parameters$validation > 0) {
     param_lst <- c(
       param_lst,
       " " = "% Validation: {signif(x$parameters$validation, 3)}"
     )
   }
+
   if (!is.null(x$parameters$dropout) && x$parameters$dropout > 0) {
     param_lst <- c(
       param_lst,

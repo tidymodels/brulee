@@ -4,6 +4,8 @@
 
 * All modeling functions now support GPU acceleration via the `device` parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or `device = "mps"` (Apple Silicon). When `device = NULL` (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn't support float64 dtype required by brulee. 
 
+
+
 # brulee 0.6.0
 
 * Transition from the magrittr pipe to the base R pipe.
