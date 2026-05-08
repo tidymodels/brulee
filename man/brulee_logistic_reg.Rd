@@ -152,12 +152,9 @@ improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
-\item{device}{A character string specifying the device to use for computation.
-Options are \code{"cpu"}, \code{"cuda"} (NVIDIA GPU), or \code{"mps"} (Apple Silicon GPU).
-When \code{device = NULL} (default), the function automatically selects \code{"cuda"} if
-available, otherwise defaults to \code{"cpu"}. Note: MPS is not automatically
-selected because it doesn't support float64 dtype required by brulee. Users can
-explicitly set \code{device = "mps"} if they modify their code to use float32.}
+\item{device}{A single character string for the device to train on (e.g.,
+\code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
+available, otherwise CPU.}
 
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}

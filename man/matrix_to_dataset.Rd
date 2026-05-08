@@ -4,13 +4,16 @@
 \alias{matrix_to_dataset}
 \title{Convert data to torch format}
 \usage{
-matrix_to_dataset(x, y)
+matrix_to_dataset(x, y, device = NULL)
 }
 \arguments{
 \item{x}{A numeric matrix of predictors.}
 
 \item{y}{A vector. If regression than \code{y} is numeric. For classification, it
 is a factor.}
+
+\item{device}{A single character string for the device to use (e.g., \code{"cpu"}
+or \code{"cuda"}). The default of \code{NULL} uses the CPU.}
 }
 \value{
 An R6 index sampler object with classes "training_set",

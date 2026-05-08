@@ -6,6 +6,8 @@
 #' @param x A numeric matrix of predictors.
 #' @param y A vector. If regression than `y` is numeric. For classification, it
 #'  is a factor.
+#' @param device A single character string for the device to use (e.g., `"cpu"`
+#'   or `"cuda"`). The default of `NULL` uses the CPU.
 #' @return An R6 index sampler object with classes "training_set",
 #'  "dataset", and "R6".
 #' @details Missing values should be removed before passing data to this function.

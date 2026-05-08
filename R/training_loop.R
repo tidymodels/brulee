@@ -135,7 +135,7 @@ run_training_loop <- function(
   loss_prev <- 10^38
   loss_min <- loss_prev
   poor_epoch <- 0
-  best_epoch <- 1
+  best_epoch <- 1L
   loss_vec <- rep(NA_real_, epochs)
   param_per_epoch <- list()
 
