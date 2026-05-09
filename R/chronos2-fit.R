@@ -1,22 +1,133 @@
 #' Chronos-2 pretrained forecasting model
 #'
 #' `brulee_chronos()` loads a pretrained Chronos-2 time series forecasting
-#' quantile regresison model from HuggingFace. Unlike other brulee models, no
-#' training is performed. The model is a foundation model with fixed pretrained
-#' weights.
+#' quantile regression model from HuggingFace and ingests historical
+#' ("context") data so that the returned object is ready to forecast. Unlike
+#' other brulee models, no training is performed --- the network has fixed
+#' pretrained weights.
 #'
+#' @details
+#'
+#' Every Chronos-2 forecast needs four pieces of information about the
+#' historical (context) data:
+#'
+#'   * an __id__ column that distinguishes one time series from another (e.g.
+#'     a city, store, or sensor),
+#'   * a __timestamp__ column with the time index of each observation,
+#'   * a __target__ column with the values to forecast, and
+#'   * any number of __past covariates__ --- additional numeric columns
+#'     measured alongside the target.
+#'
+#' `brulee_chronos()` is a generic with four interfaces for supplying that
+#' information. Pick whichever feels most natural for your data; all four
+#' produce an object that behaves the same way at predict time.
+#'
+#' ## Formula interface
+#'
+#' Use a formula when your data is a single tidy data frame and you want to
+#' name the covariates inline:
+#'
+#' ```r
+#' brulee_chronos(target ~ cov1 + cov2, data = df,
+#'                id_column = "item_id", timestamp_column = "timestamp")
+#' ```
+#'
+#' If you have no covariates, use `target ~ .` --- the id and timestamp
+#' columns are excluded automatically. Categorical covariates on the
+#' right-hand side are converted to numeric dummy variables (just like
+#' `lm()`).
+#'
+#' ## Recipe interface
+#'
+#' Use a [recipes::recipe()] when you want to apply preprocessing steps
+#' (e.g. normalizing or encoding columns) before the data reaches the
+#' model. With the recipe interface, the id and timestamp columns are
+#' identified by their __role__, not by name:
+#'
+#' ```r
+#' rec <- recipe(target ~ ., data = df) |>
+#'   update_role(item_id,  new_role = "id") |>
+#'   update_role(timestamp, new_role = "time") |>
+#'   step_normalize(all_numeric_predictors())
+#'
+#' brulee_chronos(rec, data = df)
+#' ```
+#'
+#' All non-numeric covariates must be encoded numerically by the recipe
+#' (e.g. with [recipes::step_dummy()]).
+#'
+#' ## Data-frame / matrix (`x` and `y`) interface
+#'
+#' Use the `x_y` interface when you already have your covariates and target
+#' separated. `x` is a data frame or matrix of past covariates (zero-column
+#' is allowed when there are no covariates), `y` is the numeric target
+#' vector, and `item_id` / `timestamp` are vectors of the same length:
+#'
+#' ```r
+#' brulee_chronos(x = df[, c("cov1", "cov2")], y = df$target,
+#'                item_id = df$item_id, timestamp = df$timestamp)
+#' ```
+#'
+#' ## Multiple time series
+#'
+#' All four interfaces support multiple series in one call. Stack the series
+#' end-to-end in a single long-format data frame and let the id column
+#' distinguish them; `brulee_chronos()` will sort each series by timestamp
+#' and forecast all of them together.
+#'
+#' ## What happens at `predict()` time
+#'
+#' By default, [predict.brulee_chronos()] forecasts from the context data
+#' that was supplied at construction --- there's no need to pass
+#' `new_data`. Override `prediction_length` or `quantile_levels` per call to
+#' change the horizon or which quantiles are returned. Pass `future_df` to
+#' supply known-future values of any covariate (e.g. holiday flags, planned
+#' promotions). To forecast a __different__ series with the same schema,
+#' pass it as `new_data`; it will be processed through the same blueprint
+#' as the original context.
+#'
+#' @param x Depending on the context:
+#'
+#'   * A __data frame__ of past covariates.
+#'   * A __matrix__ of past covariates.
+#'   * A __recipe__ specifying preprocessing and roles for `target`,
+#'     `id`, and `time` columns.
+#'
+#'  Pass an empty data frame or zero-column matrix when there are no
+#'  covariates.
+#' @param y A numeric vector of target values, of length `nrow(x)`.
+#' @param item_id A vector of time series identifiers, of length `nrow(x)`.
+#' @param timestamp A vector of timestamps (Date, POSIXct, or numeric), of
+#'   length `nrow(x)`.
+#' @param data When a __recipe__ or __formula__ is used, `data` is the
+#'   training set with columns for the id, timestamp, target, and any
+#'   covariates.
+#' @param formula A formula of the form `target ~ cov1 + cov2`. Use
+#'   `target ~ .` when there are no covariates --- the id and timestamp
+#'   columns are dropped before the formula is evaluated. The id and
+#'   timestamp columns are read from `data` by name (see `id_column` /
+#'   `timestamp_column`) and should not appear in the formula.
+#' @param id_column The name of the column in `data` containing time series
+#'   identifiers. Default: `"item_id"`. Used by the formula and `x_y`
+#'   methods; for the recipe method, identify the id column with
+#'   `recipes::update_role(..., new_role = "id")`.
+#' @param timestamp_column The name of the column in `data` containing
+#'   timestamps. Default: `"timestamp"`. Used by the formula and `x_y`
+#'   methods; for the recipe method, identify the timestamp column with
+#'   `recipes::update_role(..., new_role = "time")`.
 #' @param model_id A character string identifying the HuggingFace model
 #'   repository to download. Default: `"amazon/chronos-2"` (120M parameters).
 #' @param prediction_length An integer for the number of future time steps to
-#'   forecast. Default: `NULL` (uses the model maximum of 1024). Must not
-#'   exceed the model maximum.
+#'   forecast. Default: `NULL` (uses the model maximum). Must not exceed the
+#'   model maximum. Can be overridden at `predict()` time.
 #' @param quantile_levels A numeric vector of quantile levels to produce in
 #'   predictions. Must be a subset of the model's trained quantiles. Default:
-#'   `(1:9) / 10`.
+#'   `(1:9) / 10`. Can be overridden at `predict()` time.
 #' @param device A character string for the computation device: `"cpu"`,
 #'   `"cuda"`, or `"mps"`. Default: `NULL` (auto-detects best available).
 #' @param cache_dir Path to a directory for caching downloaded model files.
 #'   Default: `"~/.cache/chronos-r"`.
+#' @param ... Currently unused.
 #'
 #' @returns A `brulee_chronos` object with elements:
 #'
@@ -25,130 +136,512 @@
 #'   * `device`: The torch device in use.
 #'   * `prediction_length`: Validated prediction length.
 #'   * `quantile_levels`: Validated quantile levels.
+#'   * `blueprint`: The hardhat blueprint for processing new data.
+#'   * `context`: A list with the per-series target, covariates, timestamps,
+#'     and column-name metadata that `predict()` uses by default.
 #'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \dontrun{
-#' mod <- brulee_chronos()
-#' predict(mod, data.frame(
-#'   item_id = "air_passengers",
-#'   timestamp = seq(as.Date("1949-01-01"), by = "month", length.out = 144),
-#'   target = as.numeric(AirPassengers)
-#' ))
+#' data(Chicago, package = "modeldata")
+#' chi <- Chicago[, c("date", "ridership", "Clark_Lake", "Austin")]
+#' chi$series_id <- "L"
+#'
+#' # Formula interface, no covariates
+#' mod <- brulee_chronos(
+#'   ridership ~ .,
+#'   data = chi[, c("series_id", "date", "ridership")],
+#'   id_column = "series_id",
+#'   timestamp_column = "date"
+#' )
+#' predict(mod, prediction_length = 14)
+#'
+#' # Formula interface with past covariates
+#' mod_cov <- brulee_chronos(
+#'   ridership ~ Clark_Lake + Austin,
+#'   data = chi,
+#'   id_column = "series_id",
+#'   timestamp_column = "date"
+#' )
+#' predict(mod_cov, prediction_length = 14)
+#'
+#' # Recipe interface (use roles for id and timestamp)
+#' library(recipes)
+#' rec <- recipe(ridership ~ ., data = chi) |>
+#'   update_role(series_id, new_role = "id") |>
+#'   update_role(date,      new_role = "time")
+#' mod_rec <- brulee_chronos(rec, data = chi)
+#' predict(mod_rec, prediction_length = 14)
 #' }
 #' @export
-brulee_chronos <- function(
+brulee_chronos <- function(x, ...) {
+  UseMethod("brulee_chronos")
+}
+
+#' @export
+#' @rdname brulee_chronos
+brulee_chronos.default <- function(x, ...) {
+  stop(
+    "`brulee_chronos()` is not defined for a '",
+    class(x)[1],
+    "'.",
+    call. = FALSE
+  )
+}
+
+# XY method - data frame
+
+#' @export
+#' @rdname brulee_chronos
+brulee_chronos.data.frame <- function(
+  x,
+  y,
+  item_id,
+  timestamp,
+  id_column = "item_id",
+  timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
 ) {
- # TODO:
- # - make control file for model id and cache dir
- # Resolve device
- if (is.null(device)) {
-  device <- chronos2_detect_device()
- } else {
-  device <- torch::torch_device(device)
- }
+  processed <- hardhat::mold(x, y)
 
- # Download model files
- model_dir <- chronos2_download(model_id, cache_dir = cache_dir)
-
- # Parse config
- config <- chronos2_parse_config(file.path(model_dir, "config.json"))
-
- # Validate prediction_length
- max_prediction_length <- config$max_output_patches * config$output_patch_size
- if (is.null(prediction_length)) {
-  prediction_length <- max_prediction_length
- }
- if (prediction_length > max_prediction_length) {
-  cli::cli_abort(
-   "{.arg prediction_length} ({prediction_length}) exceeds model maximum ({max_prediction_length})."
+  brulee_chronos_bridge(
+    processed,
+    item_id = item_id,
+    timestamp = timestamp,
+    id_column = id_column,
+    timestamp_column = timestamp_column,
+    target_column = ".outcome",
+    model_id = model_id,
+    prediction_length = prediction_length,
+    quantile_levels = quantile_levels,
+    device = device,
+    cache_dir = cache_dir,
+    ...
   )
- }
- if (prediction_length < 1) {
-  cli::cli_abort("{.arg prediction_length} must be at least 1.")
- }
+}
 
- # Validate quantile_levels
- model_quantiles <- config$quantiles
- unavailable <- setdiff(quantile_levels, model_quantiles)
- if (length(unavailable) > 0) {
-  cli::cli_abort(c(
-   "Requested quantile levels not available in model: {.val {unavailable}}.",
-   "i" = "Available: {.val {model_quantiles}}"
-  ))
- }
+# XY method - matrix
 
- # Build model, load weights, move to device
+#' @export
+#' @rdname brulee_chronos
+brulee_chronos.matrix <- function(
+  x,
+  y,
+  item_id,
+  timestamp,
+  id_column = "item_id",
+  timestamp_column = "timestamp",
+  model_id = "amazon/chronos-2",
+  prediction_length = NULL,
+  quantile_levels = (1:9) / 10,
+  device = NULL,
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
+) {
+  processed <- hardhat::mold(x, y)
 
- model <- chronos2_model(config)
- load_chronos2_weights(model, file.path(model_dir, "model.safetensors"))
- model$to(device = device)
- model$eval()
+  brulee_chronos_bridge(
+    processed,
+    item_id = item_id,
+    timestamp = timestamp,
+    id_column = id_column,
+    timestamp_column = timestamp_column,
+    target_column = ".outcome",
+    model_id = model_id,
+    prediction_length = prediction_length,
+    quantile_levels = quantile_levels,
+    device = device,
+    cache_dir = cache_dir,
+    ...
+  )
+}
 
- structure(
-  list(
-   model = model,
-   config = config,
-   device = device,
-   prediction_length = as.integer(prediction_length),
-   quantile_levels = quantile_levels
-  ),
-  class = "brulee_chronos"
- )
+# Formula method
+
+#' @export
+#' @rdname brulee_chronos
+brulee_chronos.formula <- function(
+  formula,
+  data,
+  id_column = "item_id",
+  timestamp_column = "timestamp",
+  model_id = "amazon/chronos-2",
+  prediction_length = NULL,
+  quantile_levels = (1:9) / 10,
+  device = NULL,
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
+) {
+  if (!id_column %in% names(data)) {
+    cli::cli_abort("Column {.val {id_column}} not found in {.arg data}.")
+  }
+  if (!timestamp_column %in% names(data)) {
+    cli::cli_abort(
+      "Column {.val {timestamp_column}} not found in {.arg data}."
+    )
+  }
+
+  item_id <- data[[id_column]]
+  timestamp <- data[[timestamp_column]]
+
+  # Hide id/timestamp from the formula-mold pass so `target ~ .` doesn't pick
+  # them up as predictors.
+  data_for_mold <- data[,
+    setdiff(names(data), c(id_column, timestamp_column)),
+    drop = FALSE
+  ]
+
+  target_var <- all.vars(formula[[2]])
+  if (length(target_var) != 1L) {
+    cli::cli_abort(
+      "{.arg formula} must have exactly one variable on the left-hand side."
+    )
+  }
+  rhs_terms <- attr(stats::terms(formula, data = data_for_mold), "term.labels")
+  has_covariates <- length(rhs_terms) > 0L
+
+  if (has_covariates) {
+    processed <- hardhat::mold(formula, data_for_mold)
+  } else {
+    # No covariates: bypass the formula blueprint (which rejects `~ 1`) and
+    # mold via the x_y interface with a zero-column predictor frame.
+    if (!target_var %in% names(data_for_mold)) {
+      cli::cli_abort(
+        "Target column {.val {target_var}} not found in {.arg data}."
+      )
+    }
+    y <- data_for_mold[[target_var]]
+    empty_x <- data_for_mold[, character(0), drop = FALSE]
+    processed <- hardhat::mold(empty_x, y)
+  }
+
+  brulee_chronos_bridge(
+    processed,
+    item_id = item_id,
+    timestamp = timestamp,
+    id_column = id_column,
+    timestamp_column = timestamp_column,
+    target_column = target_var,
+    model_id = model_id,
+    prediction_length = prediction_length,
+    quantile_levels = quantile_levels,
+    device = device,
+    cache_dir = cache_dir,
+    ...
+  )
+}
+
+# Recipe method
+
+#' @export
+#' @rdname brulee_chronos
+brulee_chronos.recipe <- function(
+  x,
+  data,
+  model_id = "amazon/chronos-2",
+  prediction_length = NULL,
+  quantile_levels = (1:9) / 10,
+  device = NULL,
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
+) {
+  processed <- hardhat::mold(x, data)
+
+  # hardhat passes columns with non-standard recipe roles through
+  # `processed$extras$roles` (one tibble per role). For Chronos, we expect
+  # exactly one column with role `id` and one with role `time`.
+  roles <- processed$extras$roles
+  id_role <- roles$id
+  time_role <- roles$time
+
+  if (is.null(id_role) || ncol(id_role) != 1L) {
+    cli::cli_abort(c(
+      "The recipe must have exactly one variable with role {.val id}.",
+      "i" = "Use {.code recipes::update_role(<col>, new_role = \"id\")}."
+    ))
+  }
+  if (is.null(time_role) || ncol(time_role) != 1L) {
+    cli::cli_abort(c(
+      "The recipe must have exactly one variable with role {.val time}.",
+      "i" = "Use {.code recipes::update_role(<col>, new_role = \"time\")}."
+    ))
+  }
+
+  id_column <- names(id_role)
+  timestamp_column <- names(time_role)
+  item_id <- id_role[[1L]]
+  timestamp <- time_role[[1L]]
+
+  outcome_names <- names(processed$blueprint$ptypes$outcomes)
+  if (length(outcome_names) != 1L) {
+    cli::cli_abort(
+      "The recipe must have exactly one variable with role {.val outcome}."
+    )
+  }
+  target_column <- outcome_names
+
+  brulee_chronos_bridge(
+    processed,
+    item_id = item_id,
+    timestamp = timestamp,
+    id_column = id_column,
+    timestamp_column = timestamp_column,
+    target_column = target_column,
+    model_id = model_id,
+    prediction_length = prediction_length,
+    quantile_levels = quantile_levels,
+    device = device,
+    cache_dir = cache_dir,
+    ...
+  )
+}
+
+# ------------------------------------------------------------------------------
+# Bridge
+
+brulee_chronos_bridge <- function(
+  processed,
+  item_id,
+  timestamp,
+  id_column,
+  timestamp_column,
+  target_column,
+  model_id,
+  prediction_length,
+  quantile_levels,
+  device,
+  cache_dir,
+  ...
+) {
+  if (!torch::torch_is_installed()) {
+    cli::cli_abort(
+      "The torch backend has not been installed; use {.run torch::install_torch()}."
+    )
+  }
+
+  f_nm <- "brulee_chronos"
+
+  # Pretrained-model arg validation
+  check_character(model_id, single = TRUE, fn = f_nm)
+  check_character(cache_dir, single = TRUE, fn = f_nm)
+  if (!is.null(device)) {
+    check_character(device, single = TRUE, fn = f_nm)
+  }
+  if (!is.null(prediction_length)) {
+    if (is.numeric(prediction_length) && !is.integer(prediction_length)) {
+      prediction_length <- as.integer(prediction_length)
+    }
+    check_integer(prediction_length, single = TRUE, 1L, fn = f_nm)
+  }
+  if (!is.numeric(quantile_levels) || length(quantile_levels) < 1L) {
+    cli::cli_abort(
+      "{.arg quantile_levels} must be a non-empty numeric vector."
+    )
+  }
+  if (any(quantile_levels <= 0 | quantile_levels >= 1)) {
+    cli::cli_abort(
+      "{.arg quantile_levels} must be in the open interval (0, 1)."
+    )
+  }
+
+  # Predictor / outcome validation
+  predictors <- processed$predictors
+  outcome <- processed$outcomes[[1]]
+
+  if (!is.numeric(outcome)) {
+    cli::cli_abort(
+      "The target ({.arg y} / left-hand side of the formula) must be numeric."
+    )
+  }
+
+  non_numeric <- vapply(predictors, function(col) !is.numeric(col), logical(1))
+  if (any(non_numeric)) {
+    bad <- names(predictors)[non_numeric]
+    cli::cli_abort(c(
+      "All past covariates must be numeric. Non-numeric column{?s}: {.val {bad}}.",
+      "i" = "Use a recipe (e.g. {.fn recipes::step_dummy}) to encode them as numeric."
+    ))
+  }
+
+  # Length checks for id/timestamp
+  n <- length(outcome)
+  if (length(item_id) != n) {
+    cli::cli_abort(
+      "{.arg item_id} has length {length(item_id)} but {.arg y} has length {n}."
+    )
+  }
+  if (length(timestamp) != n) {
+    cli::cli_abort(
+      "{.arg timestamp} has length {length(timestamp)} but {.arg y} has length {n}."
+    )
+  }
+  if (any(is.na(item_id))) {
+    cli::cli_abort("{.arg item_id} must not contain {.code NA}.")
+  }
+  if (any(is.na(timestamp))) {
+    cli::cli_abort("{.arg timestamp} must not contain {.code NA}.")
+  }
+
+  # Resolve device
+  if (is.null(device)) {
+    torch_device <- chronos2_detect_device()
+  } else {
+    torch_device <- torch::torch_device(device)
+  }
+
+  # Download, parse, build, load
+  model_dir <- chronos2_download(model_id, cache_dir = cache_dir)
+  config <- chronos2_parse_config(file.path(model_dir, "config.json"))
+
+  max_prediction_length <- config$max_output_patches * config$output_patch_size
+  if (is.null(prediction_length)) {
+    prediction_length <- as.integer(max_prediction_length)
+  }
+  if (prediction_length > max_prediction_length) {
+    cli::cli_abort(
+      "{.arg prediction_length} ({prediction_length}) exceeds model maximum ({max_prediction_length})."
+    )
+  }
+
+  unavailable <- setdiff(quantile_levels, config$quantiles)
+  if (length(unavailable) > 0) {
+    cli::cli_abort(c(
+      "Requested quantile levels not available in model: {.val {unavailable}}.",
+      "i" = "Available: {.val {config$quantiles}}"
+    ))
+  }
+
+  model <- chronos2_model(config)
+  load_chronos2_weights(model, file.path(model_dir, "model.safetensors"))
+  model$to(device = torch_device)
+  model$eval()
+
+  # Per-series context split
+  context <- chronos2_split_by_series(
+    target = as.numeric(outcome),
+    covariates = as.data.frame(predictors),
+    item_id = item_id,
+    timestamp = timestamp,
+    id_column = id_column,
+    timestamp_column = timestamp_column,
+    target_column = target_column
+  )
+
+  structure(
+    list(
+      model = model,
+      config = config,
+      device = torch_device,
+      prediction_length = as.integer(prediction_length),
+      quantile_levels = quantile_levels,
+      blueprint = processed$blueprint,
+      context = context
+    ),
+    class = "brulee_chronos"
+  )
 }
 
 #' @export
 print.brulee_chronos <- function(x, ...) {
- cat(cli::style_bold("Chronos-2 Pretrained Forecasting Mode"), "\n\n", sep = "")
-
- mod_lst <-
-  c(
-   " " = "Model: {x$config$d_model}",
-   " " = "Layers: { x$config$num_layers}",
-   " " = "Attention heads: {x$config$num_heads}",
-   " " = "Quantiles: {x$prediction_length}",
-   " " = "Prediction length: {x$quantile_levels}",
-   " " = "Device: {x$device}",
+  cat(
+    cli::style_bold("Chronos-2 Pretrained Forecasting Model"),
+    "\n\n",
+    sep = ""
   )
 
- cli::cli_bullets(mod_lst)
+  n_series <- length(x$context$item_ids)
+  history_lengths <- vapply(x$context$series_target, length, integer(1))
+  n_covars <- length(x$context$covariate_cols)
 
- invisible(x)
+  mod_lst <- c(
+    " " = "Model dim: {x$config$d_model}",
+    " " = "Layers: {x$config$num_layers}",
+    " " = "Attention heads: {x$config$num_heads}",
+    " " = "Prediction length: {x$prediction_length}",
+    " " = "Quantiles: {x$quantile_levels}",
+    " " = "Device: {x$device}",
+    " " = "Context: {n_series} series, max history {max(history_lengths)}, {n_covars} covariate{?s}"
+  )
+
+  cli::cli_bullets(mod_lst)
+
+  invisible(x)
 }
 
-# ─── Internal helpers ─────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
+# Internal helpers
 
 chronos2_detect_device <- function() {
- if (torch::cuda_is_available()) {
-  torch::torch_device("cuda")
- } else if (torch::backends_mps_is_available()) {
-  torch::torch_device("mps")
- } else {
-  torch::torch_device("cpu")
- }
+  if (torch::cuda_is_available()) {
+    torch::torch_device("cuda")
+  } else if (torch::backends_mps_is_available()) {
+    torch::torch_device("mps")
+  } else {
+    torch::torch_device("cpu")
+  }
 }
 
 chronos2_download <- function(
   model_id = "amazon/chronos-2",
   cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
 ) {
- model_dir <- file.path(cache_dir, gsub("/", "--", model_id))
- dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+  model_dir <- file.path(cache_dir, gsub("/", "--", model_id))
+  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
 
- files <- c("config.json", "model.safetensors")
+  files <- c("config.json", "model.safetensors")
 
- for (f in files) {
-  dest <- file.path(model_dir, f)
-  if (!file.exists(dest)) {
-   url <- sprintf("https://huggingface.co/%s/resolve/main/%s", model_id, f)
-   cli::cli_progress_step("Downloading {.url {url}}")
-   download.file(url, dest, mode = "wb", quiet = TRUE)
+  for (f in files) {
+    dest <- file.path(model_dir, f)
+    if (!file.exists(dest)) {
+      url <- sprintf("https://huggingface.co/%s/resolve/main/%s", model_id, f)
+      cli::cli_progress_step("Downloading {.url {url}}")
+      download.file(url, dest, mode = "wb", quiet = TRUE)
+    }
   }
- }
 
- model_dir
+  model_dir
+}
+
+# Split a long-format context (target vector + covariate frame + per-row id and
+# timestamp vectors) into per-series structures keyed by unique item_id and
+# sorted by timestamp.
+chronos2_split_by_series <- function(
+  target,
+  covariates,
+  item_id,
+  timestamp,
+  id_column,
+  timestamp_column,
+  target_column
+) {
+  covariates <- as.data.frame(covariates)
+  item_ids <- unique(item_id)
+
+  series_target <- vector("list", length(item_ids))
+  series_covars <- vector("list", length(item_ids))
+  series_timestamp <- vector("list", length(item_ids))
+
+  for (i in seq_along(item_ids)) {
+    mask <- item_id == item_ids[i]
+    sub_ts <- timestamp[mask]
+    ord <- order(sub_ts)
+    series_target[[i]] <- as.numeric(target[mask][ord])
+    series_covars[[i]] <- covariates[mask, , drop = FALSE][ord, , drop = FALSE]
+    series_timestamp[[i]] <- sub_ts[ord]
+  }
+
+  list(
+    item_ids = item_ids,
+    series_target = series_target,
+    series_covars = series_covars,
+    series_timestamp = series_timestamp,
+    covariate_cols = colnames(covariates),
+    id_column = id_column,
+    timestamp_column = timestamp_column,
+    target_column = target_column
+  )
 }

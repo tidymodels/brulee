@@ -6,12 +6,9 @@
 \usage{
 \method{predict}{brulee_chronos}(
   object,
-  new_data,
+  new_data = NULL,
   future_df = NULL,
   prediction_length = NULL,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
-  target = "target",
   quantile_levels = NULL,
   ...
 )
@@ -19,29 +16,21 @@
 \arguments{
 \item{object}{A \code{brulee_chronos} object returned by \code{\link[=brulee_chronos]{brulee_chronos()}}.}
 
-\item{new_data}{A data frame in long format with columns for item
-identifiers, timestamps, and target values. Additional numeric columns are
-treated as past covariates.}
+\item{new_data}{Optional data frame in the same long format as the data
+used to build \code{object} --- it must contain the id, timestamp, target,
+and covariate columns named in \code{object}. If \code{NULL} (the default), the
+context stored in \code{object} is used.}
 
-\item{future_df}{Optional data frame with future covariate values. Must have
-the same \code{id_column} and \code{timestamp_column} as \code{new_data}, plus covariate
-columns (a subset of extra columns in \code{new_data}). Each series must have
-exactly \code{prediction_length} rows.}
+\item{future_df}{Optional data frame with future covariate values. Must
+contain the id and timestamp columns plus any covariate columns to
+provide for the future window (a subset of the past covariates). Each
+series must have exactly \code{prediction_length} rows.}
 
 \item{prediction_length}{Number of future time steps to forecast. Defaults
-to the value set in \code{\link[=brulee_chronos]{brulee_chronos()}}.}
-
-\item{id_column}{Name of the column containing time series identifiers.
-Default: \code{"item_id"}.}
-
-\item{timestamp_column}{Name of the column containing timestamps.
-Default: \code{"timestamp"}.}
-
-\item{target}{Name of the column containing target values to forecast.
-Default: \code{"target"}.}
+to the value stored in \code{object}.}
 
 \item{quantile_levels}{Numeric vector of quantile levels. Defaults to the
-value set in \code{\link[=brulee_chronos]{brulee_chronos()}}.}
+value stored in \code{object}.}
 
 \item{...}{Not used.}
 }
@@ -58,24 +47,19 @@ A data frame with columns:
 Predict from a \code{brulee_chronos} model
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \dontrun{
-mod <- brulee_chronos()
+data(Chicago, package = "modeldata")
+chi <- Chicago[, c("date", "ridership")]
+chi$series_id <- "L"
 
-df <- data.frame(
-  item_id = rep("air_passengers", 144),
-  timestamp = seq(as.Date("1949-01-01"), by = "month", length.out = 144),
-  target = as.numeric(AirPassengers)
+mod <- brulee_chronos(
+  ridership ~ .,
+  data = chi[, c("series_id", "date", "ridership")],
+  id_column = "series_id",
+  timestamp_column = "date"
 )
-
-predict(mod, df, prediction_length = 24)
-
-# With covariates
-df$temperature <- rnorm(144)
-future_df <- data.frame(
-  item_id = rep("air_passengers", 24),
-  timestamp = seq(as.Date("1961-01-01"), by = "month", length.out = 24),
-  temperature = rnorm(24)
-)
-predict(mod, df, future_df = future_df, prediction_length = 24)
+predict(mod, prediction_length = 14)
 }
+\dontshow{\}) # examplesIf}
 }

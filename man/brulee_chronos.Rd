@@ -2,33 +2,128 @@
 % Please edit documentation in R/chronos2-fit.R
 \name{brulee_chronos}
 \alias{brulee_chronos}
+\alias{brulee_chronos.default}
+\alias{brulee_chronos.data.frame}
+\alias{brulee_chronos.matrix}
+\alias{brulee_chronos.formula}
+\alias{brulee_chronos.recipe}
 \title{Chronos-2 pretrained forecasting model}
 \usage{
-brulee_chronos(
+brulee_chronos(x, ...)
+
+\method{brulee_chronos}{default}(x, ...)
+
+\method{brulee_chronos}{data.frame}(
+  x,
+  y,
+  item_id,
+  timestamp,
+  id_column = "item_id",
+  timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
+)
+
+\method{brulee_chronos}{matrix}(
+  x,
+  y,
+  item_id,
+  timestamp,
+  id_column = "item_id",
+  timestamp_column = "timestamp",
+  model_id = "amazon/chronos-2",
+  prediction_length = NULL,
+  quantile_levels = (1:9)/10,
+  device = NULL,
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
+)
+
+\method{brulee_chronos}{formula}(
+  formula,
+  data,
+  id_column = "item_id",
+  timestamp_column = "timestamp",
+  model_id = "amazon/chronos-2",
+  prediction_length = NULL,
+  quantile_levels = (1:9)/10,
+  device = NULL,
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
+)
+
+\method{brulee_chronos}{recipe}(
+  x,
+  data,
+  model_id = "amazon/chronos-2",
+  prediction_length = NULL,
+  quantile_levels = (1:9)/10,
+  device = NULL,
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  ...
 )
 }
 \arguments{
+\item{x}{Depending on the context:
+\itemize{
+\item A \strong{data frame} of past covariates.
+\item A \strong{matrix} of past covariates.
+\item A \strong{recipe} specifying preprocessing and roles for \code{target},
+\code{id}, and \code{time} columns.
+}
+
+Pass an empty data frame or zero-column matrix when there are no
+covariates.}
+
+\item{...}{Currently unused.}
+
+\item{y}{A numeric vector of target values, of length \code{nrow(x)}.}
+
+\item{item_id}{A vector of time series identifiers, of length \code{nrow(x)}.}
+
+\item{timestamp}{A vector of timestamps (Date, POSIXct, or numeric), of
+length \code{nrow(x)}.}
+
+\item{id_column}{The name of the column in \code{data} containing time series
+identifiers. Default: \code{"item_id"}. Used by the formula and \code{x_y}
+methods; for the recipe method, identify the id column with
+\code{recipes::update_role(..., new_role = "id")}.}
+
+\item{timestamp_column}{The name of the column in \code{data} containing
+timestamps. Default: \code{"timestamp"}. Used by the formula and \code{x_y}
+methods; for the recipe method, identify the timestamp column with
+\code{recipes::update_role(..., new_role = "time")}.}
+
 \item{model_id}{A character string identifying the HuggingFace model
 repository to download. Default: \code{"amazon/chronos-2"} (120M parameters).}
 
 \item{prediction_length}{An integer for the number of future time steps to
-forecast. Default: \code{NULL} (uses the model maximum of 1024). Must not
-exceed the model maximum.}
+forecast. Default: \code{NULL} (uses the model maximum). Must not exceed the
+model maximum. Can be overridden at \code{predict()} time.}
 
 \item{quantile_levels}{A numeric vector of quantile levels to produce in
 predictions. Must be a subset of the model's trained quantiles. Default:
-\code{(1:9) / 10}.}
+\code{(1:9) / 10}. Can be overridden at \code{predict()} time.}
 
 \item{device}{A character string for the computation device: \code{"cpu"},
 \code{"cuda"}, or \code{"mps"}. Default: \code{NULL} (auto-detects best available).}
 
 \item{cache_dir}{Path to a directory for caching downloaded model files.
 Default: \code{"~/.cache/chronos-r"}.}
+
+\item{formula}{A formula of the form \code{target ~ cov1 + cov2}. Use
+\code{target ~ .} when there are no covariates --- the id and timestamp
+columns are dropped before the formula is evaluated. The id and
+timestamp columns are read from \code{data} by name (see \code{id_column} /
+\code{timestamp_column}) and should not appear in the formula.}
+
+\item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is the
+training set with columns for the id, timestamp, target, and any
+covariates.}
 }
 \value{
 A \code{brulee_chronos} object with elements:
@@ -38,21 +133,131 @@ A \code{brulee_chronos} object with elements:
 \item \code{device}: The torch device in use.
 \item \code{prediction_length}: Validated prediction length.
 \item \code{quantile_levels}: Validated quantile levels.
+\item \code{blueprint}: The hardhat blueprint for processing new data.
+\item \code{context}: A list with the per-series target, covariates, timestamps,
+and column-name metadata that \code{predict()} uses by default.
 }
 }
 \description{
 \code{brulee_chronos()} loads a pretrained Chronos-2 time series forecasting
-quantile regresison model from HuggingFace. Unlike other brulee models, no
-training is performed. The model is a foundation model with fixed pretrained
-weights.
+quantile regression model from HuggingFace and ingests historical
+("context") data so that the returned object is ready to forecast. Unlike
+other brulee models, no training is performed --- the network has fixed
+pretrained weights.
+}
+\details{
+Every Chronos-2 forecast needs four pieces of information about the
+historical (context) data:
+\itemize{
+\item an \strong{id} column that distinguishes one time series from another (e.g.
+a city, store, or sensor),
+\item a \strong{timestamp} column with the time index of each observation,
+\item a \strong{target} column with the values to forecast, and
+\item any number of \strong{past covariates} --- additional numeric columns
+measured alongside the target.
+}
+
+\code{brulee_chronos()} is a generic with four interfaces for supplying that
+information. Pick whichever feels most natural for your data; all four
+produce an object that behaves the same way at predict time.
+\subsection{Formula interface}{
+
+Use a formula when your data is a single tidy data frame and you want to
+name the covariates inline:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{brulee_chronos(target ~ cov1 + cov2, data = df,
+               id_column = "item_id", timestamp_column = "timestamp")
+}\if{html}{\out{</div>}}
+
+If you have no covariates, use \code{target ~ .} --- the id and timestamp
+columns are excluded automatically. Categorical covariates on the
+right-hand side are converted to numeric dummy variables (just like
+\code{lm()}).
+}
+
+\subsection{Recipe interface}{
+
+Use a \code{\link[recipes:recipe]{recipes::recipe()}} when you want to apply preprocessing steps
+(e.g. normalizing or encoding columns) before the data reaches the
+model. With the recipe interface, the id and timestamp columns are
+identified by their \strong{role}, not by name:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rec <- recipe(target ~ ., data = df) |>
+  update_role(item_id,  new_role = "id") |>
+  update_role(timestamp, new_role = "time") |>
+  step_normalize(all_numeric_predictors())
+
+brulee_chronos(rec, data = df)
+}\if{html}{\out{</div>}}
+
+All non-numeric covariates must be encoded numerically by the recipe
+(e.g. with \code{\link[recipes:step_dummy]{recipes::step_dummy()}}).
+}
+
+\subsection{Data-frame / matrix (\code{x} and \code{y}) interface}{
+
+Use the \code{x_y} interface when you already have your covariates and target
+separated. \code{x} is a data frame or matrix of past covariates (zero-column
+is allowed when there are no covariates), \code{y} is the numeric target
+vector, and \code{item_id} / \code{timestamp} are vectors of the same length:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{brulee_chronos(x = df[, c("cov1", "cov2")], y = df$target,
+               item_id = df$item_id, timestamp = df$timestamp)
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Multiple time series}{
+
+All four interfaces support multiple series in one call. Stack the series
+end-to-end in a single long-format data frame and let the id column
+distinguish them; \code{brulee_chronos()} will sort each series by timestamp
+and forecast all of them together.
+}
+
+\subsection{What happens at \code{predict()} time}{
+
+By default, \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}} forecasts from the context data
+that was supplied at construction --- there's no need to pass
+\code{new_data}. Override \code{prediction_length} or \code{quantile_levels} per call to
+change the horizon or which quantiles are returned. Pass \code{future_df} to
+supply known-future values of any covariate (e.g. holiday flags, planned
+promotions). To forecast a \strong{different} series with the same schema,
+pass it as \code{new_data}; it will be processed through the same blueprint
+as the original context.
+}
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \dontrun{
-mod <- brulee_chronos()
-predict(mod, data.frame(
-  item_id = "air_passengers",
-  timestamp = seq(as.Date("1949-01-01"), by = "month", length.out = 144),
-  target = as.numeric(AirPassengers)
-))
+data(Chicago, package = "modeldata")
+chi <- Chicago[, c("date", "ridership", "Clark_Lake", "Austin")]
+chi$series_id <- "L"
+
+# Formula interface, no covariates
+mod <- brulee_chronos(
+  ridership ~ .,
+  data = chi[, c("series_id", "date", "ridership")],
+  id_column = "series_id",
+  timestamp_column = "date"
+)
+predict(mod, prediction_length = 14)
+
+# Formula interface with past covariates
+mod_cov <- brulee_chronos(
+  ridership ~ Clark_Lake + Austin,
+  data = chi,
+  id_column = "series_id",
+  timestamp_column = "date"
+)
+predict(mod_cov, prediction_length = 14)
+
+# Recipe interface (use roles for id and timestamp)
+library(recipes)
+rec <- recipe(ridership ~ ., data = chi) |>
+  update_role(series_id, new_role = "id") |>
+  update_role(date,      new_role = "time")
+mod_rec <- brulee_chronos(rec, data = chi)
+predict(mod_rec, prediction_length = 14)
 }
+\dontshow{\}) # examplesIf}
 }

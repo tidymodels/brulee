@@ -1,23 +1,18 @@
 #' Predict from a `brulee_chronos` model
 #'
 #' @param object A `brulee_chronos` object returned by [brulee_chronos()].
-#' @param new_data A data frame in long format with columns for item
-#'   identifiers, timestamps, and target values. Additional numeric columns are
-#'   treated as past covariates.
-#' @param future_df Optional data frame with future covariate values. Must have
-#'   the same `id_column` and `timestamp_column` as `new_data`, plus covariate
-#'   columns (a subset of extra columns in `new_data`). Each series must have
-#'   exactly `prediction_length` rows.
+#' @param new_data Optional data frame in the same long format as the data
+#'   used to build `object` --- it must contain the id, timestamp, target,
+#'   and covariate columns named in `object`. If `NULL` (the default), the
+#'   context stored in `object` is used.
+#' @param future_df Optional data frame with future covariate values. Must
+#'   contain the id and timestamp columns plus any covariate columns to
+#'   provide for the future window (a subset of the past covariates). Each
+#'   series must have exactly `prediction_length` rows.
 #' @param prediction_length Number of future time steps to forecast. Defaults
-#'   to the value set in [brulee_chronos()].
-#' @param id_column Name of the column containing time series identifiers.
-#'   Default: `"item_id"`.
-#' @param timestamp_column Name of the column containing timestamps.
-#'   Default: `"timestamp"`.
-#' @param target Name of the column containing target values to forecast.
-#'   Default: `"target"`.
+#'   to the value stored in `object`.
 #' @param quantile_levels Numeric vector of quantile levels. Defaults to the
-#'   value set in [brulee_chronos()].
+#'   value stored in `object`.
 #' @param ... Not used.
 #'
 #' @returns A data frame with columns:
@@ -27,37 +22,26 @@
 #'     \item{mean}{Point forecast (the 0.5 quantile).}
 #'     \item{`0.1`, `0.2`, ...}{One column per requested quantile level.}
 #'   }
-#'
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' \dontrun{
-#' mod <- brulee_chronos()
+#' data(Chicago, package = "modeldata")
+#' chi <- Chicago[, c("date", "ridership")]
+#' chi$series_id <- "L"
 #'
-#' df <- data.frame(
-#'   item_id = rep("air_passengers", 144),
-#'   timestamp = seq(as.Date("1949-01-01"), by = "month", length.out = 144),
-#'   target = as.numeric(AirPassengers)
+#' mod <- brulee_chronos(
+#'   ridership ~ .,
+#'   data = chi[, c("series_id", "date", "ridership")],
+#'   id_column = "series_id",
+#'   timestamp_column = "date"
 #' )
-#'
-#' predict(mod, df, prediction_length = 24)
-#'
-#' # With covariates
-#' df$temperature <- rnorm(144)
-#' future_df <- data.frame(
-#'   item_id = rep("air_passengers", 24),
-#'   timestamp = seq(as.Date("1961-01-01"), by = "month", length.out = 24),
-#'   temperature = rnorm(24)
-#' )
-#' predict(mod, df, future_df = future_df, prediction_length = 24)
+#' predict(mod, prediction_length = 14)
 #' }
 #' @export
 predict.brulee_chronos <- function(
   object,
-  new_data,
+  new_data = NULL,
   future_df = NULL,
   prediction_length = NULL,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
-  target = "target",
   quantile_levels = NULL,
   ...
 ) {
@@ -68,84 +52,133 @@ predict.brulee_chronos <- function(
     quantile_levels <- object$quantile_levels
   }
 
-  # Validate columns
-  if (!id_column %in% names(new_data)) {
-    cli::cli_abort("Column {.val {id_column}} not found in {.arg new_data}.")
-  }
-  if (!timestamp_column %in% names(new_data)) {
-    cli::cli_abort(
-      "Column {.val {timestamp_column}} not found in {.arg new_data}."
+  id_column <- object$context$id_column
+  timestamp_column <- object$context$timestamp_column
+  target_column <- object$context$target_column
+  covariate_cols <- object$context$covariate_cols
+  has_stored_covariates <- length(covariate_cols) > 0L
+
+  # Resolve context: stored or forged from new_data
+  if (is.null(new_data)) {
+    ctx <- object$context
+  } else {
+    if (has_stored_covariates) {
+      forged <- hardhat::forge(
+        new_data,
+        object$blueprint,
+        outcomes = TRUE
+      )
+
+      # Recipe-built models pass id/time through `forged$extras$roles`.
+      # Formula / x_y blueprints don't have that mechanism, so fall back to
+      # pulling those columns by name from `new_data`.
+      roles <- forged$extras$roles
+      if (!is.null(roles) && !is.null(roles$id) && !is.null(roles$time)) {
+        item_id <- roles$id[[1L]]
+        timestamp <- roles$time[[1L]]
+      } else {
+        item_id <- chronos2_pull_column(new_data, id_column, "id_column")
+        timestamp <- chronos2_pull_column(
+          new_data,
+          timestamp_column,
+          "timestamp_column"
+        )
+      }
+
+      target <- forged$outcomes[[1]]
+      covariates <- as.data.frame(forged$predictors)
+    } else {
+      # No covariates: skip forge entirely. Pull target / id / timestamp by
+      # stored names. (For x_y-built models, target_column == ".outcome", so
+      # the user must include a column with that name.)
+      target <- chronos2_pull_column(new_data, target_column, "target")
+      item_id <- chronos2_pull_column(new_data, id_column, "id_column")
+      timestamp <- chronos2_pull_column(
+        new_data,
+        timestamp_column,
+        "timestamp_column"
+      )
+      covariates <- as.data.frame(matrix(
+        NA_real_,
+        nrow = length(target),
+        ncol = 0
+      ))
+    }
+
+    if (!is.numeric(target)) {
+      cli::cli_abort("The target column must be numeric.")
+    }
+    non_numeric <- vapply(
+      covariates,
+      function(col) !is.numeric(col),
+      logical(1)
+    )
+    if (any(non_numeric)) {
+      bad <- names(covariates)[non_numeric]
+      cli::cli_abort(c(
+        "All past covariates must be numeric. Non-numeric column{?s}: {.val {bad}}."
+      ))
+    }
+
+    ctx <- chronos2_split_by_series(
+      target = as.numeric(target),
+      covariates = covariates,
+      item_id = item_id,
+      timestamp = timestamp,
+      id_column = id_column,
+      timestamp_column = timestamp_column,
+      target_column = target_column
     )
   }
-  if (!target %in% names(new_data)) {
-    cli::cli_abort("Column {.val {target}} not found in {.arg new_data}.")
-  }
 
-  # Identify covariates
-  reserved_cols <- c(id_column, timestamp_column, target)
-  covariate_cols <- setdiff(names(new_data), reserved_cols)
-  covariate_cols <- covariate_cols[vapply(
-    new_data[covariate_cols],
-    is.numeric,
-    logical(1)
-  )]
+  has_covariates <- length(ctx$covariate_cols) > 0
 
-  # Identify known-future vs past-only covariates
+  # Future-covariate handling
+  future_cov_cols <- character(0)
+  future_list <- NULL
   if (!is.null(future_df)) {
     if (!id_column %in% names(future_df)) {
-      cli::cli_abort("Column {.val {id_column}} not found in {.arg future_df}.")
+      cli::cli_abort(
+        "Column {.val {id_column}} not found in {.arg future_df}."
+      )
     }
     if (!timestamp_column %in% names(future_df)) {
       cli::cli_abort(
         "Column {.val {timestamp_column}} not found in {.arg future_df}."
       )
     }
-    future_cov_cols <- setdiff(names(future_df), c(id_column, timestamp_column))
-    bad_cols <- setdiff(future_cov_cols, covariate_cols)
+    future_cov_cols <- setdiff(
+      names(future_df),
+      c(id_column, timestamp_column)
+    )
+    bad_cols <- setdiff(future_cov_cols, ctx$covariate_cols)
     if (length(bad_cols) > 0) {
       cli::cli_abort(c(
-        "Columns in {.arg future_df} not found as covariates in {.arg new_data}: {.val {bad_cols}}.",
-        "i" = "Available covariate columns: {.val {covariate_cols}}"
+        "Columns in {.arg future_df} not found as covariates: {.val {bad_cols}}.",
+        "i" = "Available covariate columns: {.val {ctx$covariate_cols}}"
       ))
     }
-  } else {
-    future_cov_cols <- character(0)
-  }
-  has_covariates <- length(covariate_cols) > 0
 
-  # Split by item_id
-  item_ids <- unique(new_data[[id_column]])
-  series_list <- lapply(item_ids, function(id) {
-    sub <- new_data[new_data[[id_column]] == id, ]
-    sub[order(sub[[timestamp_column]]), ]
-  })
-
-  if (!is.null(future_df)) {
-    future_list <- lapply(item_ids, function(id) {
-      sub <- future_df[future_df[[id_column]] == id, ]
-      sub[order(sub[[timestamp_column]]), ]
+    future_list <- lapply(ctx$item_ids, function(id) {
+      sub <- future_df[future_df[[id_column]] == id, , drop = FALSE]
+      sub[order(sub[[timestamp_column]]), , drop = FALSE]
     })
   }
 
-  # Infer future timestamps
-  future_timestamps <- lapply(series_list, function(sub) {
-    infer_future_timestamps(sub[[timestamp_column]], prediction_length)
+  # Per-series target / covariate / timestamp lists from context
+  contexts <- ctx$series_target
+  past_cov_list <- ctx$series_covars
+  future_timestamps <- lapply(ctx$series_timestamp, function(ts_col) {
+    infer_future_timestamps(ts_col, prediction_length)
   })
-
-  # Build prediction inputs
-  contexts <- lapply(series_list, function(sub) as.numeric(sub[[target]]))
 
   if (has_covariates) {
-    past_cov_list <- lapply(series_list, function(sub) {
-      sub[, covariate_cols, drop = FALSE]
-    })
-
-    if (length(future_cov_cols) > 0 && !is.null(future_df)) {
-      future_cov_list <- lapply(seq_along(item_ids), function(i) {
+    if (length(future_cov_cols) > 0 && !is.null(future_list)) {
+      future_cov_list <- lapply(seq_along(ctx$item_ids), function(i) {
         future_sub <- future_list[[i]]
         if (nrow(future_sub) != prediction_length) {
           cli::cli_abort(
-            "Series {.val {item_ids[i]}}: {.arg future_df} has {nrow(future_sub)} rows, expected {prediction_length}."
+            "Series {.val {ctx$item_ids[i]}}: {.arg future_df} has {nrow(future_sub)} rows, expected {prediction_length}."
           )
         }
         future_sub[, future_cov_cols, drop = FALSE]
@@ -169,8 +202,7 @@ predict.brulee_chronos <- function(
     )
   }
 
-  # Validate quantile levels against model
-
+  # Map requested quantile levels to model quantile indices
   model_quantiles <- object$config$quantiles
   quantile_indices <- match(quantile_levels, model_quantiles)
 
@@ -180,12 +212,12 @@ predict.brulee_chronos <- function(
   }
 
   # Build output data frame
-  out_rows <- vector("list", length(item_ids))
-  for (i in seq_along(item_ids)) {
+  out_rows <- vector("list", length(ctx$item_ids))
+  for (i in seq_along(ctx$item_ids)) {
     preds_i <- as.matrix(result$predictions[i, , ])
 
     row_df <- data.frame(
-      id = rep(item_ids[i], prediction_length),
+      id = rep(ctx$item_ids[i], prediction_length),
       timestamp = future_timestamps[[i]],
       mean = as.numeric(preds_i[median_idx, ])
     )
@@ -202,6 +234,15 @@ predict.brulee_chronos <- function(
   }
 
   do.call(rbind, out_rows)
+}
+
+chronos2_pull_column <- function(data, column, arg_label) {
+  if (!column %in% names(data)) {
+    cli::cli_abort(
+      "Column {.val {column}} (from {.arg {arg_label}}) not found in {.arg new_data}."
+    )
+  }
+  data[[column]]
 }
 
 # ─── Internal prediction engine ──────────────────────────────────────────────
