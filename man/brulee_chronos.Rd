@@ -21,6 +21,7 @@ brulee_chronos(x, ...)
   id_column = "item_id",
   timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
@@ -36,6 +37,7 @@ brulee_chronos(x, ...)
   id_column = "item_id",
   timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
@@ -49,6 +51,7 @@ brulee_chronos(x, ...)
   id_column = "item_id",
   timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
@@ -60,6 +63,7 @@ brulee_chronos(x, ...)
   x,
   data,
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
@@ -101,6 +105,13 @@ methods; for the recipe method, identify the timestamp column with
 \item{model_id}{A character string identifying the HuggingFace model
 repository to download. Default: \code{"amazon/chronos-2"} (120M parameters).}
 
+\item{revision}{A character string identifying which version of the
+weights to load. May be a 40-character commit SHA, a tag, or a branch
+name on the HuggingFace repo (e.g. \code{"main"}). Default: a commit SHA
+pinned by brulee so the weights cannot change without you opting in.
+The resolved SHA is recorded on the returned object as
+\code{object$revision} and printed by \code{print()}.}
+
 \item{prediction_length}{An integer for the number of future time steps to
 forecast. Default: \code{NULL} (uses the model maximum). Must not exceed the
 model maximum. Can be overridden at \code{predict()} time.}
@@ -133,6 +144,8 @@ A \code{brulee_chronos} object with elements:
 \item \code{device}: The torch device in use.
 \item \code{prediction_length}: Validated prediction length.
 \item \code{quantile_levels}: Validated quantile levels.
+\item \code{model_id}: The HuggingFace repository the weights came from.
+\item \code{revision}: The 40-character commit SHA of the weights actually loaded.
 \item \code{blueprint}: The hardhat blueprint for processing new data.
 \item \code{context}: A list with the per-series target, covariates, timestamps,
 and column-name metadata that \code{predict()} uses by default.

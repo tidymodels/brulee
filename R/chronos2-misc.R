@@ -1015,7 +1015,7 @@ load_chronos2_weights <- function(model, safetensors_path) {
   # fmt: skip
   num_layers <- length(model$encoder$blocks)
   for (i in seq_len(num_layers)) {
-    py_i <- i - 1  # Python 0-indexed
+    py_i <- i - 1 # Python 0-indexed
     block <- model$encoder$blocks[[i]]
     prefix <- paste0("encoder.block.", py_i, ".")
 
@@ -1090,4 +1090,156 @@ load_chronos2_weights <- function(model, safetensors_path) {
   }
 
   invisible(model)
+}
+
+# ------------------------------------------------------------------------------
+# Download
+
+# Pinned default revision for `amazon/chronos-2`. Bump this deliberately
+# when we're ready to ship a new set of weights -- never let users silently
+# track a moving HuggingFace branch.
+chronos2_default_revision <- function() {
+  "0f8a440441931157957e2be1a9bce66627d99c76"
+}
+
+# Resolve a HuggingFace revision (branch / tag / SHA) to a 40-character
+# commit SHA. SHAs are returned as-is so this is a no-op for the default
+# pinned revision (no network call required).
+chronos2_resolve_revision <- function(model_id, revision) {
+  if (grepl("^[0-9a-f]{40}$", revision)) {
+    return(revision)
+  }
+
+  url <- sprintf(
+    "https://huggingface.co/api/models/%s/revision/%s",
+    model_id,
+    utils::URLencode(revision, reserved = TRUE)
+  )
+  res <- tryCatch(
+    curl::curl_fetch_memory(url),
+    error = function(e) e
+  )
+  if (inherits(res, "error")) {
+    cli::cli_abort(c(
+      "Failed to resolve revision {.val {revision}} for {.val {model_id}}.",
+      "x" = conditionMessage(res)
+    ))
+  }
+  if (res$status_code != 200L) {
+    cli::cli_abort(
+      "Failed to resolve revision {.val {revision}} for {.val {model_id}} (HTTP {res$status_code})."
+    )
+  }
+  parsed <- jsonlite::fromJSON(rawToChar(res$content))
+  if (is.null(parsed$sha) || !nzchar(parsed$sha)) {
+    cli::cli_abort(
+      "HuggingFace API did not return a SHA for revision {.val {revision}}."
+    )
+  }
+  parsed$sha
+}
+
+# Fetch the Content-Length for a URL via a HEAD request, returning NA when
+# the server doesn't expose it (in which case we just skip size checking).
+chronos2_remote_size <- function(url) {
+  handle <- curl::new_handle()
+  curl::handle_setopt(handle, nobody = TRUE, followlocation = TRUE)
+  res <- tryCatch(
+    curl::curl_fetch_memory(url, handle = handle),
+    error = function(e) e
+  )
+  if (inherits(res, "error") || res$status_code >= 400L) {
+    return(NA_real_)
+  }
+  hdrs <- curl::parse_headers(res$headers)
+  cl <- grep("^content-length:", hdrs, ignore.case = TRUE, value = TRUE)
+  if (length(cl) == 0L) {
+    return(NA_real_)
+  }
+  as.numeric(sub("^[Cc]ontent-[Ll]ength:\\s*([0-9]+).*$", "\\1", cl[[1L]]))
+}
+
+# Download a single file with size validation and bounded retries. If the
+# destination already holds a complete file (size matches the remote
+# Content-Length, or HEAD didn't expose one), we keep it.
+chronos2_download_file <- function(url, dest, label, max_attempts = 3L) {
+  expected_size <- chronos2_remote_size(url)
+
+  if (
+    file.exists(dest) &&
+      (is.na(expected_size) || file.size(dest) == expected_size)
+  ) {
+    return(invisible(dest))
+  }
+
+  if (file.exists(dest)) {
+    cli::cli_alert_info(
+      "Cached {.file {label}} is incomplete (size {.val {file.size(dest)}} of {.val {expected_size}}); re-downloading."
+    )
+    file.remove(dest)
+  }
+
+  for (attempt in seq_len(max_attempts)) {
+    cli::cli_progress_step("Downloading {.url {url}}")
+    err <- tryCatch(
+      {
+        curl::curl_download(url, dest, mode = "wb", quiet = TRUE)
+        NULL
+      },
+      error = function(e) e
+    )
+
+    ok <-
+      is.null(err) &&
+      file.exists(dest) &&
+      (is.na(expected_size) || file.size(dest) == expected_size)
+    if (ok) {
+      return(invisible(dest))
+    }
+
+    if (file.exists(dest)) {
+      file.remove(dest)
+    }
+    if (attempt < max_attempts) {
+      cli::cli_alert_warning(
+        "Attempt {attempt}/{max_attempts} for {.val {label}} failed; retrying."
+      )
+    }
+  }
+
+  cli::cli_abort(c(
+    "Failed to download {.url {url}} after {max_attempts} attempts.",
+    "i" = "If you keep hitting this, try a different network or proxy."
+  ))
+}
+
+chronos2_download <- function(
+  model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
+  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
+) {
+  sha <- chronos2_resolve_revision(model_id, revision)
+
+  model_dir <- file.path(cache_dir, gsub("/", "--", model_id), sha)
+  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+
+  files <- c("config.json", "model.safetensors")
+
+  # `download.file()` defaults to a 60-second timeout, which is too tight
+  # for the ~478MB safetensors file. Lift it for the duration of the call.
+  old_timeout <- getOption("timeout")
+  options(timeout = max(600L, old_timeout))
+  on.exit(options(timeout = old_timeout), add = TRUE)
+
+  for (f in files) {
+    url <- sprintf(
+      "https://huggingface.co/%s/resolve/%s/%s",
+      model_id,
+      sha,
+      f
+    )
+    chronos2_download_file(url, file.path(model_dir, f), label = f)
+  }
+
+  list(model_dir = model_dir, sha = sha)
 }

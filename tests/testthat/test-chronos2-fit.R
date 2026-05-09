@@ -10,7 +10,33 @@ skip_if_not_installed("recipes")
 skip_if_not_installed("modeldata")
 
 stub_chronos_loaders <- function() {
+  fake_dir <- file.path(
+    tempdir(check = TRUE),
+    paste0("chronos-stub-", as.integer(Sys.time()))
+  )
+  dir.create(fake_dir, recursive = TRUE, showWarnings = FALSE)
+
   testthat::local_mocked_bindings(
+    chronos2_download = function(model_id, revision, cache_dir) {
+      list(
+        model_dir = fake_dir,
+        sha = if (grepl("^[0-9a-f]{40}$", revision)) {
+          revision
+        } else {
+          "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        }
+      )
+    },
+    chronos2_parse_config = function(path) {
+      list(
+        d_model = 384L,
+        num_layers = 12L,
+        num_heads = 12L,
+        output_patch_size = 16L,
+        max_output_patches = 64L,
+        quantiles = (1:9) / 10
+      )
+    },
     chronos2_model = function(config) {
       structure(list(config = config), class = "fake_chronos_module")
     },
@@ -65,6 +91,48 @@ test_that("formula method builds context with no covariates", {
   expect_equal(length(mod$context$covariate_cols), 0L)
   expect_equal(length(mod$context$item_ids), 1L)
   expect_equal(length(mod$context$series_target[[1]]), nrow(d))
+})
+
+test_that("model_id and revision are recorded on the object", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  d <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = d,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  expect_equal(mod$model_id, "amazon/chronos-2")
+  # Default revision is the pinned 40-char SHA
+  expect_match(mod$revision, "^[0-9a-f]{40}$")
+  expect_equal(mod$revision, brulee:::chronos2_default_revision())
+})
+
+test_that("an explicit SHA is passed through verbatim (no API call)", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  d <- Chi[, c("series_id", "date", "ridership")]
+  some_sha <- "1234567890abcdef1234567890abcdef12345678"
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = d,
+    id_column = "series_id",
+    timestamp_column = "date",
+    revision = some_sha
+  )
+  expect_equal(mod$revision, some_sha)
+})
+
+test_that("chronos2_resolve_revision returns SHAs unchanged offline", {
+  sha <- "1234567890abcdef1234567890abcdef12345678"
+  expect_equal(
+    brulee:::chronos2_resolve_revision("amazon/chronos-2", sha),
+    sha
+  )
 })
 
 test_that("formula method builds context with covariates", {

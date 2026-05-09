@@ -117,6 +117,12 @@
 #'   `recipes::update_role(..., new_role = "time")`.
 #' @param model_id A character string identifying the HuggingFace model
 #'   repository to download. Default: `"amazon/chronos-2"` (120M parameters).
+#' @param revision A character string identifying which version of the
+#'   weights to load. May be a 40-character commit SHA, a tag, or a branch
+#'   name on the HuggingFace repo (e.g. `"main"`). Default: a commit SHA
+#'   pinned by brulee so the weights cannot change without you opting in.
+#'   The resolved SHA is recorded on the returned object as
+#'   `object$revision` and printed by `print()`.
 #' @param prediction_length An integer for the number of future time steps to
 #'   forecast. Default: `NULL` (uses the model maximum). Must not exceed the
 #'   model maximum. Can be overridden at `predict()` time.
@@ -136,6 +142,8 @@
 #'   * `device`: The torch device in use.
 #'   * `prediction_length`: Validated prediction length.
 #'   * `quantile_levels`: Validated quantile levels.
+#'   * `model_id`: The HuggingFace repository the weights came from.
+#'   * `revision`: The 40-character commit SHA of the weights actually loaded.
 #'   * `blueprint`: The hardhat blueprint for processing new data.
 #'   * `context`: A list with the per-series target, covariates, timestamps,
 #'     and column-name metadata that `predict()` uses by default.
@@ -200,6 +208,7 @@ brulee_chronos.data.frame <- function(
   id_column = "item_id",
   timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
@@ -216,6 +225,7 @@ brulee_chronos.data.frame <- function(
     timestamp_column = timestamp_column,
     target_column = ".outcome",
     model_id = model_id,
+    revision = revision,
     prediction_length = prediction_length,
     quantile_levels = quantile_levels,
     device = device,
@@ -236,6 +246,7 @@ brulee_chronos.matrix <- function(
   id_column = "item_id",
   timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
@@ -252,6 +263,7 @@ brulee_chronos.matrix <- function(
     timestamp_column = timestamp_column,
     target_column = ".outcome",
     model_id = model_id,
+    revision = revision,
     prediction_length = prediction_length,
     quantile_levels = quantile_levels,
     device = device,
@@ -270,6 +282,7 @@ brulee_chronos.formula <- function(
   id_column = "item_id",
   timestamp_column = "timestamp",
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
@@ -327,6 +340,7 @@ brulee_chronos.formula <- function(
     timestamp_column = timestamp_column,
     target_column = target_var,
     model_id = model_id,
+    revision = revision,
     prediction_length = prediction_length,
     quantile_levels = quantile_levels,
     device = device,
@@ -343,6 +357,7 @@ brulee_chronos.recipe <- function(
   x,
   data,
   model_id = "amazon/chronos-2",
+  revision = chronos2_default_revision(),
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
@@ -392,6 +407,7 @@ brulee_chronos.recipe <- function(
     timestamp_column = timestamp_column,
     target_column = target_column,
     model_id = model_id,
+    revision = revision,
     prediction_length = prediction_length,
     quantile_levels = quantile_levels,
     device = device,
@@ -411,6 +427,7 @@ brulee_chronos_bridge <- function(
   timestamp_column,
   target_column,
   model_id,
+  revision,
   prediction_length,
   quantile_levels,
   device,
@@ -427,6 +444,7 @@ brulee_chronos_bridge <- function(
 
   # Pretrained-model arg validation
   check_character(model_id, single = TRUE, fn = f_nm)
+  check_character(revision, single = TRUE, fn = f_nm)
   check_character(cache_dir, single = TRUE, fn = f_nm)
   if (!is.null(device)) {
     check_character(device, single = TRUE, fn = f_nm)
@@ -493,9 +511,17 @@ brulee_chronos_bridge <- function(
     torch_device <- torch::torch_device(device)
   }
 
-  # Download, parse, build, load
-  model_dir <- chronos2_download(model_id, cache_dir = cache_dir)
-  config <- chronos2_parse_config(file.path(model_dir, "config.json"))
+  # Download, parse, build, load. Returns the resolved commit SHA so we
+  # can record exactly which version of the weights ended up in the object.
+  download_info <- chronos2_download(
+    model_id,
+    revision = revision,
+    cache_dir = cache_dir
+  )
+  resolved_sha <- download_info$sha
+  config <- chronos2_parse_config(
+    file.path(download_info$model_dir, "config.json")
+  )
 
   max_prediction_length <- config$max_output_patches * config$output_patch_size
   if (is.null(prediction_length)) {
@@ -516,7 +542,10 @@ brulee_chronos_bridge <- function(
   }
 
   model <- chronos2_model(config)
-  load_chronos2_weights(model, file.path(model_dir, "model.safetensors"))
+  load_chronos2_weights(
+    model,
+    file.path(download_info$model_dir, "model.safetensors")
+  )
   model$to(device = torch_device)
   model$eval()
 
@@ -538,6 +567,8 @@ brulee_chronos_bridge <- function(
       device = torch_device,
       prediction_length = as.integer(prediction_length),
       quantile_levels = quantile_levels,
+      model_id = model_id,
+      revision = resolved_sha,
       blueprint = processed$blueprint,
       context = context
     ),
@@ -557,7 +588,9 @@ print.brulee_chronos <- function(x, ...) {
   history_lengths <- vapply(x$context$series_target, length, integer(1))
   n_covars <- length(x$context$covariate_cols)
 
+  short_sha <- if (is.null(x$revision)) "unknown" else substr(x$revision, 1, 8)
   mod_lst <- c(
+    " " = "Source: {x$model_id} @ {short_sha}",
     " " = "Model dim: {x$config$d_model}",
     " " = "Layers: {x$config$num_layers}",
     " " = "Attention heads: {x$config$num_heads}",
@@ -585,26 +618,8 @@ chronos2_detect_device <- function() {
   }
 }
 
-chronos2_download <- function(
-  model_id = "amazon/chronos-2",
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
-) {
-  model_dir <- file.path(cache_dir, gsub("/", "--", model_id))
-  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
-
-  files <- c("config.json", "model.safetensors")
-
-  for (f in files) {
-    dest <- file.path(model_dir, f)
-    if (!file.exists(dest)) {
-      url <- sprintf("https://huggingface.co/%s/resolve/main/%s", model_id, f)
-      cli::cli_progress_step("Downloading {.url {url}}")
-      download.file(url, dest, mode = "wb", quiet = TRUE)
-    }
-  }
-
-  model_dir
-}
+# Download / revision-resolution helpers live in chronos2-misc.R alongside
+# the safetensors loader and config parser.
 
 # Split a long-format context (target vector + covariate frame + per-row id and
 # timestamp vectors) into per-series structures keyed by unique item_id and
