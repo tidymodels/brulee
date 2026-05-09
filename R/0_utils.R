@@ -51,7 +51,10 @@ brulee_print <- function(x, ...) {
     )
   }
   if (!is.null(x$parameters$stop_iter)) {
-    param_lst <- c(param_lst, " " = "Stopping iterations: {x$parameters$stop_iter}")
+    param_lst <- c(
+      param_lst,
+      " " = "Stopping iterations: {x$parameters$stop_iter}"
+    )
   }
 
   if (x$parameters$validation > 0) {
@@ -82,7 +85,10 @@ brulee_print <- function(x, ...) {
   }
 
   if (!is.null(x$parameters$optimizer)) {
-    param_lst <- c(param_lst, " " = "Optimizer: {.val {x$parameters$optimizer}}")
+    param_lst <- c(
+      param_lst,
+      " " = "Optimizer: {.val {x$parameters$optimizer}}"
+    )
     if (x$parameters$optimizer != "LBFGS") {
       param_lst <- c(param_lst, " " = "Batch Size: {x$parameters$batch_size}")
     }
@@ -203,8 +209,11 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
       l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
       # Create penalty tensor on the same device as l_term
       # l_term is already float64 from model parameters, on the correct device
-      penalty_tensor <- torch::torch_tensor(penalty, dtype = torch::torch_float64(),
-                                            device = l_term$device)
+      penalty_tensor <- torch::torch_tensor(
+        penalty,
+        dtype = torch::torch_float64(),
+        device = l_term$device
+      )
       loss <- loss + penalty_tensor * l_term
     }
     loss

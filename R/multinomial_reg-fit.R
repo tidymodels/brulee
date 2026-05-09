@@ -491,15 +491,29 @@ multinomial_reg_fit_imp <-
     # Set device context for training
     training_output <- torch::with_device(device = device, {
       # Convert to index sampler and data loader
-      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation, device = device)
+      torch_data <- setup_torch_data(
+        x,
+        y,
+        x_val,
+        y_val,
+        batch_size,
+        validation,
+        device = device
+      )
       dl <- torch_data$dl
       dl_val <- torch_data$dl_val
 
       ## -------------------------------------------------------------------------
       # Initialize model and optimizer
       model <- multinomial_module(ncol(x), y_dim)
-      model$to(device = device)  # Move model to the correct device
-      loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
+      model$to(device = device) # Move model to the correct device
+      loss_fn <- make_penalized_loss(
+        loss_fn,
+        model,
+        penalty,
+        mixture,
+        optimizer
+      )
       optimizer_obj <- set_optimizer(
         optimizer,
         model,

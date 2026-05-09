@@ -777,7 +777,15 @@ mlp_fit_imp <-
       # Reset the seed so that different optimizers start from the same values
       torch::torch_manual_seed(start_seed + 1)
 
-      torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation, device = device)
+      torch_data <- setup_torch_data(
+        x,
+        y,
+        x_val,
+        y_val,
+        batch_size,
+        validation,
+        device = device
+      )
       dl <- torch_data$dl
       dl_val <- torch_data$dl_val
 
@@ -828,7 +836,13 @@ mlp_fit_imp <-
 
       # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
       # optimizer depending on whether it's pure L2 (mixture = 0) or has L1 component.
-      loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
+      loss_fn <- make_penalized_loss(
+        loss_fn,
+        model,
+        penalty,
+        mixture,
+        optimizer
+      )
 
       optimizer_obj <- set_optimizer(
         optimizer,
