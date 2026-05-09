@@ -127,7 +127,7 @@ predictions. Must be a subset of the model's trained quantiles. Default:
 Default: \code{"~/.cache/chronos-r"}.}
 
 \item{formula}{A formula of the form \code{target ~ cov1 + cov2}. Use
-\code{target ~ .} when there are no covariates --- the id and timestamp
+\code{target ~ .} when there are no covariates. The id and timestamp
 columns are dropped before the formula is evaluated. The id and
 timestamp columns are read from \code{data} by name (see \code{id_column} /
 \code{timestamp_column}) and should not appear in the formula.}
@@ -155,7 +155,7 @@ and column-name metadata that \code{predict()} uses by default.
 \code{brulee_chronos()} loads a pretrained Chronos-2 time series forecasting
 quantile regression model from HuggingFace and ingests historical
 ("context") data so that the returned object is ready to forecast. Unlike
-other brulee models, no training is performed --- the network has fixed
+other brulee models, no training is performed; the network has fixed
 pretrained weights.
 }
 \details{
@@ -166,7 +166,7 @@ historical (context) data:
 a city, store, or sensor),
 \item a \strong{timestamp} column with the time index of each observation,
 \item a \strong{target} column with the values to forecast, and
-\item any number of \strong{past covariates} --- additional numeric columns
+\item any number of \strong{past covariates}; additional numeric columns
 measured alongside the target.
 }
 
@@ -230,7 +230,7 @@ and forecast all of them together.
 \subsection{What happens at \code{predict()} time}{
 
 By default, \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}} forecasts from the context data
-that was supplied at construction --- there's no need to pass
+that was supplied at construction. There's no need to pass
 \code{new_data}. Override \code{prediction_length} or \code{quantile_levels} per call to
 change the horizon or which quantiles are returned. Pass \code{future_df} to
 supply known-future values of any covariate (e.g. holiday flags, planned

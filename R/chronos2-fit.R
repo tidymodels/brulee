@@ -3,7 +3,7 @@
 #' `brulee_chronos()` loads a pretrained Chronos-2 time series forecasting
 #' quantile regression model from HuggingFace and ingests historical
 #' ("context") data so that the returned object is ready to forecast. Unlike
-#' other brulee models, no training is performed --- the network has fixed
+#' other brulee models, no training is performed; the network has fixed
 #' pretrained weights.
 #'
 #' @details
@@ -15,7 +15,7 @@
 #'     a city, store, or sensor),
 #'   * a __timestamp__ column with the time index of each observation,
 #'   * a __target__ column with the values to forecast, and
-#'   * any number of __past covariates__ --- additional numeric columns
+#'   * any number of __past covariates__; additional numeric columns
 #'     measured alongside the target.
 #'
 #' `brulee_chronos()` is a generic with four interfaces for supplying that
@@ -78,7 +78,7 @@
 #' ## What happens at `predict()` time
 #'
 #' By default, [predict.brulee_chronos()] forecasts from the context data
-#' that was supplied at construction --- there's no need to pass
+#' that was supplied at construction. There's no need to pass
 #' `new_data`. Override `prediction_length` or `quantile_levels` per call to
 #' change the horizon or which quantiles are returned. Pass `future_df` to
 #' supply known-future values of any covariate (e.g. holiday flags, planned
@@ -103,7 +103,7 @@
 #'   training set with columns for the id, timestamp, target, and any
 #'   covariates.
 #' @param formula A formula of the form `target ~ cov1 + cov2`. Use
-#'   `target ~ .` when there are no covariates --- the id and timestamp
+#'   `target ~ .` when there are no covariates. The id and timestamp
 #'   columns are dropped before the formula is evaluated. The id and
 #'   timestamp columns are read from `data` by name (see `id_column` /
 #'   `timestamp_column`) and should not appear in the formula.

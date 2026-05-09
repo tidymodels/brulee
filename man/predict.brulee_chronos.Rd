@@ -17,7 +17,7 @@
 \item{object}{A \code{brulee_chronos} object returned by \code{\link[=brulee_chronos]{brulee_chronos()}}.}
 
 \item{new_data}{Optional data frame in the same long format as the data
-used to build \code{object} --- it must contain the id, timestamp, target,
+used to build \code{object}. It should contain the id, timestamp, target,
 and covariate columns named in \code{object}. If \code{NULL} (the default), the
 context stored in \code{object} is used.}
 
@@ -41,7 +41,7 @@ context). Columns:
 \describe{
 \item{\verb{<id_column>}}{The time series identifier. Omitted when the
 context contains a single series.}
-\item{\code{.pred}}{Point forecast --- the median of \code{.pred_quantile}.}
+\item{\code{.pred}}{Point forecast, i.e. the median of \code{.pred_quantile}.}
 \item{\code{.pred_quantile}}{A \code{\link[hardhat:quantile_pred]{hardhat::quantile_pred()}} vector packing
 all requested quantile levels into a single column.}
 }

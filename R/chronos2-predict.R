@@ -2,7 +2,7 @@
 #'
 #' @param object A `brulee_chronos` object returned by [brulee_chronos()].
 #' @param new_data Optional data frame in the same long format as the data
-#'   used to build `object` --- it must contain the id, timestamp, target,
+#'   used to build `object`. It should contain the id, timestamp, target,
 #'   and covariate columns named in `object`. If `NULL` (the default), the
 #'   context stored in `object` is used.
 #' @param future_df Optional data frame with future covariate values. Must
@@ -21,7 +21,7 @@
 #'   \describe{
 #'     \item{`<id_column>`}{The time series identifier. Omitted when the
 #'       context contains a single series.}
-#'     \item{`.pred`}{Point forecast --- the median of `.pred_quantile`.}
+#'     \item{`.pred`}{Point forecast, i.e. the median of `.pred_quantile`.}
 #'     \item{`.pred_quantile`}{A [hardhat::quantile_pred()] vector packing
 #'       all requested quantile levels into a single column.}
 #'   }
@@ -169,8 +169,8 @@ predict.brulee_chronos <- function(
   }
 
   # Per-series target / covariate lists from context. Future timestamps are
-  # not needed downstream --- prediction order is determined by horizon
-  # alone --- and the timestamp column is intentionally not returned.
+  # not needed downstream. Prediction order is determined by horizon
+  # alone and the timestamp column is intentionally not returned.
   contexts <- ctx$series_target
   past_cov_list <- ctx$series_covars
 
