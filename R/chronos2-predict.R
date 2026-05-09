@@ -15,7 +15,7 @@
 #'   value stored in `object`.
 #' @param ... Not used.
 #'
-#' @returns A data frame with columns:
+#' @returns A [tibble][tibble::tibble] with columns:
 #'   \describe{
 #'     \item{`<id_column>`}{The time series identifier.}
 #'     \item{`<timestamp_column>`}{Future timestamps.}
@@ -211,29 +211,28 @@ predict.brulee_chronos <- function(
     median_idx <- which.min(abs(model_quantiles - 0.5))
   }
 
-  # Build output data frame
+  # Build output tibble
   out_rows <- vector("list", length(ctx$item_ids))
   for (i in seq_along(ctx$item_ids)) {
     preds_i <- as.matrix(result$predictions[i, , ])
 
-    row_df <- data.frame(
-      id = rep(ctx$item_ids[i], prediction_length),
-      timestamp = future_timestamps[[i]],
-      mean = as.numeric(preds_i[median_idx, ])
+    cols <- list(
+      rep(ctx$item_ids[i], prediction_length),
+      future_timestamps[[i]],
+      as.numeric(preds_i[median_idx, ])
     )
-    names(row_df)[1] <- id_column
-    names(row_df)[2] <- timestamp_column
+    names(cols) <- c(id_column, timestamp_column, "mean")
 
     for (q_idx in seq_along(quantile_levels)) {
-      row_df[[as.character(quantile_levels[q_idx])]] <- as.numeric(preds_i[
+      cols[[as.character(quantile_levels[q_idx])]] <- as.numeric(preds_i[
         quantile_indices[q_idx],
       ])
     }
 
-    out_rows[[i]] <- row_df
+    out_rows[[i]] <- tibble::as_tibble(cols)
   }
 
-  do.call(rbind, out_rows)
+  dplyr::bind_rows(out_rows)
 }
 
 chronos2_pull_column <- function(data, column, arg_label) {

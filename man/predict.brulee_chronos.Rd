@@ -35,7 +35,7 @@ value stored in \code{object}.}
 \item{...}{Not used.}
 }
 \value{
-A data frame with columns:
+A \link[tibble:tibble]{tibble} with columns:
 \describe{
 \item{\verb{<id_column>}}{The time series identifier.}
 \item{\verb{<timestamp_column>}}{Future timestamps.}
