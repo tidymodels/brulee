@@ -31,7 +31,8 @@ Imports:
     stats,
     tibble,
     torch (>= 0.13.0),
-    utils
+    utils,
+    withr
 Suggests: 
     covr,
     modeldata,

@@ -35,12 +35,15 @@ value stored in \code{object}.}
 \item{...}{Not used.}
 }
 \value{
-A \link[tibble:tibble]{tibble} with columns:
+A \link[tibble:tibble]{tibble} with one row per future time step
+per series, in the same order as the rows of \code{new_data} (or the stored
+context). Columns:
 \describe{
-\item{\verb{<id_column>}}{The time series identifier.}
-\item{\verb{<timestamp_column>}}{Future timestamps.}
-\item{mean}{Point forecast (the 0.5 quantile).}
-\item{\code{0.1}, \code{0.2}, ...}{One column per requested quantile level.}
+\item{\verb{<id_column>}}{The time series identifier. Omitted when the
+context contains a single series.}
+\item{\code{.pred}}{Point forecast --- the median of \code{.pred_quantile}.}
+\item{\code{.pred_quantile}}{A \code{\link[hardhat:quantile_pred]{hardhat::quantile_pred()}} vector packing
+all requested quantile levels into a single column.}
 }
 }
 \description{

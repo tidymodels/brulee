@@ -15,12 +15,15 @@
 #'   value stored in `object`.
 #' @param ... Not used.
 #'
-#' @returns A [tibble][tibble::tibble] with columns:
+#' @returns A [tibble][tibble::tibble] with one row per future time step
+#'   per series, in the same order as the rows of `new_data` (or the stored
+#'   context). Columns:
 #'   \describe{
-#'     \item{`<id_column>`}{The time series identifier.}
-#'     \item{`<timestamp_column>`}{Future timestamps.}
-#'     \item{mean}{Point forecast (the 0.5 quantile).}
-#'     \item{`0.1`, `0.2`, ...}{One column per requested quantile level.}
+#'     \item{`<id_column>`}{The time series identifier. Omitted when the
+#'       context contains a single series.}
+#'     \item{`.pred`}{Point forecast --- the median of `.pred_quantile`.}
+#'     \item{`.pred_quantile`}{A [hardhat::quantile_pred()] vector packing
+#'       all requested quantile levels into a single column.}
 #'   }
 #' @examplesIf !brulee:::is_cran_check()
 #' \dontrun{
@@ -165,12 +168,11 @@ predict.brulee_chronos <- function(
     })
   }
 
-  # Per-series target / covariate / timestamp lists from context
+  # Per-series target / covariate lists from context. Future timestamps are
+  # not needed downstream --- prediction order is determined by horizon
+  # alone --- and the timestamp column is intentionally not returned.
   contexts <- ctx$series_target
   past_cov_list <- ctx$series_covars
-  future_timestamps <- lapply(ctx$series_timestamp, function(ts_col) {
-    infer_future_timestamps(ts_col, prediction_length)
-  })
 
   if (has_covariates) {
     if (length(future_cov_cols) > 0 && !is.null(future_list)) {
@@ -206,30 +208,34 @@ predict.brulee_chronos <- function(
   model_quantiles <- object$config$quantiles
   quantile_indices <- match(quantile_levels, model_quantiles)
 
-  median_idx <- match(0.5, model_quantiles)
-  if (is.na(median_idx)) {
-    median_idx <- which.min(abs(model_quantiles - 0.5))
-  }
+  # Build output tibble. Quantile predictions are packed into a single
+  # `.pred_quantile` column via hardhat::quantile_pred(); `.pred` is the
+  # median pulled out of that quantile_pred. The id column is omitted when
+  # the context contains a single series; the timestamp column is never
+  # returned.
+  multiple_series <- length(ctx$item_ids) > 1L
 
-  # Build output tibble
   out_rows <- vector("list", length(ctx$item_ids))
   for (i in seq_along(ctx$item_ids)) {
     preds_i <- as.matrix(result$predictions[i, , ])
 
-    cols <- list(
-      rep(ctx$item_ids[i], prediction_length),
-      future_timestamps[[i]],
-      as.numeric(preds_i[median_idx, ])
-    )
-    names(cols) <- c(id_column, timestamp_column, "mean")
+    # rows = future timesteps, cols = requested quantile levels
+    q_mat <- t(preds_i[quantile_indices, , drop = FALSE])
+    qp <- hardhat::quantile_pred(q_mat, quantile_levels)
 
-    for (q_idx in seq_along(quantile_levels)) {
-      cols[[as.character(quantile_levels[q_idx])]] <- as.numeric(preds_i[
-        quantile_indices[q_idx],
-      ])
+    row_tbl <- tibble::tibble(
+      .pred = as.numeric(stats::median(qp)),
+      .pred_quantile = qp
+    )
+    if (multiple_series) {
+      row_tbl <- tibble::add_column(
+        row_tbl,
+        !!id_column := rep(ctx$item_ids[i], prediction_length),
+        .before = 1L
+      )
     }
 
-    out_rows[[i]] <- tibble::as_tibble(cols)
+    out_rows[[i]] <- row_tbl
   }
 
   dplyr::bind_rows(out_rows)
@@ -503,42 +509,4 @@ chronos2_run_with_covariates <- function(
     quantiles = config$quantiles,
     prediction_length = prediction_length
   )
-}
-
-# ─── Timestamp inference ─────────────────────────────────────────────────────
-
-infer_future_timestamps <- function(ts_col, prediction_length) {
-  n <- length(ts_col)
-  if (n < 2) {
-    cli::cli_abort(
-      "Each time series must have at least 2 observations to infer frequency."
-    )
-  }
-  last_ts <- ts_col[n]
-
-  if (inherits(ts_col, "Date")) {
-    diffs <- as.numeric(diff(tail(ts_col, min(n, 12))), units = "days")
-    if (all(diffs >= 28 & diffs <= 31)) {
-      return(seq(last_ts, by = "month", length.out = prediction_length + 1)[-1])
-    }
-    freq_days <- median(diffs)
-    return(
-      last_ts +
-        as.difftime(freq_days, units = "days") * seq_len(prediction_length)
-    )
-  } else if (inherits(ts_col, "POSIXct") || inherits(ts_col, "POSIXlt")) {
-    diffs <- as.numeric(diff(tail(ts_col, min(n, 12))), units = "secs")
-    median_secs <- median(diffs)
-    if (abs(median_secs - 3600) < 60) {
-      return(seq(last_ts, by = "hour", length.out = prediction_length + 1)[-1])
-    } else if (abs(median_secs - 86400) < 60) {
-      return(seq(last_ts, by = "day", length.out = prediction_length + 1)[-1])
-    } else if (all(diffs >= 28 * 86400 & diffs <= 31 * 86400)) {
-      return(seq(last_ts, by = "month", length.out = prediction_length + 1)[-1])
-    }
-    return(last_ts + median_secs * seq_len(prediction_length))
-  } else {
-    freq <- ts_col[n] - ts_col[n - 1]
-    return(last_ts + freq * seq_len(prediction_length))
-  }
 }

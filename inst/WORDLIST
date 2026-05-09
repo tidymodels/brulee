@@ -3,10 +3,12 @@ Adadelta
 Babenko
 CMD
 Cham
+Chronos
 Codecov
 Duchi
 Gorishniy
 Hazan
+HuggingFace
 Hutter
 Khrulkov
 LBFGS
@@ -15,12 +17,14 @@ Loshchilov
 Mobilenetv
 ORCID
 PBC
+POSIXct
 ReLU
 Ren
 ResNet
 ResNets
 Rubachev
 SGD
+SHA
 Sandler
 Springer
 Zeiler
@@ -36,6 +40,7 @@ mlp
 multilayer
 perceptrons
 preprint
+pretrained
 relu
 subgradient
 tanh

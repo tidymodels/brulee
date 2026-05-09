@@ -9,14 +9,14 @@ skip_if_not_installed("hardhat")
 skip_if_not_installed("recipes")
 skip_if_not_installed("modeldata")
 
-stub_chronos_loaders <- function() {
+stub_chronos_loaders <- function(also_mock_predict_core = FALSE) {
   fake_dir <- file.path(
     tempdir(check = TRUE),
     paste0("chronos-stub-", as.integer(Sys.time()))
   )
   dir.create(fake_dir, recursive = TRUE, showWarnings = FALSE)
 
-  testthat::local_mocked_bindings(
+  bindings <- list(
     chronos2_download = function(model_id, revision, cache_dir) {
       list(
         model_dir = fake_dir,
@@ -40,9 +40,40 @@ stub_chronos_loaders <- function() {
     chronos2_model = function(config) {
       structure(list(config = config), class = "fake_chronos_module")
     },
-    load_chronos2_weights = function(model, path) invisible(NULL),
-    .package = "brulee",
-    .env = parent.frame()
+    load_chronos2_weights = function(model, path) invisible(NULL)
+  )
+
+  if (also_mock_predict_core) {
+    # Return a deterministic [n_series, n_model_quantiles, prediction_length]
+    # array. Quantiles are fixed at config$quantiles = (1:9)/10 (see above).
+    bindings$chronos2_predict_core <- function(
+      object,
+      context,
+      prediction_length = NULL,
+      past_covariates = NULL,
+      future_covariates = NULL
+    ) {
+      n_series <- if (is.list(context)) length(context) else 1L
+      n_q <- length(object$config$quantiles)
+      preds <- array(0, dim = c(n_series, n_q, prediction_length))
+      for (s in seq_len(n_series)) {
+        for (q in seq_len(n_q)) {
+          for (t in seq_len(prediction_length)) {
+            preds[s, q, t] <- s * 100 + object$config$quantiles[q] * 10 + t
+          }
+        }
+      }
+      list(
+        predictions = preds,
+        quantiles = object$config$quantiles,
+        prediction_length = prediction_length
+      )
+    }
+  }
+
+  do.call(
+    testthat::local_mocked_bindings,
+    c(bindings, list(.package = "brulee", .env = parent.frame()))
   )
   # `model$to(...)` and `model$eval()` need to no-op
   assign(
@@ -346,4 +377,107 @@ test_that("recipe blueprint forges id/time through extras roles", {
   expect_setequal(names(forged$extras$roles), c("id", "time"))
   expect_equal(forged$extras$roles$id[[1]], Chi$series_id)
   expect_equal(forged$extras$roles$time[[1]], Chi$date)
+})
+
+# ------------------------------------------------------------------------------
+# predict.brulee_chronos output shape / types
+
+test_that("predict() returns a tibble with .pred + .pred_quantile (single series)", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  d <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = d,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+  out <- predict(mod, prediction_length = 5L)
+
+  expect_s3_class(out, "tbl_df")
+  # single series -> id column omitted; timestamp never present
+  expect_named(out, c(".pred", ".pred_quantile"))
+  expect_equal(nrow(out), 5L)
+  expect_type(out$.pred, "double")
+  expect_s3_class(out$.pred_quantile, "quantile_pred")
+  # default quantile_levels has 9 levels
+  expect_equal(ncol(as.matrix(out$.pred_quantile)), 9L)
+  # `.pred` should equal median(.pred_quantile) elementwise
+  expect_equal(out$.pred, as.numeric(stats::median(out$.pred_quantile)))
+})
+
+test_that("predict() keeps the id column when there are multiple series", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  # Two synthetic series, same shape
+  d <- rbind(
+    transform(Chi[, c("series_id", "date", "ridership")], series_id = "A"),
+    transform(Chi[, c("series_id", "date", "ridership")], series_id = "B")
+  )
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = d,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+  out <- predict(mod, prediction_length = 4L)
+
+  expect_s3_class(out, "tbl_df")
+  expect_named(out, c("series_id", ".pred", ".pred_quantile"))
+  expect_setequal(out$series_id, c("A", "B"))
+  expect_equal(nrow(out), 2L * 4L)
+  expect_s3_class(out$.pred_quantile, "quantile_pred")
+})
+
+test_that("predict() respects a custom quantile_levels override", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  d <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = d,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+  out <- predict(
+    mod,
+    prediction_length = 3L,
+    quantile_levels = c(0.1, 0.5, 0.9)
+  )
+
+  expect_equal(nrow(out), 3L)
+  expect_s3_class(out$.pred_quantile, "quantile_pred")
+  expect_equal(ncol(as.matrix(out$.pred_quantile)), 3L)
+  # quantile labels stored on the quantile_pred match the request
+  expect_equal(
+    attr(out$.pred_quantile, "quantile_levels"),
+    c(0.1, 0.5, 0.9)
+  )
+})
+
+test_that("predict() does not return any timestamp column", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  d <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = d,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+  out <- predict(mod, prediction_length = 2L)
+
+  expect_false("date" %in% names(out))
+  expect_false("timestamp" %in% names(out))
+  # also no Date / POSIXct columns sneaking through under another name
+  is_time_col <- vapply(
+    out,
+    function(col) inherits(col, c("Date", "POSIXct", "POSIXlt")),
+    logical(1)
+  )
+  expect_false(any(is_time_col))
 })
