@@ -1,5 +1,6 @@
 # TODO:
 # - serialize model file/bundle method
+# - hardhat as_tibble( wide = TRUE) method
 
 # ------------------------------------------------------------------------------
 # utilities
