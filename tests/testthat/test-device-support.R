@@ -1,7 +1,9 @@
 test_that("guess_brulee_device returns cpu when no GPU available", {
   skip_if(!torch::torch_is_installed())
-  skip_if(torch::cuda_is_available() || torch::backends_mps_is_available(),
-          message = "GPU available - skipping CPU-only test")
+  skip_if(
+    torch::cuda_is_available() || torch::backends_mps_is_available(),
+    message = "GPU available - skipping CPU-only test"
+  )
 
   device <- brulee:::guess_brulee_device(NULL)
   expect_equal(device, "cpu")
@@ -13,7 +15,7 @@ test_that("guess_brulee_device returns input when not NULL", {
   expect_equal(brulee:::guess_brulee_device("cpu"), "cpu")
   expect_equal(brulee:::guess_brulee_device("cuda"), "cuda")
   expect_equal(brulee:::guess_brulee_device("mps"), "mps")
-  expect_equal(brulee:::guess_brulee_device("CPU"), "cpu")  # case-insensitive
+  expect_equal(brulee:::guess_brulee_device("CPU"), "cpu") # case-insensitive
 })
 
 test_that("guess_brulee_device prefers cuda over mps and cpu", {
@@ -26,7 +28,10 @@ test_that("guess_brulee_device prefers cuda over mps and cpu", {
 
 test_that("guess_brulee_device skips mps (float64 incompatibility)", {
   skip_if(!torch::torch_is_installed())
-  skip_if(torch::cuda_is_available(), message = "CUDA available - skipping MPS test")
+  skip_if(
+    torch::cuda_is_available(),
+    message = "CUDA available - skipping MPS test"
+  )
   skip_if(!torch::backends_mps_is_available(), message = "MPS not available")
 
   # MPS should be skipped in auto-detection because it doesn't support float64
@@ -40,7 +45,7 @@ test_that("validate_device accepts valid devices", {
   expect_equal(brulee:::validate_device("cpu"), "cpu")
   expect_equal(brulee:::validate_device("cuda"), "cuda")
   expect_equal(brulee:::validate_device("mps"), "mps")
-  expect_equal(brulee:::validate_device("CPU"), "cpu")  # case-insensitive
+  expect_equal(brulee:::validate_device("CPU"), "cpu") # case-insensitive
   expect_equal(brulee:::validate_device("CUDA"), "cuda")
 })
 
