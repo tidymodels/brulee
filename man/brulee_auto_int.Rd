@@ -22,6 +22,8 @@ brulee_auto_int(x, ...)
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -47,6 +49,8 @@ brulee_auto_int(x, ...)
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -72,6 +76,8 @@ brulee_auto_int(x, ...)
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -97,6 +103,8 @@ brulee_auto_int(x, ...)
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -152,7 +160,19 @@ learns different interaction patterns in parallel. Must be >= 1.}
 layers. More layers capture higher-order interactions. Must be >= 1.}
 
 \item{activation}{A single character string for the activation function used
-after each attention block. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
+in the self-attention backbone (applied after each residual connection in
+each attention block). This does not affect the optional hidden layers; use
+\code{hidden_activation} for those. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
+
+\item{hidden_units}{An integer vector for the number of units in optional
+hidden layers between the attention backbone and the output head. For
+example, \code{c(64L, 32L)} adds two hidden layers with 64 and 32 units.
+When \code{NULL} (the default), no hidden layers are added.}
+
+\item{hidden_activation}{A character vector of activation functions for the
+hidden layers. Must be the same length as \code{hidden_units} or a single value
+that will be recycled. When \code{NULL} (the default), no hidden layers are
+added. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
 
 \item{penalty}{The amount of weight decay (i.e., L2 regularization).}
 
@@ -249,16 +269,41 @@ The AutoInt architecture has three stages:
 \item \strong{Embedding layer}: Maps every feature (categorical or continuous) into
 a shared vector space of dimension \code{num_embedding}.
 \item \strong{Self-attention backbone}: A stack of \code{num_attn_blocks} multi-head
-self-attention layers with residual connections and layer normalization.
-Each block lets every feature attend to every other feature.
-\item \strong{Output head}: Flattens all feature vectors and projects to the output
-dimension via a linear layer.
+self-attention layers. After all blocks, a residual connection from
+the original embeddings is added and an activation is applied.
+\item \strong{Hidden layers} (optional): If \code{hidden_units} is specified, one or more
+fully-connected layers with activations process the flattened attention
+output before the output head.
+\item \strong{Output head}: Projects to the output dimension via a linear layer.
 }
 
 Unlike other \pkg{brulee} models, \code{brulee_auto_int()} natively handles factor
 predictors via learned embeddings. Factor columns are automatically detected
 and embedded, while numeric columns use a scaled embedding. There is \emph{no need
 to pre-encode factors as indicators}.
+}
+
+\subsection{Attention Parameters}{
+
+The self-attention backbone has several tuning parameters that control its
+capacity and regularization:
+\itemize{
+\item \code{num_attn_heads}: The number of attention heads that operate \strong{in parallel}
+within each attention block. Each head independently learns which features
+interact, giving the model multiple "views" of the feature relationships.
+The total attention dimension per block is \code{num_attn_feat * num_attn_heads}.
+\item \code{num_attn_feat}: The per-head attention dimension. Each head projects
+features into a space of this size to compute attention scores. Larger
+values give each head more capacity to represent complex interactions.
+\item \code{num_attn_blocks}: The number of attention layers stacked \strong{sequentially}.
+Each block's output feeds into the next, allowing the model to build
+higher-order interactions (e.g., block 1 captures pairwise interactions,
+block 2 can combine those into three-way interactions, etc.).
+\item \code{activation}: The activation function applied after the residual connection
+at the end of the attention backbone.
+\item \code{dropout_attn}: Dropout applied to the attention weight matrix within each
+block, which randomly zeroes out attention connections during training.
+}
 }
 
 \subsection{Learning Rates}{

@@ -19,7 +19,17 @@
 #' @param dropout_embedding A number in `[0, 1)` for the dropout rate applied
 #'   to the embedding layer during training.
 #' @param activation A single character string for the activation function used
-#'   after each attention block. See [brulee_activations()] for options.
+#'   in the self-attention backbone (applied after each residual connection in
+#'   each attention block). This does not affect the optional hidden layers; use
+#'   `hidden_activation` for those. See [brulee_activations()] for options.
+#' @param hidden_units An integer vector for the number of units in optional
+#'   hidden layers between the attention backbone and the output head. For
+#'   example, `c(64L, 32L)` adds two hidden layers with 64 and 32 units.
+#'   When `NULL` (the default), no hidden layers are added.
+#' @param hidden_activation A character vector of activation functions for the
+#'   hidden layers. Must be the same length as `hidden_units` or a single value
+#'   that will be recycled. When `NULL` (the default), no hidden layers are
+#'   added. See [brulee_activations()] for options.
 #'
 #' @details
 #'
@@ -35,15 +45,42 @@
 #' 1. **Embedding layer**: Maps every feature (categorical or continuous) into
 #'    a shared vector space of dimension `num_embedding`.
 #' 2. **Self-attention backbone**: A stack of `num_attn_blocks` multi-head
-#'    self-attention layers with residual connections and layer normalization.
-#'    Each block lets every feature attend to every other feature.
-#' 3. **Output head**: Flattens all feature vectors and projects to the output
-#'    dimension via a linear layer.
+#'    self-attention layers. After all blocks, a residual connection from
+#'    the original embeddings is added and an activation is applied.
+#' 3. **Hidden layers** (optional): If `hidden_units` is specified, one or more
+#'    fully-connected layers with activations process the flattened attention
+#'    output before the output head.
+#' 4. **Output head**: Projects to the output dimension via a linear layer.
 #'
 #' Unlike other \pkg{brulee} models, `brulee_auto_int()` natively handles factor
 #' predictors via learned embeddings. Factor columns are automatically detected
 #' and embedded, while numeric columns use a scaled embedding. There is _no need
 #' to pre-encode factors as indicators_.
+#'
+#' ## Attention Parameters
+#'
+#' The self-attention backbone has several tuning parameters that control its
+#' capacity and regularization:
+#'
+#' - `num_attn_heads`: The number of attention heads that operate **in parallel**
+#'   within each attention block. Each head independently learns which features
+#'   interact, giving the model multiple "views" of the feature relationships.
+#'   The total attention dimension per block is `num_attn_feat * num_attn_heads`.
+#'
+#' - `num_attn_feat`: The per-head attention dimension. Each head projects
+#'   features into a space of this size to compute attention scores. Larger
+#'   values give each head more capacity to represent complex interactions.
+#'
+#' - `num_attn_blocks`: The number of attention layers stacked **sequentially**.
+#'   Each block's output feeds into the next, allowing the model to build
+#'   higher-order interactions (e.g., block 1 captures pairwise interactions,
+#'   block 2 can combine those into three-way interactions, etc.).
+#'
+#' - `activation`: The activation function applied after the residual connection
+#'   at the end of the attention backbone.
+#'
+#' - `dropout_attn`: Dropout applied to the attention weight matrix within each
+#'   block, which randomly zeroes out attention connections during training.
 #'
 #' ## Learning Rates
 #'
@@ -151,6 +188,8 @@ brulee_auto_int.data.frame <- function(
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -177,6 +216,8 @@ brulee_auto_int.data.frame <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     activation = activation,
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     penalty = penalty,
@@ -207,6 +248,8 @@ brulee_auto_int.matrix <- function(
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -232,6 +275,8 @@ brulee_auto_int.matrix <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     activation = activation,
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -262,6 +307,8 @@ brulee_auto_int.formula <- function(
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -291,6 +338,8 @@ brulee_auto_int.formula <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     activation = activation,
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -321,6 +370,8 @@ brulee_auto_int.recipe <- function(
   num_attn_heads = 2L,
   num_attn_blocks = 3L,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -346,6 +397,8 @@ brulee_auto_int.recipe <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     activation = activation,
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -374,6 +427,8 @@ brulee_auto_int_bridge <- function(
   num_attn_heads,
   num_attn_blocks,
   activation,
+  hidden_units,
+  hidden_activation,
   learn_rate,
   rate_schedule,
   momentum,
@@ -406,6 +461,13 @@ brulee_auto_int_bridge <- function(
     activation = activation,
     dropout_attn = dropout_attn,
     dropout_embedding = dropout_embedding,
+    fn = f_nm
+  )
+
+  # Validate hidden layer arguments
+  hidden_validated <- validate_hidden_args(
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation,
     fn = f_nm
   )
 
@@ -468,6 +530,8 @@ brulee_auto_int_bridge <- function(
     num_attn_heads = auto_int_validated$num_attn_heads,
     num_attn_blocks = auto_int_validated$num_attn_blocks,
     activation = auto_int_validated$activation,
+    hidden_units = hidden_validated$hidden_units,
+    hidden_activation = hidden_validated$hidden_activation,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -636,6 +700,49 @@ validate_auto_int_args <- function(
   )
 }
 
+validate_hidden_args <- function(hidden_units, hidden_activation, fn = NULL) {
+  if (is.null(hidden_units) && is.null(hidden_activation)) {
+    return(list(hidden_units = NULL, hidden_activation = NULL))
+  }
+
+  if (is.null(hidden_units) != is.null(hidden_activation)) {
+    cli::cli_abort(
+      "Both {.arg hidden_units} and {.arg hidden_activation} must be provided together or both be {.code NULL}.",
+      call = NULL
+    )
+  }
+
+  if (is.numeric(hidden_units) && !is.integer(hidden_units)) {
+    hidden_units <- as.integer(hidden_units)
+  }
+  check_integer(hidden_units, single = FALSE, 1, fn = fn)
+
+  if (length(hidden_units) > 1 && length(hidden_activation) == 1) {
+    hidden_activation <- rep(hidden_activation, length(hidden_units))
+  }
+
+  if (length(hidden_units) != length(hidden_activation)) {
+    cli::cli_abort(
+      "{.arg hidden_activation} must be a single value or a vector with the same length as {.arg hidden_units}.",
+      call = NULL
+    )
+  }
+
+  allowed_activation <- brulee_activations()
+  good_activation <- hidden_activation %in% allowed_activation
+  if (!all(good_activation)) {
+    cli::cli_abort(
+      "{.arg hidden_activation} should be one of: {.val {allowed_activation}}, not {.val {hidden_activation[!good_activation]}}.",
+      call = NULL
+    )
+  }
+
+  list(
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation
+  )
+}
+
 # ------------------------------------------------------------------------------
 # Constructor
 
@@ -728,6 +835,8 @@ auto_int_fit_imp <- function(
   rate_schedule = "none",
   momentum = 0.0,
   activation = "relu",
+  hidden_units = NULL,
+  hidden_activation = NULL,
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
@@ -893,6 +1002,8 @@ auto_int_fit_imp <- function(
     y_stats = y_stats,
     parameters = list(
       activation = activation,
+      hidden_units = hidden_units,
+      hidden_activation = hidden_activation,
       num_embedding = num_embedding,
       num_attn_feat = num_attn_feat,
       num_attn_heads = num_attn_heads,
@@ -926,6 +1037,8 @@ auto_int_fit_imp <- function(
     dropout_attn = dropout_attn,
     dropout_embedding = dropout_embedding,
     activation = activation,
+    hidden_units = hidden_units,
+    hidden_activation = hidden_activation,
     y_dim = y_dim
   )
 
@@ -1265,7 +1378,6 @@ auto_int_backbone_module <- torch::nn_module(
     self$num_attn <- num_attn
 
     self$input_proj <- torch::nn_linear(num_embedding, num_attn)
-    self$act <- get_activation_fn(activation)
 
     self$attention_layers <- torch::nn_module_list(lapply(
       seq_len(num_attn_blocks),
@@ -1279,15 +1391,8 @@ auto_int_backbone_module <- torch::nn_module(
       }
     ))
 
-    self$residual_projections <- torch::nn_module_list(lapply(
-      seq_len(num_attn_blocks),
-      function(i) torch::nn_linear(num_attn, num_attn)
-    ))
-
-    self$layer_norms <- torch::nn_module_list(lapply(
-      seq_len(num_attn_blocks),
-      function(i) torch::nn_layer_norm(num_attn)
-    ))
+    self$V_res <- torch::nn_linear(num_embedding, num_attn)
+    self$act <- get_activation_fn(activation)
 
     self$last_attention_weights <- NULL
   },
@@ -1297,17 +1402,13 @@ auto_int_backbone_module <- torch::nn_module(
 
     for (i in seq_len(self$num_attn_blocks)) {
       attn_result <- self$attention_layers[[i]](h, h, h)
-      attn_out <- attn_result[[1]]
+      h <- attn_result[[1]]
       attn_weights_list[[i]] <- attn_result[[2]]
-
-      # Residual + activation + layer norm
-      res <- self$residual_projections[[i]](h)
-      attn_out <- attn_out + res
-      attn_out <- self$act(attn_out)
-      attn_out <- self$layer_norms[[i]](attn_out)
-
-      h <- attn_out
     }
+
+    # Single residual from original embeddings + activation
+    h <- h + self$V_res(x)
+    h <- self$act(h)
 
     self$last_attention_weights <- attn_weights_list
     h
@@ -1326,10 +1427,13 @@ auto_int_module <- torch::nn_module(
     dropout_attn,
     dropout_embedding,
     activation,
+    hidden_units,
+    hidden_activation,
     y_dim
   ) {
     num_features <- length(pred_lvls) + n_continuous
     num_attn <- num_attn_feat * num_attn_heads
+    flattened_dim <- num_features * num_attn
 
     self$embedding <- auto_int_embedding_module(
       pred_lvls = pred_lvls,
@@ -1348,7 +1452,26 @@ auto_int_module <- torch::nn_module(
       activation = activation
     )
 
-    self$output_head <- torch::nn_linear(num_features * num_attn, y_dim)
+    if (!is.null(hidden_units)) {
+      hidden_layers <- list()
+      input_dim <- flattened_dim
+      for (i in seq_along(hidden_units)) {
+        hidden_layers[[length(hidden_layers) + 1]] <-
+          torch::nn_linear(input_dim, hidden_units[i])
+        hidden_layers[[length(hidden_layers) + 1]] <-
+          get_activation_fn(hidden_activation[i])
+        input_dim <- hidden_units[i]
+      }
+      self$hidden <- torch::nn_sequential(!!!hidden_layers)
+      self$output_head <- torch::nn_linear(
+        hidden_units[length(hidden_units)],
+        y_dim
+      )
+    } else {
+      self$hidden <- NULL
+      self$output_head <- torch::nn_linear(flattened_dim, y_dim)
+    }
+
     self$y_dim <- y_dim
   },
   forward = function(x_cat = NULL, x_cont = NULL) {
@@ -1356,6 +1479,10 @@ auto_int_module <- torch::nn_module(
     embeds <- self$embedding_drop(embeds)
     h <- self$backbone(embeds)
     h_flat <- h$reshape(c(h$shape[1], -1))
+
+    if (!is.null(self$hidden)) {
+      h_flat <- self$hidden(h_flat)
+    }
     x <- self$output_head(h_flat)
 
     if (self$y_dim > 1L) {
@@ -1395,7 +1522,17 @@ print.brulee_auto_int <- function(x, ...) {
   param_lst <- c(
     " " = "Activation: {.val {x$parameters$activation}}",
     " " = "Embedding dim: {x$parameters$num_embedding}",
-    " " = "Attention: {x$parameters$num_attn_heads} heads x {x$parameters$num_attn_feat} dim, {x$parameters$num_attn_blocks} block{?s}",
+    " " = "Attention: {x$parameters$num_attn_heads} heads x {x$parameters$num_attn_feat} dim, {x$parameters$num_attn_blocks} block{?s}"
+  )
+  if (!is.null(x$parameters$hidden_units)) {
+    units_str <- paste(x$parameters$hidden_units, collapse = ", ")
+    param_lst <- c(
+      param_lst,
+      " " = "Hidden layers: {units_str} units, {.val {unique(x$parameters$hidden_activation)}} activation"
+    )
+  }
+  param_lst <- c(
+    param_lst,
     " " = "Learning Rate: {signif(x$parameters$learn_rate, 3)}, Schedule: {.val {x$parameters$sched}}",
     " " = "Stopping iterations: {x$parameters$stop_iter}"
   )
