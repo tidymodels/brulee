@@ -81,3 +81,7 @@ autoplot.brulee_linear_reg <- brulee_plot
 #' @rdname brulee-autoplot
 #' @export
 autoplot.brulee_resnet <- brulee_plot
+
+#' @rdname brulee-autoplot
+#' @export
+autoplot.brulee_auto_int <- brulee_plot
