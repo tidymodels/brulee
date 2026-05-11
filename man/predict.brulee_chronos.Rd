@@ -17,14 +17,19 @@
 \item{object}{A \code{brulee_chronos} object returned by \code{\link[=brulee_chronos]{brulee_chronos()}}.}
 
 \item{new_data}{Optional data frame in the same long format as the data
-used to build \code{object}. It should contain the id, timestamp, target,
-and covariate columns named in \code{object}. If \code{NULL} (the default), the
-context stored in \code{object} is used.}
+used to build \code{object}. It should contain the target and covariate
+columns named in \code{object}, plus the id and timestamp columns when
+those were supplied at construction. (If the model was built without
+an id column, every row of \code{new_data} is treated as part of the same
+single series; similarly, if the model was built without a timestamp
+column, row order is used as the time order.) If \code{NULL} (the
+default), the context stored in \code{object} is used.}
 
 \item{future_df}{Optional data frame with future covariate values. Must
-contain the id and timestamp columns plus any covariate columns to
-provide for the future window (a subset of the past covariates). Each
-series must have exactly \code{prediction_length} rows.}
+contain the id and timestamp columns (when present in the original
+model) plus any covariate columns to provide for the future window (a
+subset of the past covariates). Each series must have exactly
+\code{prediction_length} rows.}
 
 \item{prediction_length}{Number of future time steps to forecast. Defaults
 to the value stored in \code{object}.}
@@ -59,8 +64,8 @@ chi$series_id <- "L"
 mod <- brulee_chronos(
   ridership ~ .,
   data = chi[, c("series_id", "date", "ridership")],
-  id_column = "series_id",
-  timestamp_column = "date"
+  id_column = c(series_id),
+  timestamp_column = c(date)
 )
 predict(mod, prediction_length = 14)
 }

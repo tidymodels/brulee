@@ -4,7 +4,6 @@
 \alias{brulee_chronos}
 \alias{brulee_chronos.default}
 \alias{brulee_chronos.data.frame}
-\alias{brulee_chronos.matrix}
 \alias{brulee_chronos.formula}
 \alias{brulee_chronos.recipe}
 \title{Chronos-2 pretrained forecasting model}
@@ -16,26 +15,10 @@ brulee_chronos(x, ...)
 \method{brulee_chronos}{data.frame}(
   x,
   y,
-  item_id,
-  timestamp,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
-  model_id = "amazon/chronos-2",
-  revision = chronos2_default_revision(),
-  prediction_length = NULL,
-  quantile_levels = (1:9)/10,
-  device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
-  ...
-)
-
-\method{brulee_chronos}{matrix}(
-  x,
-  y,
-  item_id,
-  timestamp,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
+  item_id = NULL,
+  timestamp = NULL,
+  id_column = ".id_column",
+  timestamp_column = ".timestamp_column",
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
   prediction_length = NULL,
@@ -48,8 +31,8 @@ brulee_chronos(x, ...)
 \method{brulee_chronos}{formula}(
   formula,
   data,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
+  id_column = NULL,
+  timestamp_column = NULL,
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
   prediction_length = NULL,
@@ -75,31 +58,38 @@ brulee_chronos(x, ...)
 \item{x}{Depending on the context:
 \itemize{
 \item A \strong{data frame} of past covariates.
-\item A \strong{matrix} of past covariates.
 \item A \strong{recipe} specifying preprocessing and roles for \code{target},
 \code{id}, and \code{time} columns.
 }
 
-Pass an empty data frame or zero-column matrix when there are no
-covariates.}
+Pass an empty data frame when there are no covariates.}
 
 \item{...}{Currently unused.}
 
 \item{y}{A numeric vector of target values, of length \code{nrow(x)}.}
 
-\item{item_id}{A vector of time series identifiers, of length \code{nrow(x)}.}
+\item{item_id}{Optional vector of time series identifiers, of length
+\code{nrow(x)}. Default: \code{NULL}, which treats all rows as a single series.}
 
-\item{timestamp}{A vector of timestamps (Date, POSIXct, or numeric), of
-length \code{nrow(x)}.}
+\item{timestamp}{Optional vector of timestamps (Date, POSIXct, or
+numeric), of length \code{nrow(x)}. Default: \code{NULL}, which uses row order
+within each series.}
 
-\item{id_column}{The name of the column in \code{data} containing time series
-identifiers. Default: \code{"item_id"}. Used by the formula and \code{x_y}
-methods; for the recipe method, identify the id column with
+\item{id_column}{For the formula method, a tidyselect expression
+selecting the id column in \code{data} (e.g. \code{c(series_id)}, \code{series_id},
+or \code{"series_id"}). For the data frame \code{x_y} method, a character
+string used as the output label only (the actual id values come from
+\code{item_id}). Default: \code{NULL} for the formula method and \code{".id_column"}
+for the \code{x_y} method. When omitted, all rows are treated as one
+series. For the recipe method, identify the id column with
 \code{recipes::update_role(..., new_role = "id")}.}
 
-\item{timestamp_column}{The name of the column in \code{data} containing
-timestamps. Default: \code{"timestamp"}. Used by the formula and \code{x_y}
-methods; for the recipe method, identify the timestamp column with
+\item{timestamp_column}{For the formula method, a tidyselect expression
+selecting the timestamp column in \code{data}. For the data frame \code{x_y}
+method, a character string used as the output label only. Default:
+\code{NULL} for the formula method and \code{".timestamp_column"} for the \code{x_y}
+method. When omitted, row order is used as the time order. For the
+recipe method, identify the timestamp column with
 \code{recipes::update_role(..., new_role = "time")}.}
 
 \item{model_id}{A character string identifying the HuggingFace model
@@ -128,9 +118,7 @@ Default: \code{"~/.cache/chronos-r"}.}
 
 \item{formula}{A formula of the form \code{target ~ cov1 + cov2}. Use
 \code{target ~ .} when there are no covariates. The id and timestamp
-columns are dropped before the formula is evaluated. The id and
-timestamp columns are read from \code{data} by name (see \code{id_column} /
-\code{timestamp_column}) and should not appear in the formula.}
+columns (if named) are dropped before the formula is evaluated.}
 
 \item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is the
 training set with columns for the id, timestamp, target, and any
@@ -159,33 +147,51 @@ other brulee models, no training is performed; the network has fixed
 pretrained weights.
 }
 \details{
-Every Chronos-2 forecast needs four pieces of information about the
-historical (context) data:
+Every Chronos-2 forecast needs at most four pieces of information about
+the historical (context) data:
 \itemize{
-\item an \strong{id} column that distinguishes one time series from another (e.g.
-a city, store, or sensor),
-\item a \strong{timestamp} column with the time index of each observation,
-\item a \strong{target} column with the values to forecast, and
-\item any number of \strong{past covariates}; additional numeric columns
+\item a \strong{target} column with the values to forecast (always required),
+\item an optional \strong{id} column that distinguishes one time series from
+another (e.g. a city, store, or sensor); when omitted, all rows are
+treated as a single series,
+\item an optional \strong{timestamp} column with the time index of each
+observation; when omitted, rows are read in their existing order,
+\item any number of \strong{past covariates}, additional numeric columns
 measured alongside the target.
 }
 
-\code{brulee_chronos()} is a generic with four interfaces for supplying that
-information. Pick whichever feels most natural for your data; all four
+\code{brulee_chronos()} is a generic with three interfaces for supplying that
+information. Pick whichever feels most natural for your data. All three
 produce an object that behaves the same way at predict time.
 \subsection{Formula interface}{
 
 Use a formula when your data is a single tidy data frame and you want to
-name the covariates inline:
+name the covariates inline. The \code{id_column} and \code{timestamp_column}
+arguments use tidyselect, so bare column names, \code{c()} selections, and
+character strings all work:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{brulee_chronos(target ~ cov1 + cov2, data = df,
-               id_column = "item_id", timestamp_column = "timestamp")
+               id_column = c(series_id), timestamp_column = c(date))
+
+# bare names also work
+brulee_chronos(target ~ cov1 + cov2, data = df,
+               id_column = series_id, timestamp_column = date)
+
+# character strings still work for back compatibility
+brulee_chronos(target ~ cov1 + cov2, data = df,
+               id_column = "series_id", timestamp_column = "date")
 }\if{html}{\out{</div>}}
 
-If you have no covariates, use \code{target ~ .} --- the id and timestamp
+If you have no covariates, use \code{target ~ .}. The id and timestamp
 columns are excluded automatically. Categorical covariates on the
-right-hand side are converted to numeric dummy variables (just like
+right hand side are converted to numeric dummy variables (just like
 \code{lm()}).
+
+If you have a single series and no useful timestamp, you can omit both
+columns entirely:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{brulee_chronos(target ~ ., data = df_single_series)
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Recipe interface}{
@@ -196,46 +202,59 @@ model. With the recipe interface, the id and timestamp columns are
 identified by their \strong{role}, not by name:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{rec <- recipe(target ~ ., data = df) |>
-  update_role(item_id,  new_role = "id") |>
+  update_role(item_id,   new_role = "id") |>
   update_role(timestamp, new_role = "time") |>
   step_normalize(all_numeric_predictors())
 
 brulee_chronos(rec, data = df)
 }\if{html}{\out{</div>}}
 
-All non-numeric covariates must be encoded numerically by the recipe
-(e.g. with \code{\link[recipes:step_dummy]{recipes::step_dummy()}}).
+Both the \code{id} and \code{time} roles are optional. If neither role is set,
+\code{brulee_chronos()} treats the recipe data as a single series in row
+order. All non numeric covariates must be encoded numerically by the
+recipe (e.g. with \code{\link[recipes:step_dummy]{recipes::step_dummy()}}).
 }
 
-\subsection{Data-frame / matrix (\code{x} and \code{y}) interface}{
+\subsection{Data-frame (\code{x} and \code{y}) interface}{
 
 Use the \code{x_y} interface when you already have your covariates and target
-separated. \code{x} is a data frame or matrix of past covariates (zero-column
-is allowed when there are no covariates), \code{y} is the numeric target
-vector, and \code{item_id} / \code{timestamp} are vectors of the same length:
+separated. \code{x} is a data frame of past covariates (zero columns is
+allowed when there are no covariates), \code{y} is the numeric target vector,
+and \code{item_id} / \code{timestamp} are optional vectors of length \code{nrow(x)}:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{brulee_chronos(x = df[, c("cov1", "cov2")], y = df$target,
                item_id = df$item_id, timestamp = df$timestamp)
+
+# single series, no timestamp:
+brulee_chronos(x = df[, c("cov1", "cov2")], y = df$target)
 }\if{html}{\out{</div>}}
 }
 
 \subsection{Multiple time series}{
 
-All four interfaces support multiple series in one call. Stack the series
-end-to-end in a single long-format data frame and let the id column
-distinguish them; \code{brulee_chronos()} will sort each series by timestamp
-and forecast all of them together.
+All three interfaces support multiple series in one call. Stack the
+series end to end in a single long format data frame and let the id
+column distinguish them. \code{brulee_chronos()} sorts each series by
+timestamp before forecasting. When you omit the id column, every row
+is treated as part of one series called \code{"default"}.
+}
+
+\subsection{Pre-sorted input}{
+
+When you omit the timestamp, \code{brulee_chronos()} uses each series' row
+order as its time order. Pre-sort each series before calling
+\code{brulee_chronos()} if you take this shortcut.
 }
 
 \subsection{What happens at \code{predict()} time}{
 
 By default, \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}} forecasts from the context data
-that was supplied at construction. There's no need to pass
-\code{new_data}. Override \code{prediction_length} or \code{quantile_levels} per call to
-change the horizon or which quantiles are returned. Pass \code{future_df} to
-supply known-future values of any covariate (e.g. holiday flags, planned
+that was supplied at construction. There's no need to pass \code{new_data}.
+Override \code{prediction_length} or \code{quantile_levels} per call to change
+the horizon or which quantiles are returned. Pass \code{future_df} to supply
+known future values of any covariate (e.g. holiday flags, planned
 promotions). To forecast a \strong{different} series with the same schema,
-pass it as \code{new_data}; it will be processed through the same blueprint
+pass it as \code{new_data}. It will be processed through the same blueprint
 as the original context.
 }
 }
@@ -246,21 +265,19 @@ data(Chicago, package = "modeldata")
 chi <- Chicago[, c("date", "ridership", "Clark_Lake", "Austin")]
 chi$series_id <- "L"
 
-# Formula interface, no covariates
-mod <- brulee_chronos(
+# Formula, single series, no id or timestamp columns
+mod_simple <- brulee_chronos(
   ridership ~ .,
-  data = chi[, c("series_id", "date", "ridership")],
-  id_column = "series_id",
-  timestamp_column = "date"
+  data = chi[, "ridership", drop = FALSE]
 )
-predict(mod, prediction_length = 14)
+predict(mod_simple, prediction_length = 14)
 
-# Formula interface with past covariates
+# Formula with tidyselect for id / timestamp
 mod_cov <- brulee_chronos(
   ridership ~ Clark_Lake + Austin,
   data = chi,
-  id_column = "series_id",
-  timestamp_column = "date"
+  id_column = c(series_id),
+  timestamp_column = c(date)
 )
 predict(mod_cov, prediction_length = 14)
 

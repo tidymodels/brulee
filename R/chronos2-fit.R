@@ -8,34 +8,53 @@
 #'
 #' @details
 #'
-#' Every Chronos-2 forecast needs four pieces of information about the
-#' historical (context) data:
+#' Every Chronos-2 forecast needs at most four pieces of information about
+#' the historical (context) data:
 #'
-#'   * an __id__ column that distinguishes one time series from another (e.g.
-#'     a city, store, or sensor),
-#'   * a __timestamp__ column with the time index of each observation,
-#'   * a __target__ column with the values to forecast, and
-#'   * any number of __past covariates__; additional numeric columns
+#'   * a __target__ column with the values to forecast (always required),
+#'   * an optional __id__ column that distinguishes one time series from
+#'     another (e.g. a city, store, or sensor); when omitted, all rows are
+#'     treated as a single series,
+#'   * an optional __timestamp__ column with the time index of each
+#'     observation; when omitted, rows are read in their existing order,
+#'   * any number of __past covariates__, additional numeric columns
 #'     measured alongside the target.
 #'
-#' `brulee_chronos()` is a generic with four interfaces for supplying that
-#' information. Pick whichever feels most natural for your data; all four
+#' `brulee_chronos()` is a generic with three interfaces for supplying that
+#' information. Pick whichever feels most natural for your data. All three
 #' produce an object that behaves the same way at predict time.
 #'
 #' ## Formula interface
 #'
 #' Use a formula when your data is a single tidy data frame and you want to
-#' name the covariates inline:
+#' name the covariates inline. The `id_column` and `timestamp_column`
+#' arguments use tidyselect, so bare column names, `c()` selections, and
+#' character strings all work:
 #'
 #' ```r
 #' brulee_chronos(target ~ cov1 + cov2, data = df,
-#'                id_column = "item_id", timestamp_column = "timestamp")
+#'                id_column = c(series_id), timestamp_column = c(date))
+#'
+#' # bare names also work
+#' brulee_chronos(target ~ cov1 + cov2, data = df,
+#'                id_column = series_id, timestamp_column = date)
+#'
+#' # character strings still work for back compatibility
+#' brulee_chronos(target ~ cov1 + cov2, data = df,
+#'                id_column = "series_id", timestamp_column = "date")
 #' ```
 #'
-#' If you have no covariates, use `target ~ .` --- the id and timestamp
+#' If you have no covariates, use `target ~ .`. The id and timestamp
 #' columns are excluded automatically. Categorical covariates on the
-#' right-hand side are converted to numeric dummy variables (just like
+#' right hand side are converted to numeric dummy variables (just like
 #' `lm()`).
+#'
+#' If you have a single series and no useful timestamp, you can omit both
+#' columns entirely:
+#'
+#' ```r
+#' brulee_chronos(target ~ ., data = df_single_series)
+#' ```
 #'
 #' ## Recipe interface
 #'
@@ -46,74 +65,91 @@
 #'
 #' ```r
 #' rec <- recipe(target ~ ., data = df) |>
-#'   update_role(item_id,  new_role = "id") |>
+#'   update_role(item_id,   new_role = "id") |>
 #'   update_role(timestamp, new_role = "time") |>
 #'   step_normalize(all_numeric_predictors())
 #'
 #' brulee_chronos(rec, data = df)
 #' ```
 #'
-#' All non-numeric covariates must be encoded numerically by the recipe
-#' (e.g. with [recipes::step_dummy()]).
+#' Both the `id` and `time` roles are optional. If neither role is set,
+#' `brulee_chronos()` treats the recipe data as a single series in row
+#' order. All non numeric covariates must be encoded numerically by the
+#' recipe (e.g. with [recipes::step_dummy()]).
 #'
-#' ## Data-frame / matrix (`x` and `y`) interface
+#' ## Data-frame (`x` and `y`) interface
 #'
 #' Use the `x_y` interface when you already have your covariates and target
-#' separated. `x` is a data frame or matrix of past covariates (zero-column
-#' is allowed when there are no covariates), `y` is the numeric target
-#' vector, and `item_id` / `timestamp` are vectors of the same length:
+#' separated. `x` is a data frame of past covariates (zero columns is
+#' allowed when there are no covariates), `y` is the numeric target vector,
+#' and `item_id` / `timestamp` are optional vectors of length `nrow(x)`:
 #'
 #' ```r
 #' brulee_chronos(x = df[, c("cov1", "cov2")], y = df$target,
 #'                item_id = df$item_id, timestamp = df$timestamp)
+#'
+#' # single series, no timestamp:
+#' brulee_chronos(x = df[, c("cov1", "cov2")], y = df$target)
 #' ```
 #'
 #' ## Multiple time series
 #'
-#' All four interfaces support multiple series in one call. Stack the series
-#' end-to-end in a single long-format data frame and let the id column
-#' distinguish them; `brulee_chronos()` will sort each series by timestamp
-#' and forecast all of them together.
+#' All three interfaces support multiple series in one call. Stack the
+#' series end to end in a single long format data frame and let the id
+#' column distinguish them. `brulee_chronos()` sorts each series by
+#' timestamp before forecasting. When you omit the id column, every row
+#' is treated as part of one series called `"default"`.
+#'
+#' ## Pre-sorted input
+#'
+#' When you omit the timestamp, `brulee_chronos()` uses each series' row
+#' order as its time order. Pre-sort each series before calling
+#' `brulee_chronos()` if you take this shortcut.
 #'
 #' ## What happens at `predict()` time
 #'
 #' By default, [predict.brulee_chronos()] forecasts from the context data
-#' that was supplied at construction. There's no need to pass
-#' `new_data`. Override `prediction_length` or `quantile_levels` per call to
-#' change the horizon or which quantiles are returned. Pass `future_df` to
-#' supply known-future values of any covariate (e.g. holiday flags, planned
+#' that was supplied at construction. There's no need to pass `new_data`.
+#' Override `prediction_length` or `quantile_levels` per call to change
+#' the horizon or which quantiles are returned. Pass `future_df` to supply
+#' known future values of any covariate (e.g. holiday flags, planned
 #' promotions). To forecast a __different__ series with the same schema,
-#' pass it as `new_data`; it will be processed through the same blueprint
+#' pass it as `new_data`. It will be processed through the same blueprint
 #' as the original context.
 #'
 #' @param x Depending on the context:
 #'
 #'   * A __data frame__ of past covariates.
-#'   * A __matrix__ of past covariates.
 #'   * A __recipe__ specifying preprocessing and roles for `target`,
 #'     `id`, and `time` columns.
 #'
-#'  Pass an empty data frame or zero-column matrix when there are no
-#'  covariates.
+#'  Pass an empty data frame when there are no covariates.
 #' @param y A numeric vector of target values, of length `nrow(x)`.
-#' @param item_id A vector of time series identifiers, of length `nrow(x)`.
-#' @param timestamp A vector of timestamps (Date, POSIXct, or numeric), of
-#'   length `nrow(x)`.
+#' @param item_id Optional vector of time series identifiers, of length
+#'   `nrow(x)`. Default: `NULL`, which treats all rows as a single series.
+#' @param timestamp Optional vector of timestamps (Date, POSIXct, or
+#'   numeric), of length `nrow(x)`. Default: `NULL`, which uses row order
+#'   within each series.
 #' @param data When a __recipe__ or __formula__ is used, `data` is the
 #'   training set with columns for the id, timestamp, target, and any
 #'   covariates.
 #' @param formula A formula of the form `target ~ cov1 + cov2`. Use
 #'   `target ~ .` when there are no covariates. The id and timestamp
-#'   columns are dropped before the formula is evaluated. The id and
-#'   timestamp columns are read from `data` by name (see `id_column` /
-#'   `timestamp_column`) and should not appear in the formula.
-#' @param id_column The name of the column in `data` containing time series
-#'   identifiers. Default: `"item_id"`. Used by the formula and `x_y`
-#'   methods; for the recipe method, identify the id column with
+#'   columns (if named) are dropped before the formula is evaluated.
+#' @param id_column For the formula method, a tidyselect expression
+#'   selecting the id column in `data` (e.g. `c(series_id)`, `series_id`,
+#'   or `"series_id"`). For the data frame `x_y` method, a character
+#'   string used as the output label only (the actual id values come from
+#'   `item_id`). Default: `NULL` for the formula method and `".id_column"`
+#'   for the `x_y` method. When omitted, all rows are treated as one
+#'   series. For the recipe method, identify the id column with
 #'   `recipes::update_role(..., new_role = "id")`.
-#' @param timestamp_column The name of the column in `data` containing
-#'   timestamps. Default: `"timestamp"`. Used by the formula and `x_y`
-#'   methods; for the recipe method, identify the timestamp column with
+#' @param timestamp_column For the formula method, a tidyselect expression
+#'   selecting the timestamp column in `data`. For the data frame `x_y`
+#'   method, a character string used as the output label only. Default:
+#'   `NULL` for the formula method and `".timestamp_column"` for the `x_y`
+#'   method. When omitted, row order is used as the time order. For the
+#'   recipe method, identify the timestamp column with
 #'   `recipes::update_role(..., new_role = "time")`.
 #' @param model_id A character string identifying the HuggingFace model
 #'   repository to download. Default: `"amazon/chronos-2"` (120M parameters).
@@ -154,21 +190,19 @@
 #' chi <- Chicago[, c("date", "ridership", "Clark_Lake", "Austin")]
 #' chi$series_id <- "L"
 #'
-#' # Formula interface, no covariates
-#' mod <- brulee_chronos(
+#' # Formula, single series, no id or timestamp columns
+#' mod_simple <- brulee_chronos(
 #'   ridership ~ .,
-#'   data = chi[, c("series_id", "date", "ridership")],
-#'   id_column = "series_id",
-#'   timestamp_column = "date"
+#'   data = chi[, "ridership", drop = FALSE]
 #' )
-#' predict(mod, prediction_length = 14)
+#' predict(mod_simple, prediction_length = 14)
 #'
-#' # Formula interface with past covariates
+#' # Formula with tidyselect for id / timestamp
 #' mod_cov <- brulee_chronos(
 #'   ridership ~ Clark_Lake + Austin,
 #'   data = chi,
-#'   id_column = "series_id",
-#'   timestamp_column = "date"
+#'   id_column = c(series_id),
+#'   timestamp_column = c(date)
 #' )
 #' predict(mod_cov, prediction_length = 14)
 #'
@@ -203,10 +237,10 @@ brulee_chronos.default <- function(x, ...) {
 brulee_chronos.data.frame <- function(
   x,
   y,
-  item_id,
-  timestamp,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
+  item_id = NULL,
+  timestamp = NULL,
+  id_column = ".id_column",
+  timestamp_column = ".timestamp_column",
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
   prediction_length = NULL,
@@ -217,43 +251,16 @@ brulee_chronos.data.frame <- function(
 ) {
   processed <- hardhat::mold(x, y)
 
-  brulee_chronos_bridge(
-    processed,
-    item_id = item_id,
-    timestamp = timestamp,
-    id_column = id_column,
-    timestamp_column = timestamp_column,
-    target_column = ".outcome",
-    model_id = model_id,
-    revision = revision,
-    prediction_length = prediction_length,
-    quantile_levels = quantile_levels,
-    device = device,
-    cache_dir = cache_dir,
-    ...
-  )
-}
-
-# XY method - matrix
-
-#' @export
-#' @rdname brulee_chronos
-brulee_chronos.matrix <- function(
-  x,
-  y,
-  item_id,
-  timestamp,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
-  model_id = "amazon/chronos-2",
-  revision = chronos2_default_revision(),
-  prediction_length = NULL,
-  quantile_levels = (1:9) / 10,
-  device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
-  ...
-) {
-  processed <- hardhat::mold(x, y)
+  id_synthetic <- is.null(item_id)
+  timestamp_synthetic <- is.null(timestamp)
+  if (id_synthetic) {
+    item_id <- rep("default", length(y))
+    id_column <- ".id_column"
+  }
+  if (timestamp_synthetic) {
+    timestamp <- seq_along(y)
+    timestamp_column <- ".timestamp_column"
+  }
 
   brulee_chronos_bridge(
     processed,
@@ -262,6 +269,8 @@ brulee_chronos.matrix <- function(
     id_column = id_column,
     timestamp_column = timestamp_column,
     target_column = ".outcome",
+    id_synthetic = id_synthetic,
+    timestamp_synthetic = timestamp_synthetic,
     model_id = model_id,
     revision = revision,
     prediction_length = prediction_length,
@@ -279,8 +288,8 @@ brulee_chronos.matrix <- function(
 brulee_chronos.formula <- function(
   formula,
   data,
-  id_column = "item_id",
-  timestamp_column = "timestamp",
+  id_column = NULL,
+  timestamp_column = NULL,
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
   prediction_length = NULL,
@@ -289,22 +298,40 @@ brulee_chronos.formula <- function(
   cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
   ...
 ) {
-  if (!id_column %in% names(data)) {
-    cli::cli_abort("Column {.val {id_column}} not found in {.arg data}.")
-  }
-  if (!timestamp_column %in% names(data)) {
-    cli::cli_abort(
-      "Column {.val {timestamp_column}} not found in {.arg data}."
-    )
-  }
+  id_name <- chronos2_resolve_column(
+    rlang::enquo(id_column),
+    data,
+    "id_column"
+  )
+  ts_name <- chronos2_resolve_column(
+    rlang::enquo(timestamp_column),
+    data,
+    "timestamp_column"
+  )
 
-  item_id <- data[[id_column]]
-  timestamp <- data[[timestamp_column]]
+  id_synthetic <- is.null(id_name)
+  timestamp_synthetic <- is.null(ts_name)
+
+  if (id_synthetic) {
+    item_id <- rep("default", nrow(data))
+    id_column <- ".id_column"
+  } else {
+    item_id <- data[[id_name]]
+    id_column <- id_name
+  }
+  if (timestamp_synthetic) {
+    timestamp <- seq_len(nrow(data))
+    timestamp_column <- ".timestamp_column"
+  } else {
+    timestamp <- data[[ts_name]]
+    timestamp_column <- ts_name
+  }
 
   # Hide id/timestamp from the formula-mold pass so `target ~ .` doesn't pick
   # them up as predictors.
+  drop_cols <- intersect(c(id_name, ts_name), names(data))
   data_for_mold <- data[,
-    setdiff(names(data), c(id_column, timestamp_column)),
+    setdiff(names(data), drop_cols),
     drop = FALSE
   ]
 
@@ -339,6 +366,8 @@ brulee_chronos.formula <- function(
     id_column = id_column,
     timestamp_column = timestamp_column,
     target_column = target_var,
+    id_synthetic = id_synthetic,
+    timestamp_synthetic = timestamp_synthetic,
     model_id = model_id,
     revision = revision,
     prediction_length = prediction_length,
@@ -367,29 +396,40 @@ brulee_chronos.recipe <- function(
   processed <- hardhat::mold(x, data)
 
   # hardhat passes columns with non-standard recipe roles through
-  # `processed$extras$roles` (one tibble per role). For Chronos, we expect
-  # exactly one column with role `id` and one with role `time`.
+  # `processed$extras$roles` (one tibble per role). The id and time roles
+  # are both optional; when absent we fall back to a single synthesized
+  # series and row order, respectively.
   roles <- processed$extras$roles
   id_role <- roles$id
   time_role <- roles$time
 
-  if (is.null(id_role) || ncol(id_role) != 1L) {
+  if (is.null(id_role)) {
+    id_synthetic <- TRUE
+    item_id <- rep("default", nrow(data))
+    id_column <- ".id_column"
+  } else if (ncol(id_role) != 1L) {
     cli::cli_abort(c(
-      "The recipe must have exactly one variable with role {.val id}.",
-      "i" = "Use {.code recipes::update_role(<col>, new_role = \"id\")}."
+      "The recipe must have at most one variable with role {.val id}."
     ))
-  }
-  if (is.null(time_role) || ncol(time_role) != 1L) {
-    cli::cli_abort(c(
-      "The recipe must have exactly one variable with role {.val time}.",
-      "i" = "Use {.code recipes::update_role(<col>, new_role = \"time\")}."
-    ))
+  } else {
+    id_synthetic <- FALSE
+    id_column <- names(id_role)
+    item_id <- id_role[[1L]]
   }
 
-  id_column <- names(id_role)
-  timestamp_column <- names(time_role)
-  item_id <- id_role[[1L]]
-  timestamp <- time_role[[1L]]
+  if (is.null(time_role)) {
+    timestamp_synthetic <- TRUE
+    timestamp <- seq_len(nrow(data))
+    timestamp_column <- ".timestamp_column"
+  } else if (ncol(time_role) != 1L) {
+    cli::cli_abort(c(
+      "The recipe must have at most one variable with role {.val time}."
+    ))
+  } else {
+    timestamp_synthetic <- FALSE
+    timestamp_column <- names(time_role)
+    timestamp <- time_role[[1L]]
+  }
 
   outcome_names <- names(processed$blueprint$ptypes$outcomes)
   if (length(outcome_names) != 1L) {
@@ -406,6 +446,8 @@ brulee_chronos.recipe <- function(
     id_column = id_column,
     timestamp_column = timestamp_column,
     target_column = target_column,
+    id_synthetic = id_synthetic,
+    timestamp_synthetic = timestamp_synthetic,
     model_id = model_id,
     revision = revision,
     prediction_length = prediction_length,
@@ -426,6 +468,8 @@ brulee_chronos_bridge <- function(
   id_column,
   timestamp_column,
   target_column,
+  id_synthetic = FALSE,
+  timestamp_synthetic = FALSE,
   model_id,
   revision,
   prediction_length,
@@ -557,7 +601,9 @@ brulee_chronos_bridge <- function(
     timestamp = timestamp,
     id_column = id_column,
     timestamp_column = timestamp_column,
-    target_column = target_column
+    target_column = target_column,
+    id_synthetic = id_synthetic,
+    timestamp_synthetic = timestamp_synthetic
   )
 
   structure(
@@ -631,7 +677,9 @@ chronos2_split_by_series <- function(
   timestamp,
   id_column,
   timestamp_column,
-  target_column
+  target_column,
+  id_synthetic = FALSE,
+  timestamp_synthetic = FALSE
 ) {
   covariates <- as.data.frame(covariates)
   item_ids <- unique(item_id)
@@ -657,6 +705,44 @@ chronos2_split_by_series <- function(
     covariate_cols = colnames(covariates),
     id_column = id_column,
     timestamp_column = timestamp_column,
-    target_column = target_column
+    target_column = target_column,
+    id_synthetic = id_synthetic,
+    timestamp_synthetic = timestamp_synthetic
   )
+}
+
+# Resolve a tidyselect-style id/timestamp column argument against a data
+# frame. Accepts NULL (returns NULL), bare names / `c(name)` / tidyselect
+# expressions, and legacy single-string column names. Errors when the
+# expression does not select exactly one column.
+chronos2_resolve_column <- function(quo, data, arg_name) {
+  if (rlang::quo_is_null(quo)) {
+    return(NULL)
+  }
+
+  expr <- rlang::quo_get_expr(quo)
+  if (is.character(expr) && length(expr) == 1L) {
+    if (!expr %in% names(data)) {
+      cli::cli_abort(
+        "Column {.val {expr}} (from {.arg {arg_name}}) not found in {.arg data}."
+      )
+    }
+    return(expr)
+  }
+
+  pos <- tryCatch(
+    tidyselect::eval_select(quo, data),
+    error = function(e) {
+      cli::cli_abort(
+        "Couldn't resolve {.arg {arg_name}}: {conditionMessage(e)}",
+        call = NULL
+      )
+    }
+  )
+  if (length(pos) != 1L) {
+    cli::cli_abort(
+      "{.arg {arg_name}} must select exactly one column, got {length(pos)}."
+    )
+  }
+  names(pos)
 }

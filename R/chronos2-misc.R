@@ -937,9 +937,9 @@ chronos2_model <- nn_module(
 # `chronos2_parse_config()`. The config contains:
 #
 # - Architecture shape parameters (`d_model`, `num_heads`, etc.) needed to
-# construct the nn_modules that weights slot into
+#   construct the nn_modules that weights slot into
 # - Training artifacts like `dropout_rate` which are dead at inference
-# (`model$eval()` disables dropout)
+#   (`model$eval()` disables dropout)
 
 chronos2_parse_config <- function(path) {
   cfg <- jsonlite::fromJSON(path)
@@ -1084,14 +1084,14 @@ load_chronos2_weights <- function(model, safetensors_path) {
   })
 
   # TODO Add verbose argument
-  cli::cli_inform(
-    "Loaded {loaded}/{length(assignments)} parameters. Skipped: {length(skipped)}"
-  )
-  if (length(skipped) > 0 && length(skipped) <= 10) {
-    cli::cli_inform("Skipped keys: {.val {skipped}}")
-  } else if (length(skipped) > 10) {
-    cli::cli_inform("First 10 skipped keys: {.val {skipped[1:10]}}")
-  }
+  # cli::cli_inform(
+  #   "Loaded {loaded}/{length(assignments)} parameters. Skipped: {length(skipped)}"
+  # )
+  # if (length(skipped) > 0 && length(skipped) <= 10) {
+  #   cli::cli_inform("Skipped keys: {.val {skipped}}")
+  # } else if (length(skipped) > 10) {
+  #   cli::cli_inform("First 10 skipped keys: {.val {skipped[1:10]}}")
+  # }
 
   invisible(model)
 }

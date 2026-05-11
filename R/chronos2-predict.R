@@ -2,13 +2,18 @@
 #'
 #' @param object A `brulee_chronos` object returned by [brulee_chronos()].
 #' @param new_data Optional data frame in the same long format as the data
-#'   used to build `object`. It should contain the id, timestamp, target,
-#'   and covariate columns named in `object`. If `NULL` (the default), the
-#'   context stored in `object` is used.
+#'   used to build `object`. It should contain the target and covariate
+#'   columns named in `object`, plus the id and timestamp columns when
+#'   those were supplied at construction. (If the model was built without
+#'   an id column, every row of `new_data` is treated as part of the same
+#'   single series; similarly, if the model was built without a timestamp
+#'   column, row order is used as the time order.) If `NULL` (the
+#'   default), the context stored in `object` is used.
 #' @param future_df Optional data frame with future covariate values. Must
-#'   contain the id and timestamp columns plus any covariate columns to
-#'   provide for the future window (a subset of the past covariates). Each
-#'   series must have exactly `prediction_length` rows.
+#'   contain the id and timestamp columns (when present in the original
+#'   model) plus any covariate columns to provide for the future window (a
+#'   subset of the past covariates). Each series must have exactly
+#'   `prediction_length` rows.
 #' @param prediction_length Number of future time steps to forecast. Defaults
 #'   to the value stored in `object`.
 #' @param quantile_levels Numeric vector of quantile levels. Defaults to the
@@ -34,8 +39,8 @@
 #' mod <- brulee_chronos(
 #'   ridership ~ .,
 #'   data = chi[, c("series_id", "date", "ridership")],
-#'   id_column = "series_id",
-#'   timestamp_column = "date"
+#'   id_column = c(series_id),
+#'   timestamp_column = c(date)
 #' )
 #' predict(mod, prediction_length = 14)
 #' }
@@ -59,6 +64,8 @@ predict.brulee_chronos <- function(
   timestamp_column <- object$context$timestamp_column
   target_column <- object$context$target_column
   covariate_cols <- object$context$covariate_cols
+  id_synthetic <- isTRUE(object$context$id_synthetic)
+  timestamp_synthetic <- isTRUE(object$context$timestamp_synthetic)
   has_stored_covariates <- length(covariate_cols) > 0L
 
   # Resolve context: stored or forged from new_data
@@ -74,13 +81,24 @@ predict.brulee_chronos <- function(
 
       # Recipe-built models pass id/time through `forged$extras$roles`.
       # Formula / x_y blueprints don't have that mechanism, so fall back to
-      # pulling those columns by name from `new_data`.
+      # pulling those columns by name from `new_data` (or synthesizing,
+      # when the model was built without an id / timestamp column).
       roles <- forged$extras$roles
-      if (!is.null(roles) && !is.null(roles$id) && !is.null(roles$time)) {
+      n_rows <- nrow(new_data)
+
+      if (id_synthetic) {
+        item_id <- rep("default", n_rows)
+      } else if (!is.null(roles) && !is.null(roles$id)) {
         item_id <- roles$id[[1L]]
-        timestamp <- roles$time[[1L]]
       } else {
         item_id <- chronos2_pull_column(new_data, id_column, "id_column")
+      }
+
+      if (timestamp_synthetic) {
+        timestamp <- seq_len(n_rows)
+      } else if (!is.null(roles) && !is.null(roles$time)) {
+        timestamp <- roles$time[[1L]]
+      } else {
         timestamp <- chronos2_pull_column(
           new_data,
           timestamp_column,
@@ -95,12 +113,22 @@ predict.brulee_chronos <- function(
       # stored names. (For x_y-built models, target_column == ".outcome", so
       # the user must include a column with that name.)
       target <- chronos2_pull_column(new_data, target_column, "target")
-      item_id <- chronos2_pull_column(new_data, id_column, "id_column")
-      timestamp <- chronos2_pull_column(
-        new_data,
-        timestamp_column,
-        "timestamp_column"
-      )
+      n_rows <- length(target)
+
+      if (id_synthetic) {
+        item_id <- rep("default", n_rows)
+      } else {
+        item_id <- chronos2_pull_column(new_data, id_column, "id_column")
+      }
+      if (timestamp_synthetic) {
+        timestamp <- seq_len(n_rows)
+      } else {
+        timestamp <- chronos2_pull_column(
+          new_data,
+          timestamp_column,
+          "timestamp_column"
+        )
+      }
       covariates <- as.data.frame(matrix(
         NA_real_,
         nrow = length(target),
@@ -130,7 +158,9 @@ predict.brulee_chronos <- function(
       timestamp = timestamp,
       id_column = id_column,
       timestamp_column = timestamp_column,
-      target_column = target_column
+      target_column = target_column,
+      id_synthetic = id_synthetic,
+      timestamp_synthetic = timestamp_synthetic
     )
   }
 
@@ -140,20 +170,21 @@ predict.brulee_chronos <- function(
   future_cov_cols <- character(0)
   future_list <- NULL
   if (!is.null(future_df)) {
-    if (!id_column %in% names(future_df)) {
+    if (!id_synthetic && !id_column %in% names(future_df)) {
       cli::cli_abort(
         "Column {.val {id_column}} not found in {.arg future_df}."
       )
     }
-    if (!timestamp_column %in% names(future_df)) {
+    if (!timestamp_synthetic && !timestamp_column %in% names(future_df)) {
       cli::cli_abort(
         "Column {.val {timestamp_column}} not found in {.arg future_df}."
       )
     }
-    future_cov_cols <- setdiff(
-      names(future_df),
-      c(id_column, timestamp_column)
+    drop_in_future <- c(
+      if (!id_synthetic) id_column,
+      if (!timestamp_synthetic) timestamp_column
     )
+    future_cov_cols <- setdiff(names(future_df), drop_in_future)
     bad_cols <- setdiff(future_cov_cols, ctx$covariate_cols)
     if (length(bad_cols) > 0) {
       cli::cli_abort(c(
@@ -163,8 +194,16 @@ predict.brulee_chronos <- function(
     }
 
     future_list <- lapply(ctx$item_ids, function(id) {
-      sub <- future_df[future_df[[id_column]] == id, , drop = FALSE]
-      sub[order(sub[[timestamp_column]]), , drop = FALSE]
+      sub <- if (id_synthetic) {
+        future_df
+      } else {
+        future_df[future_df[[id_column]] == id, , drop = FALSE]
+      }
+      if (timestamp_synthetic) {
+        sub
+      } else {
+        sub[order(sub[[timestamp_column]]), , drop = FALSE]
+      }
     })
   }
 
