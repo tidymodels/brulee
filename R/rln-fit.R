@@ -386,7 +386,8 @@ brulee_rln_bridge <- function(
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 32L
     if (batch_size >= nrow(predictors)) {
-      batch_size <- max(2L, as.integer(ceiling(nrow(predictors) / 10)))
+      batch_size <- max(2, ceiling(nrow(predictors) / 10))
+      batch_size <- as.integer(batch_size)
     }
   }
 
@@ -517,6 +518,7 @@ rln_fit_imp <- function(
   n <- length(y)
   p <- ncol(x)
 
+  # RLN is regression-only, no classification branch
   loss_fn <- function(input, target, wts = NULL) {
     nnf_mse_loss(input, target$view(c(-1, 1)))
   }
@@ -527,6 +529,7 @@ rln_fit_imp <- function(
   x_val <- val_split$x_val
   y_val <- val_split$y_val
 
+  # Always scale y, no factor branch needed because RLN only supports regression
   y_stats <- scale_stats(y)
   y <- scale_y(y, y_stats)
   if (validation > 0) {
@@ -575,12 +578,15 @@ rln_fit_imp <- function(
     )
   )
 
+  # Xavier normal init in rln_module (see below)
   model <- rln_module(
     num_pred = ncol(x),
     hidden_units = hidden_units,
     activation = activation
   )
 
+  # No make_penalized_loss call: Standard L1/L2 wrapping is skipped entirely
+  # because regularization is handled per-weight by rln_state below
   optimizer_obj <- set_optimizer(
     optimizer,
     model,
@@ -590,6 +596,7 @@ rln_fit_imp <- function(
     mixture = 0
   )
 
+  # Per-weight lambda state unique to RLN
   rln_state <- make_rln_state(
     first_linear = model$linear1,
     norm = norm,
@@ -627,8 +634,11 @@ rln_fit_imp <- function(
   res$loss <- loss_vec[1]
   res$best_epoch <- best_epoch
 
+  # Initialize lambdas before the first batch
   rln_state$on_train_begin()
 
+  # No grad_value_clip/grad_norm_clip: the per-weight regularization in
+  # on_batch_end keeps weights bounded, making gradient clipping unnecessary
   training_result <- run_training_loop(
     model = model,
     dl = dl,
@@ -643,6 +653,7 @@ rln_fit_imp <- function(
     loss_label = loss_label,
     verbose = verbose,
     rate_schedule = rate_schedule,
+    # Post-batch hook that updates per-weight lambdas; mlp/resnet pass NULL
     batch_callback = rln_state$on_batch_end,
     ...
   )
@@ -681,7 +692,11 @@ make_rln_state <- function(first_linear, norm, avg_reg, rln_learn_rate) {
     weights <<- as.array(first_linear$weight$detach())
     gradients <- weights - prev_weights
 
-    norms_derivative <- if (norm == 1L) sign(weights) else weights * 2
+    if (norm == 1L) {
+      norms_derivative <- sign(weights)
+    } else {
+      norms_derivative <- weights * 2
+    }
 
     if (!is.null(prev_regularization)) {
       lambda_gradients <- gradients * prev_regularization
@@ -723,6 +738,7 @@ rln_module <-
       self$act <- get_activation_fn(activation)
       self$linear2 <- torch::nn_linear(hidden_units, 1L)
 
+      # Xavier normal init as specified in the original RLN paper
       torch::nn_init_xavier_normal_(self$linear1$weight)
       torch::nn_init_zeros_(self$linear1$bias)
       torch::nn_init_xavier_normal_(self$linear2$weight)
@@ -760,7 +776,11 @@ print.brulee_rln <- function(x, ...) {
 
   cat("\n")
 
-  norm_label <- if (x$parameters$norm == 1L) "L1" else "L2"
+  if (x$parameters$norm == 1L) {
+    norm_label <- "L1"
+  } else {
+    norm_label <- "L2"
+  }
 
   cli::cli_bullets(c(
     " " = "Activation: {.val {x$parameters$activation}}",
