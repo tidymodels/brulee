@@ -291,3 +291,12 @@ predict(mod_rec, prediction_length = 14)
 }
 \dontshow{\}) # examplesIf}
 }
+\references{
+Ansari, A. F., Shchur, O., Küken, J., Auer, A., Han, B., Mercado, P., ... &
+Bohlke-Schneider, M. (2025). "Chronos-2: From univariate to universal
+forecasting." \emph{arXiv preprint arXiv:2510.15821}.
+
+Ansari, A. F., Shchur, O., Küken, J., Auer, A., Han, B., Mercado, P., ... &
+Bohlke-Schneider, M. (2026). "A foundation model for multivariate time
+series forecasting.", https://doi.org/10.21203/rs.3.rs-9096522/v1
+}

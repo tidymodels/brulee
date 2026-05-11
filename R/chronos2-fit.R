@@ -171,6 +171,15 @@
 #'   Default: `"~/.cache/chronos-r"`.
 #' @param ... Currently unused.
 #'
+#' @references
+#' Ansari, A. F., Shchur, O., Küken, J., Auer, A., Han, B., Mercado, P., ... &
+#'   Bohlke-Schneider, M. (2025). "Chronos-2: From univariate to universal
+#'   forecasting." _arXiv preprint arXiv:2510.15821_.
+#'
+#' Ansari, A. F., Shchur, O., Küken, J., Auer, A., Han, B., Mercado, P., ... &
+#'   Bohlke-Schneider, M. (2026). "A foundation model for multivariate time
+#'   series forecasting.", https://doi.org/10.21203/rs.3.rs-9096522/v1
+#'
 #' @returns A `brulee_chronos` object with elements:
 #'
 #'   * `model`: The torch `nn_module` (in eval mode, on the specified device).

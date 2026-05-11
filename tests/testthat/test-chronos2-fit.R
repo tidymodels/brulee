@@ -9,92 +9,9 @@ skip_if_not_installed("hardhat")
 skip_if_not_installed("recipes")
 skip_if_not_installed("modeldata")
 
-stub_chronos_loaders <- function(also_mock_predict_core = FALSE) {
-  fake_dir <- file.path(
-    tempdir(check = TRUE),
-    paste0("chronos-stub-", as.integer(Sys.time()))
-  )
-  dir.create(fake_dir, recursive = TRUE, showWarnings = FALSE)
-
-  bindings <- list(
-    chronos2_download = function(model_id, revision, cache_dir) {
-      list(
-        model_dir = fake_dir,
-        sha = if (grepl("^[0-9a-f]{40}$", revision)) {
-          revision
-        } else {
-          "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
-        }
-      )
-    },
-    chronos2_parse_config = function(path) {
-      list(
-        d_model = 384L,
-        num_layers = 12L,
-        num_heads = 12L,
-        output_patch_size = 16L,
-        max_output_patches = 64L,
-        quantiles = (1:9) / 10
-      )
-    },
-    chronos2_model = function(config) {
-      structure(list(config = config), class = "fake_chronos_module")
-    },
-    load_chronos2_weights = function(model, path) invisible(NULL)
-  )
-
-  if (also_mock_predict_core) {
-    # Return a deterministic [n_series, n_model_quantiles, prediction_length]
-    # array. Quantiles are fixed at config$quantiles = (1:9)/10 (see above).
-    bindings$chronos2_predict_core <- function(
-      object,
-      context,
-      prediction_length = NULL,
-      past_covariates = NULL,
-      future_covariates = NULL
-    ) {
-      n_series <- if (is.list(context)) length(context) else 1L
-      n_q <- length(object$config$quantiles)
-      preds <- array(0, dim = c(n_series, n_q, prediction_length))
-      for (s in seq_len(n_series)) {
-        for (q in seq_len(n_q)) {
-          for (t in seq_len(prediction_length)) {
-            preds[s, q, t] <- s * 100 + object$config$quantiles[q] * 10 + t
-          }
-        }
-      }
-      list(
-        predictions = preds,
-        quantiles = object$config$quantiles,
-        prediction_length = prediction_length
-      )
-    }
-  }
-
-  do.call(
-    testthat::local_mocked_bindings,
-    c(bindings, list(.package = "brulee", .env = parent.frame()))
-  )
-  # `model$to(...)` and `model$eval()` need to no-op
-  assign(
-    "$.fake_chronos_module",
-    function(x, name) {
-      if (name %in% c("to", "eval")) {
-        return(function(...) invisible(NULL))
-      }
-      unclass(x)[[name]]
-    },
-    envir = globalenv()
-  )
-  withr::defer(rm("$.fake_chronos_module", envir = globalenv()), parent.frame())
-}
-
-chicago_subset <- function(n = 200) {
-  data(Chicago, package = "modeldata", envir = environment())
-  Chi <- Chicago[seq_len(n), c("date", "ridership", "Clark_Lake", "Austin")]
-  Chi$series_id <- "L"
-  Chi[, c("series_id", "date", "ridership", "Clark_Lake", "Austin")]
-}
+# `stub_chronos_loaders()` and `chicago_subset()` live in
+# tests/testthat/helper-chronos2.R so they're shared with other chronos
+# test files.
 
 # ------------------------------------------------------------------------------
 
@@ -106,11 +23,11 @@ test_that("default method errors for unsupported types", {
 test_that("formula method builds context with no covariates", {
   stub_chronos_loaders()
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
@@ -121,17 +38,17 @@ test_that("formula method builds context with no covariates", {
   expect_equal(mod$context$target_column, "ridership")
   expect_equal(length(mod$context$covariate_cols), 0L)
   expect_equal(length(mod$context$item_ids), 1L)
-  expect_equal(length(mod$context$series_target[[1]]), nrow(d))
+  expect_equal(length(mod$context$series_target[[1]]), nrow(chi))
 })
 
 test_that("model_id and revision are recorded on the object", {
   stub_chronos_loaders()
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
@@ -145,12 +62,12 @@ test_that("model_id and revision are recorded on the object", {
 test_that("an explicit SHA is passed through verbatim (no API call)", {
   stub_chronos_loaders()
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
   some_sha <- "1234567890abcdef1234567890abcdef12345678"
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date",
     revision = some_sha
@@ -197,26 +114,53 @@ test_that("recipe method detects id/time roles via hardhat extras", {
   expect_setequal(mod$context$covariate_cols, c("Clark_Lake", "Austin"))
 })
 
-test_that("recipe method errors when id or time role is missing", {
+test_that("recipe method synthesizes id when the id role is missing", {
   stub_chronos_loaders()
   Chi <- chicago_subset()
+  # Drop the series_id column so it isn't treated as a (non-numeric) predictor.
+  chi_no_id <- Chi[, c("date", "ridership", "Clark_Lake", "Austin")]
 
-  rec_no_id <- recipes::recipe(ridership ~ ., data = Chi) |>
+  rec_no_id <- recipes::recipe(ridership ~ ., data = chi_no_id) |>
     recipes::update_role(date, new_role = "time")
-  expect_error(
-    brulee_chronos(rec_no_id, data = Chi),
-    "exactly one variable with role"
-  )
+  mod <- brulee_chronos(rec_no_id, data = chi_no_id)
 
-  rec_no_time <- recipes::recipe(ridership ~ ., data = Chi) |>
-    recipes::update_role(series_id, new_role = "id")
-  expect_error(
-    brulee_chronos(rec_no_time, data = Chi),
-    "exactly one variable with role"
-  )
+  expect_equal(mod$context$id_column, ".id_column")
+  expect_true(isTRUE(mod$context$id_synthetic))
+  expect_equal(length(mod$context$item_ids), 1L)
+  expect_equal(mod$context$item_ids, "default")
 })
 
-test_that("data.frame and matrix methods build matching context", {
+test_that("recipe method synthesizes timestamp when the time role is missing", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  # Drop the date column so it isn't treated as a (non-numeric) predictor.
+  chi_no_date <- Chi[, c("series_id", "ridership", "Clark_Lake", "Austin")]
+
+  rec_no_time <- recipes::recipe(ridership ~ ., data = chi_no_date) |>
+    recipes::update_role(series_id, new_role = "id")
+  mod <- brulee_chronos(rec_no_time, data = chi_no_date)
+
+  expect_equal(mod$context$timestamp_column, ".timestamp_column")
+  expect_true(isTRUE(mod$context$timestamp_synthetic))
+  # Row order is preserved within each series (synthesized timestamps are seq_len).
+  expect_equal(mod$context$series_target[[1]], chi_no_date$ridership)
+})
+
+test_that("recipe method synthesizes both when neither role is set", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  # All-numeric data so that nothing un-roled trips the predictor check.
+  chi_numeric <- Chi[, c("ridership", "Clark_Lake", "Austin")]
+
+  rec <- recipes::recipe(ridership ~ ., data = chi_numeric)
+  mod <- brulee_chronos(rec, data = chi_numeric)
+
+  expect_true(isTRUE(mod$context$id_synthetic))
+  expect_true(isTRUE(mod$context$timestamp_synthetic))
+  expect_equal(mod$context$item_ids, "default")
+})
+
+test_that("data.frame method builds context with item_id/timestamp vectors", {
   stub_chronos_loaders()
   Chi <- chicago_subset()
 
@@ -229,20 +173,18 @@ test_that("data.frame and matrix methods build matching context", {
     timestamp_column = "date"
   )
   expect_equal(mod_df$context$covariate_cols, c("Clark_Lake", "Austin"))
+  expect_false(isTRUE(mod_df$context$id_synthetic))
+  expect_false(isTRUE(mod_df$context$timestamp_synthetic))
+})
 
-  mod_mat <- brulee_chronos(
-    x = as.matrix(Chi[, c("Clark_Lake", "Austin")]),
-    y = Chi$ridership,
-    item_id = Chi$series_id,
-    timestamp = Chi$date,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-  expect_equal(mod_mat$context$covariate_cols, c("Clark_Lake", "Austin"))
-  expect_equal(
-    mod_df$context$series_target[[1]],
-    mod_mat$context$series_target[[1]]
-  )
+test_that("matrix input dispatches to the default method and errors", {
+  stub_chronos_loaders()
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      matrix(rnorm(20), nrow = 10, ncol = 2),
+      y = rnorm(10)
+    )
+  })
 })
 
 test_that("non-numeric predictors are rejected when mold doesn't encode them", {
@@ -309,12 +251,12 @@ test_that("length mismatches between y and item_id/timestamp error", {
 test_that("invalid quantile_levels and prediction_length error", {
   stub_chronos_loaders()
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   expect_error(
     brulee_chronos(
       ridership ~ .,
-      data = d,
+      data = chi,
       id_column = "series_id",
       timestamp_column = "date",
       quantile_levels = c(0, 0.5)
@@ -324,7 +266,7 @@ test_that("invalid quantile_levels and prediction_length error", {
   expect_error(
     brulee_chronos(
       ridership ~ .,
-      data = d,
+      data = chi,
       id_column = "series_id",
       timestamp_column = "date",
       prediction_length = -1
@@ -335,7 +277,7 @@ test_that("invalid quantile_levels and prediction_length error", {
   expect_error(
     brulee_chronos(
       ridership ~ .,
-      data = d,
+      data = chi,
       id_column = "series_id",
       timestamp_column = "date",
       quantile_levels = 0.123
@@ -385,11 +327,11 @@ test_that("recipe blueprint forges id/time through extras roles", {
 test_that("predict() returns a tibble with .pred + .pred_quantile (single series)", {
   stub_chronos_loaders(also_mock_predict_core = TRUE)
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
@@ -411,14 +353,14 @@ test_that("predict() keeps the id column when there are multiple series", {
   stub_chronos_loaders(also_mock_predict_core = TRUE)
   Chi <- chicago_subset()
   # Two synthetic series, same shape
-  d <- rbind(
+  multi_series <- rbind(
     transform(Chi[, c("series_id", "date", "ridership")], series_id = "A"),
     transform(Chi[, c("series_id", "date", "ridership")], series_id = "B")
   )
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = multi_series,
     id_column = "series_id",
     timestamp_column = "date"
   )
@@ -434,11 +376,11 @@ test_that("predict() keeps the id column when there are multiple series", {
 test_that("predict() respects a custom quantile_levels override", {
   stub_chronos_loaders(also_mock_predict_core = TRUE)
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
@@ -461,11 +403,11 @@ test_that("predict() respects a custom quantile_levels override", {
 test_that("predict() does not return any timestamp column", {
   stub_chronos_loaders(also_mock_predict_core = TRUE)
   Chi <- chicago_subset()
-  d <- Chi[, c("series_id", "date", "ridership")]
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   mod <- brulee_chronos(
     ridership ~ .,
-    data = d,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
@@ -480,4 +422,369 @@ test_that("predict() does not return any timestamp column", {
     logical(1)
   )
   expect_false(any(is_time_col))
+})
+
+# ------------------------------------------------------------------------------
+# Optional id_column / timestamp_column on the formula method
+
+test_that("formula synthesizes id and timestamp when both are omitted", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  target_only <- Chi[, "ridership", drop = FALSE]
+
+  mod <- brulee_chronos(ridership ~ ., data = target_only)
+
+  expect_equal(mod$context$id_column, ".id_column")
+  expect_equal(mod$context$timestamp_column, ".timestamp_column")
+  expect_true(isTRUE(mod$context$id_synthetic))
+  expect_true(isTRUE(mod$context$timestamp_synthetic))
+  expect_equal(mod$context$item_ids, "default")
+
+  out <- predict(mod, prediction_length = 3L)
+  expect_named(out, c(".pred", ".pred_quantile"))
+})
+
+test_that("formula tidyselect with c() resolves id and timestamp columns", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = Chi,
+    id_column = c(series_id),
+    timestamp_column = c(date)
+  )
+
+  expect_equal(mod$context$id_column, "series_id")
+  expect_equal(mod$context$timestamp_column, "date")
+  expect_false(isTRUE(mod$context$id_synthetic))
+  expect_false(isTRUE(mod$context$timestamp_synthetic))
+})
+
+test_that("formula tidyselect with bare names resolves id and timestamp", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = Chi,
+    id_column = series_id,
+    timestamp_column = date
+  )
+
+  expect_equal(mod$context$id_column, "series_id")
+  expect_equal(mod$context$timestamp_column, "date")
+})
+
+test_that("formula accepts character strings for id and timestamp (back-compat)", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  expect_equal(mod$context$id_column, "series_id")
+  expect_equal(mod$context$timestamp_column, "date")
+})
+
+test_that("formula errors when id_column tidyselect picks more than one column", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      ridership ~ Clark_Lake,
+      data = Chi,
+      id_column = c(series_id, date)
+    )
+  })
+})
+
+test_that("formula errors when id_column tidyselect picks no column", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      ridership ~ Clark_Lake,
+      data = Chi,
+      id_column = tidyselect::starts_with("nope_")
+    )
+  })
+})
+
+test_that("formula errors when string id_column is not a column in data", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      ridership ~ Clark_Lake,
+      data = Chi,
+      id_column = "nope"
+    )
+  })
+})
+
+# ------------------------------------------------------------------------------
+# Optional item_id / timestamp on the data.frame method
+
+test_that("data.frame method synthesizes id and timestamp when omitted", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    x = Chi[, "Clark_Lake", drop = FALSE],
+    y = Chi$ridership
+  )
+
+  expect_equal(mod$context$id_column, ".id_column")
+  expect_equal(mod$context$timestamp_column, ".timestamp_column")
+  expect_true(isTRUE(mod$context$id_synthetic))
+  expect_true(isTRUE(mod$context$timestamp_synthetic))
+  expect_equal(mod$context$item_ids, "default")
+
+  out <- predict(mod, prediction_length = 3L)
+  expect_named(out, c(".pred", ".pred_quantile"))
+})
+
+# ------------------------------------------------------------------------------
+# predict round-trip with new_data on a model that has no id / timestamp
+
+test_that("predict accepts new_data without id/timestamp when model was synthesized", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  chi_simple <- Chi[, c("ridership", "Clark_Lake")]
+
+  mod <- brulee_chronos(ridership ~ Clark_Lake, data = chi_simple)
+
+  # new_data has only the target + covariate; no id, no timestamp
+  out <- predict(mod, new_data = chi_simple, prediction_length = 4L)
+  expect_s3_class(out, "tbl_df")
+  expect_named(out, c(".pred", ".pred_quantile"))
+  expect_equal(nrow(out), 4L)
+})
+
+# ------------------------------------------------------------------------------
+# Print method
+
+test_that("print.brulee_chronos lists model + context details", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  # cli_bullets writes via cli's own sink; capture both stdout and stderr.
+  out <- capture.output(print(mod), type = "output")
+  msg <- capture.output(print(mod), type = "message")
+  out_str <- paste(c(out, msg), collapse = "\n")
+
+  expect_match(out_str, "Chronos-2 Pretrained Forecasting Model")
+  expect_match(out_str, "amazon/chronos-2")
+  expect_match(out_str, "Prediction length:")
+  expect_match(out_str, "Quantiles:")
+  expect_match(out_str, "Device:")
+  expect_match(out_str, "Context: 1 series")
+})
+
+test_that("print uses 'unknown' when revision is missing", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+  mod$revision <- NULL
+
+  out <- capture.output(print(mod), type = "output")
+  msg <- capture.output(print(mod), type = "message")
+  out_str <- paste(c(out, msg), collapse = "\n")
+  expect_match(out_str, "unknown")
+})
+
+# ------------------------------------------------------------------------------
+# Bridge validation extras
+
+test_that("prediction_length above the model maximum errors", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  # Model maximum is config$max_output_patches * config$output_patch_size
+  # = 64 * 16 = 1024 in stub_chronos_loaders.
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      ridership ~ .,
+      data = chi,
+      id_column = "series_id",
+      timestamp_column = "date",
+      prediction_length = 2000L
+    )
+  })
+})
+
+test_that("non-numeric model_id / cache_dir error", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      ridership ~ .,
+      data = chi,
+      id_column = "series_id",
+      timestamp_column = "date",
+      model_id = 42
+    )
+  })
+})
+
+test_that("NA values in item_id or timestamp error", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  na_id <- Chi$series_id
+  na_id[1] <- NA
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      x = Chi[, "Clark_Lake", drop = FALSE],
+      y = Chi$ridership,
+      item_id = na_id,
+      timestamp = Chi$date
+    )
+  })
+
+  na_ts <- Chi$date
+  na_ts[1] <- NA
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      x = Chi[, "Clark_Lake", drop = FALSE],
+      y = Chi$ridership,
+      item_id = Chi$series_id,
+      timestamp = na_ts
+    )
+  })
+})
+
+test_that("non-numeric target errors", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      x = Chi[, "Clark_Lake", drop = FALSE],
+      y = as.character(Chi$ridership),
+      item_id = Chi$series_id,
+      timestamp = Chi$date
+    )
+  })
+})
+
+test_that("quantile_levels of length zero errors", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(
+      ridership ~ .,
+      data = chi,
+      id_column = "series_id",
+      timestamp_column = "date",
+      quantile_levels = numeric(0)
+    )
+  })
+})
+
+# ------------------------------------------------------------------------------
+# Recipe role validation extras
+
+test_that("recipe with more than one id role errors", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  Chi$series_id2 <- Chi$series_id
+
+  rec <- recipes::recipe(ridership ~ ., data = Chi) |>
+    recipes::update_role(series_id, new_role = "id") |>
+    recipes::update_role(series_id2, new_role = "id") |>
+    recipes::update_role(date, new_role = "time")
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(rec, data = Chi)
+  })
+})
+
+test_that("recipe with more than one time role errors", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  Chi$date2 <- Chi$date
+
+  rec <- recipes::recipe(ridership ~ ., data = Chi) |>
+    recipes::update_role(series_id, new_role = "id") |>
+    recipes::update_role(date, new_role = "time") |>
+    recipes::update_role(date2, new_role = "time")
+
+  expect_snapshot(error = TRUE, {
+    brulee_chronos(rec, data = Chi)
+  })
+})
+
+# ------------------------------------------------------------------------------
+# chronos2_split_by_series
+
+test_that("chronos2_split_by_series sorts each series by timestamp", {
+  unsorted_target <- c(3, 1, 2, 30, 10, 20)
+  unsorted_ts <- c(3, 1, 2, 3, 1, 2)
+  item_id <- c("A", "A", "A", "B", "B", "B")
+  covariates <- data.frame(cov = unsorted_target * 10)
+
+  res <- brulee:::chronos2_split_by_series(
+    target = unsorted_target,
+    covariates = covariates,
+    item_id = item_id,
+    timestamp = unsorted_ts,
+    id_column = "iid",
+    timestamp_column = "ts",
+    target_column = "y"
+  )
+
+  expect_equal(res$item_ids, c("A", "B"))
+  expect_equal(res$series_target[[1]], c(1, 2, 3))
+  expect_equal(res$series_target[[2]], c(10, 20, 30))
+  expect_equal(res$series_timestamp[[1]], c(1, 2, 3))
+  expect_equal(res$series_covars[[1]]$cov, c(10, 20, 30))
+  expect_equal(res$covariate_cols, "cov")
+  expect_false(isTRUE(res$id_synthetic))
+  expect_false(isTRUE(res$timestamp_synthetic))
+})
+
+test_that("formula method drops covariates correctly when only timestamp is named", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("date", "ridership", "Clark_Lake")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    timestamp_column = date
+  )
+
+  expect_true(isTRUE(mod$context$id_synthetic))
+  expect_false(isTRUE(mod$context$timestamp_synthetic))
+  # The timestamp column should be dropped from the predictors.
+  expect_setequal(mod$context$covariate_cols, "Clark_Lake")
 })
