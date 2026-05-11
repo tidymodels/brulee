@@ -24,6 +24,7 @@ Imports:
     ggplot2,
     glue,
     hardhat,
+    purrr,
     rlang (>= 1.1.1),
     stats,
     tibble,
@@ -32,7 +33,6 @@ Imports:
 Suggests: 
     covr,
     modeldata,
-    purrr,
     recipes,
     spelling,
     testthat,
