@@ -5,6 +5,7 @@ CMD
 Cham
 Codecov
 Duchi
+GBTs
 Gorishniy
 Hazan
 Hutter
@@ -17,6 +18,7 @@ Mobilenetv
 ORCID
 PBC
 RLN
+RLNs
 RMSprop
 ReLU
 Ren
@@ -34,14 +36,17 @@ Zhmoginov
 Zhu
 adadelta
 adagrad
+ensembling
 extensibility
 funder
+interpretability
 magrittr
 mlp
 multilayer
 perceptrons
 preprint
 relu
+sparsification
 subgradient
 tanh
 tibble
