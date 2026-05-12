@@ -11,7 +11,7 @@ test_that("activation functions", {
   acts <- acts[acts != "linear"]
 
   for (i in acts) {
-    expect_error(
+    expect_no_error(
       {
         set.seed(2)
         model <- brulee_mlp(
@@ -23,9 +23,8 @@ test_that("activation functions", {
           epochs = 50L,
           hidden_units = 20L
         )
-      },
-      regex = NA
-    )
+      }
+  )
 
     r_sq <- cor(predict(model, df[401:500, -1])$.pred, df$outcome[401:500])^2
 

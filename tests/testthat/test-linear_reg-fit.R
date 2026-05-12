@@ -23,13 +23,12 @@ test_that("basic linear regression LBFGS", {
 
   lm_fit <- lm(outcome ~ ., data = lin_tr)
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       lin_fit_lbfgs <-
         brulee_linear_reg(outcome ~ ., lin_tr, penlaty = 0)
-    },
-    regex = NA
+    }
   )
 
   expect_equal(
@@ -38,11 +37,10 @@ test_that("basic linear regression LBFGS", {
     tolerance = .1
   )
 
-  expect_error(
+  expect_no_error(
     lin_pred_lbfgs <-
       predict(lin_fit_lbfgs, lin_te) |>
-      bind_cols(lin_te),
-    regex = NA
+      bind_cols(lin_te)
   )
 
   exp_str <-
@@ -99,7 +97,7 @@ test_that("basic Linear regression sgd", {
 
   lm_fit <- lm(outcome ~ ., data = lin_tr)
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       lin_fit_sgd <-
@@ -113,8 +111,7 @@ test_that("basic Linear regression sgd", {
           optimizer = "SGD",
           stop_iter = 20
         )
-    },
-    regex = NA
+    }
   )
 
   expect_equal(
@@ -123,11 +120,10 @@ test_that("basic Linear regression sgd", {
     tolerance = .1
   )
 
-  expect_error(
+  expect_no_error(
     lin_pred_sgd <-
       predict(lin_fit_sgd, lin_te) |>
-      bind_cols(lin_te),
-    regex = NA
+      bind_cols(lin_te)
   )
 
   exp_str <-

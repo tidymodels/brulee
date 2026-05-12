@@ -235,7 +235,7 @@ test_that("resnet argument validation", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   # batch_norm_units must be >= 2
-  expect_error(
+  expect_snapshot(
     brulee_resnet(
       x,
       y,
@@ -243,11 +243,11 @@ test_that("resnet argument validation", {
       batch_norm_units = c(1, 1),
       epochs = 2
     ),
-    "batch_norm_units"
+    error = TRUE
   )
 
   # batch_norm_units and hidden_units lengths must match
-  expect_error(
+  expect_snapshot(
     brulee_resnet(
       x,
       y,
@@ -255,11 +255,11 @@ test_that("resnet argument validation", {
       batch_norm_units = c(3, 4, 5),
       epochs = 2
     ),
-    "batch_norm_units.*hidden_units"
+    error = TRUE
   )
 
   # residual_at values must be valid layer indices
-  expect_error(
+  expect_snapshot(
     brulee_resnet(
       x,
       y,
@@ -268,7 +268,7 @@ test_that("resnet argument validation", {
       residual_at = 5,
       epochs = 2
     ),
-    "residual_at"
+    error = TRUE
   )
 })
 
