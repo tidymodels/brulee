@@ -346,26 +346,23 @@ used in those packages.
 \donttest{
 if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
- data(credit_data, package = "modeldata")
- credit_data <- na.omit(credit_data)
+  set.seed(87261)
+  tr_data <- modeldata::sim_regression(500)
+  te_data <- modeldata::sim_regression(50)
 
- set.seed(1)
- in_train <- sample(1:nrow(credit_data), 3000)
- credit_train <- credit_data[ in_train,]
- credit_test  <- credit_data[-in_train,]
+  # Using formula (factors are handled natively)
+  set.seed(2)
+  fit <- brulee_auto_int(outcome ~ ., data = tr_data,
+                         epochs = 50L, batch_size = 64L, stop_iter = 10L,
+                         learn_rate = 0.01, penalty = 0.1)
+  fit
 
- # Using formula (factors are handled natively)
- set.seed(2)
- fit <- brulee_auto_int(Status ~ ., data = credit_train,
-                       epochs = 50, batch_size = 256)
- fit
+  autoplot(fit)
 
- autoplot(fit)
-
- library(yardstick)
- predict(fit, credit_test, type = "prob") |>
-   dplyr::bind_cols(credit_test) |>
-   roc_auc(Status, .pred_bad)
+  library(yardstick)
+  predict(fit, te_data) |>
+   dplyr::bind_cols(te_data) |>
+   rmse(outcome, .pred)
 
 }
 }
