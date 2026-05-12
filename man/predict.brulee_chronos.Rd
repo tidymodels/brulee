@@ -56,18 +56,82 @@ Predict from a \code{brulee_chronos} model
 }
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
-\dontrun{
-data(Chicago, package = "modeldata")
-chi <- Chicago[, c("date", "ridership")]
-chi$series_id <- "L"
+pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
 
-mod <- brulee_chronos(
-  ridership ~ .,
-  data = chi[, c("series_id", "date", "ridership")],
-  id_column = c(series_id),
-  timestamp_column = c(date)
-)
-predict(mod, prediction_length = 14)
+\dontrun{
+if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+ library(dplyr)
+ library(ggplot2)
+
+ n <- nrow(modeldata::Chicago)
+
+ prior_data <- modeldata::Chicago[-((n-13):n),]
+ test_data <-
+  modeldata::Chicago[(n-13):n,] |>
+  mutate(day = lubridate::wday(date, label = TRUE))
+
+ # ------------------------------------------------------------------------------
+ # Simple, no covariate model
+
+ mod_1 <-
+  brulee_chronos(
+   ridership ~ 1,
+   data = prior_data,
+   # Removing `timestamp_column` does not affect the fit
+   timestamp_column = c(date),
+   prediction_length = 14)
+
+ pred_1 <- predict(mod_1, test_data)
+ pred_1
+
+ pred_1 |>
+  bind_cols(test_data) |>
+  ggplot(aes(date)) +
+  geom_point(aes(y = ridership, col = day)) +
+  geom_line(aes(y = .pred)) +
+  labs(title = "No covariates: Meh") +
+  theme_bw()
+
+ # ------------------------------------------------------------------------------
+ # Some covariates via the formula method
+
+mod_2 <-
+  brulee_chronos(
+   ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
+   data = prior_data,
+   timestamp_column = c(date),
+   quantile_levels = qtl_lvl,
+   prediction_length = 14)
+
+ pred_2 <- predict(mod_2, future_df = test_data)
+
+ pred_2 |>
+  bind_cols(test_data) |>
+  ggplot(aes(date)) +
+  geom_point(aes(y = ridership, col = day)) +
+  geom_line(aes(y = .pred)) +
+  labs(title = "Four covariates: Pretty good") +
+  theme_bw()
+
+ # ------------------------------------------------------------------------------
+ # Covariates using recipes
+
+ rec <-
+  recipe(ridership ~ ., data = prior_data) |>
+  update_role(date, new_role = "time")
+
+ mod_3 <- brulee_chronos(rec, data = prior_data, prediction_length = 14)
+
+ pred_3 <- predict(mod_3, future_df = test_data)
+
+ pred_3 |>
+  bind_cols(test_data) |>
+  ggplot(aes(date)) +
+  geom_point(aes(y = ridership, col = day)) +
+  geom_line(aes(y = .pred)) +
+  labs(title = "All covariates: Better Saturdays") +
+  theme_bw()
+}
 }
 \dontshow{\}) # examplesIf}
 }

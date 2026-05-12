@@ -11,18 +11,42 @@
 #' Every Chronos-2 forecast needs at most four pieces of information about
 #' the historical (context) data:
 #'
-#'   * a __target__ column with the values to forecast (always required),
-#'   * an optional __id__ column that distinguishes one time series from
+#'   * A __target__ column with the values to forecast (always required),
+#'   * An optional __id__ column that distinguishes one time series from
 #'     another (e.g. a city, store, or sensor); when omitted, all rows are
 #'     treated as a single series,
-#'   * an optional __timestamp__ column with the time index of each
+#'   * An optional __timestamp__ column with the time index of each
 #'     observation; when omitted, rows are read in their existing order,
-#'   * any number of __past covariates__, additional numeric columns
+#'   * Any number of __past covariates__, additional numeric columns
 #'     measured alongside the target.
 #'
 #' `brulee_chronos()` is a generic with three interfaces for supplying that
-#' information. Pick whichever feels most natural for your data. All three
-#' produce an object that behaves the same way at predict time.
+#' information; this intended to add flexability in how you decalre the model as
+#' well as what data are given as inputs. All three produce an object that
+#' behaves the same way at predict time.
+#'
+#' To contrast these approaches, consider the `Chicago` data contained in the
+#' \pkg{modeldata} package. The goal is to predict daily train `ridership`.
+#' There is a `date` column, as well as a set of 14-day lagged ridership data
+#' from our station of interest and from others in the Chicago system.
+#'
+#' We could use Chronos in the simplest way by just passing in the column c
+#' ontaining past ridership values. It assumes that there are no gaps in the
+#' data and that the data are arranged/sorted in the proper order (past to
+#' present). The simplest interfaces to use in this case are the formula and
+#' matrix ones.
+#'
+#' We could add the `date` column, but this is primarily used to label the data.
+#' Here, we would want the formula or recipe interface.
+#'
+#' In these data, only one station's ridership is modeled. Suppose we did this
+#' for all stations. In that case, we would _stack_ the ridership data and use
+#' the `id` argument to specify which station corresponds to each row. In this
+#' implementation, that is equivalent to running the function separately for each
+#' station; it is just a simpler interface with some small computational gains.
+#'
+#' If we wanted to use covariates in our model, such as lagged ridership data,
+#' we can do so with the formula or recipe interfaces (see below).
 #'
 #' ## Formula interface
 #'
@@ -124,6 +148,7 @@
 #'     `id`, and `time` columns.
 #'
 #'  Pass an empty data frame when there are no covariates.
+#'
 #' @param y A numeric vector of target values, of length `nrow(x)`.
 #' @param item_id Optional vector of time series identifiers, of length
 #'   `nrow(x)`. Default: `NULL`, which treats all rows as a single series.

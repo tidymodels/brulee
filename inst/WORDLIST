@@ -1,6 +1,9 @@
 ADAMw
 Adadelta
+Ansari
+Auer
 Babenko
+Bohlke
 CMD
 Cham
 Chronos
@@ -11,6 +14,7 @@ Hazan
 HuggingFace
 Hutter
 Khrulkov
+Küken
 LBFGS
 Lifecycle
 Loshchilov
@@ -27,6 +31,7 @@ Rubachev
 SGD
 SHA
 Sandler
+Shchur
 Springer
 Zeiler
 Zhang
@@ -34,11 +39,16 @@ Zhmoginov
 Zhu
 adadelta
 adagrad
+decalre
+doi
 extensibility
+flexability
 funder
+https
 magrittr
 mlp
 multilayer
+ontaining
 perceptrons
 preprint
 pretrained

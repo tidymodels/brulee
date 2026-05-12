@@ -30,15 +30,6 @@
       Error in `predict()`:
       ! Column "date" not found in `future_df`.
 
-# future_df with an unknown covariate column errors
-
-    Code
-      predict(mod, future_df = future_df, prediction_length = 3L)
-    Condition
-      Error in `predict()`:
-      ! Columns in `future_df` not found as covariates: "something_else".
-      i Available covariate columns: "Clark_Lake"
-
 # chronos2_pull_column errors when the column is missing
 
     Code

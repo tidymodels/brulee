@@ -150,19 +150,43 @@ pretrained weights.
 Every Chronos-2 forecast needs at most four pieces of information about
 the historical (context) data:
 \itemize{
-\item a \strong{target} column with the values to forecast (always required),
-\item an optional \strong{id} column that distinguishes one time series from
+\item A \strong{target} column with the values to forecast (always required),
+\item An optional \strong{id} column that distinguishes one time series from
 another (e.g. a city, store, or sensor); when omitted, all rows are
 treated as a single series,
-\item an optional \strong{timestamp} column with the time index of each
+\item An optional \strong{timestamp} column with the time index of each
 observation; when omitted, rows are read in their existing order,
-\item any number of \strong{past covariates}, additional numeric columns
+\item Any number of \strong{past covariates}, additional numeric columns
 measured alongside the target.
 }
 
 \code{brulee_chronos()} is a generic with three interfaces for supplying that
-information. Pick whichever feels most natural for your data. All three
-produce an object that behaves the same way at predict time.
+information; this intended to add flexability in how you decalre the model as
+well as what data are given as inputs. All three produce an object that
+behaves the same way at predict time.
+
+To contrast these approaches, consider the \code{Chicago} data contained in the
+\pkg{modeldata} package. The goal is to predict daily train \code{ridership}.
+There is a \code{date} column, as well as a set of 14-day lagged ridership data
+from our station of interest and from others in the Chicago system.
+
+We could use Chronos in the simplest way by just passing in the column c
+ontaining past ridership values. It assumes that there are no gaps in the
+data and that the data are arranged/sorted in the proper order (past to
+present). The simplest interfaces to use in this case are the formula and
+matrix ones.
+
+We could add the \code{date} column, but this is primarily used to label the data.
+Here, we would want the formula or recipe interface.
+
+In these data, only one station's ridership is modeled. Suppose we did this
+for all stations. In that case, we would \emph{stack} the ridership data and use
+the \code{id} argument to specify which station corresponds to each row. In this
+implementation, that is equivalent to running the function separately for each
+station; it is just a simpler interface with some small computational gains.
+
+If we wanted to use covariates in our model, such as lagged ridership data,
+we can do so with the formula or recipe interfaces (see below).
 \subsection{Formula interface}{
 
 Use a formula when your data is a single tidy data frame and you want to

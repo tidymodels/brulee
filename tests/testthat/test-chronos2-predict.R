@@ -192,7 +192,7 @@ test_that("future_df missing the timestamp column errors", {
   })
 })
 
-test_that("future_df with an unknown covariate column errors", {
+test_that("future_df with an unknown covariate column silently ignores it", {
   stub_chronos_loaders(also_mock_predict_core = TRUE)
   Chi <- chicago_subset()
 
@@ -209,9 +209,113 @@ test_that("future_df with an unknown covariate column errors", {
     something_else = rnorm(3)
   )
 
-  expect_snapshot(error = TRUE, {
-    predict(mod, future_df = future_df, prediction_length = 3L)
-  })
+  out <- predict(mod, future_df = future_df, prediction_length = 3L)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 3L)
+})
+
+# ------------------------------------------------------------------------------
+# extra columns in new_data and future_df are silently ignored
+
+test_that("new_data with extra columns works (formula model with covariates)", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake + Austin,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  extra <- Chi
+  extra$extra_col <- rnorm(nrow(extra))
+  extra$another_one <- "hello"
+
+  out <- predict(mod, new_data = extra, prediction_length = 3L)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 3L)
+})
+
+test_that("new_data with extra columns works (no-covariate model)", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  extra <- chi
+  extra$extra_col <- rnorm(nrow(extra))
+  extra$another_one <- "hello"
+
+  out <- predict(mod, new_data = extra, prediction_length = 3L)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 3L)
+})
+
+test_that("future_df with extra columns silently ignores them", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake + Austin,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  future_df <- data.frame(
+    series_id = rep("L", 5),
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 5),
+    Clark_Lake = rnorm(5),
+    Austin = rnorm(5),
+    extra_col = rnorm(5),
+    unrelated = letters[1:5]
+  )
+
+  out <- predict(mod, future_df = future_df, prediction_length = 5L)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 5L)
+})
+
+test_that("new_data still errors when a required column is missing", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake + Austin,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  bad <- Chi[, c("series_id", "date", "ridership", "Clark_Lake")]
+  expect_error(predict(mod, new_data = bad, prediction_length = 3L))
+})
+
+test_that("future_df still errors when the id column is missing", {
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  future_df <- data.frame(
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
+    Clark_Lake = rnorm(3),
+    extra_col = rnorm(3)
+  )
+
+  expect_error(predict(mod, future_df = future_df, prediction_length = 3L))
 })
 
 # ------------------------------------------------------------------------------
