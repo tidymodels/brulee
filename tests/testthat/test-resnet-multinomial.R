@@ -1,7 +1,7 @@
 test_that("resnet multinomial classification - data.frame interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
+  
 
   set.seed(1)
   n <- 150
@@ -46,7 +46,7 @@ test_that("resnet multinomial classification - data.frame interface", {
 test_that("resnet multinomial classification - formula interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
+  
 
   set.seed(1)
   n <- 150
@@ -77,7 +77,7 @@ test_that("resnet multinomial classification - formula interface", {
 test_that("resnet multinomial classification - recipe interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
+  
 
   library(recipes)
 
@@ -113,7 +113,7 @@ test_that("resnet multinomial classification - recipe interface", {
 test_that("resnet multinomial classification - class weights", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
+  
 
   set.seed(1)
   n <- 150
