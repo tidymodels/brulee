@@ -26,6 +26,7 @@ brulee_auto_int(x, ...)
   hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
+  dropout = 0,
   dropout_attn = 0,
   dropout_embedding = 0,
   validation = 0.1,
@@ -51,6 +52,7 @@ brulee_auto_int(x, ...)
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -78,6 +80,7 @@ brulee_auto_int(x, ...)
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -105,6 +108,7 @@ brulee_auto_int(x, ...)
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -180,6 +184,10 @@ added. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
 value of mixture = 1 corresponds to a pure lasso model, while mixture = 0
 indicates ridge regression (a.k.a weight decay). Must be zero for
 optimizers \code{"ADAMw"}, \code{"RMSprop"}, \code{"Adadelta"}.}
+
+\item{dropout}{A number in \verb{[0, 1)} for the dropout rate applied between
+the last hidden layer and the output head. Only has effect when
+\code{hidden_units} is not \code{NULL}. Default is 0 (no dropout).}
 
 \item{dropout_attn}{A number in \verb{[0, 1)} for the dropout rate applied to
 attention weights during training.}

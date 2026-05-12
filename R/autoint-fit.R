@@ -14,6 +14,9 @@
 #'   learns different interaction patterns in parallel. Must be >= 1.
 #' @param num_attn_blocks An integer for the number of stacked self-attention
 #'   layers. More layers capture higher-order interactions. Must be >= 1.
+#' @param dropout A number in `[0, 1)` for the dropout rate applied between
+#'   the last hidden layer and the output head. Only has effect when
+#'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
 #' @param dropout_attn A number in `[0, 1)` for the dropout rate applied to
 #'   attention weights during training.
 #' @param dropout_embedding A number in `[0, 1)` for the dropout rate applied
@@ -192,6 +195,7 @@ brulee_auto_int.data.frame <- function(
   hidden_activation = NULL,
   penalty = 0.001,
   mixture = 0,
+  dropout = 0,
   dropout_attn = 0,
   dropout_embedding = 0,
   validation = 0.1,
@@ -218,6 +222,7 @@ brulee_auto_int.data.frame <- function(
     activation = activation,
     hidden_units = hidden_units,
     hidden_activation = hidden_activation,
+    dropout = dropout,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     penalty = penalty,
@@ -250,6 +255,7 @@ brulee_auto_int.matrix <- function(
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -277,6 +283,7 @@ brulee_auto_int.matrix <- function(
     activation = activation,
     hidden_units = hidden_units,
     hidden_activation = hidden_activation,
+    dropout = dropout,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -309,6 +316,7 @@ brulee_auto_int.formula <- function(
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -340,6 +348,7 @@ brulee_auto_int.formula <- function(
     activation = activation,
     hidden_units = hidden_units,
     hidden_activation = hidden_activation,
+    dropout = dropout,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -372,6 +381,7 @@ brulee_auto_int.recipe <- function(
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   penalty = 0.001,
   mixture = 0,
   dropout_attn = 0,
@@ -399,6 +409,7 @@ brulee_auto_int.recipe <- function(
     activation = activation,
     hidden_units = hidden_units,
     hidden_activation = hidden_activation,
+    dropout = dropout,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -429,6 +440,7 @@ brulee_auto_int_bridge <- function(
   activation,
   hidden_units,
   hidden_activation,
+  dropout,
   learn_rate,
   rate_schedule,
   momentum,
@@ -470,6 +482,8 @@ brulee_auto_int_bridge <- function(
     hidden_activation = hidden_activation,
     fn = f_nm
   )
+
+  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
 
   # Handle batch_size
   if (!is.null(batch_size) & optimizer != "LBFGS") {
@@ -532,6 +546,7 @@ brulee_auto_int_bridge <- function(
     activation = auto_int_validated$activation,
     hidden_units = hidden_validated$hidden_units,
     hidden_activation = hidden_validated$hidden_activation,
+    dropout = dropout,
     learn_rate = learn_rate,
     rate_schedule = rate_schedule,
     momentum = momentum,
@@ -837,6 +852,7 @@ auto_int_fit_imp <- function(
   activation = "relu",
   hidden_units = NULL,
   hidden_activation = NULL,
+  dropout = 0,
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
@@ -1004,6 +1020,7 @@ auto_int_fit_imp <- function(
       activation = activation,
       hidden_units = hidden_units,
       hidden_activation = hidden_activation,
+      dropout = dropout,
       num_embedding = num_embedding,
       num_attn_feat = num_attn_feat,
       num_attn_heads = num_attn_heads,
@@ -1039,6 +1056,7 @@ auto_int_fit_imp <- function(
     activation = activation,
     hidden_units = hidden_units,
     hidden_activation = hidden_activation,
+    dropout = dropout,
     y_dim = y_dim
   )
 
@@ -1429,6 +1447,7 @@ auto_int_module <- torch::nn_module(
     activation,
     hidden_units,
     hidden_activation,
+    dropout,
     y_dim
   ) {
     num_features <- length(pred_lvls) + n_continuous
@@ -1463,12 +1482,18 @@ auto_int_module <- torch::nn_module(
         input_dim <- hidden_units[i]
       }
       self$hidden <- torch::nn_sequential(!!!hidden_layers)
+      if (dropout > 0) {
+        self$hidden_drop <- torch::nn_dropout(p = dropout)
+      } else {
+        self$hidden_drop <- NULL
+      }
       self$output_head <- torch::nn_linear(
         hidden_units[length(hidden_units)],
         y_dim
       )
     } else {
       self$hidden <- NULL
+      self$hidden_drop <- NULL
       self$output_head <- torch::nn_linear(flattened_dim, y_dim)
     }
 
@@ -1482,6 +1507,9 @@ auto_int_module <- torch::nn_module(
 
     if (!is.null(self$hidden)) {
       h_flat <- self$hidden(h_flat)
+      if (!is.null(self$hidden_drop)) {
+        h_flat <- self$hidden_drop(h_flat)
+      }
     }
     x <- self$output_head(h_flat)
 
@@ -1526,10 +1554,14 @@ print.brulee_auto_int <- function(x, ...) {
   )
   if (!is.null(x$parameters$hidden_units)) {
     units_str <- paste(x$parameters$hidden_units, collapse = ", ")
-    param_lst <- c(
-      param_lst,
-      " " = "Hidden layers: {units_str} units, {.val {unique(x$parameters$hidden_activation)}} activation"
-    )
+    hidden_info <- "Hidden layers: {units_str} units, {.val {unique(x$parameters$hidden_activation)}} activation"
+    if (x$parameters$dropout > 0) {
+      hidden_info <- paste0(
+        hidden_info,
+        ", dropout={signif(x$parameters$dropout, 3)}"
+      )
+    }
+    param_lst <- c(param_lst, " " = hidden_info)
   }
   param_lst <- c(
     param_lst,
