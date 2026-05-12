@@ -23,7 +23,7 @@ brulee_auto_int(x, ...)
   num_attn_blocks = 3L,
   activation = "relu",
   hidden_units = NULL,
-  hidden_activation = NULL,
+  hidden_activations = NULL,
   penalty = 0.001,
   mixture = 0,
   dropout = 0,
@@ -51,7 +51,7 @@ brulee_auto_int(x, ...)
   num_attn_blocks = 3L,
   activation = "relu",
   hidden_units = NULL,
-  hidden_activation = NULL,
+  hidden_activations = NULL,
   dropout = 0,
   penalty = 0.001,
   mixture = 0,
@@ -79,7 +79,7 @@ brulee_auto_int(x, ...)
   num_attn_blocks = 3L,
   activation = "relu",
   hidden_units = NULL,
-  hidden_activation = NULL,
+  hidden_activations = NULL,
   dropout = 0,
   penalty = 0.001,
   mixture = 0,
@@ -107,7 +107,7 @@ brulee_auto_int(x, ...)
   num_attn_blocks = 3L,
   activation = "relu",
   hidden_units = NULL,
-  hidden_activation = NULL,
+  hidden_activations = NULL,
   dropout = 0,
   penalty = 0.001,
   mixture = 0,
@@ -166,14 +166,14 @@ layers. More layers capture higher-order interactions. Must be >= 1.}
 \item{activation}{A single character string for the activation function used
 in the self-attention backbone (applied after each residual connection in
 each attention block). This does not affect the optional hidden layers; use
-\code{hidden_activation} for those. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
+\code{hidden_activations} for those. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
 
 \item{hidden_units}{An integer vector for the number of units in optional
 hidden layers between the attention backbone and the output head. For
 example, \code{c(64L, 32L)} adds two hidden layers with 64 and 32 units.
 When \code{NULL} (the default), no hidden layers are added.}
 
-\item{hidden_activation}{A character vector of activation functions for the
+\item{hidden_activations}{A character vector of activation functions for the
 hidden layers. Must be the same length as \code{hidden_units} or a single value
 that will be recycled. When \code{NULL} (the default), no hidden layers are
 added. See \code{\link[=brulee_activations]{brulee_activations()}} for options.}
@@ -350,7 +350,6 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
   tr_data <- modeldata::sim_regression(500)
   te_data <- modeldata::sim_regression(50)
 
-  # Using formula (factors are handled natively)
   set.seed(2)
   fit <- brulee_auto_int(outcome ~ ., data = tr_data,
                          epochs = 50L, batch_size = 64L, stop_iter = 10L,

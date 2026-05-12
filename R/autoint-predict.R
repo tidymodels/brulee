@@ -24,20 +24,21 @@
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
-#'  data(credit_data, package = "modeldata")
-#'  credit_data <- na.omit(credit_data)
+#'   set.seed(87261)
+#'   tr_data <- modeldata::sim_classification(500)
+#'   te_data <- modeldata::sim_classification(50)
 #'
-#'  set.seed(1)
-#'  in_train <- sample(1:nrow(credit_data), 3000)
-#'  credit_train <- credit_data[ in_train,]
-#'  credit_test  <- credit_data[-in_train,]
+#'   set.seed(2)
+#'   fit <- brulee_auto_int(class ~ ., data = tr_data,
+#'                          epochs = 50L, batch_size = 64L, stop_iter = 10L,
+#'                          hidden_units = 5, hidden_activations = "relu",
+#'                          learn_rate = 0.01, penalty = 0.01)
+#'   fit
 #'
-#'  set.seed(2)
-#'  fit <- brulee_auto_int(Status ~ ., data = credit_train,
-#'                        epochs = 50, batch_size = 256)
+#'   autoplot(fit)
 #'
-#'  predict(fit, credit_test)
-#'  predict(fit, credit_test, type = "prob")
+#'  predict(fit, te_data)
+#'  predict(fit, te_data, type = "prob")
 #' }
 #' }
 #' @export
