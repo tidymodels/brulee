@@ -8,6 +8,14 @@
 #'
 #' @details
 #'
+#' ## Model Weight File Download
+#'
+#' Keep in mind that, on the first usage of the fitting function, the package
+#' will attempt to download the model weights file. This file can require about
+#' 500MB and is locally cached.
+#'
+#' ## Interface Overview
+#'
 #' Every Chronos-2 forecast needs at most four pieces of information about
 #' the historical (context) data:
 #'
@@ -219,34 +227,51 @@
 #'     and column-name metadata that `predict()` uses by default.
 #'
 #' @examplesIf !brulee:::is_cran_check()
+#' pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
+#'
 #' \dontrun{
-#' data(Chicago, package = "modeldata")
-#' chi <- Chicago[, c("date", "ridership", "Clark_Lake", "Austin")]
-#' chi$series_id <- "L"
+#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+#'  library(dplyr)
+#'  library(ggplot2)
 #'
-#' # Formula, single series, no id or timestamp columns
-#' mod_simple <- brulee_chronos(
-#'   ridership ~ .,
-#'   data = chi[, "ridership", drop = FALSE]
-#' )
-#' predict(mod_simple, prediction_length = 14)
+#'  n <- nrow(modeldata::Chicago)
 #'
-#' # Formula with tidyselect for id / timestamp
-#' mod_cov <- brulee_chronos(
-#'   ridership ~ Clark_Lake + Austin,
-#'   data = chi,
-#'   id_column = c(series_id),
-#'   timestamp_column = c(date)
-#' )
-#' predict(mod_cov, prediction_length = 14)
+#'  prior_data <- modeldata::Chicago[-((n-13):n),]
+#'  test_data <-
+#'   modeldata::Chicago[(n-13):n,] |>
+#'   mutate(day = lubridate::wday(date, label = TRUE))
 #'
-#' # Recipe interface (use roles for id and timestamp)
-#' library(recipes)
-#' rec <- recipe(ridership ~ ., data = chi) |>
-#'   update_role(series_id, new_role = "id") |>
-#'   update_role(date,      new_role = "time")
-#' mod_rec <- brulee_chronos(rec, data = chi)
-#' predict(mod_rec, prediction_length = 14)
+#'  # ------------------------------------------------------------------------------
+#'  # Simple, no covariate model
+#'
+#'  mod_1 <-
+#'   brulee_chronos(
+#'    ridership ~ 1,
+#'    data = prior_data,
+#'    # Removing `timestamp_column` does not affect the fit
+#'    timestamp_column = c(date),
+#'    prediction_length = 14)
+#'
+#'  # ------------------------------------------------------------------------------
+#'  # Some covariates via the formula method
+#'
+#' mod_2 <-
+#'   brulee_chronos(
+#'    ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
+#'    data = prior_data,
+#'    timestamp_column = c(date),
+#'    quantile_levels = qtl_lvl,
+#'    prediction_length = 14)
+#'
+#'  # ------------------------------------------------------------------------------
+#'  # Covariates using recipes
+#'
+#'  rec <-
+#'   recipe(ridership ~ ., data = prior_data) |>
+#'   update_role(date, new_role = "time")
+#'
+#'  mod_3 <- brulee_chronos(rec, data = prior_data, prediction_length = 14)
+#' }
 #' }
 #' @export
 brulee_chronos <- function(x, ...) {
@@ -668,6 +693,11 @@ print.brulee_chronos <- function(x, ...) {
   history_lengths <- vapply(x$context$series_target, length, integer(1))
   n_covars <- length(x$context$covariate_cols)
 
+  device_label <- tryCatch(
+    as.character(x$device),
+    error = function(e) "<not available; model has not been reloaded>"
+  )
+
   short_sha <- if (is.null(x$revision)) "unknown" else substr(x$revision, 1, 8)
   mod_lst <- c(
     " " = "Source: {x$model_id} @ {short_sha}",
@@ -676,11 +706,17 @@ print.brulee_chronos <- function(x, ...) {
     " " = "Attention heads: {x$config$num_heads}",
     " " = "Prediction length: {x$prediction_length}",
     " " = "Quantiles: {x$quantile_levels}",
-    " " = "Device: {x$device}",
+    " " = "Device: {device_label}",
     " " = "Context: {n_series} series, max history {max(history_lengths)}, {n_covars} covariate{?s}"
   )
 
   cli::cli_bullets(mod_lst)
+
+  if (identical(device_label, "<not available; model has not been reloaded>")) {
+    cli::cli_alert_warning(
+      "Object contains an invalid external pointer (e.g. loaded from an RDS without serialization). Re-fit or reload the model to restore full functionality."
+    )
+  }
 
   invisible(x)
 }

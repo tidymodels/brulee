@@ -616,6 +616,30 @@ test_that("print uses 'unknown' when revision is missing", {
   expect_match(out_str, "unknown")
 })
 
+test_that("print handles invalid external pointer gracefully", {
+  stub_chronos_loaders()
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  # Simulate a deserialized object with an invalid external pointer
+  mod$device <- unserialize(serialize(torch::torch_device("cpu"), NULL))
+
+  out <- capture.output(print(mod), type = "output")
+  msg <- capture.output(print(mod), type = "message")
+  out_str <- paste(c(out, msg), collapse = "\n")
+
+  expect_match(out_str, "Chronos-2 Pretrained Forecasting Model")
+  expect_match(out_str, "not available")
+  expect_match(out_str, "invalid external pointer")
+})
+
 # ------------------------------------------------------------------------------
 # Bridge validation extras
 

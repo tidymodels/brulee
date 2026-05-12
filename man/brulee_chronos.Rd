@@ -147,6 +147,15 @@ other brulee models, no training is performed; the network has fixed
 pretrained weights.
 }
 \details{
+\subsection{Model Weight File Download}{
+
+Keep in mind that, on the first usage of the fitting function, the package
+will attempt to download the model weights file. This file can require about
+500MB and is locally cached.
+}
+
+\subsection{Interface Overview}{
+
 Every Chronos-2 forecast needs at most four pieces of information about
 the historical (context) data:
 \itemize{
@@ -187,6 +196,8 @@ station; it is just a simpler interface with some small computational gains.
 
 If we wanted to use covariates in our model, such as lagged ridership data,
 we can do so with the formula or recipe interfaces (see below).
+}
+
 \subsection{Formula interface}{
 
 Use a formula when your data is a single tidy data frame and you want to
@@ -284,34 +295,51 @@ as the original context.
 }
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
+pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
+
 \dontrun{
-data(Chicago, package = "modeldata")
-chi <- Chicago[, c("date", "ridership", "Clark_Lake", "Austin")]
-chi$series_id <- "L"
+if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+ library(dplyr)
+ library(ggplot2)
 
-# Formula, single series, no id or timestamp columns
-mod_simple <- brulee_chronos(
-  ridership ~ .,
-  data = chi[, "ridership", drop = FALSE]
-)
-predict(mod_simple, prediction_length = 14)
+ n <- nrow(modeldata::Chicago)
 
-# Formula with tidyselect for id / timestamp
-mod_cov <- brulee_chronos(
-  ridership ~ Clark_Lake + Austin,
-  data = chi,
-  id_column = c(series_id),
-  timestamp_column = c(date)
-)
-predict(mod_cov, prediction_length = 14)
+ prior_data <- modeldata::Chicago[-((n-13):n),]
+ test_data <-
+  modeldata::Chicago[(n-13):n,] |>
+  mutate(day = lubridate::wday(date, label = TRUE))
 
-# Recipe interface (use roles for id and timestamp)
-library(recipes)
-rec <- recipe(ridership ~ ., data = chi) |>
-  update_role(series_id, new_role = "id") |>
-  update_role(date,      new_role = "time")
-mod_rec <- brulee_chronos(rec, data = chi)
-predict(mod_rec, prediction_length = 14)
+ # ------------------------------------------------------------------------------
+ # Simple, no covariate model
+
+ mod_1 <-
+  brulee_chronos(
+   ridership ~ 1,
+   data = prior_data,
+   # Removing `timestamp_column` does not affect the fit
+   timestamp_column = c(date),
+   prediction_length = 14)
+
+ # ------------------------------------------------------------------------------
+ # Some covariates via the formula method
+
+mod_2 <-
+  brulee_chronos(
+   ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
+   data = prior_data,
+   timestamp_column = c(date),
+   quantile_levels = qtl_lvl,
+   prediction_length = 14)
+
+ # ------------------------------------------------------------------------------
+ # Covariates using recipes
+
+ rec <-
+  recipe(ridership ~ ., data = prior_data) |>
+  update_role(date, new_role = "time")
+
+ mod_3 <- brulee_chronos(rec, data = prior_data, prediction_length = 14)
+}
 }
 \dontshow{\}) # examplesIf}
 }
