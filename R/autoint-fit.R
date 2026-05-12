@@ -147,7 +147,7 @@
 #'   set.seed(2)
 #'   fit <- brulee_auto_int(outcome ~ ., data = tr_data,
 #'                          epochs = 50L, batch_size = 64L, stop_iter = 10L,
-#'                          learn_rate = 0.01, penalty = 0.1)
+#'                          learn_rate = 0.01, penalty = 0.01)
 #'   fit
 #'
 #'   autoplot(fit)
