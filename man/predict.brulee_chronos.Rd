@@ -100,7 +100,6 @@ mod_2 <-
    ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
    data = prior_data,
    timestamp_column = c(date),
-   quantile_levels = qtl_lvl,
    prediction_length = 14)
 
  pred_2 <- predict(mod_2, future_df = test_data)

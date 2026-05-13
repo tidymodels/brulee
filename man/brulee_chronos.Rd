@@ -147,6 +147,12 @@ other brulee models, no training is performed; the network has fixed
 pretrained weights.
 }
 \details{
+\subsection{Computing Requirements}{
+
+This model can be used with or without a graphics processing unit (GPU).
+However, it may be limited when used with a CPU (and no GPU).
+}
+
 \subsection{Model Weight File Download}{
 
 Keep in mind that, on the first usage of the fitting function, the package
@@ -328,7 +334,6 @@ mod_2 <-
    ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
    data = prior_data,
    timestamp_column = c(date),
-   quantile_levels = qtl_lvl,
    prediction_length = 14)
 
  # ------------------------------------------------------------------------------

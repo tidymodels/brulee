@@ -8,6 +8,11 @@
 #'
 #' @details
 #'
+#' ## Computing Requirements
+#'
+#' This model can be used with or without a graphics processing unit (GPU).
+#' However, it may be limited when used with a CPU (and no GPU).
+#'
 #' ## Model Weight File Download
 #'
 #' Keep in mind that, on the first usage of the fitting function, the package
@@ -260,7 +265,6 @@
 #'    ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
 #'    data = prior_data,
 #'    timestamp_column = c(date),
-#'    quantile_levels = qtl_lvl,
 #'    prediction_length = 14)
 #'
 #'  # ------------------------------------------------------------------------------
