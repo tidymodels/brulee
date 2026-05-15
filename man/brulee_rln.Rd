@@ -18,7 +18,7 @@ brulee_rln(x, ...)
   y,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e+05,
   activation = "relu",
@@ -38,7 +38,7 @@ brulee_rln(x, ...)
   y,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e+05,
   activation = "relu",
@@ -58,7 +58,7 @@ brulee_rln(x, ...)
   data,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e+05,
   activation = "relu",
@@ -78,7 +78,7 @@ brulee_rln(x, ...)
   data,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e+05,
   activation = "relu",
@@ -121,8 +121,8 @@ specified as:
 \item{hidden_units}{An integer for the number of units in the single hidden
 layer. Must be >= 1.}
 
-\item{penalty_type}{An integer for the regularization norm: \code{1L} for L1 (default)
-or \code{2L} for L2. L1 is recommended by the original paper.}
+\item{penalty_type}{A string for the regularization norm: \code{"L1"} (default)
+or \code{"L2"}. L1 is recommended by the original paper.}
 
 \item{penalty_average}{A numeric value for the target mean of the log-scale
 per-weight regularization coefficients (Theta in the paper). Controls

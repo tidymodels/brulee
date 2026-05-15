@@ -301,7 +301,7 @@ validate_resnet_args <- function(
 #' Validate RLN-specific arguments
 #'
 #' @param hidden_units Number of units in the single hidden layer
-#' @param penalty_type Regularization norm (1 or 2)
+#' @param penalty_type Regularization norm ("L1" or "L2")
 #' @param penalty_average Target mean of log-scale lambda coefficients
 #' @param step_rate Step size for lambda updates
 #' @param activation Activation function name
@@ -323,12 +323,10 @@ validate_rln_args <- function(
   }
   check_integer(hidden_units, single = TRUE, 1, fn = fn)
 
-  if (is.numeric(penalty_type) & !is.integer(penalty_type)) {
-    penalty_type <- as.integer(penalty_type)
-  }
-  if (!penalty_type %in% c(1L, 2L)) {
+  penalty_type <- toupper(as.character(penalty_type))
+  if (!penalty_type %in% c("L1", "L2")) {
     cli::cli_abort(
-      "{.arg penalty_type} must be 1 (L1) or 2 (L2), not {.val {penalty_type}}."
+      '{.arg penalty_type} must be "L1" or "L2", not {.val {penalty_type}}.'
     )
   }
 

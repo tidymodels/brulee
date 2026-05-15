@@ -6,8 +6,8 @@
 #' @inheritParams brulee_mlp
 #' @param hidden_units An integer for the number of units in the single hidden
 #'   layer. Must be >= 1.
-#' @param penalty_type An integer for the regularization norm: `1L` for L1 (default)
-#'   or `2L` for L2. L1 is recommended by the original paper.
+#' @param penalty_type A string for the regularization norm: `"L1"` (default)
+#'   or `"L2"`. L1 is recommended by the original paper.
 #' @param penalty_average A numeric value for the target mean of the log-scale
 #'   per-weight regularization coefficients (Theta in the paper). Controls
 #'   average regularization strength: `exp(penalty_average)` is approximately the
@@ -149,7 +149,7 @@ brulee_rln.data.frame <- function(
   y,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e5,
   activation = "relu",
@@ -193,7 +193,7 @@ brulee_rln.matrix <- function(
   y,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e5,
   activation = "relu",
@@ -237,7 +237,7 @@ brulee_rln.formula <- function(
   data,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e5,
   activation = "relu",
@@ -281,7 +281,7 @@ brulee_rln.recipe <- function(
   data,
   epochs = 100L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e5,
   activation = "relu",
@@ -494,7 +494,7 @@ rln_fit_imp <- function(
   epochs = 100L,
   batch_size = 32L,
   hidden_units = 5L,
-  penalty_type = 1L,
+  penalty_type = "L1",
   penalty_average = -10,
   step_rate = 6e5,
   validation = 0.1,
@@ -701,7 +701,7 @@ make_rln_state <- function(
     weights <<- as.array(first_linear$weight$detach())
     gradients <- weights - prev_weights
 
-    if (penalty_type == 1L) {
+    if (penalty_type == "L1") {
       norms_derivative <- sign(weights)
     } else {
       norms_derivative <- weights * 2
@@ -785,16 +785,10 @@ print.brulee_rln <- function(x, ...) {
 
   cat("\n")
 
-  if (x$parameters$penalty_type == 1L) {
-    norm_label <- "L1"
-  } else {
-    norm_label <- "L2"
-  }
-
   cli::cli_bullets(c(
     " " = "Activation: {.val {x$parameters$activation}}",
     " " = "# Hidden Units: {x$parameters$hidden_units}",
-    " " = "Norm: {norm_label}",
+    " " = "Norm: {x$parameters$penalty_type}",
     " " = "penalty_average (Theta): {signif(x$parameters$penalty_average, 3)}",
     " " = "RLN Learning Rate (nu): {signif(x$parameters$step_rate, 3)}",
     " " = "Optimizer LR: {signif(x$parameters$learn_rate, 3)}, Schedule: {.val {x$parameters$sched}}",
