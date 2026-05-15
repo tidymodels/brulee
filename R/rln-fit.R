@@ -13,7 +13,7 @@
 #'   average regularization strength: `exp(penalty_average)` is approximately the
 #'   geometric mean of the coefficients. Default is `-10`, corresponding to
 #'   `exp(-10) ≈ 0.000045`.
-#' @param rln_learn_rate A numeric value for the step size used to update the
+#' @param step_rate A numeric value for the step size used to update the
 #'   per-weight regularization coefficients (nu in the paper). Typically large
 #'   (default `6e5`) because updates operate in log-scale.
 #'
@@ -151,7 +151,7 @@ brulee_rln.data.frame <- function(
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e5,
+  step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -170,7 +170,7 @@ brulee_rln.data.frame <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation,
     validation = validation,
     optimizer = optimizer,
@@ -195,7 +195,7 @@ brulee_rln.matrix <- function(
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e5,
+  step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -214,7 +214,7 @@ brulee_rln.matrix <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation,
     validation = validation,
     optimizer = optimizer,
@@ -239,7 +239,7 @@ brulee_rln.formula <- function(
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e5,
+  step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -258,7 +258,7 @@ brulee_rln.formula <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation,
     validation = validation,
     optimizer = optimizer,
@@ -283,7 +283,7 @@ brulee_rln.recipe <- function(
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e5,
+  step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -302,7 +302,7 @@ brulee_rln.recipe <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation,
     validation = validation,
     optimizer = optimizer,
@@ -325,7 +325,7 @@ brulee_rln_bridge <- function(
   hidden_units,
   penalty_type,
   penalty_average,
-  rln_learn_rate,
+  step_rate,
   activation,
   validation,
   optimizer,
@@ -349,7 +349,7 @@ brulee_rln_bridge <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation,
     fn = f_nm
   )
@@ -409,7 +409,7 @@ brulee_rln_bridge <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation,
     validation = validation,
     optimizer = optimizer,
@@ -496,7 +496,7 @@ rln_fit_imp <- function(
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e5,
+  step_rate = 6e5,
   validation = 0.1,
   optimizer = "RMSprop",
   learn_rate = 0.001,
@@ -566,7 +566,7 @@ rln_fit_imp <- function(
       hidden_units = hidden_units,
       penalty_type = penalty_type,
       penalty_average = penalty_average,
-      rln_learn_rate = rln_learn_rate,
+      step_rate = step_rate,
       learn_rate = learn_rate,
       validation = validation,
       optimizer = optimizer,
@@ -601,7 +601,7 @@ rln_fit_imp <- function(
     first_linear = model$linear1,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate
+    step_rate = step_rate
   )
 
   best_epoch <- 0L
@@ -676,14 +676,23 @@ rln_fit_imp <- function(
 # ------------------------------------------------------------------------------
 # RLN state closure
 
-make_rln_state <- function(first_linear, penalty_type, penalty_average, rln_learn_rate) {
+make_rln_state <- function(
+  first_linear,
+  penalty_type,
+  penalty_average,
+  step_rate
+) {
   weights <- NULL
   lambdas <- NULL
   prev_regularization <- NULL
 
   on_train_begin <- function() {
     weights <<- as.array(first_linear$weight$detach())
-    lambdas <<- matrix(penalty_average, nrow = nrow(weights), ncol = ncol(weights))
+    lambdas <<- matrix(
+      penalty_average,
+      nrow = nrow(weights),
+      ncol = ncol(weights)
+    )
     prev_regularization <<- NULL
   }
 
@@ -700,7 +709,7 @@ make_rln_state <- function(first_linear, penalty_type, penalty_average, rln_lear
 
     if (!is.null(prev_regularization)) {
       lambda_gradients <- gradients * prev_regularization
-      lambdas <<- lambdas - rln_learn_rate * lambda_gradients
+      lambdas <<- lambdas - step_rate * lambda_gradients
       lambdas <<- lambdas + (penalty_average - mean(lambdas))
     }
 
@@ -787,7 +796,7 @@ print.brulee_rln <- function(x, ...) {
     " " = "# Hidden Units: {x$parameters$hidden_units}",
     " " = "Norm: {norm_label}",
     " " = "penalty_average (Theta): {signif(x$parameters$penalty_average, 3)}",
-    " " = "RLN Learning Rate (nu): {signif(x$parameters$rln_learn_rate, 3)}",
+    " " = "RLN Learning Rate (nu): {signif(x$parameters$step_rate, 3)}",
     " " = "Optimizer LR: {signif(x$parameters$learn_rate, 3)}, Schedule: {.val {x$parameters$sched}}",
     " " = "Stopping iterations: {x$parameters$stop_iter}"
   ))

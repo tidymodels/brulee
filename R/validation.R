@@ -303,7 +303,7 @@ validate_resnet_args <- function(
 #' @param hidden_units Number of units in the single hidden layer
 #' @param penalty_type Regularization norm (1 or 2)
 #' @param penalty_average Target mean of log-scale lambda coefficients
-#' @param rln_learn_rate Step size for lambda updates
+#' @param step_rate Step size for lambda updates
 #' @param activation Activation function name
 #' @param fn Function name for error messages
 #'
@@ -314,7 +314,7 @@ validate_rln_args <- function(
   hidden_units,
   penalty_type,
   penalty_average,
-  rln_learn_rate,
+  step_rate,
   activation,
   fn = NULL
 ) {
@@ -327,7 +327,9 @@ validate_rln_args <- function(
     penalty_type <- as.integer(penalty_type)
   }
   if (!penalty_type %in% c(1L, 2L)) {
-    cli::cli_abort("{.arg penalty_type} must be 1 (L1) or 2 (L2), not {.val {penalty_type}}.")
+    cli::cli_abort(
+      "{.arg penalty_type} must be 1 (L1) or 2 (L2), not {.val {penalty_type}}."
+    )
   }
 
   check_double(penalty_average, single = TRUE, fn = fn)
@@ -335,7 +337,7 @@ validate_rln_args <- function(
     cli::cli_abort("{.arg penalty_average} must be a finite number.")
   }
 
-  check_double(rln_learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = fn)
+  check_double(step_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = fn)
 
   allowed_activation <- brulee_activations()
   if (!activation %in% allowed_activation) {
@@ -349,7 +351,7 @@ validate_rln_args <- function(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
     penalty_average = penalty_average,
-    rln_learn_rate = rln_learn_rate,
+    step_rate = step_rate,
     activation = activation
   )
 }

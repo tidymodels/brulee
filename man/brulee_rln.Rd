@@ -20,7 +20,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e+05,
+  step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -40,7 +40,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e+05,
+  step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -60,7 +60,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e+05,
+  step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -80,7 +80,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = 1L,
   penalty_average = -10,
-  rln_learn_rate = 6e+05,
+  step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
   optimizer = "RMSprop",
@@ -130,7 +130,7 @@ average regularization strength: \code{exp(penalty_average)} is approximately th
 geometric mean of the coefficients. Default is \code{-10}, corresponding to
 \verb{exp(-10) ≈ 0.000045}.}
 
-\item{rln_learn_rate}{A numeric value for the step size used to update the
+\item{step_rate}{A numeric value for the step size used to update the
 per-weight regularization coefficients (nu in the paper). Typically large
 (default \code{6e5}) because updates operate in log-scale.}
 
