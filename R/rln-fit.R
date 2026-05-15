@@ -635,9 +635,6 @@ rln_fit_imp <- function(
   res$loss <- loss_vec[1]
   res$best_epoch <- best_epoch
 
-  # Initialize lambdas before the first batch
-  rln_state$on_train_begin()
-
   # No grad_value_clip/grad_norm_clip: the per-weight regularization in
   # on_batch_end keeps weights bounded, making gradient clipping unnecessary
   training_result <- run_training_loop(
@@ -683,19 +680,9 @@ make_rln_state <- function(
   penalty_average,
   step_rate
 ) {
-  weights <- NULL
-  lambdas <- NULL
+  weights <- as.array(first_linear$weight$detach())
+  lambdas <- matrix(penalty_average, nrow = nrow(weights), ncol = ncol(weights))
   prev_regularization <- NULL
-
-  on_train_begin <- function() {
-    weights <<- as.array(first_linear$weight$detach())
-    lambdas <<- matrix(
-      penalty_average,
-      nrow = nrow(weights),
-      ncol = ncol(weights)
-    )
-    prev_regularization <<- NULL
-  }
 
   on_batch_end <- function() {
     prev_weights <- weights
@@ -732,7 +719,6 @@ make_rln_state <- function(
   }
 
   list(
-    on_train_begin = on_train_begin,
     on_batch_end = on_batch_end
   )
 }
