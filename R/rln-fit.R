@@ -51,7 +51,7 @@
 #' After each optimizer step, the per-weight regularization coefficients are
 #' updated using the gradient of the Counterfactual Loss with respect to the
 #' coefficients, then projected onto a simplex so that `mean(lambda) == penalty_average`.
-#' The RMSprop optimizer is the default, as used in the original paper.
+#' The ADAMw optimizer is the default.
 #'
 #' ## Other Notes
 #'
@@ -154,7 +154,7 @@ brulee_rln.data.frame <- function(
   step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0.0,
@@ -198,7 +198,7 @@ brulee_rln.matrix <- function(
   step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0.0,
@@ -242,7 +242,7 @@ brulee_rln.formula <- function(
   step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0.0,
@@ -286,7 +286,7 @@ brulee_rln.recipe <- function(
   step_rate = 6e5,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0.0,
@@ -498,7 +498,7 @@ rln_fit_imp <- function(
   penalty_average = -10,
   step_rate = 6e5,
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0.0,

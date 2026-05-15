@@ -23,7 +23,7 @@ brulee_rln(x, ...)
   step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0,
@@ -43,7 +43,7 @@ brulee_rln(x, ...)
   step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0,
@@ -63,7 +63,7 @@ brulee_rln(x, ...)
   step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0,
@@ -83,7 +83,7 @@ brulee_rln(x, ...)
   step_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
-  optimizer = "RMSprop",
+  optimizer = "ADAMw",
   learn_rate = 0.001,
   rate_schedule = "none",
   momentum = 0,
@@ -229,7 +229,7 @@ Weights are initialized with Xavier normal initialization.
 After each optimizer step, the per-weight regularization coefficients are
 updated using the gradient of the Counterfactual Loss with respect to the
 coefficients, then projected onto a simplex so that \code{mean(lambda) == penalty_average}.
-The RMSprop optimizer is the default, as used in the original paper.
+The ADAMw optimizer is the default.
 }
 
 \subsection{Other Notes}{
