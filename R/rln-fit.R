@@ -9,13 +9,12 @@
 #' @param penalty_type A string for the regularization norm: `"L1"` (default)
 #'   or `"L2"`. L1 is recommended by the original paper.
 #' @param penalty_average A numeric value for the target mean of the log-scale
-#'   per-weight regularization coefficients ($\theta$ in Shavitt and Segal (2018)).
+#'   per-weight regularization coefficients (Theta in Shavitt and Segal (2018)).
 #'   Controls average regularization strength: `exp(penalty_average)` is
 #'   approximately the geometric mean of the coefficients. Default is `-10`,
-#'   corresponding to
-#'   `exp(-10) ≈ 0.000045`.
+#'   corresponding to `exp(-10) ≈ 0.000045`.
 #' @param step_rate A numeric value for the step size used to update the
-#'   per-weight regularization coefficients ($\nu$ in Shavitt and Segal (2018)).
+#'   per-weight regularization coefficients (nu in Shavitt and Segal (2018)).
 #'    Typically large (default `6e5`) because updates operate in log-scale.
 #'
 #' @details

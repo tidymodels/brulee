@@ -125,14 +125,13 @@ layer. Must be >= 1.}
 or \code{"L2"}. L1 is recommended by the original paper.}
 
 \item{penalty_average}{A numeric value for the target mean of the log-scale
-per-weight regularization coefficients ($\theta$ in Shavitt and Segal (2018)).
+per-weight regularization coefficients (Theta in Shavitt and Segal (2018)).
 Controls average regularization strength: \code{exp(penalty_average)} is
 approximately the geometric mean of the coefficients. Default is \code{-10},
-corresponding to
-\verb{exp(-10) ≈ 0.000045}.}
+corresponding to \verb{exp(-10) ≈ 0.000045}.}
 
 \item{step_rate}{A numeric value for the step size used to update the
-per-weight regularization coefficients ($\nu$ in Shavitt and Segal (2018)).
+per-weight regularization coefficients (nu in Shavitt and Segal (2018)).
 Typically large (default \code{6e5}) because updates operate in log-scale.}
 
 \item{activation}{A character vector for the activation function (such as
