@@ -1,6 +1,5 @@
 test_that("rln regression - matrix interface", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -59,7 +58,6 @@ test_that("rln regression - data.frame interface", {
 
 test_that("rln regression - formula interface", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -113,7 +111,6 @@ test_that("rln regression - recipe interface", {
 
 test_that("rln regression - epoch parameter", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -141,7 +138,6 @@ test_that("rln regression - epoch parameter", {
 
 test_that("rln print method works", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -188,7 +184,6 @@ test_that("rln autoplot works", {
 
 test_that("rln argument validation", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -230,7 +225,6 @@ test_that("rln rejects factor outcomes", {
 
 test_that("predict call threading surfaces predict() not the bridge", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -239,7 +233,13 @@ test_that("predict call threading surfaces predict() not the bridge", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_rln(x = x, y = y, hidden_units = 4L, epochs = 3L, verbose = FALSE)
+  fit <- brulee_rln(
+    x = x,
+    y = y,
+    hidden_units = 4L,
+    epochs = 3L,
+    verbose = FALSE
+  )
 
   cnd <- rlang::catch_cnd(predict(fit, x, epoch = 9999), classes = "warning")
   expect_match(conditionMessage(cnd), "last epoch")
