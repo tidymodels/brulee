@@ -45,18 +45,31 @@ predict.brulee_rln <- function(
   epoch = NULL,
   ...
 ) {
+  call <- rlang::caller_env()
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_rln_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_rln_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch,
+    call = call
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_rln_bridge <- function(type, model, predictors, epoch) {
+predict_brulee_rln_bridge <- function(
+  type,
+  model,
+  predictors,
+  epoch,
+  call = rlang::caller_env()
+) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -64,7 +77,8 @@ predict_brulee_rln_bridge <- function(type, model, predictors, epoch) {
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
+        ),
+        call = call
       )
     }
   }
@@ -72,7 +86,8 @@ predict_brulee_rln_bridge <- function(type, model, predictors, epoch) {
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
     cli::cli_warn(
-      "The model fit only {max_epoch} epoch{?s}; predictions cannot be made at epoch {epoch} so the last epoch is used."
+      "The model fit only {max_epoch} epoch{?s}; predictions cannot be made at epoch {epoch} so the last epoch is used.",
+      call = call
     )
     epoch <- max_epoch
   }

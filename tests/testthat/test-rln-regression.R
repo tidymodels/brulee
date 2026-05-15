@@ -228,6 +228,24 @@ test_that("rln rejects factor outcomes", {
   )
 })
 
+test_that("predict call threading surfaces predict() not the bridge", {
+  skip_if_not_installed("torch")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 50
+  x <- matrix(rnorm(n * 2), ncol = 2)
+  colnames(x) <- c("x1", "x2")
+  y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
+
+  set.seed(1)
+  fit <- brulee_rln(x = x, y = y, hidden_units = 4L, epochs = 3L, verbose = FALSE)
+
+  cnd <- rlang::catch_cnd(predict(fit, x, epoch = 9999), classes = "warning")
+  expect_match(conditionMessage(cnd), "last epoch")
+  expect_no_match(deparse(conditionCall(cnd)), "bridge")
+})
+
 test_that("rln stores parameters correctly", {
   skip_if_not_installed("torch")
   skip_on_cran()
