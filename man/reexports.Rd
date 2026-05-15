@@ -13,10 +13,10 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{generics}{\code{\link[generics]{tunable}}}
+  \item{generics}{\code{\link[generics:tunable]{tunable()}}}
 
-  \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
+  \item{ggplot2}{\code{\link[ggplot2:autoplot]{autoplot()}}}
 
-  \item{stats}{\code{\link[stats]{coef}}}
+  \item{stats}{\code{\link[stats:coef]{coef()}}}
 }}
 

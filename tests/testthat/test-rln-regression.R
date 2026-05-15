@@ -197,8 +197,8 @@ test_that("rln argument validation", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   expect_error(
-    brulee_rln(x, y, norm = 3, epochs = 2L),
-    "norm"
+    brulee_rln(x, y, penalty_type = 3, epochs = 2L),
+    "penalty_type"
   )
 
   expect_error(
@@ -243,7 +243,7 @@ test_that("rln stores parameters correctly", {
     x = x,
     y = y,
     hidden_units = 6L,
-    norm = 2L,
+    penalty_type = 2L,
     avg_reg = -8,
     rln_learn_rate = 1e5,
     activation = "tanh",
@@ -252,7 +252,7 @@ test_that("rln stores parameters correctly", {
   )
 
   expect_equal(fit$parameters$hidden_units, 6L)
-  expect_equal(fit$parameters$norm, 2L)
+  expect_equal(fit$parameters$penalty_type, 2L)
   expect_equal(fit$parameters$avg_reg, -8)
   expect_equal(fit$parameters$rln_learn_rate, 1e5)
   expect_equal(fit$parameters$activation, "tanh")

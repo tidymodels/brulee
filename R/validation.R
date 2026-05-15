@@ -301,7 +301,7 @@ validate_resnet_args <- function(
 #' Validate RLN-specific arguments
 #'
 #' @param hidden_units Number of units in the single hidden layer
-#' @param norm Regularization norm (1 or 2)
+#' @param penalty_type Regularization norm (1 or 2)
 #' @param avg_reg Target mean of log-scale lambda coefficients
 #' @param rln_learn_rate Step size for lambda updates
 #' @param activation Activation function name
@@ -312,7 +312,7 @@ validate_resnet_args <- function(
 #' @noRd
 validate_rln_args <- function(
   hidden_units,
-  norm,
+  penalty_type,
   avg_reg,
   rln_learn_rate,
   activation,
@@ -323,11 +323,11 @@ validate_rln_args <- function(
   }
   check_integer(hidden_units, single = TRUE, 1, fn = fn)
 
-  if (is.numeric(norm) & !is.integer(norm)) {
-    norm <- as.integer(norm)
+  if (is.numeric(penalty_type) & !is.integer(penalty_type)) {
+    penalty_type <- as.integer(penalty_type)
   }
-  if (!norm %in% c(1L, 2L)) {
-    cli::cli_abort("{.arg norm} must be 1 (L1) or 2 (L2), not {.val {norm}}.")
+  if (!penalty_type %in% c(1L, 2L)) {
+    cli::cli_abort("{.arg penalty_type} must be 1 (L1) or 2 (L2), not {.val {penalty_type}}.")
   }
 
   check_double(avg_reg, single = TRUE, fn = fn)
@@ -347,7 +347,7 @@ validate_rln_args <- function(
 
   list(
     hidden_units = hidden_units,
-    norm = norm,
+    penalty_type = penalty_type,
     avg_reg = avg_reg,
     rln_learn_rate = rln_learn_rate,
     activation = activation

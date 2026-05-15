@@ -18,7 +18,7 @@ brulee_rln(x, ...)
   y,
   epochs = 100L,
   hidden_units = 5L,
-  norm = 1L,
+  penalty_type = 1L,
   avg_reg = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
@@ -38,7 +38,7 @@ brulee_rln(x, ...)
   y,
   epochs = 100L,
   hidden_units = 5L,
-  norm = 1L,
+  penalty_type = 1L,
   avg_reg = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
@@ -58,7 +58,7 @@ brulee_rln(x, ...)
   data,
   epochs = 100L,
   hidden_units = 5L,
-  norm = 1L,
+  penalty_type = 1L,
   avg_reg = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
@@ -78,7 +78,7 @@ brulee_rln(x, ...)
   data,
   epochs = 100L,
   hidden_units = 5L,
-  norm = 1L,
+  penalty_type = 1L,
   avg_reg = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
@@ -121,7 +121,7 @@ specified as:
 \item{hidden_units}{An integer for the number of units in the single hidden
 layer. Must be >= 1.}
 
-\item{norm}{An integer for the regularization norm: \code{1L} for L1 (default)
+\item{penalty_type}{An integer for the regularization norm: \code{1L} for L1 (default)
 or \code{2L} for L2. L1 is recommended by the original paper.}
 
 \item{avg_reg}{A numeric value for the target mean of the log-scale
