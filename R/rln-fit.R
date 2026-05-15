@@ -65,8 +65,8 @@
 #' approximately 10-20 epochs to stabilize (Shavitt & Segal, 2018); stopping
 #' too early prevents the per-weight regularization from taking effect.
 #'
-#' Predictors should all be numeric and on comparable scales. Use a recipe
-#' with `step_normalize()` to standardize them before training.
+#' Predictors should all be numeric and on comparable scales. Categorical
+#' predictors must be converted to dummy variables.
 #'
 #' Model parameters are saved each epoch so that `epoch` can be tuned
 #' efficiently via the `epoch` argument of [predict.brulee_rln()] and
