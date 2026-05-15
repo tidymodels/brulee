@@ -198,7 +198,9 @@ run_training_loop <- function(
           loss
         }
         optimizer_obj$step(cl)
-        if (!is.null(batch_callback)) batch_callback()
+        if (!is.null(batch_callback)) {
+          batch_callback()
+        }
       }
     )
 
