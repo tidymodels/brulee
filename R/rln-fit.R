@@ -8,9 +8,9 @@
 #'   layer. Must be >= 1.
 #' @param penalty_type An integer for the regularization norm: `1L` for L1 (default)
 #'   or `2L` for L2. L1 is recommended by the original paper.
-#' @param avg_reg A numeric value for the target mean of the log-scale
+#' @param penalty_average A numeric value for the target mean of the log-scale
 #'   per-weight regularization coefficients (Theta in the paper). Controls
-#'   average regularization strength: `exp(avg_reg)` is approximately the
+#'   average regularization strength: `exp(penalty_average)` is approximately the
 #'   geometric mean of the coefficients. Default is `-10`, corresponding to
 #'   `exp(-10) ≈ 0.000045`.
 #' @param rln_learn_rate A numeric value for the step size used to update the
@@ -24,7 +24,7 @@
 #' applies a single global penalty, RLN learns a separate regularization
 #' coefficient for each weight in the hidden layer. After each gradient step,
 #' the per-weight coefficients (lambdas) are updated and projected to keep
-#' their mean at `avg_reg`.
+#' their mean at `penalty_average`.
 #'
 #' ## Why Use RLN?
 #'
@@ -50,7 +50,7 @@
 #'
 #' After each optimizer step, the per-weight regularization coefficients are
 #' updated using the gradient of the Counterfactual Loss with respect to the
-#' coefficients, then projected onto a simplex so that `mean(lambda) == avg_reg`.
+#' coefficients, then projected onto a simplex so that `mean(lambda) == penalty_average`.
 #' The RMSprop optimizer is the default, as used in the original paper.
 #'
 #' ## Other Notes
@@ -150,7 +150,7 @@ brulee_rln.data.frame <- function(
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e5,
   activation = "relu",
   validation = 0.1,
@@ -169,7 +169,7 @@ brulee_rln.data.frame <- function(
     epochs = epochs,
     hidden_units = hidden_units,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate,
     activation = activation,
     validation = validation,
@@ -194,7 +194,7 @@ brulee_rln.matrix <- function(
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e5,
   activation = "relu",
   validation = 0.1,
@@ -213,7 +213,7 @@ brulee_rln.matrix <- function(
     epochs = epochs,
     hidden_units = hidden_units,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate,
     activation = activation,
     validation = validation,
@@ -238,7 +238,7 @@ brulee_rln.formula <- function(
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e5,
   activation = "relu",
   validation = 0.1,
@@ -257,7 +257,7 @@ brulee_rln.formula <- function(
     epochs = epochs,
     hidden_units = hidden_units,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate,
     activation = activation,
     validation = validation,
@@ -282,7 +282,7 @@ brulee_rln.recipe <- function(
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e5,
   activation = "relu",
   validation = 0.1,
@@ -301,7 +301,7 @@ brulee_rln.recipe <- function(
     epochs = epochs,
     hidden_units = hidden_units,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate,
     activation = activation,
     validation = validation,
@@ -324,7 +324,7 @@ brulee_rln_bridge <- function(
   epochs,
   hidden_units,
   penalty_type,
-  avg_reg,
+  penalty_average,
   rln_learn_rate,
   activation,
   validation,
@@ -348,7 +348,7 @@ brulee_rln_bridge <- function(
   rln_validated <- validate_rln_args(
     hidden_units = hidden_units,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate,
     activation = activation,
     fn = f_nm
@@ -408,7 +408,7 @@ brulee_rln_bridge <- function(
     epochs = epochs,
     hidden_units = hidden_units,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate,
     activation = activation,
     validation = validation,
@@ -495,7 +495,7 @@ rln_fit_imp <- function(
   batch_size = 32L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e5,
   validation = 0.1,
   optimizer = "RMSprop",
@@ -565,7 +565,7 @@ rln_fit_imp <- function(
       activation = activation,
       hidden_units = hidden_units,
       penalty_type = penalty_type,
-      avg_reg = avg_reg,
+      penalty_average = penalty_average,
       rln_learn_rate = rln_learn_rate,
       learn_rate = learn_rate,
       validation = validation,
@@ -600,7 +600,7 @@ rln_fit_imp <- function(
   rln_state <- make_rln_state(
     first_linear = model$linear1,
     penalty_type = penalty_type,
-    avg_reg = avg_reg,
+    penalty_average = penalty_average,
     rln_learn_rate = rln_learn_rate
   )
 
@@ -676,14 +676,14 @@ rln_fit_imp <- function(
 # ------------------------------------------------------------------------------
 # RLN state closure
 
-make_rln_state <- function(first_linear, penalty_type, avg_reg, rln_learn_rate) {
+make_rln_state <- function(first_linear, penalty_type, penalty_average, rln_learn_rate) {
   weights <- NULL
   lambdas <- NULL
   prev_regularization <- NULL
 
   on_train_begin <- function() {
     weights <<- as.array(first_linear$weight$detach())
-    lambdas <<- matrix(avg_reg, nrow = nrow(weights), ncol = ncol(weights))
+    lambdas <<- matrix(penalty_average, nrow = nrow(weights), ncol = ncol(weights))
     prev_regularization <<- NULL
   }
 
@@ -701,7 +701,7 @@ make_rln_state <- function(first_linear, penalty_type, avg_reg, rln_learn_rate) 
     if (!is.null(prev_regularization)) {
       lambda_gradients <- gradients * prev_regularization
       lambdas <<- lambdas - rln_learn_rate * lambda_gradients
-      lambdas <<- lambdas + (avg_reg - mean(lambdas))
+      lambdas <<- lambdas + (penalty_average - mean(lambdas))
     }
 
     max_lambdas <- log(abs(weights / norms_derivative))
@@ -786,7 +786,7 @@ print.brulee_rln <- function(x, ...) {
     " " = "Activation: {.val {x$parameters$activation}}",
     " " = "# Hidden Units: {x$parameters$hidden_units}",
     " " = "Norm: {norm_label}",
-    " " = "avg_reg (Theta): {signif(x$parameters$avg_reg, 3)}",
+    " " = "penalty_average (Theta): {signif(x$parameters$penalty_average, 3)}",
     " " = "RLN Learning Rate (nu): {signif(x$parameters$rln_learn_rate, 3)}",
     " " = "Optimizer LR: {signif(x$parameters$learn_rate, 3)}, Schedule: {.val {x$parameters$sched}}",
     " " = "Stopping iterations: {x$parameters$stop_iter}"

@@ -244,7 +244,7 @@ test_that("rln stores parameters correctly", {
     y = y,
     hidden_units = 6L,
     penalty_type = 2L,
-    avg_reg = -8,
+    penalty_average = -8,
     rln_learn_rate = 1e5,
     activation = "tanh",
     epochs = 3L,
@@ -253,7 +253,7 @@ test_that("rln stores parameters correctly", {
 
   expect_equal(fit$parameters$hidden_units, 6L)
   expect_equal(fit$parameters$penalty_type, 2L)
-  expect_equal(fit$parameters$avg_reg, -8)
+  expect_equal(fit$parameters$penalty_average, -8)
   expect_equal(fit$parameters$rln_learn_rate, 1e5)
   expect_equal(fit$parameters$activation, "tanh")
 })

@@ -19,7 +19,7 @@ brulee_rln(x, ...)
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
@@ -39,7 +39,7 @@ brulee_rln(x, ...)
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
@@ -59,7 +59,7 @@ brulee_rln(x, ...)
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
@@ -79,7 +79,7 @@ brulee_rln(x, ...)
   epochs = 100L,
   hidden_units = 5L,
   penalty_type = 1L,
-  avg_reg = -10,
+  penalty_average = -10,
   rln_learn_rate = 6e+05,
   activation = "relu",
   validation = 0.1,
@@ -124,9 +124,9 @@ layer. Must be >= 1.}
 \item{penalty_type}{An integer for the regularization norm: \code{1L} for L1 (default)
 or \code{2L} for L2. L1 is recommended by the original paper.}
 
-\item{avg_reg}{A numeric value for the target mean of the log-scale
+\item{penalty_average}{A numeric value for the target mean of the log-scale
 per-weight regularization coefficients (Theta in the paper). Controls
-average regularization strength: \code{exp(avg_reg)} is approximately the
+average regularization strength: \code{exp(penalty_average)} is approximately the
 geometric mean of the coefficients. Default is \code{-10}, corresponding to
 \verb{exp(-10) ≈ 0.000045}.}
 
@@ -200,7 +200,7 @@ regression (numeric outcomes only). Unlike standard regularization, which
 applies a single global penalty, RLN learns a separate regularization
 coefficient for each weight in the hidden layer. After each gradient step,
 the per-weight coefficients (lambdas) are updated and projected to keep
-their mean at \code{avg_reg}.
+their mean at \code{penalty_average}.
 \subsection{Why Use RLN?}{
 
 RLNs are designed for tabular datasets where interpretability matters. The
@@ -228,7 +228,7 @@ Weights are initialized with Xavier normal initialization.
 
 After each optimizer step, the per-weight regularization coefficients are
 updated using the gradient of the Counterfactual Loss with respect to the
-coefficients, then projected onto a simplex so that \code{mean(lambda) == avg_reg}.
+coefficients, then projected onto a simplex so that \code{mean(lambda) == penalty_average}.
 The RMSprop optimizer is the default, as used in the original paper.
 }
 
