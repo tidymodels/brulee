@@ -679,34 +679,39 @@ make_rln_state <- function(
   penalty_average,
   step_rate
 ) {
-  weights <- as.array(first_linear$weight$detach())
-  lambdas <- matrix(penalty_average, nrow = nrow(weights), ncol = ncol(weights))
-  prev_regularization <- NULL
+  state <- new.env(parent = emptyenv())
+  state$weights <- as.array(first_linear$weight$detach())
+  state$lambdas <- matrix(
+    penalty_average,
+    nrow = nrow(state$weights),
+    ncol = ncol(state$weights)
+  )
+  state$prev_regularization <- NULL
 
   on_batch_end <- function() {
-    prev_weights <- weights
-    weights <<- as.array(first_linear$weight$detach())
-    gradients <- weights - prev_weights
+    prev_weights <- state$weights
+    state$weights <- as.array(first_linear$weight$detach())
+    gradients <- state$weights - prev_weights
 
     if (penalty_type == "L1") {
-      norms_derivative <- sign(weights)
+      norms_derivative <- sign(state$weights)
     } else {
-      norms_derivative <- weights * 2
+      norms_derivative <- state$weights * 2
     }
 
-    if (!is.null(prev_regularization)) {
-      lambda_gradients <- gradients * prev_regularization
-      lambdas <<- lambdas - step_rate * lambda_gradients
-      lambdas <<- lambdas + (penalty_average - mean(lambdas))
+    if (!is.null(state$prev_regularization)) {
+      lambda_gradients <- gradients * state$prev_regularization
+      state$lambdas <- state$lambdas - step_rate * lambda_gradients
+      state$lambdas <- state$lambdas + (penalty_average - mean(state$lambdas))
     }
 
-    max_lambdas <- log(abs(weights / norms_derivative))
+    max_lambdas <- log(abs(state$weights / norms_derivative))
     max_lambdas[!is.finite(max_lambdas)] <- Inf
-    lambdas <<- pmin(lambdas, max_lambdas)
+    state$lambdas <- pmin(state$lambdas, max_lambdas)
 
-    regularization <- norms_derivative * exp(lambdas)
+    regularization <- norms_derivative * exp(state$lambdas)
     regularization[!is.finite(regularization)] <- 0
-    new_weights <- weights - regularization
+    new_weights <- state$weights - regularization
 
     torch::with_no_grad({
       first_linear$weight$copy_(
@@ -714,7 +719,7 @@ make_rln_state <- function(
       )
     })
 
-    prev_regularization <<- regularization
+    state$prev_regularization <- regularization
   }
 
   list(
