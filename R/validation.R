@@ -302,7 +302,7 @@ validate_resnet_args <- function(
 #'
 #' @param hidden_units Number of units in the single hidden layer
 #' @param penalty_type Regularization norm ("L1" or "L2")
-#' @param penalty_average Target mean of log-scale lambda coefficients
+#' @param penalty_average Target log10-scale mean of regularization coefficients
 #' @param step_rate Step size for lambda updates
 #' @param activation Activation function name
 #' @param fn Function name for error messages
@@ -335,7 +335,10 @@ validate_rln_args <- function(
     cli::cli_abort("{.arg penalty_average} must be a finite number.")
   }
 
-  check_double(step_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = fn)
+  check_double(step_rate, single = TRUE, fn = fn)
+  if (!is.finite(step_rate)) {
+    cli::cli_abort("{.arg step_rate} must be a finite number.")
+  }
 
   allowed_activation <- brulee_activations()
   if (!activation %in% allowed_activation) {

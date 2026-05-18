@@ -8,14 +8,14 @@
 #'   layer. Must be >= 1.
 #' @param penalty_type A string for the regularization norm: `"L1"` (default)
 #'   or `"L2"`. L1 is recommended by the original paper.
-#' @param penalty_average A numeric value for the target mean of the log-scale
-#'   per-weight regularization coefficients (Theta in Shavitt and Segal (2018)).
-#'   Controls average regularization strength: `exp(penalty_average)` is
-#'   approximately the geometric mean of the coefficients. Default is `-10`,
-#'   corresponding to `exp(-10) ≈ 0.000045`.
-#' @param step_rate A numeric value for the step size used to update the
-#'   per-weight regularization coefficients (nu in Shavitt and Segal (2018)).
-#'    Typically large (default `6e5`) because updates operate in log-scale.
+#' @param penalty_average A numeric value on the log10 scale for the target
+#'   geometric mean of the per-weight regularization coefficients (Theta in
+#'   Shavitt and Segal (2018)). The geometric mean penalty is `10^penalty_average`.
+#'   Default is `-10`, corresponding to a geometric mean of `10^-10`.
+#' @param step_rate A numeric value on the log10 scale for the step size used to
+#'   update the per-weight regularization coefficients (nu in Shavitt and Segal
+#'   (2018)). The actual multiplier applied internally is `10^step_rate`. Default
+#'   is `6`, corresponding to a multiplier of `10^6`.
 #'
 #' @details
 #'
@@ -24,7 +24,7 @@
 #' applies a single global penalty, RLN learns a separate regularization
 #' coefficient for each weight in the hidden layer. After each gradient step,
 #' the per-weight coefficients (lambdas) are updated and projected to keep
-#' their mean at `penalty_average`.
+#' their mean at `penalty_average * log(10)`.
 #'
 #' ## Why Use RLN?
 #'
@@ -50,7 +50,7 @@
 #'
 #' After each optimizer step, the per-weight regularization coefficients are
 #' updated using the gradient of the Counterfactual Loss with respect to the
-#' coefficients, then projected onto a simplex so that `mean(lambda) == penalty_average`.
+#' coefficients, then projected onto a simplex so that `mean(lambda) == penalty_average * log(10)`.
 #' The ADAMw optimizer is the default.
 #'
 #' ## Other Notes
@@ -151,7 +151,7 @@ brulee_rln.data.frame <- function(
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e5,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -195,7 +195,7 @@ brulee_rln.matrix <- function(
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e5,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -239,7 +239,7 @@ brulee_rln.formula <- function(
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e5,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -283,7 +283,7 @@ brulee_rln.recipe <- function(
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e5,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -496,7 +496,7 @@ rln_fit_imp <- function(
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e5,
+  step_rate = 6,
   validation = 0.1,
   optimizer = "ADAMw",
   learn_rate = 0.001,
@@ -679,10 +679,13 @@ make_rln_state <- function(
   penalty_average,
   step_rate
 ) {
+  log_penalty_average <- penalty_average * log(10)
+  exp_step_rate <- 10^step_rate
+
   state <- new.env(parent = emptyenv())
   state$weights <- as.array(first_linear$weight$detach())
   state$lambdas <- matrix(
-    penalty_average,
+    log_penalty_average,
     nrow = nrow(state$weights),
     ncol = ncol(state$weights)
   )
@@ -701,8 +704,8 @@ make_rln_state <- function(
 
     if (!is.null(state$prev_regularization)) {
       lambda_gradients <- gradients * state$prev_regularization
-      state$lambdas <- state$lambdas - step_rate * lambda_gradients
-      state$lambdas <- state$lambdas + (penalty_average - mean(state$lambdas))
+      state$lambdas <- state$lambdas - exp_step_rate * lambda_gradients
+      state$lambdas <- state$lambdas + (log_penalty_average - mean(state$lambdas))
     }
 
     max_lambdas <- log(abs(state$weights / norms_derivative))

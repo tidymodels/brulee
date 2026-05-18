@@ -20,7 +20,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e+05,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -40,7 +40,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e+05,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -60,7 +60,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e+05,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -80,7 +80,7 @@ brulee_rln(x, ...)
   hidden_units = 5L,
   penalty_type = "L1",
   penalty_average = -10,
-  step_rate = 6e+05,
+  step_rate = 6,
   activation = "relu",
   validation = 0.1,
   optimizer = "ADAMw",
@@ -124,15 +124,15 @@ layer. Must be >= 1.}
 \item{penalty_type}{A string for the regularization norm: \code{"L1"} (default)
 or \code{"L2"}. L1 is recommended by the original paper.}
 
-\item{penalty_average}{A numeric value for the target mean of the log-scale
-per-weight regularization coefficients (Theta in Shavitt and Segal (2018)).
-Controls average regularization strength: \code{exp(penalty_average)} is
-approximately the geometric mean of the coefficients. Default is \code{-10},
-corresponding to \verb{exp(-10) ≈ 0.000045}.}
+\item{penalty_average}{A numeric value on the log10 scale for the target
+geometric mean of the per-weight regularization coefficients (Theta in
+Shavitt and Segal (2018)). The geometric mean penalty is \code{10^penalty_average}.
+Default is \code{-10}, corresponding to a geometric mean of \code{10^-10}.}
 
-\item{step_rate}{A numeric value for the step size used to update the
-per-weight regularization coefficients (nu in Shavitt and Segal (2018)).
-Typically large (default \code{6e5}) because updates operate in log-scale.}
+\item{step_rate}{A numeric value on the log10 scale for the step size used to
+update the per-weight regularization coefficients (nu in Shavitt and Segal
+(2018)). The actual multiplier applied internally is \code{10^step_rate}. Default
+is \code{6}, corresponding to a multiplier of \code{10^6}.}
 
 \item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
@@ -200,7 +200,7 @@ regression (numeric outcomes only). Unlike standard regularization, which
 applies a single global penalty, RLN learns a separate regularization
 coefficient for each weight in the hidden layer. After each gradient step,
 the per-weight coefficients (lambdas) are updated and projected to keep
-their mean at \code{penalty_average}.
+their mean at \code{penalty_average * log(10)}.
 \subsection{Why Use RLN?}{
 
 RLNs are designed for tabular datasets where interpretability matters. The
@@ -228,7 +228,7 @@ Weights are initialized with Xavier normal initialization.
 
 After each optimizer step, the per-weight regularization coefficients are
 updated using the gradient of the Counterfactual Loss with respect to the
-coefficients, then projected onto a simplex so that \code{mean(lambda) == penalty_average}.
+coefficients, then projected onto a simplex so that \code{mean(lambda) == penalty_average * log(10)}.
 The ADAMw optimizer is the default.
 }
 
