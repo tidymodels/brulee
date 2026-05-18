@@ -705,7 +705,8 @@ make_rln_state <- function(
     if (!is.null(state$prev_regularization)) {
       lambda_gradients <- gradients * state$prev_regularization
       state$lambdas <- state$lambdas - exp_step_rate * lambda_gradients
-      state$lambdas <- state$lambdas + (log_penalty_average - mean(state$lambdas))
+      state$lambdas <- state$lambdas +
+        (log_penalty_average - mean(state$lambdas))
     }
 
     max_lambdas <- log(abs(state$weights / norms_derivative))
