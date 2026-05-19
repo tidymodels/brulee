@@ -108,6 +108,8 @@ setup_torch_data <- function(
 #' @param grad_value_clip Gradient value clipping threshold (Inf = no clipping)
 #' @param grad_norm_clip Gradient norm clipping threshold (Inf = no clipping)
 #' @param rate_schedule Learning rate schedule type
+#' @param batch_callback Optional function called after each optimizer step.
+#'   Used by `brulee_rln()` to apply the per-weight regularization update.
 #' @param ... Additional arguments passed to set_learn_rate
 #'
 #' @return List with param_per_epoch, loss_vec, and best_epoch
@@ -129,6 +131,7 @@ run_training_loop <- function(
   grad_value_clip = Inf,
   grad_norm_clip = Inf,
   rate_schedule = "none",
+  batch_callback = NULL,
   ...
 ) {
   loss_prev <- 10^38
@@ -195,6 +198,9 @@ run_training_loop <- function(
           loss
         }
         optimizer_obj$step(cl)
+        if (!is.null(batch_callback)) {
+          batch_callback()
+        }
       }
     )
 

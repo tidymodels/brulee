@@ -28,6 +28,7 @@ The R `brulee` package contains several basic modeling functions that use the `t
 * [logistic regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 * [multinomial regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
 * [residual networks (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
+* [regularization learning networks (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
 
 
 ## Installation

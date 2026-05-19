@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Regularization Learning Networks (RLN) can now be fit via `brulee_rln()`
+
 * ResNet models can now be fit via `brulee_resnet()`. 
 
 # brulee 0.6.0

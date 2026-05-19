@@ -95,3 +95,7 @@ coef.brulee_multinomial_reg <- function(object, epoch = NULL, ...) {
 #' @rdname brulee-coefs
 #' @export
 coef.brulee_resnet <- brulee_coefs
+
+#' @rdname brulee-coefs
+#' @export
+coef.brulee_rln <- brulee_coefs
