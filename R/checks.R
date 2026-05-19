@@ -241,7 +241,8 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
 
   if (is.null(wts)) {
     wts <- rep(1, length(lvls))
-    return(float_64(wts))
+    names(wts) <- lvls
+    return(wts)
   }
   if (!is.numeric(wts)) {
     msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
@@ -281,5 +282,5 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     wts <- wts[lvls]
   }
 
-  float_64(wts)
+  wts
 }

@@ -35,6 +35,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -60,6 +61,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -85,6 +87,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -110,6 +113,7 @@ brulee_resnet(x, ...)
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 }
@@ -213,6 +217,10 @@ value. This can be helpful if training stops early with the message that
 \code{"Loss is NaN at epoch x Training is stopped."}}
 
 \item{verbose}{A logical that prints out the iteration history.}
+
+\item{device}{A single character string for the device to train on (e.g.,
+\code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
+available, otherwise CPU. See \link{training_efficiency}.}
 
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}

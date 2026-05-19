@@ -2,10 +2,11 @@ ADAMw
 Adadelta
 Babenko
 CMD
+CUDA
 Cham
 Codecov
 Duchi
-GBTs
+GPUs
 Gorishniy
 Hazan
 Hutter
@@ -14,12 +15,12 @@ LBFGS
 Lifecycle
 Loshchilov
 MLP
+MPS
 Mobilenetv
 ORCID
 PBC
 RLN
 RLNs
-RMSprop
 ReLU
 Ren
 ResNet
@@ -36,6 +37,7 @@ Zhmoginov
 Zhu
 adadelta
 adagrad
+dtype
 ensembling
 extensibility
 funder

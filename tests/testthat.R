@@ -1,7 +1,6 @@
 library(testthat)
 library(brulee)
 library(tibble)
-library
 
 RNGkind("Mersenne-Twister")
 

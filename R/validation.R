@@ -298,6 +298,86 @@ validate_resnet_args <- function(
   )
 }
 
+#' Guess the appropriate device for brulee models
+#'
+#' @param device Device specification ("cpu", "cuda", or "mps"), or NULL
+#'   for automatic detection. See [training_efficiency].
+#'
+#' @return Character string specifying device ("cpu", "cuda", or "mps")
+#' @keywords internal
+#' @noRd
+#'
+#' @details
+#' Note: MPS (Apple Metal Performance Shaders) is not automatically selected because
+#' it doesn't support float64 dtype, which is required by brulee. Users can explicitly
+#' specify device="mps" if they modify their code to use float32.
+guess_brulee_device <- function(device = NULL) {
+  if (!is.null(device)) {
+    return(tolower(device))
+  }
+  if (torch::cuda_is_available()) {
+    return("cuda")
+  }
+  # Skip MPS auto-detection as it doesn't support float64
+  # if (torch::backends_mps_is_available()) {
+  #   return("mps")
+  # }
+  "cpu"
+}
+
+#' Validate device specification
+#'
+#' @param device Character string specifying device
+#' @param fn Function name for error messages
+#'
+#' @return Validated device string (lowercase)
+#' @keywords internal
+#' @noRd
+validate_device <- function(device, fn = NULL) {
+  device <- tolower(device)
+  valid_devices <- c("cpu", "cuda", "mps")
+  if (!device %in% valid_devices) {
+    cli::cli_abort(
+      "{.arg device} must be one of {.val {valid_devices}}, not {.val {device}}.",
+      call = fn
+    )
+  }
+  device
+}
+
+#' Get a safe device for prediction
+#'
+#' Checks if the specified device is available. If not, falls back to CPU
+#' with a warning.
+#'
+#' @param device Character string specifying device
+#'
+#' @return Character string specifying an available device
+#' @keywords internal
+#' @noRd
+get_safe_device <- function(device) {
+  if (device == "cpu") {
+    return("cpu")
+  }
+
+  available <- if (device == "cuda") {
+    torch::cuda_is_available()
+  } else if (device == "mps") {
+    torch::backends_mps_is_available()
+  } else {
+    FALSE
+  }
+
+  if (!available) {
+    cli::cli_warn(
+      "Model was trained on {.val {device}} but {device} is not available. Using CPU for prediction."
+    )
+    return("cpu")
+  }
+  device
+}
+
+
 #' Validate RLN-specific arguments
 #'
 #' @param hidden_units Number of units in the single hidden layer

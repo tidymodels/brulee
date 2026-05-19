@@ -72,16 +72,17 @@ setup_torch_data <- function(
   x_val,
   y_val,
   batch_size,
-  validation
+  validation,
+  device = NULL
 ) {
   # Create training dataloader
-  ds <- matrix_to_dataset(x_train, y_train)
+  ds <- matrix_to_dataset(x_train, y_train, device = device)
   dl <- torch::dataloader(ds, batch_size = batch_size)
 
   # Create validation dataloader if needed
   dl_val <- NULL
   if (validation > 0) {
-    ds_val <- matrix_to_dataset(x_val, y_val)
+    ds_val <- matrix_to_dataset(x_val, y_val, device = device)
     dl_val <- torch::dataloader(ds_val)
   }
 
@@ -137,7 +138,7 @@ run_training_loop <- function(
   loss_prev <- 10^38
   loss_min <- loss_prev
   poor_epoch <- 0
-  best_epoch <- 1
+  best_epoch <- 1L
   loss_vec <- rep(NA_real_, epochs)
   param_per_epoch <- list()
 

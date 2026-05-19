@@ -30,6 +30,7 @@ brulee_rln(x, ...)
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -50,6 +51,7 @@ brulee_rln(x, ...)
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -70,6 +72,7 @@ brulee_rln(x, ...)
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -90,6 +93,7 @@ brulee_rln(x, ...)
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 }
@@ -170,6 +174,10 @@ improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
+\item{device}{A single character string for the device to train on (e.g.,
+\code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
+available, otherwise CPU. See \link{training_efficiency}.}
+
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}
 
@@ -188,6 +196,7 @@ A \code{brulee_rln} object with elements:
 \item \code{dims}: a list of data dimensions.
 \item \code{y_stats}: a list of mean and standard deviation for the outcome.
 \item \code{parameters}: a list of tuning parameter values.
+\item \code{device}: a character string for the device used during training.
 \item \code{blueprint}: the \code{hardhat} blueprint data.
 }
 }
