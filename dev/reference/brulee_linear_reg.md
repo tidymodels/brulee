@@ -24,6 +24,7 @@ brulee_linear_reg(
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -41,6 +42,7 @@ brulee_linear_reg(
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -58,6 +60,7 @@ brulee_linear_reg(
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -75,6 +78,7 @@ brulee_linear_reg(
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 ```
@@ -163,6 +167,13 @@ brulee_linear_reg(
 - verbose:
 
   A logical that prints out the iteration history.
+
+- device:
+
+  A single character string for the device to train on (e.g., `"cpu"` or
+  `"cuda"` for GPU). If `NULL`, the function will use the GPU if
+  available, otherwise CPU. See
+  [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
 
 - formula:
 
@@ -305,7 +316,7 @@ if (torch::torch_is_installed()  & rlang::is_installed(c("recipes", "yardstick",
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rmse    standard      0.0820
+#> 1 rmse    standard      0.0821
 
 # }
 ```

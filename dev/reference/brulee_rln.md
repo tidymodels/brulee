@@ -29,6 +29,7 @@ brulee_rln(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -50,6 +51,7 @@ brulee_rln(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -71,6 +73,7 @@ brulee_rln(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -92,6 +95,7 @@ brulee_rln(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 ```
@@ -213,6 +217,13 @@ brulee_rln(
 
   A logical that prints out the iteration history.
 
+- device:
+
+  A single character string for the device to train on (e.g., `"cpu"` or
+  `"cuda"` for GPU). If `NULL`, the function will use the GPU if
+  available, otherwise CPU. See
+  [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
+
 - formula:
 
   A formula specifying the outcome term(s) on the left-hand side, and
@@ -241,6 +252,8 @@ A `brulee_rln` object with elements:
 - `y_stats`: a list of mean and standard deviation for the outcome.
 
 - `parameters`: a list of tuning parameter values.
+
+- `device`: a character string for the device used during training.
 
 - `blueprint`: the `hardhat` blueprint data.
 

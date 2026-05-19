@@ -33,6 +33,7 @@ brulee_resnet(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -59,6 +60,7 @@ brulee_resnet(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -85,6 +87,7 @@ brulee_resnet(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -111,6 +114,7 @@ brulee_resnet(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 ```
@@ -263,6 +267,13 @@ brulee_resnet(
 - verbose:
 
   A logical that prints out the iteration history.
+
+- device:
+
+  A single character string for the device to train on (e.g., `"cpu"` or
+  `"cuda"` for GPU). If `NULL`, the function will use the GPU if
+  available, otherwise CPU. See
+  [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
 
 - formula:
 

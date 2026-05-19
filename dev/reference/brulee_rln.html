@@ -64,6 +64,7 @@ learns its own adaptive regularization coefficient.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -85,6 +86,7 @@ learns its own adaptive regularization coefficient.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -106,6 +108,7 @@ learns its own adaptive regularization coefficient.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -127,6 +130,7 @@ learns its own adaptive regularization coefficient.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -239,6 +243,12 @@ improvement before stopping.</p></dd>
 <dd><p>A logical that prints out the iteration history.</p></dd>
 
 
+<dt id="arg-device">device<a class="anchor" aria-label="anchor" href="#arg-device"></a></dt>
+<dd><p>A single character string for the device to train on (e.g.,
+<code>"cpu"</code> or <code>"cuda"</code> for GPU). If <code>NULL</code>, the function will use the GPU if
+available, otherwise CPU. See <a href="training_efficiency.html">training_efficiency</a>.</p></dd>
+
+
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.</p></dd>
@@ -258,6 +268,7 @@ and the predictor term(s) on the right-hand side.</p></dd>
 <li><p><code>dims</code>: a list of data dimensions.</p></li>
 <li><p><code>y_stats</code>: a list of mean and standard deviation for the outcome.</p></li>
 <li><p><code>parameters</code>: a list of tuning parameter values.</p></li>
+<li><p><code>device</code>: a character string for the device used during training.</p></li>
 <li><p><code>blueprint</code>: the <code>hardhat</code> blueprint data.</p></li>
 </ul></div>
     <div class="section level2">

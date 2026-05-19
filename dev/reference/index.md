@@ -79,3 +79,6 @@
   [`schedule_cyclic()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`set_learn_rate()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   : Change the learning rate over time
+
+- [`training_efficiency`](https://brulee.tidymodels.org/dev/reference/training_efficiency.md)
+  : Training Efficiency

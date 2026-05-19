@@ -6,7 +6,7 @@ encodings then formats the results for consumption by `torch`.
 ## Usage
 
 ``` r
-matrix_to_dataset(x, y)
+matrix_to_dataset(x, y, device = NULL)
 ```
 
 ## Arguments
@@ -19,6 +19,12 @@ matrix_to_dataset(x, y)
 
   A vector. If regression than `y` is numeric. For classification, it is
   a factor.
+
+- device:
+
+  A single character string for the device to use (e.g., `"cpu"` or
+  `"cuda"`). The default of `NULL` uses the CPU. See
+  [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
 
 ## Value
 

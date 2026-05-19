@@ -34,6 +34,7 @@ brulee_mlp(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -58,6 +59,7 @@ brulee_mlp(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -82,6 +84,7 @@ brulee_mlp(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -106,6 +109,7 @@ brulee_mlp(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -137,6 +141,7 @@ brulee_mlp_two_layer(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -163,6 +168,7 @@ brulee_mlp_two_layer(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -189,6 +195,7 @@ brulee_mlp_two_layer(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -215,6 +222,7 @@ brulee_mlp_two_layer(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 ```
@@ -351,6 +359,13 @@ brulee_mlp_two_layer(
 - verbose:
 
   A logical that prints out the iteration history.
+
+- device:
+
+  A single character string for the device to train on (e.g., `"cpu"` or
+  `"cuda"` for GPU). If `NULL`, the function will use the GPU if
+  available, otherwise CPU. See
+  [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
 
 - formula:
 

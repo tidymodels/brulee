@@ -58,6 +58,7 @@
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -76,6 +77,7 @@
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -94,6 +96,7 @@
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -112,6 +115,7 @@
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -204,6 +208,12 @@ improvement before stopping.</p></dd>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>A logical that prints out the iteration history.</p></dd>
+
+
+<dt id="arg-device">device<a class="anchor" aria-label="anchor" href="#arg-device"></a></dt>
+<dd><p>A single character string for the device to train on (e.g.,
+<code>"cpu"</code> or <code>"cuda"</code> for GPU). If <code>NULL</code>, the function will use the GPU if
+available, otherwise CPU. See <a href="training_efficiency.html">training_efficiency</a>.</p></dd>
 
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>

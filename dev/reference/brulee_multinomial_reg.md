@@ -25,6 +25,7 @@ brulee_multinomial_reg(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -43,6 +44,7 @@ brulee_multinomial_reg(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -61,6 +63,7 @@ brulee_multinomial_reg(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -79,6 +82,7 @@ brulee_multinomial_reg(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 ```
@@ -181,6 +185,13 @@ brulee_multinomial_reg(
 
   A logical that prints out the iteration history.
 
+- device:
+
+  A single character string for the device to train on (e.g., `"cpu"` or
+  `"cuda"` for GPU). If `NULL`, the function will use the GPU if
+  available, otherwise CPU. See
+  [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
+
 - formula:
 
   A formula specifying the outcome term(s) on the left-hand side, and
@@ -278,8 +289,8 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 }
 #>            Truth
 #> Prediction  Biscoe Dream Torgersen
-#>   Biscoe        48     2         3
-#>   Dream         12    38         6
+#>   Biscoe        49     2         3
+#>   Dream         11    38         6
 #>   Torgersen      9     8         7
 # }
 ```
