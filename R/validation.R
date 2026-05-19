@@ -301,7 +301,7 @@ validate_resnet_args <- function(
 #' Guess the appropriate device for brulee models
 #'
 #' @param device Device specification ("cpu", "cuda", or "mps"), or NULL
-#'   for automatic detection
+#'   for automatic detection. See [training_efficiency].
 #'
 #' @return Character string specifying device ("cpu", "cuda", or "mps")
 #' @keywords internal

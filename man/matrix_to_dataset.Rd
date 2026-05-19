@@ -13,7 +13,7 @@ matrix_to_dataset(x, y, device = NULL)
 is a factor.}
 
 \item{device}{A single character string for the device to use (e.g., \code{"cpu"}
-or \code{"cuda"}). The default of \code{NULL} uses the CPU.}
+or \code{"cuda"}). The default of \code{NULL} uses the CPU. See \link{training_efficiency}.}
 }
 \value{
 An R6 index sampler object with classes "training_set",

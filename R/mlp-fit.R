@@ -79,7 +79,7 @@
 #' @param verbose A logical that prints out the iteration history.
 #' @param device A single character string for the device to train on (e.g.,
 #'   `"cpu"` or `"cuda"` for GPU). If `NULL`, the function will use the GPU if
-#'   available, otherwise CPU.
+#'   available, otherwise CPU. See [training_efficiency].
 #' @param ... Options to pass to the learning rate schedulers via
 #' [set_learn_rate()]. For example, the `reduction` or `steps` arguments to
 #' [schedule_step()] could be passed here.
