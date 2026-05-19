@@ -271,7 +271,7 @@ test_that("rln stores parameters correctly", {
 
   expect_equal(fit$parameters$hidden_units, 6L)
   expect_equal(fit$parameters$penalty_type, "L2")
-  expect_equal(fit$parameters$penalty_average, log10(1e-8))
-  expect_equal(fit$parameters$step_rate, log10(1e5))
+  expect_equal(fit$parameters$penalty_average, 1e-8)
+  expect_equal(fit$parameters$step_rate, 1e5)
   expect_equal(fit$parameters$activation, "tanh")
 })
