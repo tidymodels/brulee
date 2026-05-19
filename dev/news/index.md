@@ -2,6 +2,9 @@
 
 ## brulee (development version)
 
+- Regularization Learning Networks (RLN) can now be fit via
+  [`brulee_rln()`](https://brulee.tidymodels.org/dev/reference/brulee_rln.md)
+
 - ResNet models can now be fit via
   [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md).
 

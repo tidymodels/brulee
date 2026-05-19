@@ -13,6 +13,8 @@ use the `torch` package infrastructure, such as:
   regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
 - [residual networks
   (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
+- [regularization learning networks
+  (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
 
 ## Installation
 
