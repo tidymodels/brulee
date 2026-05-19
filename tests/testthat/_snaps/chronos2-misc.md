@@ -23,6 +23,14 @@
       Error in `brulee:::chronos2_resolve_revision()`:
       ! HuggingFace API did not return a SHA for revision "v0".
 
+# chronos2_resolve_revision errors when sha is empty string
+
+    Code
+      brulee:::chronos2_resolve_revision("amazon/chronos-2", "main")
+    Condition
+      Error in `brulee:::chronos2_resolve_revision()`:
+      ! HuggingFace API did not return a SHA for revision "main".
+
 # chronos2_download_file errors after exhausting retries
 
     Code
