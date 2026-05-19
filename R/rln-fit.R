@@ -569,7 +569,15 @@ rln_fit_imp <- function(
   torch::torch_manual_seed(start_seed + 1)
 
   training_output <- torch::with_device(device = device, {
-    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation, device = device)
+    torch_data <- setup_torch_data(
+      x,
+      y,
+      x_val,
+      y_val,
+      batch_size,
+      validation,
+      device = device
+    )
     dl <- torch_data$dl
     dl_val <- torch_data$dl_val
 
