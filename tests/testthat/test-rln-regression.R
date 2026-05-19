@@ -202,7 +202,7 @@ test_that("rln argument validation", {
   )
 
   expect_error(
-    brulee_rln(x, y, step_rate = Inf, epochs = 2L),
+    brulee_rln(x, y, step_rate = -1, epochs = 2L),
     "step_rate"
   )
 })
@@ -262,8 +262,8 @@ test_that("rln stores parameters correctly", {
     y = y,
     hidden_units = 6L,
     penalty_type = "L2",
-    penalty_average = -8,
-    step_rate = 5,
+    penalty_average = 1e-8,
+    step_rate = 1e5,
     activation = "tanh",
     epochs = 3L,
     verbose = FALSE
@@ -271,7 +271,7 @@ test_that("rln stores parameters correctly", {
 
   expect_equal(fit$parameters$hidden_units, 6L)
   expect_equal(fit$parameters$penalty_type, "L2")
-  expect_equal(fit$parameters$penalty_average, -8)
-  expect_equal(fit$parameters$step_rate, 5)
+  expect_equal(fit$parameters$penalty_average, log10(1e-8))
+  expect_equal(fit$parameters$step_rate, log10(1e5))
   expect_equal(fit$parameters$activation, "tanh")
 })

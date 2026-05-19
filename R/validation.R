@@ -330,15 +330,15 @@ validate_rln_args <- function(
     )
   }
 
-  check_double(penalty_average, single = TRUE, fn = fn)
-  if (!is.finite(penalty_average)) {
-    cli::cli_abort("{.arg penalty_average} must be a finite number.")
-  }
+  check_double(
+    penalty_average,
+    single = TRUE,
+    0,
+    incl = c(FALSE, TRUE),
+    fn = fn
+  )
 
-  check_double(step_rate, single = TRUE, fn = fn)
-  if (!is.finite(step_rate)) {
-    cli::cli_abort("{.arg step_rate} must be a finite number.")
-  }
+  check_double(step_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = fn)
 
   allowed_activation <- brulee_activations()
   if (!activation %in% allowed_activation) {
