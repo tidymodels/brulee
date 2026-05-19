@@ -92,6 +92,7 @@
 #'  * `dims`: a list of data dimensions.
 #'  * `y_stats`: a list of mean and standard deviation for the outcome.
 #'  * `parameters`: a list of tuning parameter values.
+#'  * `device`: a character string for the device used during training.
 #'  * `blueprint`: the `hardhat` blueprint data.
 #'
 #' @examplesIf !brulee:::is_cran_check()
@@ -162,6 +163,7 @@ brulee_rln.data.frame <- function(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -181,6 +183,7 @@ brulee_rln.data.frame <- function(
     batch_size = batch_size,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -206,6 +209,7 @@ brulee_rln.matrix <- function(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -225,6 +229,7 @@ brulee_rln.matrix <- function(
     batch_size = batch_size,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -250,6 +255,7 @@ brulee_rln.formula <- function(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(formula, data)
@@ -269,6 +275,7 @@ brulee_rln.formula <- function(
     batch_size = batch_size,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -294,6 +301,7 @@ brulee_rln.recipe <- function(
   batch_size = NULL,
   stop_iter = 20,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, data)
@@ -313,6 +321,7 @@ brulee_rln.recipe <- function(
     batch_size = batch_size,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -336,6 +345,7 @@ brulee_rln_bridge <- function(
   batch_size,
   stop_iter,
   verbose,
+  device,
   ...
 ) {
   if (!torch::torch_is_installed()) {
@@ -343,6 +353,8 @@ brulee_rln_bridge <- function(
       "The torch backend has not been installed; use `torch::install_torch()`."
     )
   }
+
+  device <- guess_brulee_device(device)
 
   f_nm <- "brulee_rln"
 
@@ -422,6 +434,7 @@ brulee_rln_bridge <- function(
     batch_size = batch_size,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 
@@ -433,6 +446,7 @@ brulee_rln_bridge <- function(
     dims = fit$dims,
     y_stats = fit$y_stats,
     parameters = fit$parameters,
+    device = fit$device,
     blueprint = processed$blueprint
   )
 }
@@ -445,6 +459,7 @@ new_brulee_rln <- function(
   dims,
   y_stats,
   parameters,
+  device,
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
@@ -483,6 +498,7 @@ new_brulee_rln <- function(
     dims = dims,
     y_stats = y_stats,
     parameters = parameters,
+    device = device,
     blueprint = blueprint,
     class = "brulee_rln"
   )
@@ -508,6 +524,7 @@ rln_fit_imp <- function(
   activation = "relu",
   stop_iter = 20,
   verbose = FALSE,
+  device = "cpu",
   ...
 ) {
   start_seed <- sample.int(10^5, 1)
@@ -551,11 +568,106 @@ rln_fit_imp <- function(
 
   torch::torch_manual_seed(start_seed + 1)
 
-  torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
-  dl <- torch_data$dl
-  dl_val <- torch_data$dl_val
+  training_output <- torch::with_device(device = device, {
+    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation, device = device)
+    dl <- torch_data$dl
+    dl_val <- torch_data$dl_val
 
-  res <- list(
+    # Xavier normal init in rln_module (see below)
+    model <- rln_module(
+      num_pred = ncol(x),
+      hidden_units = hidden_units,
+      activation = activation
+    )
+    model$to(device = device)
+
+    # No make_penalized_loss call: Standard L1/L2 wrapping is skipped entirely
+    # because regularization is handled per-weight by rln_state below
+    optimizer_obj <- set_optimizer(
+      optimizer,
+      model,
+      learn_rate,
+      momentum,
+      penalty = 0,
+      mixture = 0
+    )
+
+    # Per-weight lambda state unique to RLN
+    rln_state <- make_rln_state(
+      first_linear = model$linear1,
+      penalty_type = penalty_type,
+      penalty_average = penalty_average,
+      step_rate = step_rate
+    )
+
+    best_epoch <- 0L
+    loss_vec <- rep(NA_real_, epochs + 1)
+
+    if (validation > 0) {
+      pred <- model(dl_val$dataset$tensors$x)
+      loss <- loss_fn(pred, dl_val$dataset$tensors$y)
+    } else {
+      pred <- model(dl$dataset$tensors$x)
+      loss <- loss_fn(pred, dl$dataset$tensors$y)
+    }
+
+    loss_vec[1] <- loss$item()
+
+    if (verbose) {
+      epoch_chr <- gsub(" ", "0", format(0:epochs))
+      cli::cli_inform(
+        "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
+      )
+      epoch_chr <- epoch_chr[-1]
+    }
+
+    param_per_epoch <- vector(mode = "list", length = epochs + 1)
+    param_per_epoch[[1]] <-
+      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+    # No grad_value_clip/grad_norm_clip: the per-weight regularization in
+    # on_batch_end keeps weights bounded, making gradient clipping unnecessary
+    training_result <- run_training_loop(
+      model = model,
+      dl = dl,
+      dl_val = dl_val,
+      loss_fn = loss_fn,
+      optimizer_obj = optimizer_obj,
+      epochs = epochs,
+      learn_rate = learn_rate,
+      stop_iter = stop_iter,
+      validation = validation,
+      class_weights = NULL,
+      loss_label = loss_label,
+      verbose = verbose,
+      rate_schedule = rate_schedule,
+      batch_callback = rln_state$on_batch_end,
+      ...
+    )
+
+    list(
+      model = model,
+      training_result = training_result,
+      param_per_epoch_init = param_per_epoch[[1]],
+      initial_loss = loss_vec[1]
+    )
+  })
+
+  param_per_epoch <- c(
+    list(training_output$param_per_epoch_init),
+    training_output$training_result$param_per_epoch
+  )
+  loss_vec <- c(
+    training_output$initial_loss,
+    training_output$training_result$loss_vec
+  )
+  best_epoch <- training_output$training_result$best_epoch
+
+  list(
+    model_obj = model_to_raw(training_output$model),
+    estimates = param_per_epoch,
+    best_epoch = best_epoch,
+    loss = loss_vec,
     dims = list(
       p = p,
       n = n,
@@ -578,99 +690,9 @@ rln_fit_imp <- function(
       stop_iter = stop_iter,
       sched = rate_schedule,
       sched_opt = list(...)
-    )
+    ),
+    device = device
   )
-
-  # Xavier normal init in rln_module (see below)
-  model <- rln_module(
-    num_pred = ncol(x),
-    hidden_units = hidden_units,
-    activation = activation
-  )
-
-  # No make_penalized_loss call: Standard L1/L2 wrapping is skipped entirely
-  # because regularization is handled per-weight by rln_state below
-  optimizer_obj <- set_optimizer(
-    optimizer,
-    model,
-    learn_rate,
-    momentum,
-    penalty = 0,
-    mixture = 0
-  )
-
-  # Per-weight lambda state unique to RLN
-  rln_state <- make_rln_state(
-    first_linear = model$linear1,
-    penalty_type = penalty_type,
-    penalty_average = penalty_average,
-    step_rate = step_rate
-  )
-
-  best_epoch <- 0L
-  loss_vec <- rep(NA_real_, epochs + 1)
-
-  if (validation > 0) {
-    pred <- model(dl_val$dataset$tensors$x)
-    loss <- loss_fn(pred, dl_val$dataset$tensors$y)
-  } else {
-    pred <- model(dl$dataset$tensors$x)
-    loss <- loss_fn(pred, dl$dataset$tensors$y)
-  }
-
-  loss_vec[1] <- loss$item()
-
-  if (verbose) {
-    epoch_chr <- gsub(" ", "0", format(0:epochs))
-    cli::cli_inform(
-      "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
-    )
-    epoch_chr <- epoch_chr[-1]
-  }
-
-  param_per_epoch <- vector(mode = "list", length = epochs + 1)
-  param_per_epoch[[1]] <-
-    lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
-
-  res$model_obj <- model_to_raw(model)
-  res$estimates <- param_per_epoch[[1]]
-  res$loss <- loss_vec[1]
-  res$best_epoch <- best_epoch
-
-  # No grad_value_clip/grad_norm_clip: the per-weight regularization in
-  # on_batch_end keeps weights bounded, making gradient clipping unnecessary
-  training_result <- run_training_loop(
-    model = model,
-    dl = dl,
-    dl_val = dl_val,
-    loss_fn = loss_fn,
-    optimizer_obj = optimizer_obj,
-    epochs = epochs,
-    learn_rate = learn_rate,
-    stop_iter = stop_iter,
-    validation = validation,
-    class_weights = NULL,
-    loss_label = loss_label,
-    verbose = verbose,
-    rate_schedule = rate_schedule,
-    # Post-batch hook that updates per-weight lambdas; mlp/resnet pass NULL
-    batch_callback = rln_state$on_batch_end,
-    ...
-  )
-
-  param_per_epoch <- c(
-    list(param_per_epoch[[1]]),
-    training_result$param_per_epoch
-  )
-  loss_vec <- c(loss_vec[1], training_result$loss_vec)
-  best_epoch <- training_result$best_epoch
-
-  res$model_obj <- model_to_raw(model)
-  res$estimates <- param_per_epoch
-  res$loss <- loss_vec
-  res$best_epoch <- best_epoch
-
-  res
 }
 
 # ------------------------------------------------------------------------------
@@ -803,6 +825,10 @@ print.brulee_rln <- function(x, ...) {
 
   if (x$parameters$optimizer != "LBFGS") {
     cli::cli_bullets(c(" " = "Batch Size: {x$parameters$batch_size}"))
+  }
+
+  if (!is.null(x$device)) {
+    cli::cli_bullets(c(" " = "Device: {.val {x$device}}"))
   }
 
   cat("\n")
