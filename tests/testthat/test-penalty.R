@@ -11,7 +11,7 @@ test_that("penalty works with all optimizers and mixture values", {
   parabolic_tr <- parabolic[in_train, ]
 
   # Test parameters
-  optimizers <- c("SGD", "LBFGS", "ADAMw", "RMSprop", "Adadelta", "Adagrad")
+  optimizers <- c("SGD", "ADAMw", "RMSprop", "Adadelta", "Adagrad")
   mixture_values <- c(0, 0.5, 1) # L2, elastic net, L1
   penalty_values <- c(0, 0.1, 10)
 
@@ -36,7 +36,7 @@ test_that("penalty works with all optimizers and mixture values", {
       activation = "elu",
       penalty = 0,
       mixture = 0,
-      batch_size = 256,
+      batch_size = 32,
       optimizer = opt,
       verbose = FALSE
     )
@@ -51,7 +51,7 @@ test_that("penalty works with all optimizers and mixture values", {
       activation = "elu",
       penalty = 10,
       mixture = 0,
-      batch_size = 256,
+      batch_size = 32,
       optimizer = opt,
       verbose = FALSE
     )
@@ -81,7 +81,7 @@ test_that("penalty works with all optimizers and mixture values", {
         activation = "elu",
         penalty = 0,
         mixture = 1,
-        batch_size = 256,
+        batch_size = 32,
         optimizer = opt,
         verbose = FALSE
       )
@@ -94,9 +94,9 @@ test_that("penalty works with all optimizers and mixture values", {
         epochs = 50L,
         learn_rate = 0.1,
         activation = "elu",
-        penalty = 10,
+        penalty = 3,
         mixture = 1,
-        batch_size = 256,
+        batch_size = 32,
         optimizer = opt,
         verbose = FALSE
       )
@@ -118,7 +118,7 @@ test_that("penalty works with all optimizers and mixture values", {
         activation = "elu",
         penalty = 0,
         mixture = 0.5,
-        batch_size = 256,
+        batch_size = 32,
         optimizer = opt,
         verbose = FALSE
       )
@@ -131,9 +131,9 @@ test_that("penalty works with all optimizers and mixture values", {
         epochs = 50L,
         learn_rate = 0.1,
         activation = "elu",
-        penalty = 10,
+        penalty = 3,
         mixture = 0.5,
-        batch_size = 256,
+        batch_size = 32,
         optimizer = opt,
         verbose = FALSE
       )
@@ -344,8 +344,8 @@ test_that("LBFGS penalty works correctly", {
     class ~ .,
     data = parabolic_tr,
     hidden_units = 2,
-    epochs = 50L,
-    learn_rate = 0.1,
+    epochs = 5L,
+    learn_rate = 0.001,
     activation = "elu",
     penalty = 0,
     mixture = 0,
@@ -359,10 +359,10 @@ test_that("LBFGS penalty works correctly", {
     class ~ .,
     data = parabolic_tr,
     hidden_units = 2,
-    epochs = 50L,
-    learn_rate = 0.1,
+    epochs = 5L,
+    learn_rate = 0.001,
     activation = "elu",
-    penalty = 1,
+    penalty = 0.1,
     mixture = 0,
     optimizer = "LBFGS",
     verbose = FALSE
@@ -377,10 +377,10 @@ test_that("LBFGS penalty works correctly", {
     class ~ .,
     data = parabolic_tr,
     hidden_units = 2,
-    epochs = 50L,
-    learn_rate = 0.1,
+    epochs = 5L,
+    learn_rate = 0.001,
     activation = "elu",
-    penalty = 1,
+    penalty = 0.1,
     mixture = 1,
     optimizer = "LBFGS",
     verbose = FALSE

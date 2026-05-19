@@ -72,16 +72,17 @@ setup_torch_data <- function(
   x_val,
   y_val,
   batch_size,
-  validation
+  validation,
+  device = NULL
 ) {
   # Create training dataloader
-  ds <- matrix_to_dataset(x_train, y_train)
+  ds <- matrix_to_dataset(x_train, y_train, device = device)
   dl <- torch::dataloader(ds, batch_size = batch_size)
 
   # Create validation dataloader if needed
   dl_val <- NULL
   if (validation > 0) {
-    ds_val <- matrix_to_dataset(x_val, y_val)
+    ds_val <- matrix_to_dataset(x_val, y_val, device = device)
     dl_val <- torch::dataloader(ds_val)
   }
 
@@ -108,6 +109,8 @@ setup_torch_data <- function(
 #' @param grad_value_clip Gradient value clipping threshold (Inf = no clipping)
 #' @param grad_norm_clip Gradient norm clipping threshold (Inf = no clipping)
 #' @param rate_schedule Learning rate schedule type
+#' @param batch_callback Optional function called after each optimizer step.
+#'   Used by `brulee_rln()` to apply the per-weight regularization update.
 #' @param ... Additional arguments passed to set_learn_rate
 #'
 #' @return List with param_per_epoch, loss_vec, and best_epoch
@@ -129,12 +132,13 @@ run_training_loop <- function(
   grad_value_clip = Inf,
   grad_norm_clip = Inf,
   rate_schedule = "none",
+  batch_callback = NULL,
   ...
 ) {
   loss_prev <- 10^38
   loss_min <- loss_prev
   poor_epoch <- 0
-  best_epoch <- 1
+  best_epoch <- 1L
   loss_vec <- rep(NA_real_, epochs)
   param_per_epoch <- list()
 
@@ -195,6 +199,9 @@ run_training_loop <- function(
           loss
         }
         optimizer_obj$step(cl)
+        if (!is.null(batch_callback)) {
+          batch_callback()
+        }
       }
     )
 

@@ -26,6 +26,7 @@ brulee_linear_reg(x, ...)
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -42,6 +43,7 @@ brulee_linear_reg(x, ...)
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -58,6 +60,7 @@ brulee_linear_reg(x, ...)
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -74,6 +77,7 @@ brulee_linear_reg(x, ...)
   batch_size = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 }
@@ -132,6 +136,10 @@ batch. (\code{optimizer != "LBFGS"} only, ignored otherwise)}
 improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
+
+\item{device}{A single character string for the device to train on (e.g.,
+\code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
+available, otherwise CPU. See \link{training_efficiency}.}
 
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}

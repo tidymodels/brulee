@@ -1,23 +1,23 @@
-#' Predict from a `brulee_linear_reg`
+#' Predict from a `brulee_rln`
 #'
-#' @inheritParams predict.brulee_mlp
-#' @param object A `brulee_linear_reg` object.
-#' @param type A single character. The type of predictions to generate.
-#' Valid options are:
-#'
-#' - `"numeric"` for numeric predictions.
+#' @param object A `brulee_rln` object.
+#' @param new_data A data frame or matrix of new predictors.
+#' @param epoch An integer for the epoch to make predictions. If larger than
+#'   the number of epochs fit, a warning is issued and the last epoch is used.
+#'   If `NULL` (default), the epoch with the smallest loss is used.
+#' @param type A single character. The only valid option is `"numeric"` for
+#'   numeric predictions.
+#' @param ... Not used, but required for extensibility.
 #'
 #' @return
 #'
-#' A tibble of predictions. The number of rows in the tibble is guaranteed
-#' to be the same as the number of rows in `new_data`.
+#' A tibble of predictions with the same number of rows as `new_data`.
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
+#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
 #'
 #'  data(ames, package = "modeldata")
-#'
 #'  ames$Sale_Price <- log10(ames$Sale_Price)
 #'
 #'  set.seed(1)
@@ -25,7 +25,6 @@
 #'  ames_train <- ames[ in_train,]
 #'  ames_test  <- ames[-in_train,]
 #'
-#'  # Using recipe
 #'  library(recipes)
 #'
 #'  ames_rec <-
@@ -33,36 +32,44 @@
 #'     step_normalize(all_numeric_predictors())
 #'
 #'  set.seed(2)
-#'  fit <- brulee_linear_reg(ames_rec, data = ames_train, epochs = 50)
+#'  fit <- brulee_rln(ames_rec, data = ames_train, hidden_units = 20L, epochs = 30L)
 #'
 #'  predict(fit, ames_test)
 #' }
 #' }
 #' @export
-predict.brulee_linear_reg <- function(
+predict.brulee_rln <- function(
   object,
   new_data,
   type = NULL,
   epoch = NULL,
   ...
 ) {
+  call <- rlang::caller_env()
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_linear_reg_bridge(
+  predict_brulee_rln_bridge(
     type,
     object,
     forged$predictors,
-    epoch = epoch
+    epoch = epoch,
+    call = call
   )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
+predict_brulee_rln_bridge <- function(
+  type,
+  model,
+  predictors,
+  epoch,
+  call = rlang::caller_env()
+) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
     if (is.character(predictors)) {
@@ -70,61 +77,44 @@ predict_brulee_linear_reg_bridge <- function(type, model, predictors, epoch) {
         paste(
           "There were some non-numeric columns in the predictors.",
           "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
+        ),
+        call = call
       )
     }
   }
 
-  predict_function <- get_linear_reg_predict_function(type)
-
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    msg <- paste(
-      "The model fit only",
-      max_epoch,
-      "epochs; predictions cannot",
-      "be made at epoch",
-      epoch,
-      "so last epoch is used."
+    cli::cli_warn(
+      "The model fit only {max_epoch} epoch{?s}; predictions cannot be made at epoch {epoch} so the last epoch is used.",
+      call = call
     )
-    cli::cli_warn(msg)
+    epoch <- max_epoch
   }
 
-  predictions <- predict_function(model, predictors, epoch)
+  predictions <- predict_brulee_rln_numeric(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)
   predictions
-}
-
-get_linear_reg_predict_function <- function(type) {
-  predict_brulee_linear_reg_numeric
 }
 
 # ------------------------------------------------------------------------------
 # Implementation
 
-predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
-  # Get safe device (fallback to CPU if trained device unavailable)
+predict_brulee_rln_raw <- function(model, predictors, epoch) {
   device <- get_safe_device(model$device)
-
-  # convert from raw format
   module <- revive_model(model$model_obj, device)
-  # get current model parameters
-  estimates <- model$estimates[[epoch]]
-  # convert to torch representation on correct device
+  estimates <- model$estimates[[epoch + 1]]
   estimates <- lapply(estimates, float_64, device = device)
-  # stuff back into the model
   module$load_state_dict(estimates)
-  # put the model in evaluation mode
   module$eval()
   predictions <- module(float_64(predictors, device))
   predictions <- as.array(predictions)
-  # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA
   predictions
 }
 
-predict_brulee_linear_reg_numeric <- function(model, predictors, epoch) {
-  predictions <- predict_brulee_linear_reg_raw(model, predictors, epoch)
+predict_brulee_rln_numeric <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_rln_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
   hardhat::spruce_numeric(predictions[, 1])
 }

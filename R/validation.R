@@ -297,3 +297,142 @@ validate_resnet_args <- function(
     grad_norm_clip = grad_norm_clip
   )
 }
+
+#' Guess the appropriate device for brulee models
+#'
+#' @param device Device specification ("cpu", "cuda", or "mps"), or NULL
+#'   for automatic detection. See [training_efficiency].
+#'
+#' @return Character string specifying device ("cpu", "cuda", or "mps")
+#' @keywords internal
+#' @noRd
+#'
+#' @details
+#' Note: MPS (Apple Metal Performance Shaders) is not automatically selected because
+#' it doesn't support float64 dtype, which is required by brulee. Users can explicitly
+#' specify device="mps" if they modify their code to use float32.
+guess_brulee_device <- function(device = NULL) {
+  if (!is.null(device)) {
+    return(tolower(device))
+  }
+  if (torch::cuda_is_available()) {
+    return("cuda")
+  }
+  # Skip MPS auto-detection as it doesn't support float64
+  # if (torch::backends_mps_is_available()) {
+  #   return("mps")
+  # }
+  "cpu"
+}
+
+#' Validate device specification
+#'
+#' @param device Character string specifying device
+#' @param fn Function name for error messages
+#'
+#' @return Validated device string (lowercase)
+#' @keywords internal
+#' @noRd
+validate_device <- function(device, fn = NULL) {
+  device <- tolower(device)
+  valid_devices <- c("cpu", "cuda", "mps")
+  if (!device %in% valid_devices) {
+    cli::cli_abort(
+      "{.arg device} must be one of {.val {valid_devices}}, not {.val {device}}.",
+      call = fn
+    )
+  }
+  device
+}
+
+#' Get a safe device for prediction
+#'
+#' Checks if the specified device is available. If not, falls back to CPU
+#' with a warning.
+#'
+#' @param device Character string specifying device
+#'
+#' @return Character string specifying an available device
+#' @keywords internal
+#' @noRd
+get_safe_device <- function(device) {
+  if (device == "cpu") {
+    return("cpu")
+  }
+
+  available <- if (device == "cuda") {
+    torch::cuda_is_available()
+  } else if (device == "mps") {
+    torch::backends_mps_is_available()
+  } else {
+    FALSE
+  }
+
+  if (!available) {
+    cli::cli_warn(
+      "Model was trained on {.val {device}} but {device} is not available. Using CPU for prediction."
+    )
+    return("cpu")
+  }
+  device
+}
+
+
+#' Validate RLN-specific arguments
+#'
+#' @param hidden_units Number of units in the single hidden layer
+#' @param penalty_type Regularization norm ("L1" or "L2")
+#' @param penalty_average Target log10-scale mean of regularization coefficients
+#' @param step_rate Step size for lambda updates
+#' @param activation Activation function name
+#' @param fn Function name for error messages
+#'
+#' @return List of validated/coerced arguments
+#' @keywords internal
+#' @noRd
+validate_rln_args <- function(
+  hidden_units,
+  penalty_type,
+  penalty_average,
+  step_rate,
+  activation,
+  fn = NULL
+) {
+  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+    hidden_units <- as.integer(hidden_units)
+  }
+  check_integer(hidden_units, single = TRUE, 1, fn = fn)
+
+  penalty_type <- toupper(as.character(penalty_type))
+  if (!penalty_type %in% c("L1", "L2")) {
+    cli::cli_abort(
+      '{.arg penalty_type} must be "L1" or "L2", not {.val {penalty_type}}.'
+    )
+  }
+
+  check_double(
+    penalty_average,
+    single = TRUE,
+    0,
+    incl = c(FALSE, TRUE),
+    fn = fn
+  )
+
+  check_double(step_rate, single = TRUE, 0, incl = c(FALSE, TRUE), fn = fn)
+
+  allowed_activation <- brulee_activations()
+  if (!activation %in% allowed_activation) {
+    cli::cli_abort(
+      "{.arg activation} should be one of: {allowed_activation}, not {.val {activation}}."
+    )
+  }
+  check_character(activation, single = TRUE, fn = fn)
+
+  list(
+    hidden_units = hidden_units,
+    penalty_type = penalty_type,
+    penalty_average = penalty_average,
+    step_rate = step_rate,
+    activation = activation
+  )
+}

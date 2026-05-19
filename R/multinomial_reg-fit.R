@@ -133,6 +133,7 @@ brulee_multinomial_reg.data.frame <-
     class_weights = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, y)
@@ -150,6 +151,7 @@ brulee_multinomial_reg.data.frame <-
       class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -172,6 +174,7 @@ brulee_multinomial_reg.matrix <- function(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -189,6 +192,7 @@ brulee_multinomial_reg.matrix <- function(
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -212,6 +216,7 @@ brulee_multinomial_reg.formula <-
     class_weights = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(formula, data)
@@ -229,6 +234,7 @@ brulee_multinomial_reg.formula <-
       class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -252,6 +258,7 @@ brulee_multinomial_reg.recipe <-
     class_weights = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, data)
@@ -269,6 +276,7 @@ brulee_multinomial_reg.recipe <-
       class_weights = class_weights,
       stop_iter = stop_iter,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -289,6 +297,7 @@ brulee_multinomial_reg_bridge <- function(
   batch_size,
   stop_iter,
   verbose,
+  device,
   ...
 ) {
   if (!torch::torch_is_installed()) {
@@ -296,6 +305,9 @@ brulee_multinomial_reg_bridge <- function(
       "The torch backend has not been installed; use `torch::install_torch()`."
     )
   }
+
+  # Guess device if not specified
+  device <- guess_brulee_device(device)
 
   f_nm <- "brulee_multinomial_reg"
 
@@ -348,7 +360,8 @@ brulee_multinomial_reg_bridge <- function(
       batch_size = batch_size,
       class_weights = class_weights,
       stop_iter = stop_iter,
-      verbose = verbose
+      verbose = verbose,
+      device = device
     )
 
   new_brulee_multinomial_reg(
@@ -359,6 +372,7 @@ brulee_multinomial_reg_bridge <- function(
     dims = fit$dims,
     y_stats = fit$y_stats,
     parameters = fit$parameters,
+    device = fit$device,
     blueprint = processed$blueprint
   )
 }
@@ -371,6 +385,7 @@ new_brulee_multinomial_reg <- function(
   dims,
   y_stats,
   parameters,
+  device,
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
@@ -399,6 +414,7 @@ new_brulee_multinomial_reg <- function(
     dims = dims,
     y_stats = y_stats,
     parameters = parameters,
+    device = device,
     blueprint = blueprint,
     class = "brulee_multinomial_reg"
   )
@@ -422,6 +438,7 @@ multinomial_reg_fit_imp <-
     class_weights = NULL,
     stop_iter = 5,
     verbose = FALSE,
+    device = "cpu",
     ...
   ) {
     torch::torch_manual_seed(sample.int(10^5, 1))
@@ -445,7 +462,7 @@ multinomial_reg_fit_imp <-
     # pass the log of softmax.
     loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
-        weight = wts,
+        weight = weights_to_tensor(wts),
         input = torch::torch_log(input),
         target = target
       )
@@ -471,42 +488,65 @@ multinomial_reg_fit_imp <-
     on.exit(torch::torch_set_default_dtype(or_dtype))
     torch::torch_set_default_dtype(torch::torch_float64())
 
-    # Convert to index sampler and data loader
-    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
-    dl <- torch_data$dl
-    dl_val <- torch_data$dl_val
+    # Set device context for training
+    training_output <- torch::with_device(device = device, {
+      # Convert to index sampler and data loader
+      torch_data <- setup_torch_data(
+        x,
+        y,
+        x_val,
+        y_val,
+        batch_size,
+        validation,
+        device = device
+      )
+      dl <- torch_data$dl
+      dl_val <- torch_data$dl_val
 
-    ## ---------------------------------------------------------------------------
-    # Initialize model and optimizer
-    model <- multinomial_module(ncol(x), y_dim)
-    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-    optimizer_obj <- set_optimizer(
-      optimizer,
-      model,
-      learn_rate,
-      momentum,
-      penalty,
-      mixture
-    )
+      ## -------------------------------------------------------------------------
+      # Initialize model and optimizer
+      model <- multinomial_module(ncol(x), y_dim)
+      model$to(device = device) # Move model to the correct device
+      loss_fn <- make_penalized_loss(
+        loss_fn,
+        model,
+        penalty,
+        mixture,
+        optimizer
+      )
+      optimizer_obj <- set_optimizer(
+        optimizer,
+        model,
+        learn_rate,
+        momentum,
+        penalty,
+        mixture
+      )
 
-    ## ---------------------------------------------------------------------------
+      ## -------------------------------------------------------------------------
 
-    # Run training loop
-    training_result <- run_training_loop(
-      model = model,
-      dl = dl,
-      dl_val = dl_val,
-      loss_fn = loss_fn,
-      optimizer_obj = optimizer_obj,
-      epochs = epochs,
-      learn_rate = learn_rate,
-      stop_iter = stop_iter,
-      validation = validation,
-      class_weights = class_weights,
-      loss_label = loss_label,
-      verbose = verbose,
-      ...
-    )
+      # Run training loop
+      training_result <- run_training_loop(
+        model = model,
+        dl = dl,
+        dl_val = dl_val,
+        loss_fn = loss_fn,
+        optimizer_obj = optimizer_obj,
+        epochs = epochs,
+        learn_rate = learn_rate,
+        stop_iter = stop_iter,
+        validation = validation,
+        class_weights = class_weights,
+        loss_label = loss_label,
+        verbose = verbose,
+        ...
+      )
+
+      list(
+        model = model,
+        training_result = training_result
+      )
+    })
 
     # ------------------------------------------------------------------------------
 
@@ -516,10 +556,10 @@ multinomial_reg_fit_imp <-
     ## ---------------------------------------------------------------------------
 
     list(
-      model_obj = model_to_raw(model),
-      estimates = training_result$param_per_epoch,
-      loss = training_result$loss_vec,
-      best_epoch = training_result$best_epoch,
+      model_obj = model_to_raw(training_output$model),
+      estimates = training_output$training_result$param_per_epoch,
+      loss = training_output$training_result$loss_vec,
+      best_epoch = training_output$training_result$best_epoch,
       dims = list(
         p = p,
         n = n,
@@ -537,7 +577,8 @@ multinomial_reg_fit_imp <-
         class_weights = class_weights,
         batch_size = batch_size,
         momentum = momentum
-      )
+      ),
+      device = device
     )
   }
 

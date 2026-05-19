@@ -1,6 +1,14 @@
 # brulee (development version)
 
-* ResNet models can now be fit via `brulee_resnet()`. 
+New models:
+
+  * Regularization Learning Networks (RLN) can now be fit via `brulee_rln()`
+
+  * ResNet models can now be fit via `brulee_resnet()`. 
+
+* All modeling functions now support GPU acceleration via the `device` parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or `device = "mps"` (Apple Silicon). When `device = NULL` (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn't support float64 dtype required by brulee. See`?training_efficiency` for some related notes. 
+
+
 
 # brulee 0.6.0
 

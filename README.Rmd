@@ -29,6 +29,7 @@ The R `brulee` package contains several basic modeling functions that use the `t
 * [multinomial regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
 * [residual networks (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
 * [Chronos2 foundational model for forecasting](https://brulee.tidymodels.org/reference/brulee_chronos.html)
+* [regularization learning networks (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
 
 Chronos2 is the only model that uses a pretrained model, requiring a one-time download of about 500MB. 
 

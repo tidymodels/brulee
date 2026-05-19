@@ -227,6 +227,7 @@ brulee_resnet.data.frame <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, y)
@@ -252,6 +253,7 @@ brulee_resnet.data.frame <-
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -282,6 +284,7 @@ brulee_resnet.matrix <- function(
   grad_value_clip = 5,
   grad_norm_clip = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -307,6 +310,7 @@ brulee_resnet.matrix <- function(
     grad_value_clip = grad_value_clip,
     grad_norm_clip = grad_norm_clip,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -338,6 +342,7 @@ brulee_resnet.formula <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(formula, data)
@@ -363,6 +368,7 @@ brulee_resnet.formula <-
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -394,6 +400,7 @@ brulee_resnet.recipe <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = NULL,
     ...
   ) {
     processed <- hardhat::mold(x, data)
@@ -419,6 +426,7 @@ brulee_resnet.recipe <-
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
   }
@@ -447,6 +455,7 @@ brulee_resnet_bridge <- function(
   grad_value_clip,
   grad_norm_clip,
   verbose,
+  device,
   ...
 ) {
   if (!torch::torch_is_installed()) {
@@ -454,6 +463,9 @@ brulee_resnet_bridge <- function(
       "The torch backend has not been installed; use `torch::install_torch()`."
     )
   }
+
+  # Guess device if not specified
+  device <- guess_brulee_device(device)
 
   f_nm <- "brulee_resnet"
 
@@ -549,6 +561,7 @@ brulee_resnet_bridge <- function(
       grad_value_clip = grad_value_clip,
       grad_norm_clip = grad_norm_clip,
       verbose = verbose,
+      device = device,
       ...
     )
 
@@ -560,6 +573,7 @@ brulee_resnet_bridge <- function(
     dims = fit$dims,
     y_stats = fit$y_stats,
     parameters = fit$parameters,
+    device = fit$device,
     blueprint = processed$blueprint
   )
 }
@@ -572,6 +586,7 @@ new_brulee_resnet <- function(
   dims,
   y_stats,
   parameters,
+  device,
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
@@ -611,6 +626,7 @@ new_brulee_resnet <- function(
     dims = dims,
     y_stats = y_stats,
     parameters = parameters,
+    device = device,
     blueprint = blueprint,
     class = "brulee_resnet"
   )
@@ -642,6 +658,7 @@ resnet_fit_imp <-
     grad_value_clip = 5,
     grad_norm_clip = 5,
     verbose = FALSE,
+    device = "cpu",
     ...
   ) {
     start_seed <- sample.int(10^5, 1)
@@ -674,7 +691,7 @@ resnet_fit_imp <-
       # pass the log of softmax.
       loss_fn <- function(input, target, wts = NULL) {
         nnf_nll_loss(
-          weight = wts,
+          weight = weights_to_tensor(wts),
           input = torch::torch_log(input),
           target = target,
         )
@@ -714,169 +731,192 @@ resnet_fit_imp <-
     batch_size <- min(batch_size, nrow(x))
 
     ## ---------------------------------------------------------------------------
-    # Convert to index sampler and data loader
+    # Set torch dtype for both data and model
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
     torch::torch_set_default_dtype(torch::torch_float64())
 
-    # Reset the seed so that different optimizers start from the same values
-    torch::torch_manual_seed(start_seed + 1)
+    # Set device context for training
+    training_output <- torch::with_device(device = device, {
+      # Reset the seed so that different optimizers start from the same values
+      torch::torch_manual_seed(start_seed + 1)
 
-    torch_data <- setup_torch_data(x, y, x_val, y_val, batch_size, validation)
-    dl <- torch_data$dl
-    dl_val <- torch_data$dl_val
+      torch_data <- setup_torch_data(
+        x,
+        y,
+        x_val,
+        y_val,
+        batch_size,
+        validation,
+        device = device
+      )
+      dl <- torch_data$dl
+      dl_val <- torch_data$dl_val
 
-    # ------------------------------------------------------------------------------
-    # Return value
+      # ------------------------------------------------------------------------------
+      # Return value
 
-    res <-
-      list(
-        dims = list(
-          p = p,
-          n = n,
-          h = hidden_units,
-          num_layers = length(hidden_units),
-          batch_norm_units = batch_norm_units,
-          y = y_dim,
-          levels = lvls,
-          features = colnames(x)
-        ),
-        y_stats = y_stats,
-        parameters = list(
-          activation = activation,
-          hidden_units = hidden_units,
-          batch_norm_units = batch_norm_units,
-          residual_at = residual_at,
-          learn_rate = learn_rate,
-          class_weights = as.numeric(class_weights),
-          penalty = penalty,
-          mixture = mixture,
-          dropout = dropout,
-          validation = validation,
-          optimizer = optimizer,
-          batch_size = batch_size,
-          momentum = momentum,
-          stop_iter = stop_iter,
-          grad_value_clip = grad_value_clip,
-          grad_norm_clip = grad_norm_clip,
-          sched = rate_schedule,
-          sched_opt = list(...)
+      res <-
+        list(
+          dims = list(
+            p = p,
+            n = n,
+            h = hidden_units,
+            num_layers = length(hidden_units),
+            batch_norm_units = batch_norm_units,
+            y = y_dim,
+            levels = lvls,
+            features = colnames(x)
+          ),
+          y_stats = y_stats,
+          parameters = list(
+            activation = activation,
+            hidden_units = hidden_units,
+            batch_norm_units = batch_norm_units,
+            residual_at = residual_at,
+            learn_rate = learn_rate,
+            class_weights = as.numeric(class_weights),
+            penalty = penalty,
+            mixture = mixture,
+            dropout = dropout,
+            validation = validation,
+            optimizer = optimizer,
+            batch_size = batch_size,
+            momentum = momentum,
+            stop_iter = stop_iter,
+            grad_value_clip = grad_value_clip,
+            grad_norm_clip = grad_norm_clip,
+            sched = rate_schedule,
+            sched_opt = list(...)
+          )
         )
+
+      ## ---------------------------------------------------------------------------
+      # Initialize model and optimizer
+
+      d_type <- torch::torch_get_default_dtype()
+      on.exit(torch::torch_set_default_dtype(d_type))
+      torch::torch_set_default_dtype(torch::torch_float64())
+
+      model <- resnet_module(
+        num_pred = ncol(x),
+        batch_norm_units = batch_norm_units,
+        hidden_units = hidden_units,
+        residual_at = residual_at,
+        activation = activation,
+        dropout = dropout,
+        y_dim = y_dim
+      )
+      model$to(device = device) # Move model to the correct device
+
+      mixture <- check_mixture(mixture, optimizer)
+
+      # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
+      # optimizer depending on whether it's pure L2 (mixture = 0) or has L1 component.
+      loss_fn <- make_penalized_loss(
+        loss_fn,
+        model,
+        penalty,
+        mixture,
+        optimizer
       )
 
-    ## ---------------------------------------------------------------------------
-    # Initialize model and optimizer
-
-    d_type <- torch::torch_get_default_dtype()
-    on.exit(torch::torch_set_default_dtype(d_type))
-    torch::torch_set_default_dtype(torch::torch_float64())
-
-    model <- resnet_module(
-      num_pred = ncol(x),
-      batch_norm_units = batch_norm_units,
-      hidden_units = hidden_units,
-      residual_at = residual_at,
-      activation = activation,
-      dropout = dropout,
-      y_dim = y_dim
-    )
-
-    mixture <- check_mixture(mixture, optimizer)
-
-    # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
-    # optimizer depending on whether it's pure L2 (mixture = 0) or has L1 component.
-    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-
-    optimizer_obj <- set_optimizer(
-      optimizer,
-      model,
-      learn_rate,
-      momentum,
-      penalty,
-      mixture
-    )
-
-    ## ---------------------------------------------------------------------------
-
-    best_epoch <- 0L
-    poor_epoch <- 0L
-    loss_vec <- rep(NA_real_, epochs + 1)
-
-    if (validation > 0) {
-      pred <- model(dl_val$dataset$tensors$x)
-      loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
-    } else {
-      pred <- model(dl$dataset$tensors$x)
-      loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
-    }
-
-    loss_vec[1] <- loss$item()
-    loss_prev <- loss_curr <- loss_vec[1]
-    loss_min <- loss_prev
-
-    if (verbose) {
-      epoch_chr <- gsub(" ", "0", format(0:epochs))
-      cli::cli_inform(
-        "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+      optimizer_obj <- set_optimizer(
+        optimizer,
+        model,
+        learn_rate,
+        momentum,
+        penalty,
+        mixture
       )
-      epoch_chr <- epoch_chr[-1]
-    }
 
-    param_per_epoch <- vector(mode = "list", length = epochs + 1)
-    param_per_epoch[[1]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      ## ---------------------------------------------------------------------------
 
-    res$model_obj <- model_to_raw(model)
-    res$estimates <- param_per_epoch[[1]]
-    res$loss <- loss_vec[1]
-    res$best_epoch <- best_epoch
+      best_epoch <- 0L
+      poor_epoch <- 0L
+      loss_vec <- rep(NA_real_, epochs + 1)
 
-    ## -----------------------------------------------------------------------------
+      if (validation > 0) {
+        pred <- model(dl_val$dataset$tensors$x)
+        loss <- loss_fn(pred, dl_val$dataset$tensors$y, class_weights)
+      } else {
+        pred <- model(dl$dataset$tensors$x)
+        loss <- loss_fn(pred, dl$dataset$tensors$y, class_weights)
+      }
 
-    # Run training loop
-    training_result <- run_training_loop(
-      model = model,
-      dl = dl,
-      dl_val = dl_val,
-      loss_fn = loss_fn,
-      optimizer_obj = optimizer_obj,
-      epochs = epochs,
-      learn_rate = learn_rate,
-      stop_iter = stop_iter,
-      validation = validation,
-      class_weights = class_weights,
-      loss_label = loss_label,
-      verbose = verbose,
-      grad_value_clip = grad_value_clip,
-      grad_norm_clip = grad_norm_clip,
-      rate_schedule = rate_schedule,
-      ...
-    )
+      loss_vec[1] <- loss$item()
+      loss_prev <- loss_curr <- loss_vec[1]
+      loss_min <- loss_prev
 
-    # Prepend initial parameters and loss to match MLP's original behavior
-    param_per_epoch <- c(
-      list(param_per_epoch[[1]]),
-      training_result$param_per_epoch
-    )
-    loss_vec <- c(loss_vec[1], training_result$loss_vec)
-    best_epoch <- training_result$best_epoch
+      if (verbose) {
+        epoch_chr <- gsub(" ", "0", format(0:epochs))
+        cli::cli_inform(
+          "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+        )
+        epoch_chr <- epoch_chr[-1]
+      }
 
-    # Update result object
-    res$model_obj <- model_to_raw(model)
-    res$estimates <- param_per_epoch
-    res$loss <- loss_vec
-    res$best_epoch <- best_epoch
+      param_per_epoch <- vector(mode = "list", length = epochs + 1)
+      param_per_epoch[[1]] <-
+        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+      res$model_obj <- model_to_raw(model)
+      res$estimates <- param_per_epoch[[1]]
+      res$loss <- loss_vec[1]
+      res$best_epoch <- best_epoch
+
+      ## -----------------------------------------------------------------------------
+
+      # Run training loop
+      training_result <- run_training_loop(
+        model = model,
+        dl = dl,
+        dl_val = dl_val,
+        loss_fn = loss_fn,
+        optimizer_obj = optimizer_obj,
+        epochs = epochs,
+        learn_rate = learn_rate,
+        stop_iter = stop_iter,
+        validation = validation,
+        class_weights = class_weights,
+        loss_label = loss_label,
+        verbose = verbose,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
+        rate_schedule = rate_schedule,
+        ...
+      )
+
+      # Prepend initial parameters and loss to match MLP's original behavior
+      param_per_epoch <- c(
+        list(param_per_epoch[[1]]),
+        training_result$param_per_epoch
+      )
+      loss_vec <- c(loss_vec[1], training_result$loss_vec)
+      best_epoch <- training_result$best_epoch
+
+      # Update result object
+      res$model_obj <- model_to_raw(model)
+      res$estimates <- param_per_epoch
+      res$loss <- loss_vec
+      res$best_epoch <- best_epoch
+
+      res
+    })
 
     ## ---------------------------------------------------------------------------
 
     # Add names back to class_weights
-    res$parameters$class_weights <- as.numeric(class_weights)
-    names(res$parameters$class_weights) <- lvls
+    training_output$parameters$class_weights <- as.numeric(class_weights)
+    names(training_output$parameters$class_weights) <- lvls
+
+    # Add device to result
+    training_output$device <- device
 
     ## ---------------------------------------------------------------------------
 
-    res
+    training_output
   }
 
 
