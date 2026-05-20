@@ -1,4 +1,4 @@
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Regression tests
 
 test_that("autoint regression - formula interface", {
@@ -88,7 +88,7 @@ test_that("autoint regression - recipe interface", {
   expect_equal(nrow(pred), n)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Classification tests
 
 test_that("autoint binary classification", {
@@ -168,7 +168,7 @@ test_that("autoint classification with class_weights", {
   expect_equal(nrow(pred), n)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Hidden layer tests
 
 test_that("autoint with single hidden layer", {
@@ -273,7 +273,7 @@ test_that("autoint hidden layer dropout", {
   expect_equal(nrow(pred), n)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Validation error tests
 
 test_that("autoint hidden layer validation errors", {
@@ -358,7 +358,7 @@ test_that("autoint default method errors on unsupported types", {
   )
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Feature handling tests
 
 test_that("autoint with only categorical predictors", {
@@ -422,7 +422,7 @@ test_that("autoint with mixed predictors", {
   expect_equal(fit$dims$p, 4L)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Prediction tests
 
 test_that("autoint prediction with specific epoch", {
@@ -463,7 +463,7 @@ test_that("autoint prediction with epoch = 0 and epoch = max", {
   expect_equal(nrow(pred_best), n)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Optimizer and training tests
 
 test_that("autoint with different optimizers", {
@@ -555,7 +555,7 @@ test_that("autoint with batch_size", {
   expect_equal(fit$parameters$batch_size, 32L)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Attention parameter tests
 
 test_that("autoint with various attention configurations", {
@@ -608,7 +608,7 @@ test_that("autoint with dropout_attn and dropout_embedding", {
   expect_equal(fit$parameters$dropout_embedding, 0.1)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Top interactions
 
 test_that("autoint returns top interactions", {
@@ -635,7 +635,7 @@ test_that("autoint returns top interactions", {
   expect_true(nrow(fit$top_interactions) > 0)
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Print and autoplot tests
 
 test_that("autoint print method works (no hidden layers)", {
@@ -744,7 +744,7 @@ test_that("autoint autoplot works", {
   expect_s3_class(p, "ggplot")
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Learning rate schedule test
 
 test_that("autoint with learning rate schedule", {
@@ -767,7 +767,7 @@ test_that("autoint with learning rate schedule", {
   expect_equal(fit$parameters$sched, "decay_time")
 })
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # Additional coverage tests
 
 test_that("autoint print shows dropout_attn/dropout_embedding", {
