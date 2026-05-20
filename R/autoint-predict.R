@@ -94,6 +94,8 @@ get_auto_int_predict_function <- function(type) {
 # Implementation
 
 predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
+  device <- get_safe_device(model$device)
+
   # Split predictors into categorical and continuous using stored metadata
   cat_names <- model$dims$cat_names
   cont_names <- model$dims$cont_names
@@ -109,7 +111,11 @@ predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
           as.integer(predictors[[nm]])
         })
       )
-      x_cat <- torch::torch_tensor(cat_mat, dtype = torch::torch_long())
+      x_cat <- torch::torch_tensor(
+        cat_mat,
+        dtype = torch::torch_long(),
+        device = device
+      )
     }
   }
 
@@ -118,16 +124,19 @@ predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
   if (length(cont_names) > 0) {
     cont_cols <- intersect(cont_names, names(predictors))
     if (length(cont_cols) > 0) {
-      x_cont <- float_64(as.matrix(predictors[, cont_cols, drop = FALSE]))
+      x_cont <- float_64(
+        as.matrix(predictors[, cont_cols, drop = FALSE]),
+        device = device
+      )
     }
   }
 
   # Revive model from raw format
-  module <- revive_model(model$model_obj)
+  module <- revive_model(model$model_obj, device)
 
   # Load parameters for the requested epoch
   estimates <- model$estimates[[epoch + 1]]
-  estimates <- lapply(estimates, float_64)
+  estimates <- lapply(estimates, float_64, device = device)
   module$load_state_dict(estimates)
   module$eval()
 

@@ -1,8 +1,8 @@
 #' Fit AutoInt models for tabular data
 #'
-#' `brulee_auto_int()` fits AutoInt (Automatic Feature Interaction) models from
-#' Song _at al_ (2019) that use multi-head self-attention to automatically
-#' learn feature interactions.
+#' `brulee_auto_int()` fits AutoInt from Song _at al_ (2019) that use multi-head
+#' columnar self-attention to help exploit how combinations predictor can be
+#' used to improve specific predictions.
 #'
 #' @inheritParams brulee_mlp
 #' @param num_embedding An integer for the embedding dimension. Each feature
@@ -36,10 +36,22 @@
 #'
 #' @details
 #'
-#' This function fits AutoInt models (Song _et al_, 2019) for regression or
-#' classification (a factor). AutoInt uses multi-head self-attention to
-#' automatically learn which features interact and how strongly, without
-#' requiring hand-engineered interaction terms.
+#' ## What is Being Estimated
+#'
+#' Statistically, an interaction occurs when two or more predictors jointly
+#' predict the outcome. You need to know the values of all predictors within
+#' the interaction effect to appropriately model the data. AutoInt is often
+#' described as "automatically learning feature interactions," but that is not
+#' an accurate description.
+#'
+#' In neural networks, the original predictors are converted to _embeddings_,
+#'  which are often the hidden units of the network.
+#'
+#' AutoInt uses _column attention_ to change how embeddings are represented. It
+#' learns how to make the embeddings more relevant to the outcome by creating
+#' mixtures of them. For example, if we predict a data point in one part of the
+#' predictor space, attention will refocus (i.e., transform) the embedding to
+#' be more relevant to that part of the space.
 #'
 #' ## Architecture
 #'
@@ -133,11 +145,13 @@
 #'                        interactions.
 #'  * `y_stats`: A list of summary statistics for numeric outcomes.
 #'  * `parameters`: A list of some tuning parameter values.
+#'  * `device`: A character string for the device used during training.
 #'  * `blueprint`: The `hardhat` blueprint data.
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+#' pkgs <- c("recipes", "yardstick", "modeldata")
+#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #'
 #'   set.seed(87261)
 #'   tr_data <- modeldata::sim_regression(500)
@@ -204,6 +218,7 @@ brulee_auto_int.data.frame <- function(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -232,6 +247,7 @@ brulee_auto_int.data.frame <- function(
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -265,6 +281,7 @@ brulee_auto_int.matrix <- function(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -293,6 +310,7 @@ brulee_auto_int.matrix <- function(
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -326,6 +344,7 @@ brulee_auto_int.formula <- function(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(
@@ -358,6 +377,7 @@ brulee_auto_int.formula <- function(
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -391,6 +411,7 @@ brulee_auto_int.recipe <- function(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 ) {
   processed <- hardhat::mold(x, data)
@@ -419,6 +440,7 @@ brulee_auto_int.recipe <- function(
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 }
@@ -450,6 +472,7 @@ brulee_auto_int_bridge <- function(
   batch_size,
   stop_iter,
   verbose,
+  device,
   ...
 ) {
   if (!torch::torch_is_installed()) {
@@ -457,6 +480,8 @@ brulee_auto_int_bridge <- function(
       "The torch backend has not been installed; use `torch::install_torch()`."
     )
   }
+
+  device <- guess_brulee_device(device)
 
   f_nm <- "brulee_auto_int"
 
@@ -556,6 +581,7 @@ brulee_auto_int_bridge <- function(
     class_weights = class_weights,
     stop_iter = stop_iter,
     verbose = verbose,
+    device = device,
     ...
   )
 
@@ -568,6 +594,7 @@ brulee_auto_int_bridge <- function(
     top_interactions = fit$top_interactions,
     y_stats = fit$y_stats,
     parameters = fit$parameters,
+    device = fit$device,
     blueprint = processed$blueprint
   )
 }
@@ -766,6 +793,7 @@ new_brulee_auto_int <- function(
   top_interactions,
   y_stats,
   parameters,
+  device,
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
@@ -815,6 +843,7 @@ new_brulee_auto_int <- function(
     top_interactions = top_interactions,
     y_stats = y_stats,
     parameters = parameters,
+    device = device,
     blueprint = blueprint,
     class = "brulee_auto_int"
   )
@@ -852,6 +881,7 @@ auto_int_fit_imp <- function(
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = "cpu",
   ...
 ) {
   start_seed <- sample.int(10^5, 1)
@@ -872,7 +902,7 @@ auto_int_fit_imp <- function(
     y_dim <- length(lvls)
     loss_fn <- function(input, target, wts = NULL) {
       nnf_nll_loss(
-        weight = wts,
+        weight = weights_to_tensor(wts),
         input = torch::torch_log(input),
         target = target
       )
@@ -932,241 +962,252 @@ auto_int_fit_imp <- function(
   on.exit(torch::torch_set_default_dtype(or_dtype))
   torch::torch_set_default_dtype(torch::torch_float64())
 
-  torch::torch_manual_seed(start_seed + 1)
+  training_output <- torch::with_device(device = device, {
+    d_type <- torch::torch_get_default_dtype()
+    on.exit(torch::torch_set_default_dtype(d_type))
+    torch::torch_set_default_dtype(torch::torch_float64())
 
-  make_auto_int_tensors <- function(xc, xn, yv) {
-    t_cat <- if (!is.null(xc)) {
-      torch::torch_tensor(xc, dtype = torch::torch_long())
-    } else {
-      NULL
+    torch::torch_manual_seed(start_seed + 1)
+
+    make_auto_int_tensors <- function(xc, xn, yv) {
+      t_cat <- if (!is.null(xc)) {
+        torch::torch_tensor(xc, dtype = torch::torch_long())
+      } else {
+        NULL
+      }
+      t_cont <- if (!is.null(xn)) float_64(xn) else NULL
+      if (is.factor(yv)) {
+        t_y <- torch::torch_tensor(as.numeric(yv), dtype = torch::torch_long())
+      } else {
+        t_y <- float_64(yv)
+      }
+      list(x_cat = t_cat, x_cont = t_cont, y = t_y)
     }
-    t_cont <- if (!is.null(xn)) float_64(xn) else NULL
-    if (is.factor(yv)) {
-      t_y <- torch::torch_tensor(as.numeric(yv), dtype = torch::torch_long())
-    } else {
-      t_y <- float_64(yv)
-    }
-    list(x_cat = t_cat, x_cont = t_cont, y = t_y)
-  }
 
-  train_tensors <- make_auto_int_tensors(x_cat, x_cont, y)
+    train_tensors <- make_auto_int_tensors(x_cat, x_cont, y)
 
-  # Build dataset using tensor_dataset with named tensors
-  # We combine cat and cont into the dataset; the model forward will split them
-  if (!is.null(train_tensors$x_cat) && !is.null(train_tensors$x_cont)) {
-    ds <- torch::tensor_dataset(
-      x_cat = train_tensors$x_cat,
-      x_cont = train_tensors$x_cont,
-      y = train_tensors$y
-    )
-  } else if (!is.null(train_tensors$x_cat)) {
-    ds <- torch::tensor_dataset(
-      x_cat = train_tensors$x_cat,
-      y = train_tensors$y
-    )
-  } else {
-    ds <- torch::tensor_dataset(
-      x_cont = train_tensors$x_cont,
-      y = train_tensors$y
-    )
-  }
-  dl <- torch::dataloader(ds, batch_size = batch_size)
-
-  dl_val <- NULL
-  if (validation > 0) {
-    val_tensors <- make_auto_int_tensors(x_cat_val, x_cont_val, y_val)
-    if (!is.null(val_tensors$x_cat) && !is.null(val_tensors$x_cont)) {
-      ds_val <- torch::tensor_dataset(
-        x_cat = val_tensors$x_cat,
-        x_cont = val_tensors$x_cont,
-        y = val_tensors$y
+    # Build dataset using tensor_dataset with named tensors
+    # We combine cat and cont into the dataset; the model forward will split them
+    if (!is.null(train_tensors$x_cat) && !is.null(train_tensors$x_cont)) {
+      ds <- torch::tensor_dataset(
+        x_cat = train_tensors$x_cat,
+        x_cont = train_tensors$x_cont,
+        y = train_tensors$y
       )
-    } else if (!is.null(val_tensors$x_cat)) {
-      ds_val <- torch::tensor_dataset(
-        x_cat = val_tensors$x_cat,
-        y = val_tensors$y
+    } else if (!is.null(train_tensors$x_cat)) {
+      ds <- torch::tensor_dataset(
+        x_cat = train_tensors$x_cat,
+        y = train_tensors$y
       )
     } else {
-      ds_val <- torch::tensor_dataset(
-        x_cont = val_tensors$x_cont,
-        y = val_tensors$y
+      ds <- torch::tensor_dataset(
+        x_cont = train_tensors$x_cont,
+        y = train_tensors$y
       )
     }
-    dl_val <- torch::dataloader(ds_val)
-  }
+    dl <- torch::dataloader(ds, batch_size = batch_size)
 
-  ## ---------------------------------------------------------------------------
-  # Return value scaffold
+    dl_val <- NULL
+    if (validation > 0) {
+      val_tensors <- make_auto_int_tensors(x_cat_val, x_cont_val, y_val)
+      if (!is.null(val_tensors$x_cat) && !is.null(val_tensors$x_cont)) {
+        ds_val <- torch::tensor_dataset(
+          x_cat = val_tensors$x_cat,
+          x_cont = val_tensors$x_cont,
+          y = val_tensors$y
+        )
+      } else if (!is.null(val_tensors$x_cat)) {
+        ds_val <- torch::tensor_dataset(
+          x_cat = val_tensors$x_cat,
+          y = val_tensors$y
+        )
+      } else {
+        ds_val <- torch::tensor_dataset(
+          x_cont = val_tensors$x_cont,
+          y = val_tensors$y
+        )
+      }
+      dl_val <- torch::dataloader(ds_val)
+    }
 
-  res <- list(
-    dims = list(
-      p = p,
-      n = n,
-      p_cat = p_cat,
-      p_cont = p_cont,
+    ## ---------------------------------------------------------------------------
+    # Return value scaffold
+
+    res <- list(
+      dims = list(
+        p = p,
+        n = n,
+        p_cat = p_cat,
+        p_cont = p_cont,
+        pred_lvls = pred_lvls,
+        cat_names = cat_names,
+        cont_names = cont_names,
+        y = y_dim,
+        levels = lvls,
+        features = all_features
+      ),
+      y_stats = y_stats,
+      parameters = list(
+        activation = activation,
+        hidden_units = hidden_units,
+        hidden_activations = hidden_activations,
+        dropout = dropout,
+        num_embedding = num_embedding,
+        num_attn_feat = num_attn_feat,
+        num_attn_heads = num_attn_heads,
+        num_attn_blocks = num_attn_blocks,
+        learn_rate = learn_rate,
+        class_weights = as.numeric(class_weights),
+        penalty = penalty,
+        mixture = mixture,
+        dropout_attn = dropout_attn,
+        dropout_embedding = dropout_embedding,
+        validation = validation,
+        optimizer = optimizer,
+        batch_size = batch_size,
+        momentum = momentum,
+        stop_iter = stop_iter,
+        sched = rate_schedule,
+        sched_opt = list(...)
+      )
+    )
+
+    ## ---------------------------------------------------------------------------
+    # Initialize model
+
+    model <- auto_int_module(
       pred_lvls = pred_lvls,
-      cat_names = cat_names,
-      cont_names = cont_names,
-      y = y_dim,
-      levels = lvls,
-      features = all_features
-    ),
-    y_stats = y_stats,
-    parameters = list(
-      activation = activation,
-      hidden_units = hidden_units,
-      hidden_activations = hidden_activations,
-      dropout = dropout,
+      n_continuous = p_cont,
       num_embedding = num_embedding,
       num_attn_feat = num_attn_feat,
       num_attn_heads = num_attn_heads,
       num_attn_blocks = num_attn_blocks,
-      learn_rate = learn_rate,
-      class_weights = as.numeric(class_weights),
-      penalty = penalty,
-      mixture = mixture,
       dropout_attn = dropout_attn,
       dropout_embedding = dropout_embedding,
-      validation = validation,
-      optimizer = optimizer,
-      batch_size = batch_size,
-      momentum = momentum,
-      stop_iter = stop_iter,
-      sched = rate_schedule,
-      sched_opt = list(...)
+      activation = activation,
+      hidden_units = hidden_units,
+      hidden_activations = hidden_activations,
+      dropout = dropout,
+      y_dim = y_dim
     )
-  )
+    model$to(device = device)
 
-  ## ---------------------------------------------------------------------------
-  # Initialize model
+    mixture <- check_mixture(mixture, optimizer)
+    loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
 
-  model <- auto_int_module(
-    pred_lvls = pred_lvls,
-    n_continuous = p_cont,
-    num_embedding = num_embedding,
-    num_attn_feat = num_attn_feat,
-    num_attn_heads = num_attn_heads,
-    num_attn_blocks = num_attn_blocks,
-    dropout_attn = dropout_attn,
-    dropout_embedding = dropout_embedding,
-    activation = activation,
-    hidden_units = hidden_units,
-    hidden_activations = hidden_activations,
-    dropout = dropout,
-    y_dim = y_dim
-  )
-
-  mixture <- check_mixture(mixture, optimizer)
-  loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
-
-  optimizer_obj <- set_optimizer(
-    optimizer,
-    model,
-    learn_rate,
-    momentum,
-    penalty,
-    mixture
-  )
-
-  ## ---------------------------------------------------------------------------
-  # Initial evaluation (epoch 0)
-
-  best_epoch <- 0L
-  loss_vec <- rep(NA_real_, epochs + 1)
-
-  get_batch_tensors <- function(dataset) {
-    tens <- dataset$tensors
-    list(
-      x_cat = tens$x_cat,
-      x_cont = tens$x_cont,
-      y = tens$y
+    optimizer_obj <- set_optimizer(
+      optimizer,
+      model,
+      learn_rate,
+      momentum,
+      penalty,
+      mixture
     )
-  }
 
-  if (validation > 0) {
-    bt <- get_batch_tensors(dl_val$dataset)
-  } else {
-    bt <- get_batch_tensors(dl$dataset)
-  }
-  pred <- model(bt$x_cat, bt$x_cont)
-  loss <- loss_fn(pred, bt$y, class_weights)
+    ## ---------------------------------------------------------------------------
+    # Initial evaluation (epoch 0)
 
-  loss_vec[1] <- loss$item()
-  loss_min <- loss_vec[1]
+    best_epoch <- 0L
+    loss_vec <- rep(NA_real_, epochs + 1)
 
-  if (verbose) {
-    epoch_chr <- gsub(" ", "0", format(0:epochs))
-    cli::cli_inform(
-      "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
-    )
-    epoch_chr <- epoch_chr[-1]
-  }
+    get_batch_tensors <- function(dataset) {
+      tens <- dataset$tensors
+      list(
+        x_cat = tens$x_cat,
+        x_cont = tens$x_cont,
+        y = tens$y
+      )
+    }
 
-  param_per_epoch <- vector(mode = "list", length = epochs + 1)
-  param_per_epoch[[1]] <-
-    lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
-
-  res$model_obj <- model_to_raw(model)
-  res$estimates <- param_per_epoch[[1]]
-  res$loss <- loss_vec[1]
-  res$best_epoch <- best_epoch
-
-  ## ---------------------------------------------------------------------------
-  # Training loop
-
-  training_result <- run_auto_int_training_loop(
-    model = model,
-    dl = dl,
-    dl_val = dl_val,
-    loss_fn = loss_fn,
-    optimizer_obj = optimizer_obj,
-    epochs = epochs,
-    learn_rate = learn_rate,
-    stop_iter = stop_iter,
-    validation = validation,
-    class_weights = class_weights,
-    loss_label = loss_label,
-    verbose = verbose,
-    rate_schedule = rate_schedule,
-    ...
-  )
-
-  param_per_epoch <- c(
-    list(param_per_epoch[[1]]),
-    training_result$param_per_epoch
-  )
-  loss_vec <- c(loss_vec[1], training_result$loss_vec)
-  best_epoch <- training_result$best_epoch
-
-  res$model_obj <- model_to_raw(model)
-  res$estimates <- param_per_epoch
-  res$loss <- loss_vec
-  res$best_epoch <- best_epoch
-
-  ## ---------------------------------------------------------------------------
-  # Compute top feature interactions
-
-  model$eval()
-  torch::with_no_grad({
     if (validation > 0) {
       bt <- get_batch_tensors(dl_val$dataset)
     } else {
       bt <- get_batch_tensors(dl$dataset)
     }
-    model(bt$x_cat, bt$x_cont)
+    pred <- model(bt$x_cat, bt$x_cont)
+    loss <- loss_fn(pred, bt$y, class_weights)
+
+    loss_vec[1] <- loss$item()
+    loss_min <- loss_vec[1]
+
+    if (verbose) {
+      epoch_chr <- gsub(" ", "0", format(0:epochs))
+      cli::cli_inform(
+        "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
+      )
+      epoch_chr <- epoch_chr[-1]
+    }
+
+    param_per_epoch <- vector(mode = "list", length = epochs + 1)
+    param_per_epoch[[1]] <-
+      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
+    res$model_obj <- model_to_raw(model)
+    res$estimates <- param_per_epoch[[1]]
+    res$loss <- loss_vec[1]
+    res$best_epoch <- best_epoch
+
+    ## ---------------------------------------------------------------------------
+    # Training loop
+
+    training_result <- run_auto_int_training_loop(
+      model = model,
+      dl = dl,
+      dl_val = dl_val,
+      loss_fn = loss_fn,
+      optimizer_obj = optimizer_obj,
+      epochs = epochs,
+      learn_rate = learn_rate,
+      stop_iter = stop_iter,
+      validation = validation,
+      class_weights = class_weights,
+      loss_label = loss_label,
+      verbose = verbose,
+      rate_schedule = rate_schedule,
+      ...
+    )
+
+    param_per_epoch <- c(
+      list(param_per_epoch[[1]]),
+      training_result$param_per_epoch
+    )
+    loss_vec <- c(loss_vec[1], training_result$loss_vec)
+    best_epoch <- training_result$best_epoch
+
+    res$model_obj <- model_to_raw(model)
+    res$estimates <- param_per_epoch
+    res$loss <- loss_vec
+    res$best_epoch <- best_epoch
+
+    ## ---------------------------------------------------------------------------
+    # Compute top feature interactions
+
+    model$eval()
+    torch::with_no_grad({
+      if (validation > 0) {
+        bt <- get_batch_tensors(dl_val$dataset)
+      } else {
+        bt <- get_batch_tensors(dl$dataset)
+      }
+      model(bt$x_cat, bt$x_cont)
+    })
+
+    res$top_interactions <- compute_top_interactions(
+      model$backbone$last_attention_weights,
+      all_features
+    )
+
+    ## ---------------------------------------------------------------------------
+
+    res$parameters$class_weights <- as.numeric(class_weights)
+    names(res$parameters$class_weights) <- lvls
+
+    res
   })
 
-  res$top_interactions <- compute_top_interactions(
-    model$backbone$last_attention_weights,
-    all_features
-  )
+  training_output$device <- device
 
-  ## ---------------------------------------------------------------------------
-
-  res$parameters$class_weights <- as.numeric(class_weights)
-  names(res$parameters$class_weights) <- lvls
-
-  res
+  training_output
 }
 
 
