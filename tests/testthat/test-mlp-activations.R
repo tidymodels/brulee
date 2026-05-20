@@ -19,14 +19,17 @@ test_that("activation functions", {
           data = df[1:400, ],
           activation = i,
           penalty = 0.1,
-          learn_rate = 0.1,
+          learn_rate = 0.01,
           epochs = 50L,
-          hidden_units = 20L
+          hidden_units = 20L,
+          optimizer = "ADAMw",
+          batch_size = 16,
         )
       }
   )
 
     r_sq <- cor(predict(model, df[401:500, -1])$.pred, df$outcome[401:500])^2
+    # cat("act", i, "rsq:", signif(r_sq, 3), "\n")
 
     # These do very poorly on this problems
     pass <- c("tanhshrink", "log_sigmoid", "softplus")

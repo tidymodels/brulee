@@ -24,6 +24,7 @@ Imports:
     ggplot2,
     glue,
     hardhat,
+    purrr,
     rlang (>= 1.1.1),
     stats,
     tibble,
@@ -32,7 +33,6 @@ Imports:
 Suggests: 
     covr,
     modeldata,
-    purrr,
     recipes,
     spelling,
     testthat,
@@ -42,4 +42,5 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
 RoxygenNote: 7.3.3
