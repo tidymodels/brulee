@@ -612,11 +612,7 @@ brulee_chronos_bridge <- function(
   }
 
   # Resolve device
-  if (is.null(device)) {
-    torch_device <- chronos2_detect_device()
-  } else {
-    torch_device <- torch::torch_device(device)
-  }
+  torch_device <- guess_brulee_device(device)
 
   # Download, parse, build, load. Returns the resolved commit SHA so we
   # can record exactly which version of the weights ended up in the object.
@@ -727,16 +723,6 @@ print.brulee_chronos <- function(x, ...) {
 
 # ------------------------------------------------------------------------------
 # Internal helpers
-
-chronos2_detect_device <- function() {
-  if (torch::cuda_is_available()) {
-    torch::torch_device("cuda")
-  } else if (torch::backends_mps_is_available()) {
-    torch::torch_device("mps")
-  } else {
-    torch::torch_device("cpu")
-  }
-}
 
 # Download / revision-resolution helpers live in chronos2-misc.R alongside
 # the safetensors loader and config parser.
