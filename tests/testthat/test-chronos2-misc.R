@@ -508,15 +508,26 @@ test_that("chronos2_parse_config handles different field values", {
   on.exit(unlink(cfg_path), add = TRUE)
 
   json <- list(
-    d_model = 256L, d_ff = 512L, d_kv = 32L, num_heads = 8L,
-    num_layers = 6L, dropout_rate = 0.0, layer_norm_epsilon = 1e-8,
-    rope_theta = 5000, vocab_size = 2L, pad_token_id = 0L,
+    d_model = 256L,
+    d_ff = 512L,
+    d_kv = 32L,
+    num_heads = 8L,
+    num_layers = 6L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-8,
+    rope_theta = 5000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
     reg_token_id = 1L,
     chronos_config = list(
-      context_length = 512L, input_patch_size = 8L,
-      input_patch_stride = 8L, output_patch_size = 8L,
-      max_output_patches = 32L, quantiles = c(0.1, 0.5, 0.9),
-      use_arcsinh = FALSE, use_reg_token = FALSE,
+      context_length = 512L,
+      input_patch_size = 8L,
+      input_patch_stride = 8L,
+      output_patch_size = 8L,
+      max_output_patches = 32L,
+      quantiles = c(0.1, 0.5, 0.9),
+      use_arcsinh = FALSE,
+      use_reg_token = FALSE,
       time_encoding_scale = 2.0
     )
   )
@@ -550,7 +561,11 @@ test_that("nan_to_num replaces NaN with the specified value", {
 test_that("torch_nanmean computes mean ignoring NaN", {
   skip_if_not(torch::torch_is_installed())
 
-  x <- torch::torch_tensor(matrix(c(1, NaN, 3, 4, NaN, 6), nrow = 2, byrow = TRUE))
+  x <- torch::torch_tensor(matrix(
+    c(1, NaN, 3, 4, NaN, 6),
+    nrow = 2,
+    byrow = TRUE
+  ))
   result <- brulee:::torch_nanmean(x, dim = -1L)
   expect_equal(as.numeric(result), c(2.0, 5.0), tolerance = 1e-5)
 })
@@ -568,7 +583,11 @@ test_that("torch_nanmean handles all-NaN rows", {
 test_that("torch_nansum sums ignoring NaN", {
   skip_if_not(torch::torch_is_installed())
 
-  x <- torch::torch_tensor(matrix(c(1, NaN, 3, 4, 5, NaN), nrow = 2, byrow = TRUE))
+  x <- torch::torch_tensor(matrix(
+    c(1, NaN, 3, 4, 5, NaN),
+    nrow = 2,
+    byrow = TRUE
+  ))
   result <- brulee:::torch_nansum(x, dim = -1L)
   expect_equal(as.numeric(result), c(4.0, 9.0))
 })
@@ -633,7 +652,11 @@ test_that("chronos2_instance_norm normalizes and inverts correctly", {
   skip_if_not(torch::torch_is_installed())
 
   norm <- brulee:::chronos2_instance_norm(use_arcsinh = FALSE)
-  x <- torch::torch_tensor(matrix(c(2, 4, 6, 8, 10, 12), nrow = 2, byrow = TRUE))
+  x <- torch::torch_tensor(matrix(
+    c(2, 4, 6, 8, 10, 12),
+    nrow = 2,
+    byrow = TRUE
+  ))
 
   result <- norm(x)
   scaled <- result[[1]]
@@ -652,7 +675,11 @@ test_that("chronos2_instance_norm works with arcsinh transform", {
   skip_if_not(torch::torch_is_installed())
 
   norm <- brulee:::chronos2_instance_norm(use_arcsinh = TRUE)
-  x <- torch::torch_tensor(matrix(c(1, 10, 100, 2, 20, 200), nrow = 2, byrow = TRUE))
+  x <- torch::torch_tensor(matrix(
+    c(1, 10, 100, 2, 20, 200),
+    nrow = 2,
+    byrow = TRUE
+  ))
 
   result <- norm(x)
   scaled <- result[[1]]
@@ -699,7 +726,10 @@ test_that("chronos2_layer_norm produces stable output", {
 test_that("rotate_half rotates tensor halves correctly", {
   skip_if_not(torch::torch_is_installed())
 
-  x <- torch::torch_tensor(array(c(1, 2, 3, 4, 5, 6, 7, 8), dim = c(1, 1, 1, 8)))
+  x <- torch::torch_tensor(array(
+    c(1, 2, 3, 4, 5, 6, 7, 8),
+    dim = c(1, 1, 1, 8)
+  ))
   result <- brulee:::rotate_half(x)
 
   vals <- as.numeric(result)
@@ -736,7 +766,9 @@ test_that("prepare_patched_context truncates when context exceeds context_length
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    context_length = 8L, input_patch_size = 4L, input_patch_stride = 4L,
+    context_length = 8L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
     time_encoding_scale = 1.0
   )
 
@@ -748,7 +780,11 @@ test_that("prepare_patched_context truncates when context exceeds context_length
   context_mask <- torch::torch_ones(1, 16)
 
   result <- brulee:::prepare_patched_context(
-    context, context_mask, norm, patch, config
+    context,
+    context_mask,
+    norm,
+    patch,
+    config
   )
 
   # After truncation to 8, with patch_size 4 we get 2 patches
@@ -760,7 +796,9 @@ test_that("prepare_patched_context returns expected structure", {
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    context_length = 32L, input_patch_size = 4L, input_patch_stride = 4L,
+    context_length = 32L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
     time_encoding_scale = 1.0
   )
 
@@ -771,7 +809,11 @@ test_that("prepare_patched_context returns expected structure", {
   context_mask <- torch::torch_ones(2, 16)
 
   result <- brulee:::prepare_patched_context(
-    context, context_mask, norm, patch, config
+    context,
+    context_mask,
+    norm,
+    patch,
+    config
   )
 
   expect_true("patched_context" %in% names(result))
@@ -787,7 +829,8 @@ test_that("prepare_patched_future returns expected structure without covariates"
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    output_patch_size = 4L, time_encoding_scale = 1.0
+    output_patch_size = 4L,
+    time_encoding_scale = 1.0
   )
 
   result <- brulee:::prepare_patched_future(
@@ -807,7 +850,8 @@ test_that("prepare_patched_future pads short future covariates", {
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    output_patch_size = 4L, time_encoding_scale = 1.0
+    output_patch_size = 4L,
+    time_encoding_scale = 1.0
   )
 
   norm <- brulee:::chronos2_instance_norm(use_arcsinh = FALSE)
@@ -838,7 +882,8 @@ test_that("prepare_patched_future accepts explicit future_covariates_mask", {
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    output_patch_size = 4L, time_encoding_scale = 1.0
+    output_patch_size = 4L,
+    time_encoding_scale = 1.0
   )
 
   norm <- brulee:::chronos2_instance_norm(use_arcsinh = FALSE)
@@ -868,7 +913,8 @@ test_that("prepare_patched_future handles future covariates", {
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    output_patch_size = 4L, time_encoding_scale = 1.0
+    output_patch_size = 4L,
+    time_encoding_scale = 1.0
   )
 
   norm <- brulee:::chronos2_instance_norm(use_arcsinh = FALSE)
@@ -900,13 +946,25 @@ test_that("chronos2_model forward produces correctly shaped output", {
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
 
@@ -927,13 +985,25 @@ test_that("chronos2_model encode produces encoder hidden states", {
   skip_if_not(torch::torch_is_installed())
 
   config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
 
@@ -960,13 +1030,25 @@ test_that("load_chronos2_weights warns on shape mismatch and skips unknown keys"
   skip_if_not_installed("safetensors")
 
   config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
 
@@ -981,7 +1063,9 @@ test_that("load_chronos2_weights warns on shape mismatch and skips unknown keys"
   # Unknown key (not rope_embed.inv_freq, so it gets tracked as skipped)
   tensors[["some_unknown_key.weight"]] <- torch::torch_randn(10, 10)
   # A rope inv_freq key should be silently ignored (not tracked as skipped)
-  tensors[["encoder.block.0.layer.0.self_attention.rope_embed.inv_freq"]] <- torch::torch_randn(8)
+  tensors[[
+    "encoder.block.0.layer.0.self_attention.rope_embed.inv_freq"
+  ]] <- torch::torch_randn(8)
 
   safetensors::safe_save_file(tensors, st_path)
 
@@ -996,13 +1080,25 @@ test_that("load_chronos2_weights assigns parameters from tensor dict", {
   skip_if_not_installed("safetensors")
 
   config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
 
@@ -1015,32 +1111,84 @@ test_that("load_chronos2_weights assigns parameters from tensor dict", {
   # Collect model parameters and create matching tensors
   tensors <- list()
   tensors[["shared.weight"]] <- torch::torch_randn(2, 32)
-  tensors[["input_patch_embedding.hidden_layer.weight"]] <- torch::torch_randn(64, 12)
+  tensors[["input_patch_embedding.hidden_layer.weight"]] <- torch::torch_randn(
+    64,
+    12
+  )
   tensors[["input_patch_embedding.hidden_layer.bias"]] <- torch::torch_randn(64)
-  tensors[["input_patch_embedding.output_layer.weight"]] <- torch::torch_randn(32, 64)
+  tensors[["input_patch_embedding.output_layer.weight"]] <- torch::torch_randn(
+    32,
+    64
+  )
   tensors[["input_patch_embedding.output_layer.bias"]] <- torch::torch_randn(32)
-  tensors[["input_patch_embedding.residual_layer.weight"]] <- torch::torch_randn(32, 12)
-  tensors[["input_patch_embedding.residual_layer.bias"]] <- torch::torch_randn(32)
-  tensors[["output_patch_embedding.hidden_layer.weight"]] <- torch::torch_randn(64, 32)
-  tensors[["output_patch_embedding.hidden_layer.bias"]] <- torch::torch_randn(64)
-  tensors[["output_patch_embedding.output_layer.weight"]] <- torch::torch_randn(12, 64)
-  tensors[["output_patch_embedding.output_layer.bias"]] <- torch::torch_randn(12)
-  tensors[["output_patch_embedding.residual_layer.weight"]] <- torch::torch_randn(12, 32)
-  tensors[["output_patch_embedding.residual_layer.bias"]] <- torch::torch_randn(12)
+  tensors[[
+    "input_patch_embedding.residual_layer.weight"
+  ]] <- torch::torch_randn(32, 12)
+  tensors[["input_patch_embedding.residual_layer.bias"]] <- torch::torch_randn(
+    32
+  )
+  tensors[["output_patch_embedding.hidden_layer.weight"]] <- torch::torch_randn(
+    64,
+    32
+  )
+  tensors[["output_patch_embedding.hidden_layer.bias"]] <- torch::torch_randn(
+    64
+  )
+  tensors[["output_patch_embedding.output_layer.weight"]] <- torch::torch_randn(
+    12,
+    64
+  )
+  tensors[["output_patch_embedding.output_layer.bias"]] <- torch::torch_randn(
+    12
+  )
+  tensors[[
+    "output_patch_embedding.residual_layer.weight"
+  ]] <- torch::torch_randn(12, 32)
+  tensors[["output_patch_embedding.residual_layer.bias"]] <- torch::torch_randn(
+    12
+  )
   tensors[["encoder.final_layer_norm.weight"]] <- torch::torch_randn(32)
-  tensors[["encoder.block.0.layer.0.layer_norm.weight"]] <- torch::torch_randn(32)
-  tensors[["encoder.block.0.layer.0.self_attention.q.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.0.self_attention.k.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.0.self_attention.v.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.0.self_attention.o.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.1.layer_norm.weight"]] <- torch::torch_randn(32)
-  tensors[["encoder.block.0.layer.1.self_attention.q.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.1.self_attention.k.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.1.self_attention.v.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.1.self_attention.o.weight"]] <- torch::torch_randn(32, 32)
-  tensors[["encoder.block.0.layer.2.layer_norm.weight"]] <- torch::torch_randn(32)
-  tensors[["encoder.block.0.layer.2.mlp.wi.weight"]] <- torch::torch_randn(64, 32)
-  tensors[["encoder.block.0.layer.2.mlp.wo.weight"]] <- torch::torch_randn(32, 64)
+  tensors[["encoder.block.0.layer.0.layer_norm.weight"]] <- torch::torch_randn(
+    32
+  )
+  tensors[[
+    "encoder.block.0.layer.0.self_attention.q.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[[
+    "encoder.block.0.layer.0.self_attention.k.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[[
+    "encoder.block.0.layer.0.self_attention.v.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[[
+    "encoder.block.0.layer.0.self_attention.o.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[["encoder.block.0.layer.1.layer_norm.weight"]] <- torch::torch_randn(
+    32
+  )
+  tensors[[
+    "encoder.block.0.layer.1.self_attention.q.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[[
+    "encoder.block.0.layer.1.self_attention.k.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[[
+    "encoder.block.0.layer.1.self_attention.v.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[[
+    "encoder.block.0.layer.1.self_attention.o.weight"
+  ]] <- torch::torch_randn(32, 32)
+  tensors[["encoder.block.0.layer.2.layer_norm.weight"]] <- torch::torch_randn(
+    32
+  )
+  tensors[["encoder.block.0.layer.2.mlp.wi.weight"]] <- torch::torch_randn(
+    64,
+    32
+  )
+  tensors[["encoder.block.0.layer.2.mlp.wo.weight"]] <- torch::torch_randn(
+    32,
+    64
+  )
 
   safetensors::safe_save_file(tensors, st_path)
 
@@ -1052,5 +1200,9 @@ test_that("load_chronos2_weights assigns parameters from tensor dict", {
   # Verify the weight was changed
   new_shared <- as.numeric(model$shared$weight)
   expect_false(identical(orig_shared, new_shared))
-  expect_equal(new_shared, as.numeric(tensors[["shared.weight"]]), tolerance = 1e-6)
+  expect_equal(
+    new_shared,
+    as.numeric(tensors[["shared.weight"]]),
+    tolerance = 1e-6
+  )
 })

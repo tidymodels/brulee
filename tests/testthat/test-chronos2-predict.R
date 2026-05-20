@@ -564,7 +564,10 @@ test_that("new_data still errors when a required column is missing", {
   )
 
   bad <- Chi[, c("series_id", "date", "ridership", "Clark_Lake")]
-  expect_snapshot(error = TRUE, predict(mod, new_data = bad, prediction_length = 3L))
+  expect_snapshot(
+    error = TRUE,
+    predict(mod, new_data = bad, prediction_length = 3L)
+  )
 })
 
 test_that("future_df still errors when the id column is missing", {
@@ -586,7 +589,10 @@ test_that("future_df still errors when the id column is missing", {
     extra_col = rnorm(3)
   )
 
-  expect_snapshot(error = TRUE, predict(mod, future_df = future_df, prediction_length = 3L))
+  expect_snapshot(
+    error = TRUE,
+    predict(mod, future_df = future_df, prediction_length = 3L)
+  )
 })
 
 # ------------------------------------------------------------------------------
@@ -713,13 +719,25 @@ test_that("chronos2_predict_core runs simple path (no covariates, list context)"
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -750,13 +768,25 @@ test_that("chronos2_predict_core runs with covariates", {
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -785,13 +815,25 @@ test_that("chronos2_predict_core handles multiple series with covariates", {
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -826,13 +868,25 @@ test_that("chronos2_predict_core simple path with numeric vector", {
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -860,13 +914,25 @@ test_that("chronos2_predict_core simple path with torch tensor", {
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -895,13 +961,25 @@ test_that("chronos2_predict_core uses object$prediction_length when NULL", {
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -928,13 +1006,25 @@ test_that("chronos2_predict_core simple path with list containing torch tensor",
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -948,7 +1038,10 @@ test_that("chronos2_predict_core simple path with list containing torch tensor",
   )
 
   # List containing a pre-built tensor (hits the "else x" branch)
-  ctx_list <- list(torch::torch_tensor(rnorm(16), dtype = torch::torch_float32()))
+  ctx_list <- list(torch::torch_tensor(
+    rnorm(16),
+    dtype = torch::torch_float32()
+  ))
   result <- brulee:::chronos2_predict_core(
     obj,
     context = ctx_list,
@@ -962,13 +1055,25 @@ test_that("chronos2_predict_core simple path with 1D torch tensor", {
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -997,13 +1102,25 @@ test_that("chronos2_run_with_covariates handles no-covariate tasks (empty keys)"
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
@@ -1019,8 +1136,12 @@ test_that("chronos2_run_with_covariates handles no-covariate tasks (empty keys)"
   )
 
   result <- brulee:::chronos2_run_with_covariates(
-    tiny_model, tiny_config, torch::torch_device("cpu"),
-    inputs, prediction_length = 4L, num_output_patches = 1L
+    tiny_model,
+    tiny_config,
+    torch::torch_device("cpu"),
+    inputs,
+    prediction_length = 4L,
+    num_output_patches = 1L
   )
 
   expect_true(inherits(result$predictions, "torch_tensor"))
@@ -1032,13 +1153,25 @@ test_that("chronos2_run_with_covariates handles past-only covariates (no future)
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
-    d_model = 32L, d_ff = 64L, d_kv = 16L, num_heads = 2L,
-    num_layers = 1L, dropout_rate = 0.0, layer_norm_epsilon = 1e-6,
-    rope_theta = 10000, vocab_size = 2L, pad_token_id = 0L,
-    reg_token_id = 1L, context_length = 64L, input_patch_size = 4L,
-    input_patch_stride = 4L, output_patch_size = 4L,
-    max_output_patches = 4L, quantiles = c(0.1, 0.5, 0.9),
-    use_arcsinh = FALSE, use_reg_token = TRUE,
+    d_model = 32L,
+    d_ff = 64L,
+    d_kv = 16L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 64L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 4L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
     time_encoding_scale = 1.0
   )
   tiny_model <- brulee:::chronos2_model(tiny_config)
