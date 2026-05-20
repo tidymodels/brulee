@@ -122,6 +122,9 @@ predict.brulee_chronos <- function(
   if (is.null(quantile_levels)) {
     quantile_levels <- object$quantile_levels
   }
+  if (is.data.frame(new_data) & nrow(new_data) == 0L) {
+    new_data <- NULL
+  }
 
   id_column <- object$context$id_column
   timestamp_column <- object$context$timestamp_column
