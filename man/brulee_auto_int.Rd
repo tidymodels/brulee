@@ -38,6 +38,7 @@ brulee_auto_int(x, ...)
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -66,6 +67,7 @@ brulee_auto_int(x, ...)
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -94,6 +96,7 @@ brulee_auto_int(x, ...)
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 
@@ -122,6 +125,7 @@ brulee_auto_int(x, ...)
   class_weights = NULL,
   stop_iter = 5,
   verbose = FALSE,
+  device = NULL,
   ...
 )
 }
@@ -235,6 +239,10 @@ improvement before stopping.}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
+\item{device}{A single character string for the device to train on (e.g.,
+\code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
+available, otherwise CPU. See \link{training_efficiency}.}
+
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}
 
@@ -257,19 +265,34 @@ likelihood for classification) at each epoch.
 interactions.
 \item \code{y_stats}: A list of summary statistics for numeric outcomes.
 \item \code{parameters}: A list of some tuning parameter values.
+\item \code{device}: A character string for the device used during training.
 \item \code{blueprint}: The \code{hardhat} blueprint data.
 }
 }
 \description{
-\code{brulee_auto_int()} fits AutoInt (Automatic Feature Interaction) models from
-Song \emph{at al} (2019) that use multi-head self-attention to automatically
-learn feature interactions.
+\code{brulee_auto_int()} fits AutoInt from Song \emph{at al} (2019) that use multi-head
+columnar self-attention to help exploit how combinations predictor can be
+used to improve specific predictions.
 }
 \details{
-This function fits AutoInt models (Song \emph{et al}, 2019) for regression or
-classification (a factor). AutoInt uses multi-head self-attention to
-automatically learn which features interact and how strongly, without
-requiring hand-engineered interaction terms.
+\subsection{What is Being Estimated}{
+
+Statistically, an interaction occurs when two or more predictors jointly
+predict the outcome. You need to know the values of all predictors within
+the interaction effect to appropriately model the data. AutoInt is often
+described as "automatically learning feature interactions," but that is not
+an accurate description.
+
+In neural networks, the original predictors are converted to \emph{embeddings},
+which are often the hidden units of the network.
+
+AutoInt uses \emph{column attention} to change how embeddings are represented. It
+learns how to make the embeddings more relevant to the outcome by creating
+mixtures of them. For example, if we predict a data point in one part of the
+predictor space, attention will refocus (i.e., transform) the embedding to
+be more relevant to that part of the space.
+}
+
 \subsection{Architecture}{
 
 The AutoInt architecture has three stages:
@@ -344,7 +367,8 @@ used in those packages.
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+pkgs <- c("recipes", "yardstick", "modeldata")
+if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 
   set.seed(87261)
   tr_data <- modeldata::sim_regression(500)
