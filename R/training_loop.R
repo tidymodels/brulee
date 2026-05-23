@@ -146,6 +146,13 @@ run_training_loop <- function(
     epoch_chr <- format(1:epochs)
   }
 
+  rm_files <- list.files(
+   path = tempdir(),
+   pattern = "loss_per_batch_",
+   full.names = TRUE
+  )
+  unlink(rm_files)
+  .iter <- 0
   # Main training loop
   for (epoch in 1:epochs) {
     # Update learning rate
@@ -160,9 +167,13 @@ run_training_loop <- function(
       optimizer_obj$param_groups[[i]]$lr <- learn_rate
     }
 
+    tmp <- NULL
+    .batch <- 0
     # Training loop over batches
     coro::loop(
       for (batch in dl) {
+       .batch  <- .batch  + 1
+       .iter  <- .iter  + 1
         cl <- function() {
           optimizer_obj$zero_grad()
           pred <- model(batch$x)
@@ -173,6 +184,9 @@ run_training_loop <- function(
           } else {
             loss <- loss_fn(pred, batch$y, class_weights)
           }
+          .tmp <- tibble::tibble(epoch = epoch, batch = .batch, loss = as.numeric(loss))
+          tmp_pth <- file.path(tempdir(), paste0("loss_per_batch_", .iter, ".RData"))
+          save(.tmp, file = tmp_pth)
 
           loss$backward()
 
