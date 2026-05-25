@@ -266,8 +266,8 @@ Each layer follows this pattern:
 \item Batch normalization (input dimension)
 \item Linear transformation (input dimension -> \code{batch_norm_units[i]})
 \item Activation function (ReLU by default)
+\item Dropout (if specified)
 \item Linear transformation (\code{batch_norm_units[i]} -> \code{hidden_units[i]})
-\item Activation function
 \item Dropout (if specified)
 }
 
