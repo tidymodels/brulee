@@ -153,10 +153,9 @@ must be >= 2.}
 \item{residual_at}{An integer vector specifying which layer indices should
 have residual (skip) connections. For example, \code{residual_at = c(2, 4)}
 creates residual connections after layers 2 and 4, forming two residual
-blocks (layers 1-2 and 3-4). If \code{NULL} (default), a residual connection
-is placed at the last layer, making the entire network one residual block.
-Use \code{integer(0)} for no residual connections (i.e., a purely feed-forward
-model only).}
+blocks (layers 1-2 and 3-4). If \code{NULL} (default), every layer gets its own
+skip connection. Use \code{integer(0)} for no residual connections (i.e., a
+purely feed-forward model only).}
 
 \item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
@@ -282,7 +281,7 @@ The \code{residual_at} parameter defines where skip connections occur:
 \itemize{
 \item \code{residual_at = 3} creates one block spanning layers 1-3
 \item \code{residual_at = c(2, 4)} creates two blocks: layers 1-2 and layers 3-4
-\item \code{residual_at = NULL} (default) creates one block spanning all layers
+\item \code{residual_at = NULL} (default) places a skip connection at every layer
 \item \code{residual_at = integer(0)} creates no residual connections (a purely
 feed-forward model)
 }
@@ -352,6 +351,8 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
                       residual_at = 2,
                       epochs = 50, batch_size = 32)
  fit
+
+ summary(fit)
 
  autoplot(fit)
 

@@ -12,10 +12,9 @@
 #' @param residual_at An integer vector specifying which layer indices should
 #'   have residual (skip) connections. For example, `residual_at = c(2, 4)`
 #'   creates residual connections after layers 2 and 4, forming two residual
-#'   blocks (layers 1-2 and 3-4). If `NULL` (default), a residual connection
-#'   is placed at the last layer, making the entire network one residual block.
-#'   Use `integer(0)` for no residual connections (i.e., a purely feed-forward
-#'   model only).
+#'   blocks (layers 1-2 and 3-4). If `NULL` (default), every layer gets its own
+#'   skip connection. Use `integer(0)` for no residual connections (i.e., a
+#'   purely feed-forward model only).
 #'
 #' @details
 #'
@@ -49,7 +48,7 @@
 #' The `residual_at` parameter defines where skip connections occur:
 #' - `residual_at = 3` creates one block spanning layers 1-3
 #' - `residual_at = c(2, 4)` creates two blocks: layers 1-2 and layers 3-4
-#' - `residual_at = NULL` (default) creates one block spanning all layers
+#' - `residual_at = NULL` (default) places a skip connection at every layer
 #' - `residual_at = integer(0)` creates no residual connections (a purely
 #'    feed-forward model)
 #'
@@ -150,6 +149,8 @@
 #'                       residual_at = 2,
 #'                       epochs = 50, batch_size = 32)
 #'  fit
+#'
+#'  summary(fit)
 #'
 #'  autoplot(fit)
 #'
@@ -663,13 +664,6 @@ resnet_fit_imp <-
   ) {
     start_seed <- sample.int(10^5, 1)
     torch::torch_manual_seed(start_seed)
-
-    ## ---------------------------------------------------------------------------
-    # Handle residual_at default
-
-    if (is.null(residual_at)) {
-      residual_at <- length(hidden_units)
-    }
 
     ## ---------------------------------------------------------------------------
     # General data checks:

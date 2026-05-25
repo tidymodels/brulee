@@ -507,3 +507,66 @@ test_that('two-layer networks', {
     regex = NA
   )
 })
+
+test_that("summary.brulee_mlp prints layers and total parameters", {
+  skip_if(!torch::torch_is_installed())
+  skip_if_not_installed("recipes")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 100
+  sim_x <- matrix(rnorm(n * 3), ncol = 3)
+  colnames(sim_x) <- c("x1", "x2", "x3")
+  sim_y <- sim_x[, 1] + 2 * sim_x[, 2] + rnorm(n, sd = 0.1)
+
+  set.seed(1)
+  fit <- brulee_mlp(
+    x = sim_x,
+    y = sim_y,
+    hidden_units = c(8, 4),
+    dropout = 0.1,
+    epochs = 2,
+    verbose = FALSE
+  )
+
+  out <- capture.output(result <- summary(fit))
+
+  expect_identical(result, fit)
+  expect_true(any(grepl("Multilayer perceptron architecture", out)))
+  expect_true(any(grepl("Linear\\(3 -> 8\\)", out)))
+  expect_true(any(grepl("Linear\\(8 -> 4\\)", out)))
+  expect_true(any(grepl("Linear\\(4 -> 1\\)", out)))
+  expect_true(any(grepl("Dropout\\(p = 0.1\\)", out)))
+
+  module <- brulee:::revive_model(fit$model_obj)
+  total <- sum(vapply(module$parameters, function(p) p$numel(), integer(1)))
+  expect_true(any(grepl(
+    paste0("Total parameters: ", format(total, big.mark = ",")),
+    out
+  )))
+})
+
+test_that("summary.brulee_mlp shows Softmax for multinomial fits", {
+  skip_if(!torch::torch_is_installed())
+  skip_if_not_installed("recipes")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 80
+  sim_x <- matrix(rnorm(n * 3), ncol = 3)
+  colnames(sim_x) <- c("x1", "x2", "x3")
+  sim_y <- factor(sample(letters[1:3], n, replace = TRUE))
+
+  set.seed(1)
+  fit <- brulee_mlp(
+    x = sim_x,
+    y = sim_y,
+    hidden_units = 5,
+    epochs = 2,
+    verbose = FALSE
+  )
+
+  out <- capture.output(summary(fit))
+  expect_true(any(grepl("Softmax", out)))
+  expect_true(any(grepl("output dim: 3", out)))
+})

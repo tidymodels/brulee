@@ -247,3 +247,54 @@ weights_to_tensor <- function(wts) {
   }
   float_64(wts)
 }
+
+# ------------------------------------------------------------------------------
+# Architecture summary helpers (shared by summary.brulee_resnet / .brulee_mlp)
+
+arch_activation_label <- c(
+  nn_relu = "ReLU",
+  nn_elu = "ELU",
+  nn_tanh = "Tanh",
+  nn_log_sigmoid = "LogSigmoid",
+  nn_relu6 = "ReLU6",
+  nn_leaky_relu = "LeakyReLU",
+  nn_gelu = "GELU",
+  nn_celu = "CELU",
+  nn_selu = "SELU"
+)
+
+arch_param_count <- function(m) {
+  params <- m$parameters
+  if (length(params) == 0) {
+    return(0L)
+  }
+  sum(vapply(params, function(p) p$numel(), integer(1)))
+}
+
+arch_fmt_module <- function(m) {
+  cls <- class(m)[1]
+  if (cls %in% names(arch_activation_label)) {
+    return(arch_activation_label[[cls]])
+  }
+  switch(
+    cls,
+    nn_batch_norm1d = paste0("BatchNorm1d(", m$num_features, ")"),
+    nn_linear = paste0("Linear(", m$in_features, " -> ", m$out_features, ")"),
+    nn_dropout = paste0("Dropout(p = ", format(m$p), ")"),
+    nn_softmax = "Softmax",
+    sub("^nn_", "", cls)
+  )
+}
+
+arch_fmt_row <- function(label, n_par, indent = "    ") {
+  sprintf(
+    "%s%-32s %6s params\n",
+    indent,
+    label,
+    format(n_par, big.mark = ",")
+  )
+}
+
+arch_is_noop <- function(m) {
+  inherits(m, "nn_dropout") && isTRUE(m$p == 0)
+}

@@ -263,8 +263,8 @@ validate_resnet_args <- function(
       residual_at <- sort(residual_at)
     }
   } else {
-    # Default: make entire network one residual block
-    residual_at <- num_layers
+    # Default: place a skip connection at every layer
+    residual_at <- seq_len(num_layers)
   }
 
   # Validate dropout and gradient clipping
