@@ -63,7 +63,7 @@ fit_resnet <- brulee_resnet(
   outcome ~ .,
   data = dat,
   hidden_units = c(10, 5),
-  batch_norm_units = c(8, 4),
+  bottleneck_units = c(8, 4),
   residual_at = 2,
   epochs = 10,
   device = "cuda",

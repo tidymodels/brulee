@@ -33,7 +33,7 @@ brulee_print <- function(x, ...) {
   if (inherits(x, "brulee_resnet")) {
     param_lst <- c(
       param_lst,
-      " " = "# BatchNorm Outputs: {x$parameters$batch_norm_units}"
+      " " = "# Bottleneck Units: {x$parameters$bottleneck_units}"
     )
   }
 

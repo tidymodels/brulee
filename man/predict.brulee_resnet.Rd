@@ -57,7 +57,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
 
  set.seed(2)
  fit <- brulee_resnet(ames_rec, data = ames_train,
-                      hidden_units = 2, num_layers = 2, batch_norm_units = 10,
+                      hidden_units = 2, num_layers = 2, bottleneck_units = 10,
                       epochs = 50, batch_size = 32)
 
  predict(fit, ames_test)
