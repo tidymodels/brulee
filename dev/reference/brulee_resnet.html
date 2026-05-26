@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.6.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.6.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +49,7 @@
 <span>  <span class="va">y</span>,</span>
 <span>  epochs <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  batch_norm_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
+<span>  bottleneck_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
 <span>  residual_at <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  activation <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -76,7 +76,7 @@
 <span>  <span class="va">y</span>,</span>
 <span>  epochs <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  batch_norm_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
+<span>  bottleneck_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
 <span>  residual_at <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  activation <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -103,7 +103,7 @@
 <span>  <span class="va">data</span>,</span>
 <span>  epochs <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  batch_norm_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
+<span>  bottleneck_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
 <span>  residual_at <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  activation <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -130,7 +130,7 @@
 <span>  <span class="va">data</span>,</span>
 <span>  epochs <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  batch_norm_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
+<span>  bottleneck_units <span class="op">=</span> <span class="va">hidden_units</span>,</span>
 <span>  residual_at <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  activation <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -188,7 +188,7 @@ in each layer. The length of this vector determines the number of layers.
 Each value must be &gt;= 1.</p></dd>
 
 
-<dt id="arg-batch-norm-units">batch_norm_units<a class="anchor" aria-label="anchor" href="#arg-batch-norm-units"></a></dt>
+<dt id="arg-bottleneck-units">bottleneck_units<a class="anchor" aria-label="anchor" href="#arg-bottleneck-units"></a></dt>
 <dd><p>An integer vector specifying the intermediate dimension
 within each layer. Must have the same length as <code>hidden_units</code>. Each value
 must be &gt;= 2.</p></dd>
@@ -334,9 +334,9 @@ two linear transformations (with an intermediate bottleneck dimension), and
 activation functions. Residual (skip) connections can be placed at specified
 layers via the <code>residual_at</code> parameter.</p>
 <p>Each layer follows this pattern:</p><ul><li><p>Batch normalization (input dimension)</p></li>
-<li><p>Linear transformation (input dimension -&gt; <code>batch_norm_units[i]</code>)</p></li>
+<li><p>Linear transformation (input dimension -&gt; <code>bottleneck_units[i]</code>)</p></li>
 <li><p>Activation function (ReLU by default)</p></li>
-<li><p>Linear transformation (<code>batch_norm_units[i]</code> -&gt; <code>hidden_units[i]</code>)</p></li>
+<li><p>Linear transformation (<code>bottleneck_units[i]</code> -&gt; <code>hidden_units[i]</code>)</p></li>
 <li><p>Activation function</p></li>
 <li><p>Dropout (if specified)</p></li>
 </ul><p>When a residual connection is specified at layer <code>i</code> via <code>residual_at</code>, the
@@ -438,7 +438,7 @@ the IEEE conference on computer vision and pattern recognition</em> (pp.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">brulee_resnet</span><span class="op">(</span><span class="va">ames_rec</span>, data <span class="op">=</span> <span class="va">ames_train</span>,</span></span>
-<span class="r-in"><span>                      hidden_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">10</span><span class="op">)</span>, batch_norm_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">8</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                      hidden_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">10</span><span class="op">)</span>, bottleneck_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">8</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                      residual_at <span class="op">=</span> <span class="fl">2</span>,</span></span>
 <span class="r-in"><span>                      epochs <span class="op">=</span> <span class="fl">50</span>, batch_size <span class="op">=</span> <span class="fl">32</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">fit</span></span></span>
@@ -464,7 +464,7 @@ the IEEE conference on computer vision and pattern recognition</em> (pp.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">cls_fit</span> <span class="op">&lt;-</span> <span class="fu">brulee_resnet</span><span class="op">(</span><span class="va">class</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">parabolic_tr</span>,</span></span>
-<span class="r-in"><span>                          hidden_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">5</span><span class="op">)</span>, batch_norm_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                          hidden_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">5</span><span class="op">)</span>, bottleneck_units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                          residual_at <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>,</span></span>
 <span class="r-in"><span>                          epochs <span class="op">=</span> <span class="fl">200L</span>, learn_rate <span class="op">=</span> <span class="fl">0.1</span>, activation <span class="op">=</span> <span class="st">"elu"</span>,</span></span>
 <span class="r-in"><span>                          penalty <span class="op">=</span> <span class="fl">0.1</span>, batch_size <span class="op">=</span> <span class="fl">2</span><span class="op">^</span><span class="fl">8</span><span class="op">)</span></span></span>

@@ -21,6 +21,9 @@ Useful links:
 
 Authors:
 
+- Max Kuhn <max@posit.co>
+  ([ORCID](https://orcid.org/0000-0003-2402-136X))
+
 - Daniel Falbel <daniel@posit.co>
 
 Other contributors:

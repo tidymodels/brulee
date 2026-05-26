@@ -5,12 +5,12 @@ to see their documentation.
 
 - generics:
 
-  [`tunable`](https://generics.r-lib.org/reference/tunable.html)
+  [`tunable()`](https://generics.r-lib.org/reference/tunable.html)
 
 - ggplot2:
 
-  [`autoplot`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+  [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
 
 - stats:
 
-  [`coef`](https://rdrr.io/r/stats/coef.html)
+  [`coef()`](https://rdrr.io/r/stats/coef.html)
