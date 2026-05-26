@@ -1,7 +1,7 @@
 #' Fit AutoInt models for tabular data
 #'
 #' `brulee_auto_int()` fits AutoInt from Song _at al_ (2019) that use multi-head
-#' columnar self-attention to help exploit how combinations predictor can be
+#' columnar self-attention to help exploit how combinations of embeddings can be
 #' used to improve specific predictions.
 #'
 #' @inheritParams brulee_mlp
@@ -38,7 +38,7 @@
 #'
 #' ## What is Being Estimated
 #'
-#' Statistically, an interaction occurs when two or more predictors jointly
+#' In statistics, an interaction occurs when two or more predictors jointly
 #' predict the outcome. You need to know the values of all predictors within
 #' the interaction effect to appropriately model the data. AutoInt is often
 #' described as "automatically learning feature interactions," but that is not
