@@ -6,7 +6,7 @@
 #' @param hidden_units An integer vector specifying the number of hidden units
 #'   in each layer. The length of this vector determines the number of layers.
 #'   Each value must be >= 1.
-#' @param batch_norm_units An integer vector specifying the intermediate dimension
+#' @param bottleneck_units An integer vector specifying the intermediate dimension
 #'   within each layer. Must have the same length as `hidden_units`. Each value
 #'   must be >= 2.
 #' @param residual_at An integer vector specifying which layer indices should
@@ -34,9 +34,9 @@
 #'
 #' Each layer follows this pattern:
 #' - Batch normalization (input dimension)
-#' - Linear transformation (input dimension -> `batch_norm_units[i]`)
+#' - Linear transformation (input dimension -> `bottleneck_units[i]`)
 #' - Activation function (ReLU by default)
-#' - Linear transformation (`batch_norm_units[i]` -> `hidden_units[i]`)
+#' - Linear transformation (`bottleneck_units[i]` -> `hidden_units[i]`)
 #' - Activation function
 #' - Dropout (if specified)
 #'
@@ -146,7 +146,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- brulee_resnet(ames_rec, data = ames_train,
-#'                       hidden_units = c(20, 10), batch_norm_units = c(15, 8),
+#'                       hidden_units = c(20, 10), bottleneck_units = c(15, 8),
 #'                       residual_at = 2,
 #'                       epochs = 50, batch_size = 32)
 #'  fit
@@ -172,7 +172,7 @@
 #'
 #'  set.seed(2)
 #'  cls_fit <- brulee_resnet(class ~ ., data = parabolic_tr,
-#'                           hidden_units = c(8, 5), batch_norm_units = c(6, 4),
+#'                           hidden_units = c(8, 5), bottleneck_units = c(6, 4),
 #'                           residual_at = 1:2,
 #'                           epochs = 200L, learn_rate = 0.1, activation = "elu",
 #'                           penalty = 0.1, batch_size = 2^8)
@@ -210,7 +210,7 @@ brulee_resnet.data.frame <-
     y,
     epochs = 100L,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
@@ -236,7 +236,7 @@ brulee_resnet.data.frame <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -267,7 +267,7 @@ brulee_resnet.matrix <- function(
   y,
   epochs = 100L,
   hidden_units = 3L,
-  batch_norm_units = hidden_units,
+  bottleneck_units = hidden_units,
   residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
@@ -293,7 +293,7 @@ brulee_resnet.matrix <- function(
     processed,
     epochs = epochs,
     hidden_units = hidden_units,
-    batch_norm_units = batch_norm_units,
+    bottleneck_units = bottleneck_units,
     residual_at = residual_at,
     activation = activation,
     learn_rate = learn_rate,
@@ -325,7 +325,7 @@ brulee_resnet.formula <-
     data,
     epochs = 100L,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
@@ -351,7 +351,7 @@ brulee_resnet.formula <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -383,7 +383,7 @@ brulee_resnet.recipe <-
     data,
     epochs = 100L,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
@@ -409,7 +409,7 @@ brulee_resnet.recipe <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -438,7 +438,7 @@ brulee_resnet_bridge <- function(
   processed,
   epochs,
   hidden_units,
-  batch_norm_units,
+  bottleneck_units,
   residual_at,
   activation,
   learn_rate,
@@ -472,7 +472,7 @@ brulee_resnet_bridge <- function(
   # Validate ResNet-specific arguments
   resnet_validated <- validate_resnet_args(
     hidden_units = hidden_units,
-    batch_norm_units = batch_norm_units,
+    bottleneck_units = bottleneck_units,
     residual_at = residual_at,
     activation = activation,
     dropout = dropout,
@@ -483,7 +483,7 @@ brulee_resnet_bridge <- function(
 
   # Extract validated/coerced values
   hidden_units <- resnet_validated$hidden_units
-  batch_norm_units <- resnet_validated$batch_norm_units
+  bottleneck_units <- resnet_validated$bottleneck_units
   residual_at <- resnet_validated$residual_at
   activation <- resnet_validated$activation
 
@@ -544,7 +544,7 @@ brulee_resnet_bridge <- function(
       y = outcome,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -642,7 +642,7 @@ resnet_fit_imp <-
     epochs = 100L,
     batch_size = 32,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     penalty = 0.001,
     mixture = 0,
@@ -764,7 +764,7 @@ resnet_fit_imp <-
             n = n,
             h = hidden_units,
             num_layers = length(hidden_units),
-            batch_norm_units = batch_norm_units,
+            bottleneck_units = bottleneck_units,
             y = y_dim,
             levels = lvls,
             features = colnames(x)
@@ -773,7 +773,7 @@ resnet_fit_imp <-
           parameters = list(
             activation = activation,
             hidden_units = hidden_units,
-            batch_norm_units = batch_norm_units,
+            bottleneck_units = bottleneck_units,
             residual_at = residual_at,
             learn_rate = learn_rate,
             class_weights = as.numeric(class_weights),
@@ -801,7 +801,7 @@ resnet_fit_imp <-
 
       model <- resnet_module(
         num_pred = ncol(x),
-        batch_norm_units = batch_norm_units,
+        bottleneck_units = bottleneck_units,
         hidden_units = hidden_units,
         residual_at = residual_at,
         activation = activation,
@@ -925,15 +925,15 @@ resnet_layer_module <-
     "resnet_layer_module",
     initialize = function(
       input_dim,
-      batch_norm_units,
+      bottleneck_units,
       hidden_units,
       activation,
       dropout
     ) {
       self$bn <- torch::nn_batch_norm1d(input_dim)
-      self$linear1 <- torch::nn_linear(input_dim, batch_norm_units)
+      self$linear1 <- torch::nn_linear(input_dim, bottleneck_units)
       self$act1 <- get_activation_fn(activation)
-      self$linear2 <- torch::nn_linear(batch_norm_units, hidden_units)
+      self$linear2 <- torch::nn_linear(bottleneck_units, hidden_units)
       self$act2 <- get_activation_fn(activation)
       self$dropout <- torch::nn_dropout(dropout)
     },
@@ -953,7 +953,7 @@ resnet_module <-
     "resnet_module",
     initialize = function(
       num_pred,
-      batch_norm_units,
+      bottleneck_units,
       hidden_units,
       residual_at,
       activation,
@@ -963,8 +963,8 @@ resnet_module <-
       num_layers <- length(hidden_units)
 
       # Validate lengths match
-      if (length(batch_norm_units) != num_layers) {
-        stop("batch_norm_units and hidden_units must have the same length")
+      if (length(bottleneck_units) != num_layers) {
+        stop("bottleneck_units and hidden_units must have the same length")
       }
 
       # Ensure activation is a vector
@@ -988,7 +988,7 @@ resnet_module <-
       for (i in seq_len(num_layers)) {
         layer <- resnet_layer_module(
           input_dim = current_dim,
-          batch_norm_units = batch_norm_units[i],
+          bottleneck_units = bottleneck_units[i],
           hidden_units = hidden_units[i],
           activation = activation[i],
           dropout = dropout

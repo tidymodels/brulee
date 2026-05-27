@@ -19,7 +19,7 @@ test_that("resnet multinomial classification - data.frame interface", {
     x = df[, c("x1", "x2")],
     y = df$y,
     hidden_units = c(8, 5),
-    batch_norm_units = c(6, 4),
+    bottleneck_units = c(6, 4),
     epochs = 5,
     verbose = FALSE
   )
@@ -63,7 +63,7 @@ test_that("resnet multinomial classification - formula interface", {
     y ~ x1 + x2,
     data = df,
     hidden_units = c(8, 5),
-    batch_norm_units = c(6, 4),
+    bottleneck_units = c(6, 4),
     epochs = 3,
     verbose = FALSE
   )
@@ -99,7 +99,7 @@ test_that("resnet multinomial classification - recipe interface", {
     rec,
     data = df,
     hidden_units = c(8, 5),
-    batch_norm_units = c(6, 4),
+    bottleneck_units = c(6, 4),
     epochs = 3,
     verbose = FALSE
   )
@@ -130,7 +130,7 @@ test_that("resnet multinomial classification - class weights", {
     x = df[, c("x1", "x2")],
     y = df$y,
     hidden_units = c(8, 5),
-    batch_norm_units = c(6, 4),
+    bottleneck_units = c(6, 4),
     class_weights = c(A = 1, B = 2, C = 1),
     epochs = 3,
     verbose = FALSE
