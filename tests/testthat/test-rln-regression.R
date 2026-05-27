@@ -275,3 +275,42 @@ test_that("rln stores parameters correctly", {
   expect_equal(fit$parameters$step_rate, 1e5)
   expect_equal(fit$parameters$activation, "tanh")
 })
+
+test_that("summary.brulee_rln prints layers and totals", {
+  skip_if_not_installed("torch")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 100
+  x <- matrix(rnorm(n * 3), ncol = 3)
+  colnames(x) <- c("x1", "x2", "x3")
+  y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
+
+  set.seed(1)
+  fit <- brulee_rln(
+    x = x,
+    y = y,
+    hidden_units = 8L,
+    epochs = 3L,
+    activation = "relu",
+    verbose = FALSE
+  )
+
+  out <- capture.output(result <- summary(fit))
+
+  expect_identical(result, fit)
+  expect_true(any(grepl("Regularization Learning Network architecture", out)))
+  expect_true(any(grepl("inputs: 3", out)))
+  expect_true(any(grepl("hidden units: 8", out)))
+  expect_true(any(grepl("activation: relu", out)))
+  expect_true(any(grepl("Linear\\(3 -> 8\\)", out)))
+  expect_true(any(grepl("ReLU", out)))
+  expect_true(any(grepl("Linear\\(8 -> 1\\)", out)))
+
+  module <- brulee:::revive_model(fit$model_obj)
+  total <- sum(vapply(module$parameters, function(p) p$numel(), integer(1)))
+  expect_true(any(grepl(
+    paste0("Total parameters: ", format(total, big.mark = ",")),
+    out
+  )))
+})

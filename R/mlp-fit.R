@@ -239,6 +239,9 @@
 #'  cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
 #'                         epochs = 200L, learn_rate = 0.1, activation = "elu",
 #'                         penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
+#'
+#'  summary(cls_fit)
+#'
 #'  autoplot(cls_fit)
 #'
 #'  grid_points <- seq(-4, 4, length.out = 100)
@@ -1023,6 +1026,48 @@ print.brulee_mlp <- function(x, ...) {
   cat(cli::style_bold("Multilayer perceptron"), "\n\n", sep = "")
 
   brulee_print(x, ...)
+}
+
+#' @rdname summary.brulee
+#' @export
+summary.brulee_mlp <- function(object, ...) {
+  module <- revive_model(object$model_obj)
+  num_pred <- length(object$dims$features)
+  y_dim <- as.integer(object$dims$y)
+  seq_module <- module$model
+  child_names <- names(seq_module$children)
+
+  total <- 0L
+  cat(cli::style_bold("Multilayer perceptron architecture"), "\n", sep = "")
+  cat(
+    "inputs: ",
+    num_pred,
+    " | output dim: ",
+    y_dim,
+    " | components: ",
+    length(child_names),
+    "\n\n",
+    sep = ""
+  )
+
+  for (nm in child_names) {
+    mod <- seq_module[[nm]]
+    if (arch_is_noop(mod)) {
+      next
+    }
+    n_par <- arch_param_count(mod)
+    total <- total + n_par
+    cat(arch_fmt_row(arch_fmt_module(mod), n_par, indent = "  "))
+  }
+
+  cat(
+    "\n",
+    cli::style_bold("Total parameters: "),
+    format(total, big.mark = ","),
+    "\n",
+    sep = ""
+  )
+  invisible(object)
 }
 
 ## -----------------------------------------------------------------------------
