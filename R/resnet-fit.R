@@ -36,7 +36,7 @@
 #' - Linear transformation (input dimension -> `bottleneck_units[i]`)
 #' - Activation function (ReLU by default)
 #' - Dropout (if specified)
-#' - Linear transformation (`batch_norm_units[i]` -> `hidden_units[i]`)
+#' - Linear transformation (`bottleneck_units[i]` -> `hidden_units[i]`)
 #' - Dropout (if specified)
 #'
 #' When a residual connection is specified at layer `i` via `residual_at`, the
@@ -925,10 +925,10 @@ resnet_layer_module <-
       dropout
     ) {
       self$bn <- torch::nn_batch_norm1d(input_dim)
-      self$linear1 <- torch::nn_linear(input_dim, batch_norm_units)
+      self$linear1 <- torch::nn_linear(input_dim, bottleneck_units)
       self$act <- get_activation_fn(activation)
       self$dropout1 <- torch::nn_dropout(dropout)
-      self$linear2 <- torch::nn_linear(batch_norm_units, hidden_units)
+      self$linear2 <- torch::nn_linear(bottleneck_units, hidden_units)
       self$dropout2 <- torch::nn_dropout(dropout)
     },
     forward = function(x) {

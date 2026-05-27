@@ -20,7 +20,7 @@
 #'
 #'   set.seed(1)
 #'   fit <- brulee_resnet(Sale_Price ~ Longitude + Latitude, data = ames,
-#'                        hidden_units = c(8, 4), batch_norm_units = c(6, 3),
+#'                        hidden_units = c(8, 4), bottleneck_units = c(6, 3),
 #'                        residual_at = 2, epochs = 3)
 #'   summary(fit)
 #' }

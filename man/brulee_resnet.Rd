@@ -266,7 +266,7 @@ Each layer follows this pattern:
 \item Linear transformation (input dimension -> \code{bottleneck_units[i]})
 \item Activation function (ReLU by default)
 \item Dropout (if specified)
-\item Linear transformation (\code{batch_norm_units[i]} -> \code{hidden_units[i]})
+\item Linear transformation (\code{bottleneck_units[i]} -> \code{hidden_units[i]})
 \item Dropout (if specified)
 }
 

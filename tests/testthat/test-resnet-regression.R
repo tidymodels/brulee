@@ -334,7 +334,7 @@ test_that("summary.brulee_resnet prints layers, skips, and totals", {
     x = ames_x,
     y = ames_y,
     hidden_units = c(8, 4, 6),
-    batch_norm_units = c(5, 3, 4),
+    bottleneck_units = c(5, 3, 4),
     residual_at = c(2, 3),
     epochs = 2,
     verbose = FALSE
@@ -375,7 +375,7 @@ test_that("summary.brulee_resnet handles no-residual and multinomial cases", {
     x = ames_x,
     y = ames_y,
     hidden_units = c(6, 4),
-    batch_norm_units = c(4, 3),
+    bottleneck_units = c(4, 3),
     residual_at = integer(0),
     epochs = 2,
     verbose = FALSE
@@ -393,7 +393,7 @@ test_that("summary.brulee_resnet handles no-residual and multinomial cases", {
     x = ames_x,
     y = y_cls,
     hidden_units = c(6, 4),
-    batch_norm_units = c(4, 3),
+    bottleneck_units = c(4, 3),
     epochs = 2,
     verbose = FALSE
   )
@@ -419,7 +419,7 @@ test_that("resnet block structure follows Gorishniy et al. 2021", {
     x = ames_x,
     y = ames_y,
     hidden_units = 4,
-    batch_norm_units = 6,
+    bottleneck_units = 6,
     epochs = 2,
     verbose = FALSE
   )
