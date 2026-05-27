@@ -1,6 +1,7 @@
 brulee_coefs <- function(object, epoch = NULL, ...) {
+  call <- rlang::current_env()
   if (!is.null(epoch) && length(epoch) != 1) {
-    cli::cli_abort("{.arg epoch} should be a single integer.")
+    cli::cli_abort("{.arg epoch} should be a single integer.", call = call)
   }
 
   max_epochs <- length(object$estimates)
@@ -10,7 +11,8 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
   } else {
     if (epoch > max_epochs) {
       cli::cli_warn(
-        "There were only {max_epochs} epochs fit. Setting {.arg epochs} to {max_epochs}."
+        "There were only {max_epochs} epochs fit. Setting {.arg epochs} to {max_epochs}.",
+        call = call
       )
       epoch <- max_epochs
     }

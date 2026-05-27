@@ -49,22 +49,35 @@ predict.brulee_auto_int <- function(
   epoch = NULL,
   ...
 ) {
+  call <- rlang::current_env()
   forged <- hardhat::forge(new_data, object$blueprint)
-  type <- check_type(object, type)
+  type <- check_type(object, type, call = call)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_auto_int_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_auto_int_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch,
+    call = call
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_auto_int_bridge <- function(type, model, predictors, epoch) {
+predict_brulee_auto_int_bridge <- function(
+  type,
+  model,
+  predictors,
+  epoch,
+  call = rlang::caller_env()
+) {
   predict_function <- get_auto_int_predict_function(type)
 
   max_epoch <- length(model$estimates)
-  last_epoch_note(epoch, max_epoch)
+  last_epoch_note(epoch, max_epoch, call = call)
 
   predictions <- predict_function(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)

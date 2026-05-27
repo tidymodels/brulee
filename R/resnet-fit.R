@@ -457,18 +457,18 @@ brulee_resnet_bridge <- function(
   grad_norm_clip,
   verbose,
   device,
-  ...
+  ...,
+  call = rlang::caller_env()
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use {.run torch::install_torch()}."
+      "The torch backend has not been installed; use {.run torch::install_torch()}.",
+      call = call
     )
   }
 
   # Guess device if not specified
   device <- guess_brulee_device(device)
-
-  f_nm <- "brulee_resnet"
 
   # Validate ResNet-specific arguments
   resnet_validated <- validate_resnet_args(
@@ -479,7 +479,7 @@ brulee_resnet_bridge <- function(
     dropout = dropout,
     grad_value_clip = grad_value_clip,
     grad_norm_clip = grad_norm_clip,
-    fn = f_nm
+    call = call
   )
 
   # Extract validated/coerced values
@@ -493,7 +493,7 @@ brulee_resnet_bridge <- function(
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+    check_integer(batch_size, single = TRUE, 1, call = call)
   }
 
   # Validate common arguments
@@ -506,7 +506,7 @@ brulee_resnet_bridge <- function(
     momentum = momentum,
     learn_rate = learn_rate,
     verbose = verbose,
-    fn = f_nm
+    call = call
   )
 
   # Extract validated/coerced values
@@ -516,7 +516,7 @@ brulee_resnet_bridge <- function(
   ## -----------------------------------------------------------------------------
 
   # Process predictors
-  predictors <- process_predictors(processed$predictors, fn = f_nm)
+  predictors <- process_predictors(processed$predictors, call = call)
 
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 32L
@@ -529,13 +529,13 @@ brulee_resnet_bridge <- function(
   ## -----------------------------------------------------------------------------
 
   # Validate outcome (ResNet accepts both numeric and factor)
-  outcome <- validate_mlp_outcome(processed$outcomes[[1]], fn = f_nm)
+  outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
 
   # ------------------------------------------------------------------------------
 
   lvls <- levels(outcome)
   xtab <- table(outcome)
-  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, call = call)
 
   ## -----------------------------------------------------------------------------
 
@@ -591,28 +591,31 @@ new_brulee_resnet <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("{.arg model_obj} should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.", call = NULL)
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("{.arg estimates} should be a list.")
+    cli::cli_abort("{.arg estimates} should be a list.", call = NULL)
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    cli::cli_abort("{.arg best_epoch} should be an integer.")
+    cli::cli_abort("{.arg best_epoch} should be an integer.", call = NULL)
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("{.arg loss} should be a numeric vector.")
+    cli::cli_abort("{.arg loss} should be a numeric vector.", call = NULL)
   }
   if (!is.list(dims)) {
-    cli::cli_abort("{.arg dims} should be a list.")
+    cli::cli_abort("{.arg dims} should be a list.", call = NULL)
   }
   if (!is.list(y_stats)) {
-    cli::cli_abort("{.arg y_stats} should be a list.")
+    cli::cli_abort("{.arg y_stats} should be a list.", call = NULL)
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("{.arg parameters} should be a list.")
+    cli::cli_abort("{.arg parameters} should be a list.", call = NULL)
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("{.arg blueprint} should be a hardhat blueprint.")
+    cli::cli_abort(
+      "{.arg blueprint} should be a hardhat blueprint.",
+      call = NULL
+    )
   }
 
   # Save the estimates that have values

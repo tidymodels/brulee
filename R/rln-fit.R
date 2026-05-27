@@ -346,17 +346,17 @@ brulee_rln_bridge <- function(
   stop_iter,
   verbose,
   device,
-  ...
+  ...,
+  call = rlang::caller_env()
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use {.run torch::install_torch()}."
+      "The torch backend has not been installed; use {.run torch::install_torch()}.",
+      call = call
     )
   }
 
   device <- guess_brulee_device(device)
-
-  f_nm <- "brulee_rln"
 
   rln_validated <- validate_rln_args(
     hidden_units = hidden_units,
@@ -364,7 +364,7 @@ brulee_rln_bridge <- function(
     penalty_average = penalty_average,
     step_rate = step_rate,
     activation = activation,
-    fn = f_nm
+    call = call
   )
 
   hidden_units <- rln_validated$hidden_units
@@ -377,7 +377,7 @@ brulee_rln_bridge <- function(
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+    check_integer(batch_size, single = TRUE, 1, call = call)
   }
 
   # penalty and mixture are not used by RLN; pass 0 as placeholders
@@ -390,13 +390,13 @@ brulee_rln_bridge <- function(
     momentum = momentum,
     learn_rate = learn_rate,
     verbose = verbose,
-    fn = f_nm
+    call = call
   )
 
   epochs <- validated$epochs
   batch_size <- validated$batch_size
 
-  predictors <- process_predictors(processed$predictors, fn = f_nm)
+  predictors <- process_predictors(processed$predictors, call = call)
 
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 32L
@@ -406,11 +406,12 @@ brulee_rln_bridge <- function(
     }
   }
 
-  outcome <- validate_mlp_outcome(processed$outcomes[[1]], fn = f_nm)
+  outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
   if (is.factor(outcome)) {
     cli::cli_abort(
-      "{.fn {f_nm}} only supports numeric outcomes.
-      For classification use {.fn brulee_mlp} or {.fn brulee_resnet}."
+      "{.fn brulee_rln} only supports numeric outcomes.
+      For classification use {.fn brulee_mlp} or {.fn brulee_resnet}.",
+      call = call
     )
   }
 
@@ -460,28 +461,31 @@ new_brulee_rln <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("{.arg model_obj} should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.", call = NULL)
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("{.arg estimates} should be a list.")
+    cli::cli_abort("{.arg estimates} should be a list.", call = NULL)
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    cli::cli_abort("{.arg best_epoch} should be an integer.")
+    cli::cli_abort("{.arg best_epoch} should be an integer.", call = NULL)
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("{.arg loss} should be a numeric vector.")
+    cli::cli_abort("{.arg loss} should be a numeric vector.", call = NULL)
   }
   if (!is.list(dims)) {
-    cli::cli_abort("{.arg dims} should be a list.")
+    cli::cli_abort("{.arg dims} should be a list.", call = NULL)
   }
   if (!is.list(y_stats)) {
-    cli::cli_abort("{.arg y_stats} should be a list.")
+    cli::cli_abort("{.arg y_stats} should be a list.", call = NULL)
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("{.arg parameters} should be a list.")
+    cli::cli_abort("{.arg parameters} should be a list.", call = NULL)
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("{.arg blueprint} should be a hardhat blueprint.")
+    cli::cli_abort(
+      "{.arg blueprint} should be a hardhat blueprint.",
+      call = NULL
+    )
   }
 
   num_items <- purrr::map_int(estimates, length)

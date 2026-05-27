@@ -123,10 +123,13 @@ set_learn_rate <- function(epoch, learn_rate, type = "none", ...) {
 
 # ------------------------------------------------------------------------------
 
-check_rate_arg_value <- function(x) {
+check_rate_arg_value <- function(x, call = rlang::caller_env()) {
   nm <- as.character(match.call()$x)
   if (is.null(x) || !is.numeric(x) || length(x) != 1 || any(x <= 0)) {
-    cli::cli_abort("{.arg {nm}} should be a single positive value.")
+    cli::cli_abort(
+      "{.arg {nm}} should be a single positive value.",
+      call = call
+    )
   }
   invisible(NULL)
 }

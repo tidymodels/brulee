@@ -54,8 +54,9 @@ predict.brulee_logistic_reg <- function(
   epoch = NULL,
   ...
 ) {
+  call <- rlang::current_env()
   forged <- hardhat::forge(new_data, object$blueprint)
-  type <- check_type(object, type)
+  type <- check_type(object, type, call = call)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
@@ -63,23 +64,30 @@ predict.brulee_logistic_reg <- function(
     type,
     object,
     forged$predictors,
-    epoch = epoch
+    epoch = epoch,
+    call = call
   )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_logistic_reg_bridge <- function(type, model, predictors, epoch) {
+predict_brulee_logistic_reg_bridge <- function(
+  type,
+  model,
+  predictors,
+  epoch,
+  call = rlang::caller_env()
+) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
-    check_character_matrix(predictors)
+    check_character_matrix(predictors, call = call)
   }
 
   predict_function <- get_logistic_reg_predict_function(type)
 
   max_epoch <- length(model$estimates)
-  last_epoch_note(epoch, max_epoch)
+  last_epoch_note(epoch, max_epoch, call = call)
 
   predictions <- predict_function(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)

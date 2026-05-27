@@ -473,17 +473,17 @@ brulee_auto_int_bridge <- function(
   stop_iter,
   verbose,
   device,
-  ...
+  ...,
+  call = rlang::caller_env()
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use {.run torch::install_torch()}."
+      "The torch backend has not been installed; use {.run torch::install_torch()}.",
+      call = call
     )
   }
 
   device <- guess_brulee_device(device)
-
-  f_nm <- "brulee_auto_int"
 
   # Validate AutoInt-specific arguments
   auto_int_validated <- validate_auto_int_args(
@@ -494,24 +494,24 @@ brulee_auto_int_bridge <- function(
     activation = activation,
     dropout_attn = dropout_attn,
     dropout_embedding = dropout_embedding,
-    fn = f_nm
+    call = call
   )
 
   # Validate hidden layer arguments
   hidden_validated <- validate_hidden_args(
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
-    fn = f_nm
+    call = call
   )
 
-  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), fn = f_nm)
+  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), call = call)
 
   # Handle batch_size
   if (!is.null(batch_size) & optimizer != "LBFGS") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+    check_integer(batch_size, single = TRUE, 1, call = call)
   }
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 256L
@@ -527,7 +527,7 @@ brulee_auto_int_bridge <- function(
     momentum = momentum,
     learn_rate = learn_rate,
     verbose = verbose,
-    fn = f_nm
+    call = call
   )
 
   epochs <- validated$epochs
@@ -537,18 +537,18 @@ brulee_auto_int_bridge <- function(
   # Split predictors into categorical and continuous
 
   predictors <- processed$predictors
-  split <- split_predictors_auto_int(predictors, fn = f_nm)
+  split <- split_predictors_auto_int(predictors, call = call)
 
   ## ---------------------------------------------------------------------------
   # Validate outcome (accepts both numeric and factor)
 
-  outcome <- validate_mlp_outcome(processed$outcomes[[1]], fn = f_nm)
+  outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
 
   # ----------------------------------------------------------------------------
 
   lvls <- levels(outcome)
   xtab <- table(outcome)
-  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, call = call)
 
   ## ---------------------------------------------------------------------------
 
@@ -602,7 +602,7 @@ brulee_auto_int_bridge <- function(
 # ------------------------------------------------------------------------------
 # Predictor splitting
 
-split_predictors_auto_int <- function(predictors, fn = NULL) {
+split_predictors_auto_int <- function(predictors, call = rlang::caller_env()) {
   cat_idx <- vapply(
     predictors,
     function(col) {
@@ -627,8 +627,8 @@ split_predictors_auto_int <- function(predictors, fn = NULL) {
     bad <- names(predictors)[other_idx]
     cli::cli_abort(
       "Column{?s} {.val {bad}} {?is/are} neither factor/character nor numeric.
-       {.fn {fn}} requires all predictors to be factor or numeric.",
-      call = NULL
+       {.fn brulee_auto_int} requires all predictors to be factor or numeric.",
+      call = call
     )
   }
 
@@ -686,44 +686,44 @@ validate_auto_int_args <- function(
   activation,
   dropout_attn,
   dropout_embedding,
-  fn = NULL
+  call = rlang::caller_env()
 ) {
   if (is.numeric(num_embedding) & !is.integer(num_embedding)) {
     num_embedding <- as.integer(num_embedding)
   }
-  check_integer(num_embedding, single = TRUE, 1, fn = fn)
+  check_integer(num_embedding, single = TRUE, 1, call = call)
 
   if (is.numeric(num_attn_feat) & !is.integer(num_attn_feat)) {
     num_attn_feat <- as.integer(num_attn_feat)
   }
-  check_integer(num_attn_feat, single = TRUE, 1, fn = fn)
+  check_integer(num_attn_feat, single = TRUE, 1, call = call)
 
   if (is.numeric(num_attn_heads) & !is.integer(num_attn_heads)) {
     num_attn_heads <- as.integer(num_attn_heads)
   }
-  check_integer(num_attn_heads, single = TRUE, 1, fn = fn)
+  check_integer(num_attn_heads, single = TRUE, 1, call = call)
 
   if (is.numeric(num_attn_blocks) & !is.integer(num_attn_blocks)) {
     num_attn_blocks <- as.integer(num_attn_blocks)
   }
-  check_integer(num_attn_blocks, single = TRUE, 1, fn = fn)
+  check_integer(num_attn_blocks, single = TRUE, 1, call = call)
 
-  check_double(dropout_attn, single = TRUE, 0, fn = fn)
+  check_double(dropout_attn, single = TRUE, 0, call = call)
   if (dropout_attn >= 1) {
-    cli::cli_abort("{.arg dropout_attn} must be less than 1.", call = NULL)
+    cli::cli_abort("{.arg dropout_attn} must be less than 1.", call = call)
   }
 
-  check_double(dropout_embedding, single = TRUE, 0, fn = fn)
+  check_double(dropout_embedding, single = TRUE, 0, call = call)
   if (dropout_embedding >= 1) {
-    cli::cli_abort("{.arg dropout_embedding} must be less than 1.", call = NULL)
+    cli::cli_abort("{.arg dropout_embedding} must be less than 1.", call = call)
   }
 
-  check_character(activation, single = TRUE, fn = fn)
+  check_character(activation, single = TRUE, call = call)
   act_choices <- brulee_activations()
   if (!(activation %in% act_choices)) {
     cli::cli_abort(
-      "`{.arg activation} should be one of: {.val {act_choices}}.",
-      call = NULL
+      "{.arg activation} should be one of: {.val {act_choices}}.",
+      call = call
     )
   }
 
@@ -738,7 +738,11 @@ validate_auto_int_args <- function(
   )
 }
 
-validate_hidden_args <- function(hidden_units, hidden_activations, fn = NULL) {
+validate_hidden_args <- function(
+  hidden_units,
+  hidden_activations,
+  call = rlang::caller_env()
+) {
   if (is.null(hidden_units) && is.null(hidden_activations)) {
     return(list(hidden_units = NULL, hidden_activations = NULL))
   }
@@ -746,14 +750,14 @@ validate_hidden_args <- function(hidden_units, hidden_activations, fn = NULL) {
   if (is.null(hidden_units) != is.null(hidden_activations)) {
     cli::cli_abort(
       "Both {.arg hidden_units} and {.arg hidden_activations} must be provided together or both be {.code NULL}.",
-      call = NULL
+      call = call
     )
   }
 
   if (is.numeric(hidden_units) && !is.integer(hidden_units)) {
     hidden_units <- as.integer(hidden_units)
   }
-  check_integer(hidden_units, single = FALSE, 1, fn = fn)
+  check_integer(hidden_units, single = FALSE, 1, call = call)
 
   if (length(hidden_units) > 1 && length(hidden_activations) == 1) {
     hidden_activations <- rep(hidden_activations, length(hidden_units))
@@ -762,7 +766,7 @@ validate_hidden_args <- function(hidden_units, hidden_activations, fn = NULL) {
   if (length(hidden_units) != length(hidden_activations)) {
     cli::cli_abort(
       "{.arg hidden_activations} must be a single value or a vector with the same length as {.arg hidden_units}.",
-      call = NULL
+      call = call
     )
   }
 
@@ -771,7 +775,7 @@ validate_hidden_args <- function(hidden_units, hidden_activations, fn = NULL) {
   if (!all(good_activation)) {
     cli::cli_abort(
       "{.arg hidden_activations} should be one of: {.val {allowed_activation}}, not {.val {hidden_activations[!good_activation]}}.",
-      call = NULL
+      call = call
     )
   }
 
@@ -797,37 +801,41 @@ new_brulee_auto_int <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("{.arg model_obj} should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.", call = NULL)
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("{.arg estimates} should be a list")
+    cli::cli_abort("{.arg estimates} should be a list", call = NULL)
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    cli::cli_abort("{.arg best_epoch} should be an integer")
+    cli::cli_abort("{.arg best_epoch} should be an integer", call = NULL)
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("{.arg loss} should be a numeric vector")
+    cli::cli_abort("{.arg loss} should be a numeric vector", call = NULL)
   }
   if (!is.list(dims)) {
-    cli::cli_abort("{.arg dims} should be a list")
+    cli::cli_abort("{.arg dims} should be a list", call = NULL)
   }
   if (!is.list(y_stats)) {
-    cli::cli_abort("{.arg y_stats} should be a list")
+    cli::cli_abort("{.arg y_stats} should be a list", call = NULL)
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("{.arg parameters} should be a list")
+    cli::cli_abort("{.arg parameters} should be a list", call = NULL)
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("{.arg blueprint} should be a hardhat blueprint")
+    cli::cli_abort(
+      "{.arg blueprint} should be a hardhat blueprint",
+      call = NULL
+    )
   }
 
   if (!inherits(top_interactions, "tbl_df")) {
-    cli::cli_abort("{.arg top_interactions} should be a tibble")
+    cli::cli_abort("{.arg top_interactions} should be a tibble", call = NULL)
   }
   int_nms <- c("attention_weight", "feature_1", "feature_2")
   if (!identical(sort(names(top_interactions)), int_nms)) {
     cli::cli_abort(
-      "{.arg top_interactions} should be a tibble with names {.val {int_nms}}"
+      "{.arg top_interactions} should be a tibble with names {.val {int_nms}}.",
+      call = NULL
     )
   }
 

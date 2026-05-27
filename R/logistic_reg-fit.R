@@ -318,18 +318,18 @@ brulee_logistic_reg_bridge <- function(
   stop_iter,
   verbose,
   device,
-  ...
+  ...,
+  call = rlang::caller_env()
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use {.run torch::install_torch()}."
+      "The torch backend has not been installed; use {.run torch::install_torch()}.",
+      call = call
     )
   }
 
   # Guess device if not specified
   device <- guess_brulee_device(device)
-
-  f_nm <- "brulee_logistic_reg"
 
   # Validate common arguments
   validated <- validate_common_args(
@@ -341,7 +341,7 @@ brulee_logistic_reg_bridge <- function(
     momentum = momentum,
     learn_rate = learn_rate,
     verbose = verbose,
-    fn = f_nm
+    call = call
   )
 
   # Extract validated/coerced values
@@ -351,18 +351,18 @@ brulee_logistic_reg_bridge <- function(
   ## -----------------------------------------------------------------------------
 
   # Process predictors
-  predictors <- process_predictors(processed$predictors, fn = f_nm)
+  predictors <- process_predictors(processed$predictors, call = call)
 
   ## -----------------------------------------------------------------------------
 
   # Validate outcome
-  outcome <- validate_binary_outcome(processed$outcomes[[1]], fn = f_nm)
+  outcome <- validate_binary_outcome(processed$outcomes[[1]], call = call)
 
   # ------------------------------------------------------------------------------
 
   lvls <- levels(outcome)
   xtab <- table(outcome)
-  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, call = call)
 
   ## -----------------------------------------------------------------------------
 
@@ -409,22 +409,25 @@ new_brulee_logistic_reg <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("{.arg model_obj} should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.", call = NULL)
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("{.arg estimates} should be a list.")
+    cli::cli_abort("{.arg estimates} should be a list.", call = NULL)
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("{.arg loss} should be a numeric vector.")
+    cli::cli_abort("{.arg loss} should be a numeric vector.", call = NULL)
   }
   if (!is.list(dims)) {
-    cli::cli_abort("{.arg dims} should be a list.")
+    cli::cli_abort("{.arg dims} should be a list.", call = NULL)
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("{.arg parameters} should be a list.")
+    cli::cli_abort("{.arg parameters} should be a list.", call = NULL)
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("{.arg blueprint} should be a hardhat blueprint.")
+    cli::cli_abort(
+      "{.arg blueprint} should be a hardhat blueprint.",
+      call = NULL
+    )
   }
   hardhat::new_model(
     model_obj = model_obj,

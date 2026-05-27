@@ -45,9 +45,9 @@ predict.brulee_rln <- function(
   epoch = NULL,
   ...
 ) {
-  call <- rlang::caller_env()
+  call <- rlang::current_env()
   forged <- hardhat::forge(new_data, object$blueprint)
-  type <- check_type(object, type)
+  type <- check_type(object, type, call = call)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
@@ -72,12 +72,12 @@ predict_brulee_rln_bridge <- function(
 ) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
-    check_character_matrix(predictors)
+    check_character_matrix(predictors, call = call)
   }
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    last_epoch_note(epoch, max_epoch)
+    last_epoch_note(epoch, max_epoch, call = call)
     epoch <- max_epoch
   }
 
