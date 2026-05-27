@@ -1,6 +1,6 @@
 Package: brulee
 Title: High-Level Modeling Functions with 'torch'
-Version: 0.6.0.9000
+Version: 0.6.0.9001
 Authors@R: c(
     person("Max", "Kuhn", , "max@posit.co", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2402-136X")),
@@ -43,4 +43,4 @@ Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0
-RoxygenNote: 7.3.3
+RoxygenNote: 8.0.0

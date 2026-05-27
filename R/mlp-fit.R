@@ -1040,16 +1040,21 @@ summary.brulee_mlp <- function(object, ...) {
   total <- 0L
   cat(cli::style_bold("Multilayer perceptron architecture"), "\n", sep = "")
   cat(
-    "inputs: ", num_pred,
-    " | output dim: ", y_dim,
-    " | components: ", length(child_names),
+    "inputs: ",
+    num_pred,
+    " | output dim: ",
+    y_dim,
+    " | components: ",
+    length(child_names),
     "\n\n",
     sep = ""
   )
 
   for (nm in child_names) {
     mod <- seq_module[[nm]]
-    if (arch_is_noop(mod)) next
+    if (arch_is_noop(mod)) {
+      next
+    }
     n_par <- arch_param_count(mod)
     total <- total + n_par
     cat(arch_fmt_row(arch_fmt_module(mod), n_par, indent = "  "))
