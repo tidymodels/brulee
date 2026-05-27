@@ -461,7 +461,7 @@ brulee_resnet_bridge <- function(
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use `torch::install_torch()`."
+      "The torch backend has not been installed; use {.run torch::install_torch()}."
     )
   }
 
@@ -591,28 +591,28 @@ new_brulee_resnet <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("'model_obj' should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.")
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("'parameters' should be a list")
+    cli::cli_abort("{.arg estimates} should be a list.")
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    cli::cli_abort("'best_epoch' should be an integer")
+    cli::cli_abort("{.arg best_epoch} should be an integer.")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("'loss' should be a numeric vector")
+    cli::cli_abort("{.arg loss} should be a numeric vector.")
   }
   if (!is.list(dims)) {
-    cli::cli_abort("'dims' should be a list")
+    cli::cli_abort("{.arg dims} should be a list.")
   }
   if (!is.list(y_stats)) {
-    cli::cli_abort("'y_stats' should be a list")
+    cli::cli_abort("{.arg y_stats} should be a list.")
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("'parameters' should be a list")
+    cli::cli_abort("{.arg parameters} should be a list.")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("'blueprint' should be a hardhat blueprint")
+    cli::cli_abort("{.arg blueprint} should be a hardhat blueprint.")
   }
 
   # Save the estimates that have values

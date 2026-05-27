@@ -477,7 +477,7 @@ brulee_auto_int_bridge <- function(
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use `torch::install_torch()`."
+      "The torch backend has not been installed; use {.run torch::install_torch()}."
     )
   }
 
@@ -710,19 +710,19 @@ validate_auto_int_args <- function(
 
   check_double(dropout_attn, single = TRUE, 0, fn = fn)
   if (dropout_attn >= 1) {
-    cli::cli_abort("`dropout_attn` must be less than 1.", call = NULL)
+    cli::cli_abort("{.arg dropout_attn} must be less than 1.", call = NULL)
   }
 
   check_double(dropout_embedding, single = TRUE, 0, fn = fn)
   if (dropout_embedding >= 1) {
-    cli::cli_abort("`dropout_embedding` must be less than 1.", call = NULL)
+    cli::cli_abort("{.arg dropout_embedding} must be less than 1.", call = NULL)
   }
 
   check_character(activation, single = TRUE, fn = fn)
   act_choices <- brulee_activations()
   if (!(activation %in% act_choices)) {
     cli::cli_abort(
-      "`activation` should be one of: {.val {act_choices}}.",
+      "`{.arg activation} should be one of: {.val {act_choices}}.",
       call = NULL
     )
   }
@@ -797,37 +797,37 @@ new_brulee_auto_int <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("'model_obj' should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.")
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("'estimates' should be a list")
+    cli::cli_abort("{.arg estimates} should be a list")
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    cli::cli_abort("'best_epoch' should be an integer")
+    cli::cli_abort("{.arg best_epoch} should be an integer")
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("'loss' should be a numeric vector")
+    cli::cli_abort("{.arg loss} should be a numeric vector")
   }
   if (!is.list(dims)) {
-    cli::cli_abort("'dims' should be a list")
+    cli::cli_abort("{.arg dims} should be a list")
   }
   if (!is.list(y_stats)) {
-    cli::cli_abort("'y_stats' should be a list")
+    cli::cli_abort("{.arg y_stats} should be a list")
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("'parameters' should be a list")
+    cli::cli_abort("{.arg parameters} should be a list")
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("'blueprint' should be a hardhat blueprint")
+    cli::cli_abort("{.arg blueprint} should be a hardhat blueprint")
   }
 
   if (!inherits(top_interactions, "tbl_df")) {
-    cli::cli_abort("'top_interactions' should be a tibble")
+    cli::cli_abort("{.arg top_interactions} should be a tibble")
   }
   int_nms <- c("attention_weight", "feature_1", "feature_2")
   if (!identical(sort(names(top_interactions)), int_nms)) {
     cli::cli_abort(
-      "'top_interactions' should be a tibble with names {.val {int_nms}}"
+      "{.arg top_interactions} should be a tibble with names {.val {int_nms}}"
     )
   }
 

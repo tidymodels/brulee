@@ -9,7 +9,7 @@
 validate_numeric_outcome <- function(outcome, fn = NULL) {
   if (!is.numeric(outcome)) {
     cli::cli_abort(
-      paste0(format_msg(fn, "outcome"), " should be numeric.")
+      paste0(format_msg(fn, "outcome"), " to be numeric.")
     )
   }
   outcome
@@ -26,16 +26,16 @@ validate_numeric_outcome <- function(outcome, fn = NULL) {
 validate_binary_outcome <- function(outcome, fn = NULL) {
   if (!is.factor(outcome)) {
     cli::cli_abort(
-      paste0(format_msg(fn, "outcome"), " should be a factor.")
+      paste0(format_msg(fn, "outcome"), " to be a factor.")
     )
   }
 
   if (length(levels(outcome)) > 2) {
-    cli::cli_abort("logistic regression is for outcomes with two classes.")
+    cli::cli_abort("Logistic regression is for outcomes with two classes.")
   }
 
   if (length(levels(outcome)) < 2) {
-    cli::cli_abort("logistic regression requires outcomes with two classes.")
+    cli::cli_abort("Logistic regression requires outcomes with two classes.")
   }
 
   outcome
@@ -52,12 +52,12 @@ validate_binary_outcome <- function(outcome, fn = NULL) {
 validate_multiclass_outcome <- function(outcome, fn = NULL) {
   if (!is.factor(outcome)) {
     cli::cli_abort(
-      paste0(format_msg(fn, "outcome"), " should be a factor.")
+      paste0(format_msg(fn, "outcome"), " to be a factor.")
     )
   }
 
   if (length(levels(outcome)) < 3) {
-    cli::cli_abort("multinomial regression is for outcomes with 3+ classes.")
+    cli::cli_abort("Multinomial regression is for outcomes with 3+ classes.")
   }
 
   outcome
@@ -74,7 +74,7 @@ validate_multiclass_outcome <- function(outcome, fn = NULL) {
 validate_mlp_outcome <- function(outcome, fn = NULL) {
   if (!is.numeric(outcome) && !is.factor(outcome)) {
     cli::cli_abort(
-      paste0(format_msg(fn, "outcome"), " should be numeric or a factor.")
+      paste0(format_msg(fn, "outcome"), " to be numeric or a factor.")
     )
   }
   outcome

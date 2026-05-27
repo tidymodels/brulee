@@ -72,23 +72,12 @@ predict_brulee_rln_bridge <- function(
 ) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
-    if (is.character(predictors)) {
-      cli::cli_abort(
-        paste(
-          "There were some non-numeric columns in the predictors.",
-          "Please use a formula or recipe to encode all of the predictors as numeric."
-        ),
-        call = call
-      )
-    }
+    check_character_matrix(predictors)
   }
 
   max_epoch <- length(model$estimates)
   if (epoch > max_epoch) {
-    cli::cli_warn(
-      "The model fit only {max_epoch} epoch{?s}; predictions cannot be made at epoch {epoch} so the last epoch is used.",
-      call = call
-    )
+    last_epoch_note(epoch, max_epoch)
     epoch <- max_epoch
   }
 

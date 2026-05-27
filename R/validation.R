@@ -77,14 +77,7 @@ validate_common_args <- function(
 process_predictors <- function(predictors, fn = NULL) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
-    if (is.character(predictors)) {
-      cli::cli_abort(
-        paste(
-          "There were some non-numeric columns in the predictors.",
-          "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
-      )
-    }
+    check_character_matrix(predictors)
   }
 
   predictors
@@ -123,7 +116,7 @@ validate_mlp_args <- function(
   # Check lengths match
   if (length(hidden_units) != length(activation)) {
     cli::cli_abort(
-      "'activation' must be a single value or a vector with the same length as 'hidden_units'"
+      "{.arg activation} must be a single value or a vector with the same length as {.arg hidden_units}."
     )
   }
 

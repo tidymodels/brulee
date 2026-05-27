@@ -64,17 +64,7 @@ predict_brulee_auto_int_bridge <- function(type, model, predictors, epoch) {
   predict_function <- get_auto_int_predict_function(type)
 
   max_epoch <- length(model$estimates)
-  if (epoch > max_epoch) {
-    msg <- paste(
-      "The model fit only",
-      max_epoch,
-      "epochs; predictions cannot",
-      "be made at epoch",
-      epoch,
-      "so last epoch is used."
-    )
-    cli::cli_warn(msg)
-  }
+  last_epoch_note(epoch, max_epoch)
 
   predictions <- predict_function(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)

@@ -298,3 +298,13 @@ arch_fmt_row <- function(label, n_par, indent = "    ") {
 arch_is_noop <- function(m) {
   inherits(m, "nn_dropout") && isTRUE(m$p == 0)
 }
+
+last_epoch_note <- function(epoch, max_epoch) {
+  if (epoch > max_epoch) {
+    cli::cli_warn(
+      "The model fit only {max_epoch} epoch{?s}; predictions cannot be made at
+   epoch {epoch}, so last epoch is used."
+    )
+  }
+  invisible(NULL)
+}

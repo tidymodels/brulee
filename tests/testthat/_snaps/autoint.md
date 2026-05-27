@@ -38,7 +38,7 @@
       brulee_auto_int(y ~ ., data = df, num_embedding = -1)
     Condition
       Error in `check_integer()`:
-      ! brulee_auto_int() expected 'num_embedding' to be an integer on [1, Inf].
+      ! `brulee_auto_int()` expected `num_embedding` to be an integer on [1, Inf].
 
 ---
 
@@ -46,7 +46,7 @@
       brulee_auto_int(y ~ ., data = df, num_attn_feat = 0)
     Condition
       Error in `check_integer()`:
-      ! brulee_auto_int() expected 'num_attn_feat' to be an integer on [1, Inf].
+      ! `brulee_auto_int()` expected `num_attn_feat` to be an integer on [1, Inf].
 
 ---
 
@@ -70,7 +70,7 @@
       brulee_auto_int(y ~ ., data = df, activation = "not_real")
     Condition
       Error:
-      ! `activation` should be one of: "celu", "elu", "gelu", "hardshrink", "hardsigmoid", "hardtanh", "leaky_relu", "linear", "log_sigmoid", "relu", "relu6", "rrelu", "selu", "sigmoid", "silu", "softplus", "softshrink", "softsign", "tanh", and "tanhshrink".
+      ! ``activation` should be one of: "celu", "elu", "gelu", "hardshrink", "hardsigmoid", "hardtanh", "leaky_relu", "linear", "log_sigmoid", "relu", "relu6", "rrelu", "selu", "sigmoid", "silu", "softplus", "softshrink", "softsign", "tanh", and "tanhshrink".
 
 # autoint default method errors on unsupported types
 

@@ -41,7 +41,7 @@ determine_batch_size <- function(batch_size, optimizer, n_rows) {
   # LBFGS doesn't use batches - set batch size to full dataset
   if (optimizer == "LBFGS") {
     if (!is.null(batch_size)) {
-      cli::cli_warn("'batch_size' is only used for the SGD optimizer.")
+      cli::cli_warn("{.arg batch_size} is only used for the SGD optimizer.")
     }
     return(n_rows)
   }

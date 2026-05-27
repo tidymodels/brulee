@@ -4,7 +4,7 @@
       brulee:::check_class_weights("a", lvls, cls_xtab, "fabulous")
     Condition
       Error in `brulee:::check_class_weights()`:
-      ! fabulous() expected 'class_weights' to a numeric vector
+      ! `fabulous()` expected `class_weights` to be a numeric vector.
 
 ---
 
@@ -20,5 +20,5 @@
       brulee:::check_class_weights(bad_wts, lvls, cls_xtab, "fabulous")
     Condition
       Error in `brulee:::check_class_weights()`:
-      ! Names for class weights should be: 'one', 'two', 'three'
+      ! Names for `class_weights` should be: "one", "two", and "three".
 

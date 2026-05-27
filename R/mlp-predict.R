@@ -70,30 +70,13 @@ predict.brulee_mlp <- function(
 predict_brulee_mlp_bridge <- function(type, model, predictors, epoch) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
-    if (is.character(predictors)) {
-      cli::cli_abort(
-        paste(
-          "There were some non-numeric columns in the predictors.",
-          "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
-      )
-    }
+    check_character_matrix(predictors)
   }
 
   predict_function <- get_mlp_predict_function(type)
 
   max_epoch <- length(model$estimates)
-  if (epoch > max_epoch) {
-    msg <- paste(
-      "The model fit only",
-      max_epoch,
-      "epochs; predictions cannot",
-      "be made at epoch",
-      epoch,
-      "so last epoch is used."
-    )
-    cli::cli_warn(msg)
-  }
+  last_epoch_note(epoch, max_epoch)
 
   predictions <- predict_function(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)
@@ -202,9 +185,9 @@ check_type <- function(model, type) {
     } else if (is.numeric(outcome_ptype)) {
       type <- "numeric"
     } else {
-      cli::cli_abort(glue::glue(
-        "Unknown outcome type '{class(outcome_ptype)}'"
-      ))
+      cli::cli_abort(
+        "Unknown outcome type {.cls {class(outcome_ptype)}}."
+      )
     }
   }
 
@@ -212,15 +195,15 @@ check_type <- function(model, type) {
 
   if (is.factor(outcome_ptype)) {
     if (!type %in% c("prob", "class")) {
-      cli::cli_abort(glue::glue(
-        "Outcome is factor and the prediction type is '{type}'."
-      ))
+      cli::cli_abort(
+        "Outcome is factor and the prediction type is {.val {type}}."
+      )
     }
   } else if (is.numeric(outcome_ptype)) {
     if (type != "numeric") {
-      cli::cli_abort(glue::glue(
-        "Outcome is numeric and the prediction type is '{type}'."
-      ))
+      cli::cli_abort(
+        "Outcome is numeric and the prediction type is {.val {type}}."
+      )
     }
   }
 
