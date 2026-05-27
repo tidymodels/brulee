@@ -142,7 +142,11 @@ summary.brulee_rln <- function(object, ...) {
   num_pred <- length(object$dims$features)
 
   total <- 0L
-  cat(cli::style_bold("Regularization Learning Network architecture"), "\n", sep = "")
+  cat(
+    cli::style_bold("Regularization Learning Network architecture"),
+    "\n",
+    sep = ""
+  )
   cat(
     "inputs: ",
     num_pred,
