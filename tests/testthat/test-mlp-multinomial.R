@@ -26,7 +26,7 @@ test_that("basic multinomial mlp LBFGS", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(92)
       mnl_fit_lbfgs <-
@@ -39,16 +39,14 @@ test_that("basic multinomial mlp LBFGS", {
           rate_schedule = "cyclic",
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_lbfgs <-
       predict(mnl_fit_lbfgs, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   fact_str <- structure(
@@ -110,7 +108,7 @@ test_that("basic multinomial mlp SGD", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_sgd <-
@@ -126,16 +124,14 @@ test_that("basic multinomial mlp SGD", {
           momentum = 0.5,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_sgd <-
       predict(mnl_fit_sgd, mnl_te) |>
       bind_cols(predict(mnl_fit_sgd, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   # Did it learn anything?
@@ -183,7 +179,7 @@ test_that("multinomial mlp class weights", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_lbfgs_wts <-
@@ -198,16 +194,14 @@ test_that("multinomial mlp class weights", {
           stop_iter = 100,
           learn_rate = 0.01
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_lbfgs_wts <-
       predict(mnl_fit_lbfgs_wts, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_wts, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   mnl_brier_lbfgs_wts <-
@@ -218,7 +212,7 @@ test_that("multinomial mlp class weights", {
 
   ### matched unweighted model
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_lbfgs_unwt <-
@@ -232,16 +226,14 @@ test_that("multinomial mlp class weights", {
           stop_iter = 100,
           learn_rate = 0.01
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_lbfgs_unwt <-
       predict(mnl_fit_lbfgs_unwt, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_unwt, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   # did weighting predict the majority class more often?

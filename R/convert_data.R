@@ -33,10 +33,10 @@ matrix_to_dataset <- function(x, y, device = NULL) {
 
 # ------------------------------------------------------------------------------
 
-scale_stats <- function(x) {
+scale_stats <- function(x, call = rlang::caller_env()) {
   res <- list(mean = mean(x, na.rm = TRUE), sd = stats::sd(x, na.rm = TRUE))
   if (res$sd == 0) {
-    cli::cli_abort("There is no variation in `y`.")
+    cli::cli_abort("There is no variation in {.arg y}.", call = call)
   }
   res
 }

@@ -58,44 +58,40 @@ predict.brulee_resnet <- function(
   epoch = NULL,
   ...
 ) {
+  call <- rlang::current_env()
   forged <- hardhat::forge(new_data, object$blueprint)
-  type <- check_type(object, type)
+  type <- check_type(object, type, call = call)
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_resnet_bridge(type, object, forged$predictors, epoch = epoch)
+  predict_brulee_resnet_bridge(
+    type,
+    object,
+    forged$predictors,
+    epoch = epoch,
+    call = call
+  )
 }
 
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_resnet_bridge <- function(type, model, predictors, epoch) {
+predict_brulee_resnet_bridge <- function(
+  type,
+  model,
+  predictors,
+  epoch,
+  call = rlang::caller_env()
+) {
   if (!is.matrix(predictors)) {
     predictors <- as.matrix(predictors)
-    if (is.character(predictors)) {
-      cli::cli_abort(
-        paste(
-          "There were some non-numeric columns in the predictors.",
-          "Please use a formula or recipe to encode all of the predictors as numeric."
-        )
-      )
-    }
+    check_character_matrix(predictors, call = call)
   }
 
   predict_function <- get_resnet_predict_function(type)
 
   max_epoch <- length(model$estimates)
-  if (epoch > max_epoch) {
-    msg <- paste(
-      "The model fit only",
-      max_epoch,
-      "epochs; predictions cannot",
-      "be made at epoch",
-      epoch,
-      "so last epoch is used."
-    )
-    cli::cli_warn(msg)
-  }
+  last_epoch_note(epoch, max_epoch, call = call)
 
   predictions <- predict_function(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)

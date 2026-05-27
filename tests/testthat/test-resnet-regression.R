@@ -1,7 +1,6 @@
 test_that("resnet regression - matrix interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   # Simple regression test
   set.seed(1)
@@ -42,7 +41,6 @@ test_that("resnet regression - matrix interface", {
 test_that("resnet regression - data.frame interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -72,7 +70,6 @@ test_that("resnet regression - data.frame interface", {
 test_that("resnet regression - formula interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -102,7 +99,6 @@ test_that("resnet regression - formula interface", {
 test_that("resnet regression - recipe interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   library(recipes)
 
@@ -137,7 +133,6 @@ test_that("resnet regression - recipe interface", {
 test_that("resnet regression - epoch parameter", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -172,7 +167,6 @@ test_that("resnet regression - epoch parameter", {
 test_that("resnet print method works", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -200,7 +194,6 @@ test_that("resnet autoplot works", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
   skip_if_not_installed("ggplot2")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -226,7 +219,6 @@ test_that("resnet autoplot works", {
 test_that("resnet argument validation", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -275,7 +267,6 @@ test_that("resnet argument validation", {
 test_that("resnet with vector hidden_units and bottleneck_units", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100

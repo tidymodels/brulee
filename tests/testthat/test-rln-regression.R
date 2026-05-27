@@ -34,7 +34,6 @@ test_that("rln regression - matrix interface", {
 
 test_that("rln regression - data.frame interface", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 100
@@ -82,7 +81,6 @@ test_that("rln regression - formula interface", {
 test_that("rln regression - recipe interface", {
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   library(recipes)
 
@@ -161,7 +159,6 @@ test_that("rln print method works", {
 test_that("rln autoplot works", {
   skip_if_not_installed("torch")
   skip_if_not_installed("ggplot2")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -209,7 +206,6 @@ test_that("rln argument validation", {
 
 test_that("rln rejects factor outcomes", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50
@@ -248,7 +244,6 @@ test_that("predict call threading surfaces predict() not the bridge", {
 
 test_that("rln stores parameters correctly", {
   skip_if_not_installed("torch")
-  skip_on_cran()
 
   set.seed(1)
   n <- 50

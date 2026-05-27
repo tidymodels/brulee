@@ -7,6 +7,7 @@
 \alias{autoplot.brulee_multinomial_reg}
 \alias{autoplot.brulee_linear_reg}
 \alias{autoplot.brulee_resnet}
+\alias{autoplot.brulee_auto_int}
 \alias{autoplot.brulee_rln}
 \title{Plot model loss over epochs}
 \usage{
@@ -19,6 +20,8 @@
 \method{autoplot}{brulee_linear_reg}(object, ...)
 
 \method{autoplot}{brulee_resnet}(object, ...)
+
+\method{autoplot}{brulee_auto_int}(object, ...)
 
 \method{autoplot}{brulee_rln}(object, ...)
 }

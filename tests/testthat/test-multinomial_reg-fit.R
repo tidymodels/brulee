@@ -26,7 +26,7 @@ test_that("basic multinomial regression LBFGS", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_lbfgs <-
@@ -37,16 +37,14 @@ test_that("basic multinomial regression LBFGS", {
           rate_schedule = "cyclic",
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_lbfgs <-
       predict(mnl_fit_lbfgs, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   fact_str <- structure(
@@ -108,7 +106,7 @@ test_that("basic multinomial regression SGD", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_sgd <-
@@ -123,16 +121,14 @@ test_that("basic multinomial regression SGD", {
           momentum = 0.5,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_sgd <-
       predict(mnl_fit_sgd, mnl_te) |>
       bind_cols(predict(mnl_fit_sgd, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   # Did it learn anything?
@@ -180,7 +176,7 @@ test_that("multinomial regression class weights", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_lbfgs_wts <-
@@ -193,21 +189,19 @@ test_that("multinomial regression class weights", {
           class_weights = cls_wts,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_lbfgs_wts <-
       predict(mnl_fit_lbfgs_wts, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_wts, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   ### matched unweighted model
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       mnl_fit_lbfgs_unwt <-
@@ -219,16 +213,14 @@ test_that("multinomial regression class weights", {
           rate_schedule = "decay_time",
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     mnl_pred_lbfgs_unwt <-
       predict(mnl_fit_lbfgs_unwt, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_unwt, mnl_te, type = "prob")) |>
-      bind_cols(mnl_te),
-    regex = NA
+      bind_cols(mnl_te)
   )
 
   # did weighting predict the majority class more often?

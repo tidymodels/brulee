@@ -1,17 +1,19 @@
 brulee_coefs <- function(object, epoch = NULL, ...) {
+  call <- rlang::current_env()
   if (!is.null(epoch) && length(epoch) != 1) {
-    cli::cli_abort("'epoch' should be a single integer.")
+    cli::cli_abort("{.arg epoch} should be a single integer.", call = call)
   }
+
   max_epochs <- length(object$estimates)
 
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   } else {
     if (epoch > max_epochs) {
-      msg <- glue::glue(
-        "There were only {max_epochs} epochs fit. Setting 'epochs' to {max_epochs}."
+      cli::cli_warn(
+        "There were only {max_epochs} epochs fit. Setting {.arg epochs} to {max_epochs}.",
+        call = call
       )
-      cli::cli_warn(msg)
       epoch <- max_epochs
     }
   }

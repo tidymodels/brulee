@@ -22,11 +22,14 @@ check_number_decimal_vec <- function(
   ...
 ) {
   if (!is.double(x)) {
-    cli::cli_abort("{.arg {arg}} should be a double vector.")
+    cli::cli_abort("{.arg {arg}} should be a double vector.", call = call)
   }
 
   if (!allow_na && any(is.na(x))) {
-    cli::cli_abort("{.arg {arg}} should not contain missing values.")
+    cli::cli_abort(
+      "{.arg {arg}} should not contain missing values.",
+      call = call
+    )
   }
 
   invisible(x)
@@ -41,46 +44,31 @@ check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
     x <- x[compl_data, , drop = FALSE]
     y <- y[compl_data]
     if (verbose) {
-      cl_chr <- as.character()
-      msg <- paste0(
-        fn,
-        "() removed ",
-        sum(!compl_data),
-        " rows of ",
-        "data due to missing values."
+      cli::cli_warn(
+        "{.fn {fn}} removed {sum(!compl_data)} rows of data due to missing values."
       )
-      cli::cli_warn(msg)
     }
   }
   list(x = x, y = y)
 }
 
-check_data_att <- function(x, y) {
+check_data_att <- function(x, y, call = rlang::caller_env()) {
   hardhat::validate_outcomes_are_univariate(y)
 
   # check matrices/vectors, matrix type, matrix column names
   if (!is.matrix(x) || !is.numeric(x)) {
-    cli::cli_abort("'x' should be a numeric matrix.")
+    cli::cli_abort("{.arg x} should be a numeric matrix.", call = call)
   }
   nms <- colnames(x)
   if (length(nms) != ncol(x)) {
-    cli::cli_abort("Every column of 'x' should have a name.")
+    cli::cli_abort("Every column of {.arg x} should have a name.", call = call)
   }
   if (!is.vector(y) & !is.factor(y)) {
-    cli::cli_abort("'y' should be a vector.")
+    cli::cli_abort("{.arg y} should be a vector.", call = call)
   }
   invisible(NULL)
 }
 
-
-format_msg <- function(fn, arg) {
-  if (is.null(fn)) {
-    fn <- "The function"
-  } else {
-    fn <- paste0(fn, "()")
-  }
-  paste0(fn, " expected '", arg, "'")
-}
 
 check_rng <- function(x, x_min, x_max, incl = c(TRUE, TRUE)) {
   if (incl[[1]]) {
@@ -121,34 +109,25 @@ check_integer <-
     x_min = -Inf,
     x_max = Inf,
     incl = c(TRUE, TRUE),
-    fn = NULL
+    call = rlang::caller_env()
   ) {
     cl <- match.call()
     arg <- as.character(cl$x)
 
     if (!is.integer(x)) {
-      msg <- paste(format_msg(fn, arg), "to be integer.")
-      cli::cli_abort(msg)
+      cli::cli_abort("{.arg {arg}} must be integer.", call = call)
     }
 
     if (single && length(x) > 1) {
-      msg <- paste(format_msg(fn, arg), "to be a single integer.")
-      cli::cli_abort(msg)
+      cli::cli_abort("{.arg {arg}} must be a single integer.", call = call)
     }
 
     out_of_range <- check_rng(x, x_min, x_max, incl)
     if (any(out_of_range)) {
-      msg <- paste0(
-        format_msg(fn, arg),
-        " to be an integer on ",
-        ifelse(incl[[1]], "[", "("),
-        x_min,
-        ", ",
-        x_max,
-        ifelse(incl[[2]], "]", ")"),
-        "."
+      cli::cli_abort(
+        "{.arg {arg}} must be an integer on {ifelse(incl[[1]], '[', '(')}{x_min}, {x_max}{ifelse(incl[[2]], ']', ')')}.",
+        call = call
       )
-      cli::cli_abort(msg)
     }
 
     invisible(TRUE)
@@ -160,81 +139,75 @@ check_double <- function(
   x_min = -Inf,
   x_max = Inf,
   incl = c(TRUE, TRUE),
-  fn = NULL
+  call = rlang::caller_env()
 ) {
   cl <- match.call()
   arg <- as.character(cl$x)
 
   if (!is.double(x)) {
-    msg <- paste(format_msg(fn, arg), "to be a double.")
-    cli::cli_abort(msg)
+    cli::cli_abort("{.arg {arg}} must be a double.", call = call)
   }
 
   if (single && length(x) > 1) {
-    msg <- paste(format_msg(fn, arg), "to be a single double.")
-    cli::cli_abort(msg)
+    cli::cli_abort("{.arg {arg}} must be a single double.", call = call)
   }
 
   out_of_range <- check_rng(x, x_min, x_max, incl)
   if (any(out_of_range)) {
-    msg <- paste0(
-      format_msg(fn, arg),
-      " to be a double on ",
-      ifelse(incl[[1]], "[", "("),
-      x_min,
-      ", ",
-      x_max,
-      ifelse(incl[[2]], "]", ")"),
-      "."
+    cli::cli_abort(
+      "{.arg {arg}} must be a double on {ifelse(incl[[1]], '[', '(')}{x_min}, {x_max}{ifelse(incl[[2]], ']', ')')}.",
+      call = call
     )
-    cli::cli_abort(msg)
   }
 
   invisible(TRUE)
 }
 
-check_character <- function(x, single = TRUE, vals = NULL, fn = NULL) {
+check_character <- function(
+  x,
+  single = TRUE,
+  vals = NULL,
+  call = rlang::caller_env()
+) {
   cl <- match.call()
   arg <- as.character(cl$x)
 
   if (!is.character(x)) {
-    msg <- paste(format_msg(fn, arg), "to be character.")
-    cli::cli_abort(msg)
+    cli::cli_abort("{.arg {arg}} must be character.", call = call)
   }
 
   if (single && length(x) > 1) {
-    msg <- paste(format_msg(fn, arg), "to be a single character string.")
-    cli::cli_abort(msg)
+    cli::cli_abort(
+      "{.arg {arg}} must be a single character string.",
+      call = call
+    )
   }
 
   if (!is.null(vals)) {
     if (any(!(x %in% vals))) {
-      msg <- paste0(format_msg(fn, arg), "  contains an incorrect value.")
-      cli::cli_abort(msg)
+      cli::cli_abort("{.arg {arg}} contains an incorrect value.", call = call)
     }
   }
 
   invisible(TRUE)
 }
 
-check_logical <- function(x, single = TRUE, fn = NULL) {
+check_logical <- function(x, single = TRUE, call = rlang::caller_env()) {
   cl <- match.call()
   arg <- as.character(cl$x)
 
   if (!is.logical(x)) {
-    msg <- paste(format_msg(fn, arg), "to be logical.")
-    cli::cli_abort(msg)
+    cli::cli_abort("{.arg {arg}} must be logical.", call = call)
   }
 
   if (single && length(x) > 1) {
-    msg <- paste(format_msg(fn, arg), "to be a single logical.")
-    cli::cli_abort(msg)
+    cli::cli_abort("{.arg {arg}} must be a single logical.", call = call)
   }
   invisible(TRUE)
 }
 
 
-check_class_weights <- function(wts, lvls, xtab, fn) {
+check_class_weights <- function(wts, lvls, xtab, call = rlang::caller_env()) {
   if (length(lvls) == 0) {
     return(NULL)
   }
@@ -245,8 +218,10 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     return(wts)
   }
   if (!is.numeric(wts)) {
-    msg <- paste(format_msg(fn, "class_weights"), "to a numeric vector")
-    cli::cli_abort(msg)
+    cli::cli_abort(
+      "{.arg class_weights} must be a numeric vector.",
+      call = call
+    )
   }
 
   if (length(wts) == 1) {
@@ -258,14 +233,10 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
   }
 
   if (length(lvls) != length(wts)) {
-    msg <- paste0(
-      "There were ",
-      length(wts),
-      " class weights given but ",
-      length(lvls),
-      " were expected."
+    cli::cli_abort(
+      "There were {length(wts)} class weights given but {length(lvls)} were expected.",
+      call = call
     )
-    cli::cli_abort(msg)
   }
 
   nms <- names(wts)
@@ -273,14 +244,24 @@ check_class_weights <- function(wts, lvls, xtab, fn) {
     names(wts) <- lvls
   } else {
     if (!identical(sort(nms), sort(lvls))) {
-      msg <- paste(
-        "Names for class weights should be:",
-        paste0("'", lvls, "'", collapse = ", ")
+      cli::cli_abort(
+        "Names for {.arg class_weights} should be: {.val {lvls}}.",
+        call = call
       )
-      cli::cli_abort(msg)
     }
     wts <- wts[lvls]
   }
 
   wts
+}
+
+check_character_matrix <- function(x, call = rlang::caller_env()) {
+  if (is.character(x)) {
+    cli::cli_abort(
+      "There were some non-numeric columns in the predictors.
+        Please use a formula or recipe to encode all of the predictors as numeric.",
+      call = call
+    )
+  }
+  invisible(NULL)
 }
