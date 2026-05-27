@@ -2,13 +2,22 @@
 
 ## brulee (development version)
 
-New models:
+New models for tabular data:
 
-- Regularization Learning Networks (RLN) can now be fit via
-  [`brulee_rln()`](https://brulee.tidymodels.org/dev/reference/brulee_rln.md)
+- Regularization Learning Networks
+  ([`brulee_rln()`](https://brulee.tidymodels.org/dev/reference/brulee_rln.md))
+  use a conventional MLP architecture but each weight learns its own
+  adaptive regularization coefficient.
 
-- ResNet models can now be fit via
-  [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md).
+- ResNet
+  ([`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md))
+  can fit a multilayer neural networek with skip (i.e. residual)
+  connections and batch normalization.
+
+- AutoInt
+  ([`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md))
+  uses residual connections and columnwise attention mechanisms to
+  create embeddings that encourage in-context learning of features.
 
 - All modeling functions now support GPU acceleration via the `device`
   parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or

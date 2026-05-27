@@ -174,10 +174,9 @@ brulee_resnet(
   An integer vector specifying which layer indices should have residual
   (skip) connections. For example, `residual_at = c(2, 4)` creates
   residual connections after layers 2 and 4, forming two residual blocks
-  (layers 1-2 and 3-4). If `NULL` (default), a residual connection is
-  placed at the last layer, making the entire network one residual
-  block. Use `integer(0)` for no residual connections (i.e., a purely
-  feed-forward model only).
+  (layers 1-2 and 3-4). If `NULL` (default), every layer gets its own
+  skip connection. Use `integer(0)` for no residual connections (i.e., a
+  purely feed-forward model only).
 
 - activation:
 
@@ -333,9 +332,9 @@ Each layer follows this pattern:
 
 - Activation function (ReLU by default)
 
-- Linear transformation (`bottleneck_units[i]` -\> `hidden_units[i]`)
+- Dropout (if specified)
 
-- Activation function
+- Linear transformation (`bottleneck_units[i]` -\> `hidden_units[i]`)
 
 - Dropout (if specified)
 
@@ -352,7 +351,7 @@ The `residual_at` parameter defines where skip connections occur:
 
 - `residual_at = c(2, 4)` creates two blocks: layers 1-2 and layers 3-4
 
-- `residual_at = NULL` (default) creates one block spanning all layers
+- `residual_at = NULL` (default) places a skip connection at every layer
 
 - `residual_at = integer(0)` creates no residual connections (a purely
   feed-forward model)
@@ -449,6 +448,8 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
                       epochs = 50, batch_size = 32)
  fit
 
+ summary(fit)
+
  autoplot(fit)
 
  library(yardstick)
@@ -481,9 +482,30 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
    roc_auc(class, .pred_Class1)
 
  }
+#> Residual network architecture
+#> inputs: 2 | output dim: 1 | layers: 2
+#> 
+#> Residual group 1 (blocks 1-2, + skip)
+#>   Block 1:
+#>     BatchNorm1d(2)                        4 params
+#>     Linear(2 -> 15)                      45 params
+#>     ReLU                                  0 params
+#>     Linear(15 -> 20)                    320 params
+#>   Block 2:
+#>     BatchNorm1d(20)                      40 params
+#>     Linear(20 -> 8)                     168 params
+#>     ReLU                                  0 params
+#>     Linear(8 -> 10)                      90 params
+#>   + skip: Linear(2 -> 10)                30 params
+#> 
+#> Output head
+#>     BatchNorm1d(10)                      20 params
+#>     Linear(10 -> 1)                      11 params
+#> 
+#> Total parameters: 728
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.960
+#> 1 roc_auc binary         0.956
 # }
 ```

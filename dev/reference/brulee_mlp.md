@@ -558,6 +558,9 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  cls_fit <- brulee_mlp(class ~ ., data = parabolic_tr, hidden_units = 2,
                         epochs = 200L, learn_rate = 0.1, activation = "elu",
                         penalty = 0.1, batch_size = 2^8, optimizer = "SGD")
+
+ summary(cls_fit)
+
  autoplot(cls_fit)
 
  grid_points <- seq(-4, 4, length.out = 100)
@@ -571,6 +574,15 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
   geom_point(data = parabolic_te, aes(col = class))
 
  }
+#> Multilayer perceptron architecture
+#> inputs: 2 | output dim: 2 | components: 4
+#> 
+#>   Linear(2 -> 2)                        6 params
+#>   ELU                                   0 params
+#>   Linear(2 -> 2)                        6 params
+#>   Softmax                               0 params
+#> 
+#> Total parameters: 12
 
 # }
 ```

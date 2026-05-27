@@ -20,6 +20,9 @@ autoplot(object, ...)
 # S3 method for class 'brulee_resnet'
 autoplot(object, ...)
 
+# S3 method for class 'brulee_auto_int'
+autoplot(object, ...)
+
 # S3 method for class 'brulee_rln'
 autoplot(object, ...)
 ```

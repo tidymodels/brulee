@@ -9,6 +9,7 @@
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee-coefs.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee-package.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_activations.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/dev/reference/brulee_auto_int.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_linear_reg.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_logistic_reg.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_mlp.html</loc></url>
@@ -17,6 +18,7 @@
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_rln.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/index.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_auto_int.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_linear_reg.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_logistic_reg.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_mlp.html</loc></url>
@@ -25,6 +27,7 @@
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_rln.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/reexports.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/schedule_decay_time.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/dev/reference/summary.brulee.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/training_efficiency.html</loc></url>
 </urlset>
 

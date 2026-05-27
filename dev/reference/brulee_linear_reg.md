@@ -312,7 +312,7 @@ if (torch::torch_is_installed()  & rlang::is_installed(c("recipes", "yardstick",
    rmse(Sale_Price, .pred)
 
  }
-#> Warning: 'batch_size' is only used for the SGD optimizer.
+#> Warning: `batch_size` is only used for the SGD optimizer.
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
