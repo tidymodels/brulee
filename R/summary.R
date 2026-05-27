@@ -6,7 +6,7 @@
 #' For `brulee_resnet`, residual (skip) connections and their projection
 #' layers are shown at the block boundaries where they apply.
 #'
-#' @param object A `brulee_resnet` or `brulee_mlp` object.
+#' @param object A `brulee_resnet`, `brulee_mlp`, or `brulee_rln` object.
 #' @param ... Not used.
 #'
 #' @return The model object, invisibly. Called for its side effect of
@@ -123,6 +123,42 @@ summary.brulee_resnet <- function(object, ...) {
   }
   if (y_dim > 1L) {
     cat(arch_fmt_row("Softmax", 0L))
+  }
+
+  cat(
+    "\n",
+    cli::style_bold("Total parameters: "),
+    format(total, big.mark = ","),
+    "\n",
+    sep = ""
+  )
+  invisible(object)
+}
+
+#' @rdname summary.brulee
+#' @export
+summary.brulee_rln <- function(object, ...) {
+  module <- revive_model(object$model_obj)
+  num_pred <- length(object$dims$features)
+
+  total <- 0L
+  cat(cli::style_bold("Regularization Learning Network architecture"), "\n", sep = "")
+  cat(
+    "inputs: ",
+    num_pred,
+    " | hidden units: ",
+    object$parameters$hidden_units,
+    " | activation: ",
+    object$parameters$activation,
+    "\n\n",
+    sep = ""
+  )
+
+  for (nm in c("linear1", "act", "linear2")) {
+    mod <- module[[nm]]
+    n_par <- arch_param_count(mod)
+    total <- total + n_par
+    cat(arch_fmt_row(arch_fmt_module(mod), n_par, indent = "  "))
   }
 
   cat(
