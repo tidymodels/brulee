@@ -946,52 +946,49 @@ mlp_module <-
   torch::nn_module(
     "mlp_module",
     initialize = function(num_pred, hidden_units, act_type, dropout, y_dim) {
-      layers <- list()
+      hidden_layers <- list()
 
       # input layer
-      layers[[1]] <- torch::nn_linear(num_pred, hidden_units[1])
-      layers[[1]] <- init_layer(layers[[1]], "linear")
-
-      layers[[2]] <- get_activation_fn(act_type[1])
+      hidden_layers[[1]] <- torch::nn_linear(num_pred, hidden_units[1])
+      hidden_layers[[1]] <- init_layer(hidden_layers[[1]], "linear")
+      hidden_layers[[2]] <- get_activation_fn(act_type[1])
 
       # if hidden units is a vector then we add those layers
       if (length(hidden_units) > 1) {
         for (i in 2:length(hidden_units)) {
-          layers[[length(layers) + 1]] <- torch::nn_linear(
+          hidden_layers[[length(hidden_layers) + 1]] <- torch::nn_linear(
             hidden_units[i - 1],
             hidden_units[i]
           )
-          layers[[length(layers)]] <- init_layer(
-            layers[[length(layers)]],
+          hidden_layers[[length(hidden_layers)]] <- init_layer(
+            hidden_layers[[length(hidden_layers)]],
             "linear"
           )
-
-          layers[[length(layers) + 1]] <- get_activation_fn(act_type[i])
+          hidden_layers[[length(hidden_layers) + 1]] <- get_activation_fn(act_type[i])
         }
       }
 
-      # we only add dropout between the last layer and the output layer
       if (dropout > 0) {
-        layers[[length(layers) + 1]] <- torch::nn_dropout(p = dropout)
+        hidden_layers[[length(hidden_layers) + 1]] <- torch::nn_dropout(p = dropout)
       }
 
-      # output layer
-      layers[[length(layers) + 1]] <- torch::nn_linear(
+      self$hidden <- torch::nn_sequential(!!!hidden_layers)
+
+      # output layers
+      output_layers <- list()
+      output_layers[[1]] <- torch::nn_linear(
         hidden_units[length(hidden_units)],
         y_dim
       )
-      layers[[length(layers)]] <- init_layer(layers[[length(layers)]], "linear")
-
-      # conditionally add the softmax layer
+      output_layers[[1]] <- init_layer(output_layers[[1]], "linear")
       if (y_dim > 1) {
-        layers[[length(layers) + 1]] <- torch::nn_softmax(dim = 2)
+        output_layers[[length(output_layers) + 1]] <- torch::nn_softmax(dim = 2)
       }
-
-      # create a sequential module that calls the layers in the same order.
-      self$model <- torch::nn_sequential(!!!layers)
+      self$output <- torch::nn_sequential(!!!output_layers)
     },
     forward = function(x) {
-      self$model(x)
+      self$last_hidden <- self$hidden(x)
+      self$output(self$last_hidden)
     }
   )
 

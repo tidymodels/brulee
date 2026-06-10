@@ -149,6 +149,9 @@ run_training_loop <- function(
   best_epoch <- 1L
   loss_vec <- rep(NA_real_, epochs)
   param_per_epoch <- list()
+  hidden_env <- new.env(parent = emptyenv())
+  hidden_env$log <- list()
+  hidden_env$batch_num <- 0L
 
   if (verbose) {
     epoch_chr <- format(1:epochs)
@@ -207,11 +210,21 @@ run_training_loop <- function(
           loss
         }
         optimizer_obj$step(cl)
+
+        hidden_env$batch_num <- hidden_env$batch_num + 1L
+        hidden_vals <- as.matrix(model$last_hidden$detach()$cpu())
+        colnames(hidden_vals) <- recipes::names0(ncol(hidden_vals), "hidden_")
+        hidden_df <- tibble::as_tibble(hidden_vals, .name_repair = "unique")
+        hidden_df$epoch <- epoch
+        hidden_df$batch <- hidden_env$batch_num
+        hidden_env$log[[length(hidden_env$log) + 1]] <- hidden_df
+
         if (!is.null(batch_callback)) {
           batch_callback()
         }
       }
     )
+    hidden_env$batch_num <- 0L
 
     # Calculate loss on validation or training set
     if (validation > 0) {
@@ -271,6 +284,15 @@ run_training_loop <- function(
       break()
     }
   }
+
+  hidden_units_data <- dplyr::bind_rows(hidden_env$log)
+  save(
+    hidden_units_data,
+    file = file.path(
+      "~/tmp",
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_hidden_units_trace.RData")
+    )
+  )
 
   # Return results
   list(
