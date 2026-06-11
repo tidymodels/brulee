@@ -151,7 +151,7 @@ run_training_loop <- function(
   param_per_epoch <- list()
 
   if (verbose) {
-    epoch_chr <- format(1:epochs)
+    epoch_chr <- format_epoch_labels(1:epochs)
   }
 
   # Main training loop

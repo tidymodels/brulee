@@ -878,7 +878,7 @@ mlp_fit_imp <-
       loss_min <- loss_prev
 
       if (verbose) {
-        epoch_chr <- gsub(" ", "0", format(0:epochs))
+        epoch_chr <- format_epoch_labels(0:epochs)
         cli::cli_inform(
           "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
         )

@@ -623,7 +623,7 @@ rln_fit_imp <- function(
     loss_vec[1] <- loss$item()
 
     if (verbose) {
-      epoch_chr <- gsub(" ", "0", format(0:epochs))
+      epoch_chr <- format_epoch_labels(0:epochs)
       cli::cli_inform(
         "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
       )

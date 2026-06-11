@@ -1139,7 +1139,7 @@ auto_int_fit_imp <- function(
     loss_min <- loss_vec[1]
 
     if (verbose) {
-      epoch_chr <- gsub(" ", "0", format(0:epochs))
+      epoch_chr <- format_epoch_labels(0:epochs)
       cli::cli_inform(
         "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
       )
@@ -1246,7 +1246,7 @@ run_auto_int_training_loop <- function(
   param_per_epoch <- list()
 
   if (verbose) {
-    epoch_chr <- format(1:epochs)
+    epoch_chr <- format_epoch_labels(1:epochs)
   }
 
   for (epoch in 1:epochs) {
