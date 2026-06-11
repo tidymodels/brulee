@@ -362,6 +362,7 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
  tr_data <- modeldata::sim_regression(500, method = "worley_1987")
  te_data <- modeldata::sim_regression(50, method = "worley_1987")
 
+ library(recipes)
  rec <- recipe(outcome ~ ., data = te_data) |>
   step_normalize(all_numeric_predictors())
 
@@ -385,6 +386,7 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
  autoplot(fit)
  summary(fit)
 
+ library(yardstick)
  predict(fit, te_data) |>
   dplyr::bind_cols(te_data) |>
   rsq(outcome, .pred)

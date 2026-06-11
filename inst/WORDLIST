@@ -12,14 +12,13 @@ Codecov
 Contrastive
 Duan
 Duchi
-GEGLU
 GPUs
+GeGLU
 Goldblum
 Goldstein
 Gorishniy
 Hazan
 Hutter
-Intersample
 Khrulkov
 LBFGS
 Lifecycle
@@ -61,10 +60,8 @@ embeddings
 ensembling
 et
 extensibility
-feedforward
 funder
 interpretability
-intersample
 magrittr
 mlp
 multilayer

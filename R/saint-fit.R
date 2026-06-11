@@ -139,6 +139,7 @@
 #'  tr_data <- modeldata::sim_regression(500, method = "worley_1987")
 #'  te_data <- modeldata::sim_regression(50, method = "worley_1987")
 #'
+#'  library(recipes)
 #'  rec <- recipe(outcome ~ ., data = te_data) |>
 #'   step_normalize(all_numeric_predictors())
 #'
@@ -162,6 +163,7 @@
 #'  autoplot(fit)
 #'  summary(fit)
 #'
+#'  library(yardstick)
 #'  predict(fit, te_data) |>
 #'   dplyr::bind_cols(te_data) |>
 #'   rsq(outcome, .pred)
@@ -1588,6 +1590,7 @@ print.brulee_saint <- function(x, ...) {
   # Can take a long time
   # n_params <- format(get_num_saint_coef(x), big.mark = ",")
   # res_list <- c(" " = "# Parameters: {n_params}")
+  res_list <- character(0)
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
