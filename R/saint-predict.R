@@ -137,6 +137,11 @@ predict_brulee_saint_raw <- function(model, predictors, epoch) {
   module$load_state_dict(estimates)
   module$eval()
 
+  row_attn <- model$parameters$row_attention_on_predict %||% FALSE
+  if (!is.null(module$backbone$use_row_attention)) {
+    module$backbone$use_row_attention <- row_attn
+  }
+
   predictions <- module(x_cat, x_cont)
   predictions <- as.array(predictions)
   predictions[is.nan(predictions)] <- NA

@@ -28,6 +28,12 @@
 #' @param dropout A number in `[0, 1)` for the dropout rate applied between
 #'   the last hidden layer and the output head. Only has effect when
 #'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
+#' @param row_attention_on_predict A logical value. Should row (intersample)
+#'   attention be applied during prediction? Default is `FALSE`. When `FALSE`,
+#'   row attention is only used during training and predictions use column
+#'   attention only — this ensures that predictions for a given row are
+#'   independent of what other rows are in the prediction set. This is only
+#'   relevant when `attention_type` is `"row"` or `"colrow"`.
 #' @param hidden_units An integer vector for the number of units in optional
 #'   hidden layers between the transformer backbone and the output head.
 #'   When `NULL` (the default), no hidden layers are added and the flattened
@@ -168,6 +174,7 @@ brulee_saint.data.frame <- function(
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -196,6 +203,7 @@ brulee_saint.data.frame <- function(
     dropout_attn = dropout_attn,
     dropout_ff = dropout_ff,
     dropout = dropout,
+    row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
     learn_rate = learn_rate,
@@ -229,6 +237,7 @@ brulee_saint.matrix <- function(
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -257,6 +266,7 @@ brulee_saint.matrix <- function(
     dropout_attn = dropout_attn,
     dropout_ff = dropout_ff,
     dropout = dropout,
+    row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
     learn_rate = learn_rate,
@@ -290,6 +300,7 @@ brulee_saint.formula <- function(
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -322,6 +333,7 @@ brulee_saint.formula <- function(
     dropout_attn = dropout_attn,
     dropout_ff = dropout_ff,
     dropout = dropout,
+    row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
     learn_rate = learn_rate,
@@ -355,6 +367,7 @@ brulee_saint.recipe <- function(
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -383,6 +396,7 @@ brulee_saint.recipe <- function(
     dropout_attn = dropout_attn,
     dropout_ff = dropout_ff,
     dropout = dropout,
+    row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
     learn_rate = learn_rate,
@@ -414,6 +428,7 @@ brulee_saint_bridge <- function(
   dropout_attn,
   dropout_ff,
   dropout,
+  row_attention_on_predict,
   hidden_units,
   hidden_activations,
   learn_rate,
@@ -427,7 +442,6 @@ brulee_saint_bridge <- function(
   batch_size,
   stop_iter,
   verbose,
-
   device,
   ...,
   call = rlang::caller_env()
@@ -458,6 +472,7 @@ brulee_saint_bridge <- function(
   )
 
   check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), call = call)
+  check_logical(row_attention_on_predict, single = TRUE, call = call)
 
   if (!is.null(batch_size) & optimizer != "LBFGS") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
@@ -516,6 +531,7 @@ brulee_saint_bridge <- function(
     dropout_attn = saint_validated$dropout_attn,
     dropout_ff = saint_validated$dropout_ff,
     dropout = dropout,
+    row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_validated$hidden_units,
     hidden_activations = hidden_validated$hidden_activations,
     learn_rate = learn_rate,
@@ -679,6 +695,7 @@ saint_fit_imp <- function(
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -858,6 +875,7 @@ saint_fit_imp <- function(
         dropout_attn = dropout_attn,
         dropout_ff = dropout_ff,
         dropout = dropout,
+        row_attention_on_predict = row_attention_on_predict,
         hidden_units = hidden_units,
         hidden_activations = hidden_activations,
         learn_rate = learn_rate,
@@ -1206,6 +1224,7 @@ saint_rowcol_transformer_module <- torch::nn_module(
     self$style <- style
     self$nfeats <- nfeats
     self$dim <- dim
+    self$use_row_attention <- TRUE
     self$layers <- torch::nn_module_list()
 
     row_dim <- dim * nfeats
@@ -1251,25 +1270,29 @@ saint_rowcol_transformer_module <- torch::nn_module(
         x <- x + attn1(norm1(x))
         x <- x + ff1(norm2(x))
 
-        b <- x$shape[1]
-        x_row <- x$reshape(c(1L, b, n * d))
-        x_row <- x_row + attn2(norm3(x_row))
-        x_row <- x_row + ff2(norm4(x_row))
-        x <- x_row$reshape(c(b, n, d))
+        if (self$use_row_attention) {
+          b <- x$shape[1]
+          x_row <- x$reshape(c(1L, b, n * d))
+          x_row <- x_row + attn2(norm3(x_row))
+          x_row <- x_row + ff2(norm4(x_row))
+          x <- x_row$reshape(c(b, n, d))
+        }
       }
     } else {
-      for (i in seq_along(self$layers)) {
-        layer <- self$layers[[i]]
-        norm1 <- layer[[1]]
-        attn1 <- layer[[2]]
-        norm2 <- layer[[3]]
-        ff1 <- layer[[4]]
+      if (self$use_row_attention) {
+        for (i in seq_along(self$layers)) {
+          layer <- self$layers[[i]]
+          norm1 <- layer[[1]]
+          attn1 <- layer[[2]]
+          norm2 <- layer[[3]]
+          ff1 <- layer[[4]]
 
-        b <- x$shape[1]
-        x_row <- x$reshape(c(1L, b, n * d))
-        x_row <- x_row + attn1(norm1(x_row))
-        x_row <- x_row + ff1(norm2(x_row))
-        x <- x_row$reshape(c(b, n, d))
+          b <- x$shape[1]
+          x_row <- x$reshape(c(1L, b, n * d))
+          x_row <- x_row + attn1(norm1(x_row))
+          x_row <- x_row + ff1(norm2(x_row))
+          x <- x_row$reshape(c(b, n, d))
+        }
       }
     }
     x

@@ -214,6 +214,55 @@ test_that("saint with colrow attention type (default)", {
 })
 
 # ------------------------------------------------------------------------------
+# row_attention_on_predict tests
+
+test_that("saint row_attention_on_predict=FALSE (default) gives batch-independent predictions", {
+  skip_if_not_installed("torch")
+
+  set.seed(1)
+  n <- 80
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  df$y <- df$x1 + rnorm(n, sd = 0.1)
+
+  set.seed(2)
+  fit <- brulee_saint(
+    y ~ ., data = df, epochs = 5,
+    attention_type = "colrow", num_attn_blocks = 2L,
+    verbose = FALSE
+  )
+
+  pred_full <- predict(fit, df)
+  pred_single <- predict(fit, df[1, , drop = FALSE])
+  expect_equal(pred_full$.pred[1], pred_single$.pred[1], tolerance = 1e-10)
+
+  pred_subset <- predict(fit, df[c(1, 50, 70), ])
+  expect_equal(pred_full$.pred[1], pred_subset$.pred[1], tolerance = 1e-10)
+})
+
+test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions", {
+  skip_if_not_installed("torch")
+
+  set.seed(1)
+
+  n <- 80
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  df$y <- df$x1 + rnorm(n, sd = 0.1)
+
+  set.seed(2)
+  fit <- brulee_saint(
+    y ~ ., data = df, epochs = 5,
+    attention_type = "colrow", num_attn_blocks = 2L,
+    row_attention_on_predict = TRUE, verbose = FALSE
+  )
+
+  pred_full <- predict(fit, df)
+  pred_single <- predict(fit, df[1, , drop = FALSE])
+  expect_false(
+    abs(pred_full$.pred[1] - pred_single$.pred[1]) < 1e-10
+  )
+})
+
+# ------------------------------------------------------------------------------
 # Feature handling tests
 
 test_that("saint with only categorical predictors", {
