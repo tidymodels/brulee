@@ -6,6 +6,7 @@
 \alias{summary.brulee_resnet}
 \alias{summary.brulee_rln}
 \alias{summary.brulee_auto_int}
+\alias{summary.brulee_saint}
 \title{Summarize the architecture of a brulee model}
 \usage{
 \method{summary}{brulee_mlp}(object, ...)
@@ -15,10 +16,12 @@
 \method{summary}{brulee_rln}(object, ...)
 
 \method{summary}{brulee_auto_int}(object, ...)
+
+\method{summary}{brulee_saint}(object, ...)
 }
 \arguments{
-\item{object}{A \code{brulee_resnet}, \code{brulee_mlp}, \code{brulee_rln}, or
-\code{brulee_auto_int} object.}
+\item{object}{A \code{brulee_resnet}, \code{brulee_mlp}, \code{brulee_rln},
+\code{brulee_auto_int}, or \code{brulee_saint} object.}
 
 \item{...}{Not used.}
 }
