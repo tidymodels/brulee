@@ -21,14 +21,17 @@ summary(object, ...)
 
 # S3 method for class 'brulee_auto_int'
 summary(object, ...)
+
+# S3 method for class 'brulee_saint'
+summary(object, ...)
 ```
 
 ## Arguments
 
 - object:
 
-  A `brulee_resnet`, `brulee_mlp`, `brulee_rln`, or `brulee_auto_int`
-  object.
+  A `brulee_resnet`, `brulee_mlp`, `brulee_rln`, `brulee_auto_int`, or
+  `brulee_saint` object.
 
 - ...:
 

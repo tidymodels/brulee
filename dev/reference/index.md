@@ -8,6 +8,7 @@
   [`autoplot(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_auto_int>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
+  [`autoplot(`*`<brulee_saint>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_rln>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
   : Plot model loss over epochs
 
@@ -43,6 +44,9 @@
 
 - [`brulee_rln()`](https://brulee.tidymodels.org/dev/reference/brulee_rln.md)
   : Fit Regularization Learning Networks (RLN)
+
+- [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
+  : Fit SAINT models for tabular data
 
 - [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
   : Convert data to torch format
@@ -82,6 +86,11 @@
 
   Predict from a `brulee_rln`
 
+- [`predict(`*`<brulee_saint>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_saint.md)
+  :
+
+  Predict from a `brulee_saint`
+
 - [`schedule_decay_time()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_decay_expo()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_step()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
@@ -93,6 +102,7 @@
   [`summary(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/dev/reference/summary.brulee.md)
   [`summary(`*`<brulee_rln>`*`)`](https://brulee.tidymodels.org/dev/reference/summary.brulee.md)
   [`summary(`*`<brulee_auto_int>`*`)`](https://brulee.tidymodels.org/dev/reference/summary.brulee.md)
+  [`summary(`*`<brulee_saint>`*`)`](https://brulee.tidymodels.org/dev/reference/summary.brulee.md)
   : Summarize the architecture of a brulee model
 
 - [`training_efficiency`](https://brulee.tidymodels.org/dev/reference/training_efficiency.md)

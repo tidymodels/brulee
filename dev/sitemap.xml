@@ -16,6 +16,7 @@
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_multinomial_reg.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_resnet.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/brulee_rln.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/dev/reference/brulee_saint.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/index.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_auto_int.html</loc></url>
@@ -25,6 +26,7 @@
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_multinomial_reg.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_resnet.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_rln.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/dev/reference/predict.brulee_saint.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/reexports.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/schedule_decay_time.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/dev/reference/summary.brulee.html</loc></url>

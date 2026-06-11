@@ -37,6 +37,7 @@
 <ul><li><p>Regularization Learning Networks (<code><a href="../reference/brulee_rln.html">brulee_rln()</a></code>) use a conventional MLP architecture but each weight learns its own adaptive regularization coefficient.</p></li>
 <li><p>ResNet (<code><a href="../reference/brulee_resnet.html">brulee_resnet()</a></code>) can fit a multilayer neural networek with skip (i.e. residual) connections and batch normalization.</p></li>
 <li><p>AutoInt (<code><a href="../reference/brulee_auto_int.html">brulee_auto_int()</a></code>) uses residual connections and columnwise attention mechanisms to create embeddings that encourage in-context learning of features.</p></li>
+<li><p>Saint (<code><a href="../reference/brulee_saint.html">brulee_saint()</a></code>) uses column and/or row attention mechanisms.</p></li>
 <li><p>All modeling functions now support GPU acceleration via the <code>device</code> parameter. Users can specify <code>device = "cpu"</code>, <code>device = "cuda"</code>, or <code>device = "mps"</code> (Apple Silicon). When <code>device = NULL</code> (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn’t support float64 dtype required by brulee. See<code><a href="../reference/training_efficiency.html">?training_efficiency</a></code> for some related notes.</p></li>
 </ul></div>
     <div class="section level2">

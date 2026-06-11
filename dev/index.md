@@ -15,6 +15,9 @@ use the `torch` package infrastructure, such as:
   (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
 - [regularization learning networks
   (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
+- [AutoInt](https://brulee.tidymodels.org/reference/brulee_auto_int.html)
+- [Self-Attention and Inter-sample Attention Transformer
+  (Saint)](https://brulee.tidymodels.org/reference/brulee_saint.html)
 
 ## Installation
 

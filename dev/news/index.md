@@ -19,6 +19,10 @@ New models for tabular data:
   uses residual connections and columnwise attention mechanisms to
   create embeddings that encourage in-context learning of features.
 
+- Saint
+  ([`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md))
+  uses column and/or row attention mechanisms.
+
 - All modeling functions now support GPU acceleration via the `device`
   parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or
   `device = "mps"` (Apple Silicon). When `device = NULL` (default), the
