@@ -18,12 +18,12 @@ brulee_saint(x, ...)
   y,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -47,12 +47,12 @@ brulee_saint(x, ...)
   y,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -76,12 +76,12 @@ brulee_saint(x, ...)
   data,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -105,12 +105,12 @@ brulee_saint(x, ...)
   data,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -154,18 +154,18 @@ specified as:
 
 \item{epochs}{An integer for the number of epochs of training.}
 
-\item{num_embedding}{An integer for the embedding dimension. Each feature
-(categorical or continuous) is mapped to a vector of this dimension.
-Must be >= 1.}
+\item{num_embedding}{An integer for the dimension of the initial embedding
+layer that encodes the original predictors.  Each feature (categorical or
+continuous) is mapped to a vector of this dimension. Must be >= 1.}
 
 \item{attention_type}{A character string for the type of attention to use.
 Options are:
 \itemize{
-\item \code{"col"}: Column attention only (attends across features). This is the
+\item \code{"column"}: Column attention only (attends across features). This is the
 SAINT-s variant.
-\item \code{"row"}: Row/intersample attention only (attends across samples within
+\item \code{"row"}: Row/inter-sample attention only (attends across samples within
 a batch). This is the SAINT-i variant.
-\item \code{"colrow"}: Alternates between column and row attention in each
+\item \code{"both"}: Alternates between column and row attention in each
 transformer block. This is the full SAINT model.
 }}
 
@@ -178,19 +178,19 @@ column attention. Must be >= 1.}
 \item{dropout_attn}{A number in \verb{[0, 1)} for the dropout rate applied to
 attention weights during training.}
 
-\item{dropout_ff}{A number in \verb{[0, 1)} for the dropout rate applied within
-the feedforward layers.}
+\item{dropout_hidden}{A number in \verb{[0, 1)} for the dropout rate applied
+within the feed-forward layers of each transformer block.}
 
-\item{dropout}{A number in \verb{[0, 1)} for the dropout rate applied between
-the last hidden layer and the output head. Only has effect when
+\item{dropout_last}{A number in \verb{[0, 1)} for the dropout rate applied
+between the last hidden layer and the output head. Only has effect when
 \code{hidden_units} is not \code{NULL}. Default is 0 (no dropout).}
 
-\item{row_attention_on_predict}{A logical value. Should row (intersample)
+\item{row_attention_on_predict}{A logical value. Should row (inter-sample)
 attention be applied during prediction? Default is \code{FALSE}. When \code{FALSE},
 row attention is only used during training and predictions use column
 attention only — this ensures that predictions for a given row are
 independent of what other rows are in the prediction set. This is only
-relevant when \code{attention_type} is \code{"row"} or \code{"colrow"}.}
+relevant when \code{attention_type} is \code{"row"} or \code{"both"}.}
 
 \item{hidden_units}{An integer vector for the number of units in optional
 hidden layers between the transformer backbone and the output head.
@@ -277,10 +277,10 @@ likelihood for classification) at each epoch.
 }
 }
 \description{
-\code{brulee_saint()} fits the SAINT (Self-Attention and Intersample Attention
+\code{brulee_saint()} fits the SAINT (Self-Attention and Inter-sample Attention
 Transformer) model from Somepalli \emph{et al} (2021). SAINT applies multi-head
 self-attention across both features (column attention) and samples within a
-batch (row/intersample attention) to learn complex feature interactions.
+batch (row/inter-sample attention) to learn complex feature interactions.
 }
 \details{
 \subsection{Architecture}{
@@ -291,8 +291,8 @@ The SAINT architecture has three stages:
 embedding tables. Continuous features are passed through per-feature MLPs
 (1 -> 100 -> \code{num_embedding}).
 \item \strong{Transformer backbone}: A stack of \code{num_attn_blocks} transformer layers.
-Each layer contains multi-head self-attention followed by a feedforward
-network with GEGLU activation. For \code{attention_type = "colrow"}, each block
+Each layer contains multi-head self-attention followed by a feed-forward
+network with GeGLU activation. For \code{attention_type = "both"}, each block
 alternates between column attention (across features) and row attention
 (across samples within the batch).
 \item \strong{Output head}: Flattens the transformer output and projects through
@@ -302,13 +302,13 @@ optional hidden layers to the output dimension.
 
 \subsection{Attention Types}{
 \itemize{
-\item \strong{Column attention} (\code{"col"}): Standard self-attention over features.
+\item \strong{Column attention} (\code{"column"}): Standard self-attention over features.
 Each feature embedding attends to all other feature embeddings.
-\item \strong{Row attention} (\code{"row"}): Intersample attention. Reshapes the batch so
+\item \strong{Row attention} (\code{"row"}): inter-sample attention. Reshapes the batch so
 that each sample's full feature representation becomes a single token,
 then applies attention across all samples in the batch.
-\item \strong{Column-row attention} (\code{"colrow"}): Alternates between column and row
-attention in each transformer block. This is the full SAINT model.
+\item \strong{Both} (\code{"both"}): Alternates between column and row attention in each
+transformer block. This is the full SAINT model.
 }
 }
 

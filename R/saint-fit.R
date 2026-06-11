@@ -1,9 +1,9 @@
 #' Fit SAINT models for tabular data
 #'
-#' `brulee_saint()` fits the SAINT (Self-Attention and Intersample Attention
+#' `brulee_saint()` fits the SAINT (Self-Attention and Inter-sample Attention
 #' Transformer) model from Somepalli _et al_ (2021). SAINT applies multi-head
 #' self-attention across both features (column attention) and samples within a
-#' batch (row/intersample attention) to learn complex feature interactions.
+#' batch (row/inter-sample attention) to learn complex feature interactions.
 #'
 #' @inheritParams brulee_mlp
 #' @param num_embedding An integer for the dimension of the initial embedding
@@ -13,7 +13,7 @@
 #'   Options are:
 #'   - `"column"`: Column attention only (attends across features). This is the
 #'     SAINT-s variant.
-#'   - `"row"`: Row/intersample attention only (attends across samples within
+#'   - `"row"`: Row/inter-sample attention only (attends across samples within
 #'     a batch). This is the SAINT-i variant.
 #'   - `"both"`: Alternates between column and row attention in each
 #'     transformer block. This is the full SAINT model.
@@ -28,7 +28,7 @@
 #' @param dropout_last A number in `[0, 1)` for the dropout rate applied
 #'   between the last hidden layer and the output head. Only has effect when
 #'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
-#' @param row_attention_on_predict A logical value. Should row (intersample)
+#' @param row_attention_on_predict A logical value. Should row (inter-sample)
 #'   attention be applied during prediction? Default is `FALSE`. When `FALSE`,
 #'   row attention is only used during training and predictions use column
 #'   attention only — this ensures that predictions for a given row are
@@ -52,8 +52,8 @@
 #'    embedding tables. Continuous features are passed through per-feature MLPs
 #'    (1 -> 100 -> `num_embedding`).
 #' 2. **Transformer backbone**: A stack of `num_attn_blocks` transformer layers.
-#'    Each layer contains multi-head self-attention followed by a feedforward
-#'    network with GEGLU activation. For `attention_type = "both"`, each block
+#'    Each layer contains multi-head self-attention followed by a feed-forward
+#'    network with GeGLU activation. For `attention_type = "both"`, each block
 #'    alternates between column attention (across features) and row attention
 #'    (across samples within the batch).
 #' 3. **Output head**: Flattens the transformer output and projects through
@@ -63,7 +63,7 @@
 #'
 #' - **Column attention** (`"column"`): Standard self-attention over features.
 #'   Each feature embedding attends to all other feature embeddings.
-#' - **Row attention** (`"row"`): Intersample attention. Reshapes the batch so
+#' - **Row attention** (`"row"`): inter-sample attention. Reshapes the batch so
 #'   that each sample's full feature representation becomes a single token,
 #'   then applies attention across all samples in the batch.
 #' - **Both** (`"both"`): Alternates between column and row attention in each
