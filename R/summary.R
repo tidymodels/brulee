@@ -338,7 +338,6 @@ summary.brulee_auto_int <- function(object, ...) {
 #' @rdname summary.brulee
 #' @export
 summary.brulee_saint <- function(object, ...) {
-
   module <- revive_model(object$model_obj)
   num_features <- object$dims$p_cat + object$dims$p_cont
   y_dim <- as.integer(module$y_dim)
@@ -402,7 +401,10 @@ summary.brulee_saint <- function(object, ...) {
     n_par_total <- n_par_each * emb$n_cont
     total <- total + n_par_total
     label <- paste0(
-      emb$n_cont, " x MLP(1 -> 100 -> ", num_embedding, ")"
+      emb$n_cont,
+      " x MLP(1 -> 100 -> ",
+      num_embedding,
+      ")"
     )
     cat(fmt_row(label, n_par_total))
   }
@@ -446,7 +448,9 @@ summary.brulee_saint <- function(object, ...) {
     child_names <- names(module$hidden$children)
     for (nm in child_names) {
       mod <- module$hidden[[nm]]
-      if (arch_is_noop(mod)) next
+      if (arch_is_noop(mod)) {
+        next
+      }
       n_par <- arch_param_count(mod)
       total <- total + n_par
       cat(fmt_row(arch_fmt_module(mod), n_par))
@@ -498,15 +502,27 @@ saint_print_colrow_blocks <- function(backbone, num_blocks, fmt_row) {
     cat("    Column attention:\n")
     for (j in 1:4) {
       mod <- layer[[children[j]]]
-      if (arch_is_noop(mod)) next
-      cat(fmt_row(saint_module_label(mod), arch_param_count(mod), indent = "      "))
+      if (arch_is_noop(mod)) {
+        next
+      }
+      cat(fmt_row(
+        saint_module_label(mod),
+        arch_param_count(mod),
+        indent = "      "
+      ))
     }
 
     cat("    Row attention:\n")
     for (j in 5:8) {
       mod <- layer[[children[j]]]
-      if (arch_is_noop(mod)) next
-      cat(fmt_row(saint_module_label(mod), arch_param_count(mod), indent = "      "))
+      if (arch_is_noop(mod)) {
+        next
+      }
+      cat(fmt_row(
+        saint_module_label(mod),
+        arch_param_count(mod),
+        indent = "      "
+      ))
     }
   }
 }
@@ -518,8 +534,14 @@ saint_print_col_blocks <- function(backbone, num_blocks, fmt_row) {
     cat("  Block ", i, ":\n", sep = "")
     for (nm in children) {
       mod <- layer[[nm]]
-      if (arch_is_noop(mod)) next
-      cat(fmt_row(saint_module_label(mod), arch_param_count(mod), indent = "    "))
+      if (arch_is_noop(mod)) {
+        next
+      }
+      cat(fmt_row(
+        saint_module_label(mod),
+        arch_param_count(mod),
+        indent = "    "
+      ))
     }
   }
 }
@@ -531,8 +553,14 @@ saint_print_row_blocks <- function(backbone, num_blocks, fmt_row) {
     cat("  Block ", i, ":\n", sep = "")
     for (nm in children) {
       mod <- layer[[nm]]
-      if (arch_is_noop(mod)) next
-      cat(fmt_row(saint_module_label(mod), arch_param_count(mod), indent = "    "))
+      if (arch_is_noop(mod)) {
+        next
+      }
+      cat(fmt_row(
+        saint_module_label(mod),
+        arch_param_count(mod),
+        indent = "    "
+      ))
     }
   }
 }

@@ -2,7 +2,6 @@
 # Zero-padded epoch labels for verbose output
 
 format_epoch_labels <- function(x) {
-
   gsub(" ", "0", format(x))
 }
 

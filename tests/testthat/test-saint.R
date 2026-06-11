@@ -155,7 +155,9 @@ test_that("saint with col attention type", {
 
   set.seed(1)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 3,
+    y ~ .,
+    data = df,
+    epochs = 3,
     attention_type = "column",
     verbose = FALSE
   )
@@ -177,7 +179,9 @@ test_that("saint with row attention type", {
 
   set.seed(1)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 3,
+    y ~ .,
+    data = df,
+    epochs = 3,
     attention_type = "row",
     num_attn_blocks = 1L,
     verbose = FALSE
@@ -200,7 +204,9 @@ test_that("saint with colrow attention type (default)", {
 
   set.seed(1)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 3,
+    y ~ .,
+    data = df,
+    epochs = 3,
     attention_type = "both",
     num_attn_blocks = 2L,
     verbose = FALSE
@@ -226,8 +232,11 @@ test_that("saint row_attention_on_predict=FALSE (default) gives batch-independen
 
   set.seed(2)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 5,
-    attention_type = "both", num_attn_blocks = 2L,
+    y ~ .,
+    data = df,
+    epochs = 5,
+    attention_type = "both",
+    num_attn_blocks = 2L,
     verbose = FALSE
   )
 
@@ -250,9 +259,13 @@ test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions
 
   set.seed(2)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 5,
-    attention_type = "both", num_attn_blocks = 2L,
-    row_attention_on_predict = TRUE, verbose = FALSE
+    y ~ .,
+    data = df,
+    epochs = 5,
+    attention_type = "both",
+    num_attn_blocks = 2L,
+    row_attention_on_predict = TRUE,
+    verbose = FALSE
   )
 
   pred_full <- predict(fit, df)
@@ -339,7 +352,9 @@ test_that("saint with hidden layers", {
 
   set.seed(1)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 5,
+    y ~ .,
+    data = df,
+    epochs = 5,
     hidden_units = c(64L, 32L),
     hidden_activations = c("relu", "relu"),
     verbose = FALSE
@@ -412,8 +427,11 @@ test_that("saint with validation = 0", {
 
   set.seed(1)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 3,
-    validation = 0, verbose = FALSE
+    y ~ .,
+    data = df,
+    epochs = 3,
+    validation = 0,
+    verbose = FALSE
   )
   expect_s3_class(fit, "brulee_saint")
   expect_equal(fit$parameters$validation, 0)
@@ -429,8 +447,11 @@ test_that("saint with early stopping", {
 
   set.seed(1)
   fit <- brulee_saint(
-    y ~ ., data = df, epochs = 100,
-    stop_iter = 3, verbose = FALSE
+    y ~ .,
+    data = df,
+    epochs = 100,
+    stop_iter = 3,
+    verbose = FALSE
   )
   expect_true(fit$best_epoch < 100)
 })
