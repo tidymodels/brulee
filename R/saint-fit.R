@@ -17,17 +17,12 @@
 #'     a batch). This is the SAINT-i variant.
 #'   - `"both"`: Alternates between column and row attention in each
 #'     transformer block. This is the full SAINT model.
-#' @param num_attn_heads An integer for the number of attention heads for
-#'   column attention. Must be >= 1.
-#' @param num_attn_blocks An integer for the number of transformer blocks
-#'   (depth). Must be >= 1.
+#' @param num_attn_heads An integer for the number of parallel attention heads
+#'   used in both column and row attention. Must be >= 1.
+#' @param num_attn_blocks An integer for the number of sequential transformer
+#'   blocks (depth). Must be >= 1.
 #' @param dropout_attn A number in `[0, 1)` for the dropout rate applied to
 #'   attention weights during training.
-#' @param dropout_hidden A number in `[0, 1)` for the dropout rate applied
-#'   within the feed-forward layers of each transformer block.
-#' @param dropout_last A number in `[0, 1)` for the dropout rate applied
-#'   between the last hidden layer and the output head. Only has effect when
-#'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
 #' @param row_attention_on_predict A logical value. Should row (inter-sample)
 #'   attention be applied during prediction? Default is `FALSE`. When `FALSE`,
 #'   row attention is only used during training and predictions use column
@@ -41,7 +36,11 @@
 #' @param hidden_activations A character vector of activation functions for the
 #'   hidden layers. Must be the same length as `hidden_units` or a single value
 #'   that will be recycled. See [brulee_activations()] for options.
-#'
+#' @param dropout_hidden A number in `[0, 1)` for the dropout rate applied
+#'   within the feed-forward layers of each transformer block.
+#' @param dropout_last A number in `[0, 1)` for the dropout rate applied
+#'   between the last hidden layer and the output head. Only has effect when
+#'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
 #' @details
 #'
 #' ## Architecture
@@ -50,7 +49,8 @@
 #'
 #' 1. **Embedding layer**: Categorical features are mapped through per-feature
 #'    embedding tables. Continuous features are passed through per-feature MLPs
-#'    (1 -> 100 -> `num_embedding`).
+#'    (1 -> 100 -> `num_embedding`). These initial embeddings are per-feature;
+#'    there is a distinct embedding MLP for each predictor.
 #' 2. **Transformer backbone**: A stack of `num_attn_blocks` transformer layers.
 #'    Each layer contains multi-head self-attention followed by a feed-forward
 #'    network with GeGLU activation. For `attention_type = "both"`, each block
@@ -58,6 +58,9 @@
 #'    (across samples within the batch).
 #' 3. **Output head**: Flattens the transformer output and projects through
 #'    optional hidden layers to the output dimension.
+#'
+#' There is a `summary()` methods that can provide details of the architecture
+#' for a specific model fit.
 #'
 #' ## Attention Types
 #'
@@ -68,6 +71,15 @@
 #'   then applies attention across all samples in the batch.
 #' - **Both** (`"both"`): Alternates between column and row attention in each
 #'   transformer block. This is the full SAINT model.
+#'
+#' ## Row Attention at Prediction Time
+#'
+#' Row attention computations adjust the internal embeddings based on the rows
+#' that are available at any given time. During training, the other rows in the
+#' batch are used to compute attention. After training, when `predict()` is
+#' called, the default behavior is to bypass row attention. This is because the
+#' predictions would depend on the other data available at the time. If this is
+#' what you want, set `row_attention_on_predict` to `TRUE`.
 #'
 #' ## Learning Rates
 #'
@@ -123,22 +135,36 @@
 #' pkgs <- c("recipes", "yardstick", "modeldata")
 #' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #'
-#'   set.seed(87261)
-#'   tr_data <- modeldata::sim_regression(500)
-#'   te_data <- modeldata::sim_regression(50)
+#'  set.seed(87261)
+#'  tr_data <- modeldata::sim_regression(500, method = "worley_1987")
+#'  te_data <- modeldata::sim_regression(50, method = "worley_1987")
 #'
-#'   set.seed(2)
-#'   fit <- brulee_saint(outcome ~ ., data = tr_data,
-#'                       epochs = 50L, batch_size = 64L, stop_iter = 10L,
-#'                       learn_rate = 0.001)
-#'   fit
+#'  rec <- recipe(outcome ~ ., data = te_data) |>
+#'   step_normalize(all_numeric_predictors())
 #'
-#'   autoplot(fit)
+#'  set.seed(389)
+#'  fit <- brulee_saint(
+#'   rec,
+#'   data = te_data,
+#'   hidden_unit = 5,
+#'   dropout_hidden = 0.2,
+#'   num_embedding = 3,
+#'   num_attn_heads = 5,
+#'   num_attn_blocks = 4,
+#'   dropout_attn = 0.2,
+#'   epochs = 50L,
+#'   batch_size = 32L,
+#'   learn_rate = 0.01,
+#'   optimize = "SGD",
+#'   verbose = TRUE
+#'  )
 #'
-#'   library(yardstick)
-#'   predict(fit, te_data) |>
-#'    dplyr::bind_cols(te_data) |>
-#'    rmse(outcome, .pred)
+#'  autoplot(fit)
+#'  summary(fit)
+#'
+#'  predict(fit, te_data) |>
+#'   dplyr::bind_cols(te_data) |>
+#'   rsq(outcome, .pred)
 #'
 #' }
 #' }
@@ -169,14 +195,13 @@ brulee_saint.data.frame <- function(
   num_embedding = 32L,
   attention_type = "both",
   num_attn_heads = 8L,
-
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -238,8 +263,8 @@ brulee_saint.matrix <- function(
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -301,8 +326,8 @@ brulee_saint.formula <- function(
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -368,8 +393,8 @@ brulee_saint.recipe <- function(
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -471,7 +496,14 @@ brulee_saint_bridge <- function(
     call = call
   )
 
-  check_double(dropout_last, single = TRUE, 0, 1, incl = c(TRUE, FALSE), call = call)
+  check_double(
+    dropout_last,
+    single = TRUE,
+    0,
+    1,
+    incl = c(TRUE, FALSE),
+    call = call
+  )
   check_logical(row_attention_on_predict, single = TRUE, call = call)
 
   if (!is.null(batch_size) & optimizer != "LBFGS") {
@@ -1553,8 +1585,9 @@ print.brulee_saint <- function(x, ...) {
 
   cli::cli_bullets(param_lst)
 
-  n_params <- format(get_num_saint_coef(x), big.mark = ",")
-  res_list <- c(" " = "# Parameters: {n_params}")
+  # Can take a long time
+  # n_params <- format(get_num_saint_coef(x), big.mark = ",")
+  # res_list <- c(" " = "# Parameters: {n_params}")
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch

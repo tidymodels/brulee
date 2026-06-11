@@ -25,8 +25,8 @@ brulee_saint(x, ...)
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -54,8 +54,8 @@ brulee_saint(x, ...)
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -83,8 +83,8 @@ brulee_saint(x, ...)
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -112,8 +112,8 @@ brulee_saint(x, ...)
   dropout_hidden = 0.1,
   dropout_last = 0,
   row_attention_on_predict = FALSE,
-  hidden_units = NULL,
-  hidden_activations = NULL,
+  hidden_units = 5,
+  hidden_activations = "relu",
   penalty = 0.001,
   mixture = 0,
   validation = 0.1,
@@ -169,11 +169,11 @@ a batch). This is the SAINT-i variant.
 transformer block. This is the full SAINT model.
 }}
 
-\item{num_attn_heads}{An integer for the number of attention heads for
-column attention. Must be >= 1.}
+\item{num_attn_heads}{An integer for the number of parallel attention heads
+used in both column and row attention. Must be >= 1.}
 
-\item{num_attn_blocks}{An integer for the number of transformer blocks
-(depth). Must be >= 1.}
+\item{num_attn_blocks}{An integer for the number of sequential transformer
+blocks (depth). Must be >= 1.}
 
 \item{dropout_attn}{A number in \verb{[0, 1)} for the dropout rate applied to
 attention weights during training.}
@@ -289,7 +289,8 @@ The SAINT architecture has three stages:
 \enumerate{
 \item \strong{Embedding layer}: Categorical features are mapped through per-feature
 embedding tables. Continuous features are passed through per-feature MLPs
-(1 -> 100 -> \code{num_embedding}).
+(1 -> 100 -> \code{num_embedding}). These initial embeddings are per-feature;
+there is a distinct embedding MLP for each predictor.
 \item \strong{Transformer backbone}: A stack of \code{num_attn_blocks} transformer layers.
 Each layer contains multi-head self-attention followed by a feed-forward
 network with GeGLU activation. For \code{attention_type = "both"}, each block
@@ -298,6 +299,9 @@ alternates between column attention (across features) and row attention
 \item \strong{Output head}: Flattens the transformer output and projects through
 optional hidden layers to the output dimension.
 }
+
+There is a \code{summary()} methods that can provide details of the architecture
+for a specific model fit.
 }
 
 \subsection{Attention Types}{
@@ -310,6 +314,16 @@ then applies attention across all samples in the batch.
 \item \strong{Both} (\code{"both"}): Alternates between column and row attention in each
 transformer block. This is the full SAINT model.
 }
+}
+
+\subsection{Row Attention at Prediction Time}{
+
+Row attention computations adjust the internal embeddings based on the rows
+that are available at any given time. During training, the other rows in the
+batch are used to compute attention. After training, when \code{predict()} is
+called, the default behavior is to bypass row attention. This is because the
+predictions would depend on the other data available at the time. If this is
+what you want, set \code{row_attention_on_predict} to \code{TRUE}.
 }
 
 \subsection{Learning Rates}{
@@ -344,22 +358,36 @@ be efficiently tuned. The \code{\link[=predict]{predict()}} method for this mode
 pkgs <- c("recipes", "yardstick", "modeldata")
 if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 
-  set.seed(87261)
-  tr_data <- modeldata::sim_regression(500)
-  te_data <- modeldata::sim_regression(50)
+ set.seed(87261)
+ tr_data <- modeldata::sim_regression(500, method = "worley_1987")
+ te_data <- modeldata::sim_regression(50, method = "worley_1987")
 
-  set.seed(2)
-  fit <- brulee_saint(outcome ~ ., data = tr_data,
-                      epochs = 50L, batch_size = 64L, stop_iter = 10L,
-                      learn_rate = 0.001)
-  fit
+ rec <- recipe(outcome ~ ., data = te_data) |>
+  step_normalize(all_numeric_predictors())
 
-  autoplot(fit)
+ set.seed(389)
+ fit <- brulee_saint(
+  rec,
+  data = te_data,
+  hidden_unit = 5,
+  dropout_hidden = 0.2,
+  num_embedding = 3,
+  num_attn_heads = 5,
+  num_attn_blocks = 4,
+  dropout_attn = 0.2,
+  epochs = 50L,
+  batch_size = 32L,
+  learn_rate = 0.01,
+  optimize = "SGD",
+  verbose = TRUE
+ )
 
-  library(yardstick)
-  predict(fit, te_data) |>
-   dplyr::bind_cols(te_data) |>
-   rmse(outcome, .pred)
+ autoplot(fit)
+ summary(fit)
+
+ predict(fit, te_data) |>
+  dplyr::bind_cols(te_data) |>
+  rsq(outcome, .pred)
 
 }
 }
