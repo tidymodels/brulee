@@ -156,12 +156,12 @@ test_that("saint with col attention type", {
   set.seed(1)
   fit <- brulee_saint(
     y ~ ., data = df, epochs = 3,
-    attention_type = "col",
+    attention_type = "column",
     verbose = FALSE
   )
 
   expect_s3_class(fit, "brulee_saint")
-  expect_equal(fit$parameters$attention_type, "col")
+  expect_equal(fit$parameters$attention_type, "column")
 
   pred <- predict(fit, df)
   expect_equal(nrow(pred), n)
@@ -201,13 +201,13 @@ test_that("saint with colrow attention type (default)", {
   set.seed(1)
   fit <- brulee_saint(
     y ~ ., data = df, epochs = 3,
-    attention_type = "colrow",
+    attention_type = "both",
     num_attn_blocks = 2L,
     verbose = FALSE
   )
 
   expect_s3_class(fit, "brulee_saint")
-  expect_equal(fit$parameters$attention_type, "colrow")
+  expect_equal(fit$parameters$attention_type, "both")
 
   pred <- predict(fit, df)
   expect_equal(nrow(pred), n)
@@ -227,7 +227,7 @@ test_that("saint row_attention_on_predict=FALSE (default) gives batch-independen
   set.seed(2)
   fit <- brulee_saint(
     y ~ ., data = df, epochs = 5,
-    attention_type = "colrow", num_attn_blocks = 2L,
+    attention_type = "both", num_attn_blocks = 2L,
     verbose = FALSE
   )
 
@@ -251,7 +251,7 @@ test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions
   set.seed(2)
   fit <- brulee_saint(
     y ~ ., data = df, epochs = 5,
-    attention_type = "colrow", num_attn_blocks = 2L,
+    attention_type = "both", num_attn_blocks = 2L,
     row_attention_on_predict = TRUE, verbose = FALSE
   )
 

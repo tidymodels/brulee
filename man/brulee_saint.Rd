@@ -24,6 +24,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -52,6 +53,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -80,6 +82,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -108,6 +111,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_ff = 0.1,
   dropout = 0,
+  row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
   penalty = 0.001,
@@ -180,6 +184,13 @@ the feedforward layers.}
 \item{dropout}{A number in \verb{[0, 1)} for the dropout rate applied between
 the last hidden layer and the output head. Only has effect when
 \code{hidden_units} is not \code{NULL}. Default is 0 (no dropout).}
+
+\item{row_attention_on_predict}{A logical value. Should row (intersample)
+attention be applied during prediction? Default is \code{FALSE}. When \code{FALSE},
+row attention is only used during training and predictions use column
+attention only — this ensures that predictions for a given row are
+independent of what other rows are in the prediction set. This is only
+relevant when \code{attention_type} is \code{"row"} or \code{"colrow"}.}
 
 \item{hidden_units}{An integer vector for the number of units in optional
 hidden layers between the transformer backbone and the output head.

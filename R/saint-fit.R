@@ -6,16 +6,16 @@
 #' batch (row/intersample attention) to learn complex feature interactions.
 #'
 #' @inheritParams brulee_mlp
-#' @param num_embedding An integer for the embedding dimension. Each feature
-#'   (categorical or continuous) is mapped to a vector of this dimension.
-#'   Must be >= 1.
+#' @param num_embedding An integer for the dimension of the initial embedding
+#'   layer that encodes the original predictors.  Each feature (categorical or
+#'   continuous) is mapped to a vector of this dimension. Must be >= 1.
 #' @param attention_type A character string for the type of attention to use.
 #'   Options are:
-#'   - `"col"`: Column attention only (attends across features). This is the
+#'   - `"column"`: Column attention only (attends across features). This is the
 #'     SAINT-s variant.
 #'   - `"row"`: Row/intersample attention only (attends across samples within
 #'     a batch). This is the SAINT-i variant.
-#'   - `"colrow"`: Alternates between column and row attention in each
+#'   - `"both"`: Alternates between column and row attention in each
 #'     transformer block. This is the full SAINT model.
 #' @param num_attn_heads An integer for the number of attention heads for
 #'   column attention. Must be >= 1.
@@ -23,17 +23,17 @@
 #'   (depth). Must be >= 1.
 #' @param dropout_attn A number in `[0, 1)` for the dropout rate applied to
 #'   attention weights during training.
-#' @param dropout_ff A number in `[0, 1)` for the dropout rate applied within
-#'   the feedforward layers.
-#' @param dropout A number in `[0, 1)` for the dropout rate applied between
-#'   the last hidden layer and the output head. Only has effect when
+#' @param dropout_hidden A number in `[0, 1)` for the dropout rate applied
+#'   within the feed-forward layers of each transformer block.
+#' @param dropout_last A number in `[0, 1)` for the dropout rate applied
+#'   between the last hidden layer and the output head. Only has effect when
 #'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
 #' @param row_attention_on_predict A logical value. Should row (intersample)
 #'   attention be applied during prediction? Default is `FALSE`. When `FALSE`,
 #'   row attention is only used during training and predictions use column
 #'   attention only — this ensures that predictions for a given row are
 #'   independent of what other rows are in the prediction set. This is only
-#'   relevant when `attention_type` is `"row"` or `"colrow"`.
+#'   relevant when `attention_type` is `"row"` or `"both"`.
 #' @param hidden_units An integer vector for the number of units in optional
 #'   hidden layers between the transformer backbone and the output head.
 #'   When `NULL` (the default), no hidden layers are added and the flattened
@@ -53,7 +53,7 @@
 #'    (1 -> 100 -> `num_embedding`).
 #' 2. **Transformer backbone**: A stack of `num_attn_blocks` transformer layers.
 #'    Each layer contains multi-head self-attention followed by a feedforward
-#'    network with GEGLU activation. For `attention_type = "colrow"`, each block
+#'    network with GEGLU activation. For `attention_type = "both"`, each block
 #'    alternates between column attention (across features) and row attention
 #'    (across samples within the batch).
 #' 3. **Output head**: Flattens the transformer output and projects through
@@ -61,13 +61,13 @@
 #'
 #' ## Attention Types
 #'
-#' - **Column attention** (`"col"`): Standard self-attention over features.
+#' - **Column attention** (`"column"`): Standard self-attention over features.
 #'   Each feature embedding attends to all other feature embeddings.
 #' - **Row attention** (`"row"`): Intersample attention. Reshapes the batch so
 #'   that each sample's full feature representation becomes a single token,
 #'   then applies attention across all samples in the batch.
-#' - **Column-row attention** (`"colrow"`): Alternates between column and row
-#'   attention in each transformer block. This is the full SAINT model.
+#' - **Both** (`"both"`): Alternates between column and row attention in each
+#'   transformer block. This is the full SAINT model.
 #'
 #' ## Learning Rates
 #'
@@ -167,13 +167,13 @@ brulee_saint.data.frame <- function(
   y,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
 
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -201,8 +201,8 @@ brulee_saint.data.frame <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_ff = dropout_ff,
-    dropout = dropout,
+    dropout_hidden = dropout_hidden,
+    dropout_last = dropout_last,
     row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
@@ -231,12 +231,12 @@ brulee_saint.matrix <- function(
   y,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -264,8 +264,8 @@ brulee_saint.matrix <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_ff = dropout_ff,
-    dropout = dropout,
+    dropout_hidden = dropout_hidden,
+    dropout_last = dropout_last,
     row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
@@ -294,12 +294,12 @@ brulee_saint.formula <- function(
   data,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -331,8 +331,8 @@ brulee_saint.formula <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_ff = dropout_ff,
-    dropout = dropout,
+    dropout_hidden = dropout_hidden,
+    dropout_last = dropout_last,
     row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
@@ -361,12 +361,12 @@ brulee_saint.recipe <- function(
   data,
   epochs = 100L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -394,8 +394,8 @@ brulee_saint.recipe <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_ff = dropout_ff,
-    dropout = dropout,
+    dropout_hidden = dropout_hidden,
+    dropout_last = dropout_last,
     row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
@@ -426,8 +426,8 @@ brulee_saint_bridge <- function(
   num_attn_heads,
   num_attn_blocks,
   dropout_attn,
-  dropout_ff,
-  dropout,
+  dropout_hidden,
+  dropout_last,
   row_attention_on_predict,
   hidden_units,
   hidden_activations,
@@ -461,7 +461,7 @@ brulee_saint_bridge <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_ff = dropout_ff,
+    dropout_hidden = dropout_hidden,
     call = call
   )
 
@@ -471,7 +471,7 @@ brulee_saint_bridge <- function(
     call = call
   )
 
-  check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), call = call)
+  check_double(dropout_last, single = TRUE, 0, 1, incl = c(TRUE, FALSE), call = call)
   check_logical(row_attention_on_predict, single = TRUE, call = call)
 
   if (!is.null(batch_size) & optimizer != "LBFGS") {
@@ -529,8 +529,8 @@ brulee_saint_bridge <- function(
     num_attn_heads = saint_validated$num_attn_heads,
     num_attn_blocks = saint_validated$num_attn_blocks,
     dropout_attn = saint_validated$dropout_attn,
-    dropout_ff = saint_validated$dropout_ff,
-    dropout = dropout,
+    dropout_hidden = saint_validated$dropout_hidden,
+    dropout_last = dropout_last,
     row_attention_on_predict = row_attention_on_predict,
     hidden_units = hidden_validated$hidden_units,
     hidden_activations = hidden_validated$hidden_activations,
@@ -571,7 +571,7 @@ validate_saint_args <- function(
   num_attn_heads,
   num_attn_blocks,
   dropout_attn,
-  dropout_ff,
+  dropout_hidden,
   call = rlang::caller_env()
 ) {
   if (is.numeric(num_embedding) & !is.integer(num_embedding)) {
@@ -589,7 +589,7 @@ validate_saint_args <- function(
   }
   check_integer(num_attn_blocks, single = TRUE, 1, call = call)
 
-  attn_choices <- c("col", "row", "colrow")
+  attn_choices <- c("column", "row", "both")
   if (!(attention_type %in% attn_choices)) {
     cli::cli_abort(
       "{.arg attention_type} should be one of: {.val {attn_choices}}.",
@@ -602,9 +602,9 @@ validate_saint_args <- function(
     cli::cli_abort("{.arg dropout_attn} must be less than 1.", call = call)
   }
 
-  check_double(dropout_ff, single = TRUE, 0, call = call)
-  if (dropout_ff >= 1) {
-    cli::cli_abort("{.arg dropout_ff} must be less than 1.", call = call)
+  check_double(dropout_hidden, single = TRUE, 0, call = call)
+  if (dropout_hidden >= 1) {
+    cli::cli_abort("{.arg dropout_hidden} must be less than 1.", call = call)
   }
 
   list(
@@ -613,7 +613,7 @@ validate_saint_args <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_ff = dropout_ff
+    dropout_hidden = dropout_hidden
   )
 }
 
@@ -689,12 +689,12 @@ saint_fit_imp <- function(
   epochs = 100L,
   batch_size = 256L,
   num_embedding = 32L,
-  attention_type = "colrow",
+  attention_type = "both",
   num_attn_heads = 8L,
   num_attn_blocks = 6L,
   dropout_attn = 0.1,
-  dropout_ff = 0.1,
-  dropout = 0,
+  dropout_hidden = 0.1,
+  dropout_last = 0,
   row_attention_on_predict = FALSE,
   hidden_units = NULL,
   hidden_activations = NULL,
@@ -873,8 +873,8 @@ saint_fit_imp <- function(
         num_attn_heads = num_attn_heads,
         num_attn_blocks = num_attn_blocks,
         dropout_attn = dropout_attn,
-        dropout_ff = dropout_ff,
-        dropout = dropout,
+        dropout_hidden = dropout_hidden,
+        dropout_last = dropout_last,
         row_attention_on_predict = row_attention_on_predict,
         hidden_units = hidden_units,
         hidden_activations = hidden_activations,
@@ -902,8 +902,8 @@ saint_fit_imp <- function(
       num_attn_heads = num_attn_heads,
       num_attn_blocks = num_attn_blocks,
       dropout_attn = dropout_attn,
-      dropout_ff = dropout_ff,
-      dropout = dropout,
+      dropout_hidden = dropout_hidden,
+      dropout_last = dropout_last,
       hidden_units = hidden_units,
       hidden_activations = hidden_activations,
       y_dim = y_dim
@@ -1198,7 +1198,12 @@ saint_col_transformer_module <- torch::nn_module(
     for (i in seq_len(depth)) {
       self$layers$append(torch::nn_module_list(list(
         torch::nn_layer_norm(dim),
-        saint_attention_module(dim, heads = heads, dim_head = dim_head, dropout = attn_dropout),
+        saint_attention_module(
+          dim,
+          heads = heads,
+          dim_head = dim_head,
+          dropout = attn_dropout
+        ),
         torch::nn_layer_norm(dim),
         saint_feedforward_module(dim, dropout = ff_dropout)
       )))
@@ -1220,7 +1225,16 @@ saint_col_transformer_module <- torch::nn_module(
 
 saint_rowcol_transformer_module <- torch::nn_module(
   "saint_rowcol_transformer",
-  initialize = function(dim, nfeats, depth, heads, dim_head, attn_dropout, ff_dropout, style = "colrow") {
+  initialize = function(
+    dim,
+    nfeats,
+    depth,
+    heads,
+    dim_head,
+    attn_dropout,
+    ff_dropout,
+    style = "both"
+  ) {
     self$style <- style
     self$nfeats <- nfeats
     self$dim <- dim
@@ -1230,21 +1244,36 @@ saint_rowcol_transformer_module <- torch::nn_module(
     row_dim <- dim * nfeats
 
     for (i in seq_len(depth)) {
-      if (style == "colrow") {
+      if (style == "both") {
         self$layers$append(torch::nn_module_list(list(
           torch::nn_layer_norm(dim),
-          saint_attention_module(dim, heads = heads, dim_head = dim_head, dropout = attn_dropout),
+          saint_attention_module(
+            dim,
+            heads = heads,
+            dim_head = dim_head,
+            dropout = attn_dropout
+          ),
           torch::nn_layer_norm(dim),
           saint_feedforward_module(dim, dropout = ff_dropout),
           torch::nn_layer_norm(row_dim),
-          saint_attention_module(row_dim, heads = heads, dim_head = 64L, dropout = attn_dropout),
+          saint_attention_module(
+            row_dim,
+            heads = heads,
+            dim_head = 64L,
+            dropout = attn_dropout
+          ),
           torch::nn_layer_norm(row_dim),
           saint_feedforward_module(row_dim, dropout = ff_dropout)
         )))
       } else {
         self$layers$append(torch::nn_module_list(list(
           torch::nn_layer_norm(row_dim),
-          saint_attention_module(row_dim, heads = heads, dim_head = 64L, dropout = attn_dropout),
+          saint_attention_module(
+            row_dim,
+            heads = heads,
+            dim_head = 64L,
+            dropout = attn_dropout
+          ),
           torch::nn_layer_norm(row_dim),
           saint_feedforward_module(row_dim, dropout = ff_dropout)
         )))
@@ -1255,7 +1284,7 @@ saint_rowcol_transformer_module <- torch::nn_module(
     n <- self$nfeats
     d <- self$dim
 
-    if (self$style == "colrow") {
+    if (self$style == "both") {
       for (i in seq_along(self$layers)) {
         layer <- self$layers[[i]]
         norm1 <- layer[[1]]
@@ -1343,7 +1372,9 @@ saint_embedding_module <- torch::nn_module(
 
     if (self$n_cont > 0 && !is.null(x_cont)) {
       cont_embeds <- lapply(seq_len(self$n_cont), function(i) {
-        self$cont_mlps[[i]](x_cont[, i, drop = FALSE]$unsqueeze(-1L))$squeeze(2L)
+        self$cont_mlps[[i]](x_cont[, i, drop = FALSE]$unsqueeze(-1L))$squeeze(
+          2L
+        )
       })
       parts <- c(parts, list(torch::torch_stack(cont_embeds, dim = 2L)))
     }
@@ -1362,8 +1393,8 @@ saint_module <- torch::nn_module(
     num_attn_heads,
     num_attn_blocks,
     dropout_attn,
-    dropout_ff,
-    dropout,
+    dropout_hidden,
+    dropout_last,
     hidden_units,
     hidden_activations,
     y_dim
@@ -1378,14 +1409,14 @@ saint_module <- torch::nn_module(
       num_embedding = num_embedding
     )
 
-    if (attention_type == "col") {
+    if (attention_type == "column") {
       self$backbone <- saint_col_transformer_module(
         dim = num_embedding,
         depth = num_attn_blocks,
         heads = num_attn_heads,
         dim_head = 16L,
         attn_dropout = dropout_attn,
-        ff_dropout = dropout_ff
+        ff_dropout = dropout_hidden
       )
     } else {
       self$backbone <- saint_rowcol_transformer_module(
@@ -1395,7 +1426,7 @@ saint_module <- torch::nn_module(
         heads = num_attn_heads,
         dim_head = 16L,
         attn_dropout = dropout_attn,
-        ff_dropout = dropout_ff,
+        ff_dropout = dropout_hidden,
         style = attention_type
       )
     }
@@ -1413,8 +1444,8 @@ saint_module <- torch::nn_module(
         input_dim <- hidden_units[i]
       }
       self$hidden <- torch::nn_sequential(!!!hidden_layers)
-      if (dropout > 0) {
-        self$hidden_drop <- torch::nn_dropout(p = dropout)
+      if (dropout_last > 0) {
+        self$hidden_drop <- torch::nn_dropout(p = dropout_last)
       } else {
         self$hidden_drop <- NULL
       }
@@ -1484,10 +1515,10 @@ print.brulee_saint <- function(x, ...) {
   if (!is.null(x$parameters$hidden_units)) {
     units_str <- paste(x$parameters$hidden_units, collapse = ", ")
     hidden_info <- "Hidden layers: {units_str} units, {.val {unique(x$parameters$hidden_activations)}} activation"
-    if (x$parameters$dropout > 0) {
+    if (x$parameters$dropout_last > 0) {
       hidden_info <- paste0(
         hidden_info,
-        ", dropout={signif(x$parameters$dropout, 3)}"
+        ", dropout={signif(x$parameters$dropout_last, 3)}"
       )
     }
     param_lst <- c(param_lst, " " = hidden_info)
@@ -1503,10 +1534,10 @@ print.brulee_saint <- function(x, ...) {
       " " = "% Validation: {signif(x$parameters$validation, 3)}"
     )
   }
-  if (x$parameters$dropout_attn > 0 || x$parameters$dropout_ff > 0) {
+  if (x$parameters$dropout_attn > 0 || x$parameters$dropout_hidden > 0) {
     param_lst <- c(
       param_lst,
-      " " = "Dropout: attention={signif(x$parameters$dropout_attn, 3)}, ff={signif(x$parameters$dropout_ff, 3)}"
+      " " = "Dropout: attention={signif(x$parameters$dropout_attn, 3)}, hidden={signif(x$parameters$dropout_hidden, 3)}"
     )
   }
   if (x$parameters$penalty > 0) {
