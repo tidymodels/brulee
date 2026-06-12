@@ -11,7 +11,7 @@ New models for tabular data:
 
 - ResNet
   ([`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md))
-  can fit a multilayer neural networek with skip (i.e. residual)
+  can fit a multilayer neural network with skip (i.e. residual)
   connections and batch normalization.
 
 - AutoInt

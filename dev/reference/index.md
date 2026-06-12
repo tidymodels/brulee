@@ -26,6 +26,9 @@
 - [`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md)
   : Fit AutoInt models for tabular data
 
+- [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md)
+  : Chronos-2 pretrained forecasting model
+
 - [`brulee_linear_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_linear_reg.md)
   : Fit a linear regression model
 
@@ -55,6 +58,11 @@
   :
 
   Predict from a `brulee_auto_int`
+
+- [`predict(`*`<brulee_chronos>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_chronos.md)
+  :
+
+  Predict from a `brulee_chronos` model
 
 - [`predict(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_linear_reg.md)
   :
