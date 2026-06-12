@@ -506,7 +506,7 @@ brulee_saint_bridge <- function(
     incl = c(TRUE, FALSE),
     call = call
   )
-  check_logical(row_attention_on_predict, single = TRUE, call = call)
+  check_bool(row_attention_on_predict, call = call)
 
   if (!is.null(batch_size) & optimizer != "LBFGS") {
     if (is.numeric(batch_size) & !is.integer(batch_size)) {

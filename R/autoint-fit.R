@@ -718,7 +718,7 @@ validate_auto_int_args <- function(
     cli::cli_abort("{.arg dropout_embedding} must be less than 1.", call = call)
   }
 
-  check_character(activation, single = TRUE, call = call)
+  check_string(activation, call = call)
   act_choices <- brulee_activations()
   if (!(activation %in% act_choices)) {
     cli::cli_abort(

@@ -3,7 +3,7 @@
 New models for tabular data:
 
   * Regularization Learning Networks (`brulee_rln()`) use a conventional MLP architecture but each weight learns its own adaptive regularization coefficient.
-  * ResNet (`brulee_resnet()`) can fit a multilayer neural networek with skip (i.e. residual) connections and batch normalization. 
+  * ResNet (`brulee_resnet()`) can fit a multilayer neural network with skip (i.e. residual) connections and batch normalization. 
   * AutoInt (`brulee_auto_int()`) uses residual connections and columnwise attention mechanisms to create embeddings that encourage in-context learning of features. 
   * Saint (`brulee_saint()`) uses column and/or row attention mechanisms. 
 

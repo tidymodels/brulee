@@ -275,7 +275,9 @@ test_that("chronos2_download_file redownloads when the cached file is incomplete
     .package = "curl"
   )
 
-  brulee:::chronos2_download_file("http://x", tmp, "test")
+  suppressMessages(
+    brulee:::chronos2_download_file("http://x", tmp, "test")
+  )
   expect_equal(download_calls, 1L)
   expect_equal(file.size(tmp), 16)
 })
@@ -297,7 +299,9 @@ test_that("chronos2_download_file downloads when the cache is empty", {
     .package = "curl"
   )
 
-  brulee:::chronos2_download_file("http://x", tmp, "test")
+  suppressMessages(
+    brulee:::chronos2_download_file("http://x", tmp, "test")
+  )
   expect_true(file.exists(tmp))
 })
 
@@ -323,7 +327,9 @@ test_that("chronos2_download_file succeeds after initial failure", {
     .package = "curl"
   )
 
-  brulee:::chronos2_download_file("http://x", tmp, "test", max_attempts = 3L)
+  suppressMessages(suppressWarnings(
+    brulee:::chronos2_download_file("http://x", tmp, "test", max_attempts = 3L)
+  ))
   expect_true(file.exists(tmp))
   expect_equal(file.size(tmp), 16)
   expect_equal(attempt, 2L)
@@ -352,7 +358,9 @@ test_that("chronos2_download_file retries when downloaded file size is wrong", {
     .package = "curl"
   )
 
-  brulee:::chronos2_download_file("http://x", tmp, "test", max_attempts = 3L)
+  suppressMessages(suppressWarnings(
+    brulee:::chronos2_download_file("http://x", tmp, "test", max_attempts = 3L)
+  ))
   expect_equal(file.size(tmp), 32)
   expect_equal(attempt, 3L)
 })
@@ -412,7 +420,9 @@ test_that("chronos2_download_file is happy when HEAD doesn't expose size", {
     .package = "curl"
   )
 
-  brulee:::chronos2_download_file("http://x", tmp, "test")
+  suppressMessages(
+    brulee:::chronos2_download_file("http://x", tmp, "test")
+  )
   expect_equal(download_calls, 1L)
   expect_true(file.exists(tmp))
 })

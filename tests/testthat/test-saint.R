@@ -469,10 +469,7 @@ test_that("saint print method works", {
 
   fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE)
 
-  stdout <- capture.output(
-    msgs <- capture.output(print(fit), type = "message")
-  )
-  output <- c(stdout, msgs)
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("SAINT network", output)))
   expect_true(any(grepl("Attention type", output)))
 })

@@ -548,20 +548,18 @@ brulee_chronos_bridge <- function(
     )
   }
 
-  f_nm <- "brulee_chronos"
-
   # Pretrained-model arg validation
-  check_character(model_id, single = TRUE, fn = f_nm)
-  check_character(revision, single = TRUE, fn = f_nm)
-  check_character(cache_dir, single = TRUE, fn = f_nm)
+  check_string(model_id)
+  check_string(revision)
+  check_string(cache_dir)
   if (!is.null(device)) {
-    check_character(device, single = TRUE, fn = f_nm)
+    check_string(device)
   }
   if (!is.null(prediction_length)) {
     if (is.numeric(prediction_length) && !is.integer(prediction_length)) {
       prediction_length <- as.integer(prediction_length)
     }
-    check_integer(prediction_length, single = TRUE, 1L, fn = f_nm)
+    check_integer(prediction_length, single = TRUE, x_min = 1L)
   }
   if (!is.numeric(quantile_levels) || length(quantile_levels) < 1L) {
     cli::cli_abort(

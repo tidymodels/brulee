@@ -38,7 +38,7 @@
       brulee_auto_int(y ~ ., data = df, num_embedding = -1)
     Condition
       Error in `brulee_auto_int()`:
-      ! `num_embedding` must be an integer on [1, Inf].
+      ! `num_embedding` must be in the range [1, Inf].
 
 ---
 
@@ -46,7 +46,7 @@
       brulee_auto_int(y ~ ., data = df, num_attn_feat = 0)
     Condition
       Error in `brulee_auto_int()`:
-      ! `num_attn_feat` must be an integer on [1, Inf].
+      ! `num_attn_feat` must be in the range [1, Inf].
 
 ---
 

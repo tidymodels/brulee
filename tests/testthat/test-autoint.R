@@ -648,10 +648,7 @@ test_that("autoint print method works (no hidden layers)", {
 
   fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
 
-  stdout <- capture.output(
-    msgs <- capture.output(print(fit), type = "message")
-  )
-  output <- c(stdout, msgs)
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("AutoInt network", output)))
   expect_true(any(grepl("Attention", output)))
   expect_false(any(grepl("Hidden layers", output)))
@@ -675,7 +672,7 @@ test_that("autoint print method works (with hidden layers + dropout)", {
     verbose = FALSE
   )
 
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("Hidden layers", output)))
   expect_true(any(grepl("dropout", output)))
 })
@@ -689,7 +686,7 @@ test_that("autoint print method shows validation loss for regression", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("scaled validation loss", output)))
 })
 
@@ -708,7 +705,7 @@ test_that("autoint print method shows training loss when validation = 0", {
     validation = 0,
     verbose = FALSE
   )
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("training set loss", output)))
 })
 
@@ -724,7 +721,7 @@ test_that("autoint print method for classification", {
   )
 
   fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("Classes", output)))
   expect_true(any(grepl("validation loss", output)))
 })
@@ -787,7 +784,7 @@ test_that("autoint print shows dropout_attn/dropout_embedding", {
     verbose = FALSE
   )
 
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("Dropout.*attention", output)))
 })
 
@@ -807,7 +804,7 @@ test_that("autoint print with LBFGS (no batch size displayed)", {
     verbose = FALSE
   )
 
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("LBFGS", output)))
   expect_false(any(grepl("Batch Size", output)))
 })
@@ -828,7 +825,7 @@ test_that("autoint print with no penalty", {
     verbose = FALSE
   )
 
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_false(any(grepl("Penalty", output)))
 })
 
@@ -852,7 +849,7 @@ test_that("autoint classification with validation = 0", {
     verbose = FALSE
   )
 
-  output <- capture.output(print(fit), type = "message")
+  output <- capture_all_output(print(fit))
   expect_true(any(grepl("training set loss", output)))
 
   pred <- predict(fit, df, type = "class")

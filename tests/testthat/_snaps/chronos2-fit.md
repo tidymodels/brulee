@@ -66,8 +66,8 @@
       brulee_chronos(ridership ~ ., data = chi, id_column = "series_id",
       timestamp_column = "date", prediction_length = -1)
     Condition
-      Error in `check_integer()`:
-      ! brulee_chronos() expected 'prediction_length' to be an integer on [1, Inf].
+      Error in `brulee_chronos_bridge()`:
+      ! `prediction_length` must be in the range [1, Inf].
 
 # quantile_levels not available in model errors
 
@@ -121,7 +121,7 @@
       timestamp_column = "date", model_id = 42)
     Condition
       Error in `brulee_chronos_bridge()`:
-      ! `model_id` must be a character vector, not the number 42.
+      ! `model_id` must be a single string, not the number 42.
 
 # NA values in item_id error
 
@@ -191,7 +191,7 @@
       timestamp_column = "date", device = 123)
     Condition
       Error in `brulee_chronos_bridge()`:
-      ! `device` must be a character vector, not the number 123.
+      ! `device` must be a single string, not the number 123.
 
 # quantile_levels at 1.0 errors
 
@@ -252,7 +252,7 @@
       timestamp_column = "date", revision = 123)
     Condition
       Error in `brulee_chronos_bridge()`:
-      ! `revision` must be a character vector, not the number 123.
+      ! `revision` must be a single string, not the number 123.
 
 # non-character cache_dir argument errors
 
@@ -261,5 +261,5 @@
       timestamp_column = "date", cache_dir = 999)
     Condition
       Error in `brulee_chronos_bridge()`:
-      ! `cache_dir` must be a character vector, not the number 999.
+      ! `cache_dir` must be a single string, not the number 999.
 

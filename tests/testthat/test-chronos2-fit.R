@@ -650,9 +650,7 @@ test_that("print.brulee_chronos lists model + context details", {
     timestamp_column = "date"
   )
 
-  out <- capture.output(print(mod), type = "output")
-  msg <- capture.output(print(mod), type = "message")
-  out_str <- paste(c(out, msg), collapse = "\n")
+  out_str <- paste(capture_all_output(print(mod)), collapse = "\n")
 
   expect_match(out_str, "Chronos-2 Pretrained Forecasting Model")
   expect_match(out_str, "amazon/chronos-2")
@@ -677,9 +675,7 @@ test_that("print uses 'unknown' when revision is missing", {
   )
   mod$revision <- NULL
 
-  out <- capture.output(print(mod), type = "output")
-  msg <- capture.output(print(mod), type = "message")
-  out_str <- paste(c(out, msg), collapse = "\n")
+  out_str <- paste(capture_all_output(print(mod)), collapse = "\n")
   expect_match(out_str, "unknown")
 })
 
@@ -699,9 +695,7 @@ test_that("print handles invalid external pointer gracefully", {
 
   mod$device <- unserialize(serialize(torch::torch_device("cpu"), NULL))
 
-  out <- capture.output(print(mod), type = "output")
-  msg <- capture.output(print(mod), type = "message")
-  out_str <- paste(c(out, msg), collapse = "\n")
+  out_str <- paste(capture_all_output(print(mod)), collapse = "\n")
 
   expect_match(out_str, "Chronos-2 Pretrained Forecasting Model")
   expect_match(out_str, "not available")
@@ -1179,9 +1173,7 @@ test_that("print works with multiple series and covariates", {
     timestamp_column = "date"
   )
 
-  out <- capture.output(print(mod), type = "output")
-  msg <- capture.output(print(mod), type = "message")
-  out_str <- paste(c(out, msg), collapse = "\n")
+  out_str <- paste(capture_all_output(print(mod)), collapse = "\n")
 
   expect_match(out_str, "2 series")
   expect_match(out_str, "2 covariate")
