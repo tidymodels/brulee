@@ -9,6 +9,7 @@
 # prediction_length / quantile_levels overrides
 
 test_that("predict falls back to the object's prediction_length / quantile_levels", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -34,6 +35,7 @@ test_that("predict falls back to the object's prediction_length / quantile_level
 })
 
 test_that("predict with prediction_length override uses the new value", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -53,6 +55,7 @@ test_that("predict with prediction_length override uses the new value", {
 })
 
 test_that("predict uses stored context when new_data is NULL", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -76,6 +79,7 @@ test_that("predict uses stored context when new_data is NULL", {
 # new_data round-trips
 
 test_that("predict with new_data forges covariates from a formula model", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -96,6 +100,7 @@ test_that("predict with new_data forges covariates from a formula model", {
 })
 
 test_that("predict with new_data forges through a recipe blueprint", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -113,6 +118,7 @@ test_that("predict with new_data forges through a recipe blueprint", {
 })
 
 test_that("predict with new_data on a multi-series model returns id column", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -135,6 +141,7 @@ test_that("predict with new_data on a multi-series model returns id column", {
 })
 
 test_that("predict with new_data missing the id column errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -154,6 +161,7 @@ test_that("predict with new_data missing the id column errors", {
 })
 
 test_that("predict with new_data containing a non-numeric target errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -175,6 +183,7 @@ test_that("predict with new_data containing a non-numeric target errors", {
 })
 
 test_that("predict with new_data on no-covariate model pulls target by name", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -195,6 +204,7 @@ test_that("predict with new_data on no-covariate model pulls target by name", {
 })
 
 test_that("predict with new_data missing the timestamp column errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -216,6 +226,7 @@ test_that("predict with new_data missing the timestamp column errors", {
 })
 
 test_that("predict with new_data on no-covariate x_y model works", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -235,6 +246,7 @@ test_that("predict with new_data on no-covariate x_y model works", {
 })
 
 test_that("predict with new_data on multi-series recipe model has id column", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -257,6 +269,7 @@ test_that("predict with new_data on multi-series recipe model has id column", {
 })
 
 test_that("predict errors when new_data has non-numeric covariates (no-forge path)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -282,6 +295,7 @@ test_that("predict errors when new_data has non-numeric covariates (no-forge pat
 # future_df validation
 
 test_that("predict with valid future_df runs", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -307,6 +321,7 @@ test_that("predict with valid future_df runs", {
 })
 
 test_that("future_df missing the id column errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -330,6 +345,7 @@ test_that("future_df missing the id column errors", {
 })
 
 test_that("future_df missing the timestamp column errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -353,6 +369,7 @@ test_that("future_df missing the timestamp column errors", {
 })
 
 test_that("future_df with an unknown covariate column silently ignores it", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -377,6 +394,7 @@ test_that("future_df with an unknown covariate column silently ignores it", {
 })
 
 test_that("future_df works when model has synthesized id and timestamp", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -398,6 +416,7 @@ test_that("future_df works when model has synthesized id and timestamp", {
 })
 
 test_that("future_df with subset of covariates provides only those to model", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -422,6 +441,7 @@ test_that("future_df with subset of covariates provides only those to model", {
 })
 
 test_that("future_df is split by series and sorted by timestamp", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -452,6 +472,7 @@ test_that("future_df is split by series and sorted by timestamp", {
 })
 
 test_that("future_df with wrong row count per series errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -479,6 +500,7 @@ test_that("future_df with wrong row count per series errors", {
 # extra columns in new_data and future_df are silently ignored
 
 test_that("new_data with extra columns works (formula model with covariates)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -501,6 +523,7 @@ test_that("new_data with extra columns works (formula model with covariates)", {
 })
 
 test_that("new_data with extra columns works (no-covariate model)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -524,6 +547,7 @@ test_that("new_data with extra columns works (no-covariate model)", {
 })
 
 test_that("future_df with extra columns silently ignores them", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -551,6 +575,7 @@ test_that("future_df with extra columns silently ignores them", {
 })
 
 test_that("new_data still errors when a required column is missing", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -571,6 +596,7 @@ test_that("new_data still errors when a required column is missing", {
 })
 
 test_that("future_df still errors when the id column is missing", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -599,6 +625,7 @@ test_that("future_df still errors when the id column is missing", {
 # chronos2_pull_column helper
 
 test_that("chronos2_pull_column errors when the column is missing", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   expect_snapshot(error = TRUE, {
     brulee:::chronos2_pull_column(
@@ -610,6 +637,7 @@ test_that("chronos2_pull_column errors when the column is missing", {
 })
 
 test_that("chronos2_pull_column returns the column value when present", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   res <- brulee:::chronos2_pull_column(
     data.frame(a = 1:3, b = letters[1:3]),
@@ -623,6 +651,7 @@ test_that("chronos2_pull_column returns the column value when present", {
 # chronos2_build_inputs (torch-level unit tests)
 
 test_that("chronos2_build_inputs handles a single numeric context vector", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   result <- brulee:::chronos2_build_inputs(
@@ -639,6 +668,7 @@ test_that("chronos2_build_inputs handles a single numeric context vector", {
 })
 
 test_that("chronos2_build_inputs handles list of contexts (multiple series)", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   result <- brulee:::chronos2_build_inputs(
@@ -659,6 +689,7 @@ test_that("chronos2_build_inputs handles list of contexts (multiple series)", {
 })
 
 test_that("chronos2_build_inputs converts torch tensor context", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   ctx_tensor <- torch::torch_tensor(c(1, 2, 3), dtype = torch::torch_float32())
@@ -675,6 +706,7 @@ test_that("chronos2_build_inputs converts torch tensor context", {
 })
 
 test_that("chronos2_build_inputs converts 2D torch tensor context", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   ctx_tensor <- torch::torch_tensor(
@@ -698,6 +730,7 @@ test_that("chronos2_build_inputs converts 2D torch tensor context", {
 })
 
 test_that("chronos2_build_inputs handles data.frame past_covariates (single task)", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   result <- brulee:::chronos2_build_inputs(
@@ -716,6 +749,7 @@ test_that("chronos2_build_inputs handles data.frame past_covariates (single task
 # chronos2_predict_core and chronos2_run_with_covariates (torch-level)
 
 test_that("chronos2_predict_core runs simple path (no covariates, list context)", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -765,6 +799,7 @@ test_that("chronos2_predict_core runs simple path (no covariates, list context)"
 })
 
 test_that("chronos2_predict_core runs with covariates", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -812,6 +847,7 @@ test_that("chronos2_predict_core runs with covariates", {
 })
 
 test_that("chronos2_predict_core handles multiple series with covariates", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -865,6 +901,7 @@ test_that("chronos2_predict_core handles multiple series with covariates", {
 })
 
 test_that("chronos2_predict_core simple path with numeric vector", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -911,6 +948,7 @@ test_that("chronos2_predict_core simple path with numeric vector", {
 })
 
 test_that("chronos2_predict_core simple path with torch tensor", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -958,6 +996,7 @@ test_that("chronos2_predict_core simple path with torch tensor", {
 })
 
 test_that("chronos2_predict_core uses object$prediction_length when NULL", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -1003,6 +1042,7 @@ test_that("chronos2_predict_core uses object$prediction_length when NULL", {
 })
 
 test_that("chronos2_predict_core simple path with list containing torch tensor", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -1052,6 +1092,7 @@ test_that("chronos2_predict_core simple path with list containing torch tensor",
 })
 
 test_that("chronos2_predict_core simple path with 1D torch tensor", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -1099,6 +1140,7 @@ test_that("chronos2_predict_core simple path with 1D torch tensor", {
 })
 
 test_that("chronos2_run_with_covariates handles no-covariate tasks (empty keys)", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   tiny_config <- list(
@@ -1148,6 +1190,7 @@ test_that("chronos2_run_with_covariates handles no-covariate tasks (empty keys)"
 })
 
 test_that("chronos2_run_with_covariates handles past-only covariates (no future)", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   skip_if_not(torch::torch_is_installed())

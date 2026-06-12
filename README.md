@@ -23,13 +23,14 @@ use the `torch` package infrastructure, such as:
   regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 - [multinomial
   regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
-- [residual networks
-  (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
-- [regularization learning networks
-  (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
-- [AutoInt](https://brulee.tidymodels.org/reference/brulee_auto_int.html)
-- [Self-Attention and Inter-sample Attention Transformer
-  (Saint)](https://brulee.tidymodels.org/reference/brulee_saint.html)
+- residual networks (ResNet)
+- regularization learning networks (RLN)
+- AutoInt
+- Self-Attention and Inter-sample Attention Transformer (Saint)
+- Chronos2 foundational model for forecasting
+
+Chronos2 is the only model that uses a pretrained model, requiring a
+one-time download of about 500MB.
 
 ## Installation
 

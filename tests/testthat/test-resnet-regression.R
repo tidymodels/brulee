@@ -1,4 +1,5 @@
 test_that("resnet regression - matrix interface", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -39,6 +40,7 @@ test_that("resnet regression - matrix interface", {
 })
 
 test_that("resnet regression - data.frame interface", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -68,6 +70,7 @@ test_that("resnet regression - data.frame interface", {
 })
 
 test_that("resnet regression - formula interface", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -97,6 +100,7 @@ test_that("resnet regression - formula interface", {
 })
 
 test_that("resnet regression - recipe interface", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -131,6 +135,7 @@ test_that("resnet regression - recipe interface", {
 })
 
 test_that("resnet regression - epoch parameter", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -165,6 +170,7 @@ test_that("resnet regression - epoch parameter", {
 })
 
 test_that("resnet print method works", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -191,6 +197,7 @@ test_that("resnet print method works", {
 })
 
 test_that("resnet autoplot works", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
   skip_if_not_installed("ggplot2")
@@ -217,6 +224,7 @@ test_that("resnet autoplot works", {
 })
 
 test_that("resnet argument validation", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 
@@ -265,6 +273,7 @@ test_that("resnet argument validation", {
 })
 
 test_that("resnet with vector hidden_units and bottleneck_units", {
+  skip_on_cran()
   skip_if_not_installed("recipes")
   skip_if_not_installed("torch")
 

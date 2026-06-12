@@ -1,4 +1,5 @@
 test_that('basic regression mlp LBFGS', {
+  skip_on_cran()
   skip_if(!torch::torch_is_installed())
 
   skip_if_not_installed("modeldata")
@@ -87,6 +88,7 @@ test_that('basic regression mlp LBFGS', {
 
 
 test_that('bad args', {
+  skip_on_cran()
   skip_if(!torch::torch_is_installed())
 
   skip_if_not_installed("recipes")
@@ -323,6 +325,7 @@ test_that('bad args', {
 })
 
 test_that("mlp learns something", {
+  skip_on_cran()
   skip_if(!torch::torch_is_installed())
 
   # ------------------------------------------------------------------------------
@@ -347,6 +350,7 @@ test_that("mlp learns something", {
   expect_true(tail(model$loss, 1) < 0.03)
 })
 test_that("variable hidden_units length", {
+  skip_on_cran()
   skip_if(!torch::torch_is_installed())
 
   x <- data.frame(x = rnorm(1000))
@@ -386,6 +390,7 @@ test_that("variable hidden_units length", {
 
 
 test_that('two-layer networks', {
+  skip_on_cran()
   skip_if(!torch::torch_is_installed())
   skip_on_os("linux")
 

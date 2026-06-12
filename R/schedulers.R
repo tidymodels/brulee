@@ -32,7 +32,7 @@
 #'
 #'
 #' @seealso [brulee_mlp()]
-#' @examples
+#' @examplesIf !brulee:::is_cran_check()
 #' if (rlang::is_installed("purrr")) {
 #'  library(ggplot2)
 #'  library(dplyr)

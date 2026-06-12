@@ -1,4 +1,5 @@
 test_that("basic linear regression LBFGS", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   skip_if_not_installed("yardstick")
@@ -73,6 +74,7 @@ test_that("basic linear regression LBFGS", {
 })
 
 test_that("basic Linear regression sgd", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   skip_if_not_installed("yardstick")

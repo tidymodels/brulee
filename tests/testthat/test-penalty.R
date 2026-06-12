@@ -1,4 +1,5 @@
 test_that("penalty works with all optimizers and mixture values", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -148,6 +149,7 @@ test_that("penalty works with all optimizers and mixture values", {
 })
 
 test_that("ADAMw enforces pure L2 penalty", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -200,6 +202,7 @@ test_that("ADAMw enforces pure L2 penalty", {
 })
 
 test_that("penalty magnitude affects regularization strength", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -265,6 +268,7 @@ test_that("penalty magnitude affects regularization strength", {
 })
 
 test_that("L1 vs L2 vs elastic net produce different results", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -330,6 +334,7 @@ test_that("L1 vs L2 vs elastic net produce different results", {
 })
 
 test_that("LBFGS penalty works correctly", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 

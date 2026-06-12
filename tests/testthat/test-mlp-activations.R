@@ -1,4 +1,5 @@
 test_that("activation functions", {
+  skip_on_cran()
   skip_if(!torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 

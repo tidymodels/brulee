@@ -1,4 +1,5 @@
 test_that("basic logistic regression LBFGS", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")
@@ -64,6 +65,7 @@ test_that("basic logistic regression LBFGS", {
 })
 
 test_that("basic logistic regression SGD", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")
@@ -120,6 +122,7 @@ test_that("basic logistic regression SGD", {
 })
 
 test_that("coef works when recipes are used", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("recipes")
@@ -156,6 +159,7 @@ test_that("coef works when recipes are used", {
 # ------------------------------------------------------------------------------
 
 test_that("logistic regression class weights", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")

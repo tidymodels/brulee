@@ -65,6 +65,7 @@ The details for how the schedulers change the rates:
 }
 }
 \examples{
+\dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 if (rlang::is_installed("purrr")) {
  library(ggplot2)
  library(dplyr)
@@ -83,7 +84,7 @@ if (rlang::is_installed("purrr")) {
   facet_wrap(~ type)
 
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brulee_mlp]{brulee_mlp()}}

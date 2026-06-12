@@ -2,6 +2,7 @@
 # Regression tests
 
 test_that("saint regression - formula interface", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -30,6 +31,7 @@ test_that("saint regression - formula interface", {
 })
 
 test_that("saint regression - data.frame interface (numeric only)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -49,6 +51,7 @@ test_that("saint regression - data.frame interface (numeric only)", {
 })
 
 test_that("saint regression - matrix interface", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -66,6 +69,7 @@ test_that("saint regression - matrix interface", {
 })
 
 test_that("saint regression - recipe interface", {
+  skip_on_cran()
   skip_if_not_installed("torch")
   skip_if_not_installed("recipes")
 
@@ -91,6 +95,7 @@ test_that("saint regression - recipe interface", {
 # Classification tests
 
 test_that("saint binary classification", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -119,6 +124,7 @@ test_that("saint binary classification", {
 })
 
 test_that("saint multiclass classification", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -146,6 +152,7 @@ test_that("saint multiclass classification", {
 # Attention type tests
 
 test_that("saint with col attention type", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -170,6 +177,7 @@ test_that("saint with col attention type", {
 })
 
 test_that("saint with row attention type", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -195,6 +203,7 @@ test_that("saint with row attention type", {
 })
 
 test_that("saint with colrow attention type (default)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -223,6 +232,7 @@ test_that("saint with colrow attention type (default)", {
 # row_attention_on_predict tests
 
 test_that("saint row_attention_on_predict=FALSE (default) gives batch-independent predictions", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -252,6 +262,7 @@ test_that("saint row_attention_on_predict=FALSE (default) gives batch-independen
 })
 
 test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -282,6 +293,7 @@ test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions
 # Feature handling tests
 
 test_that("saint with only categorical predictors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -304,6 +316,7 @@ test_that("saint with only categorical predictors", {
 })
 
 test_that("saint with only continuous predictors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -322,6 +335,7 @@ test_that("saint with only continuous predictors", {
 })
 
 test_that("saint with mixed predictors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -346,6 +360,7 @@ test_that("saint with mixed predictors", {
 # Hidden layer tests
 
 test_that("saint with hidden layers", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -374,6 +389,7 @@ test_that("saint with hidden layers", {
 # Validation error tests
 
 test_that("saint attention_type validation", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -388,6 +404,7 @@ test_that("saint attention_type validation", {
 })
 
 test_that("saint default method errors on unsupported types", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   expect_error(
@@ -400,6 +417,7 @@ test_that("saint default method errors on unsupported types", {
 # Prediction tests
 
 test_that("saint prediction with specific epoch", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -421,6 +439,7 @@ test_that("saint prediction with specific epoch", {
 # Training tests
 
 test_that("saint with validation = 0", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -441,6 +460,7 @@ test_that("saint with validation = 0", {
 })
 
 test_that("saint with early stopping", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -463,6 +483,7 @@ test_that("saint with early stopping", {
 # Print and autoplot tests
 
 test_that("saint print method works", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -478,6 +499,7 @@ test_that("saint print method works", {
 })
 
 test_that("saint autoplot works", {
+  skip_on_cran()
   skip_if_not_installed("torch")
   skip_if_not_installed("ggplot2")
 

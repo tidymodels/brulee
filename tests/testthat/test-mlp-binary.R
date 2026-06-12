@@ -1,4 +1,5 @@
 test_that("basic binomial mlp LBFGS", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   skip_if_not_installed("modeldata")
@@ -88,6 +89,7 @@ test_that("basic binomial mlp LBFGS", {
 
 
 test_that("basic binomial mlp SGD", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   skip_if_not_installed("modeldata")
@@ -185,6 +187,7 @@ test_that("basic binomial mlp SGD", {
 
 
 test_that("binomial mlp case weights", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
 
   skip_if_not_installed("modeldata")
@@ -260,6 +263,7 @@ test_that("binomial mlp case weights", {
 })
 
 test_that('linear activations', {
+  skip_on_cran()
   # See https://github.com/tidymodels/brulee/issues/68
   skip_if(!torch::torch_is_installed())
   skip_if_not_installed("modeldata")

@@ -12,11 +12,13 @@
 # ------------------------------------------------------------------------------
 
 test_that("default method errors for unsupported types", {
+  skip_on_cran()
   expect_snapshot(error = TRUE, brulee_chronos(42L))
   expect_snapshot(error = TRUE, brulee_chronos("oops"))
 })
 
 test_that("formula method builds context with no covariates", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -42,6 +44,7 @@ test_that("formula method builds context with no covariates", {
 })
 
 test_that("model_id and revision are recorded on the object", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -61,6 +64,7 @@ test_that("model_id and revision are recorded on the object", {
 })
 
 test_that("an explicit SHA is passed through verbatim (no API call)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -79,6 +83,7 @@ test_that("an explicit SHA is passed through verbatim (no API call)", {
 })
 
 test_that("chronos2_resolve_revision returns SHAs unchanged offline", {
+  skip_on_cran()
   sha <- "1234567890abcdef1234567890abcdef12345678"
   expect_equal(
     brulee:::chronos2_resolve_revision("amazon/chronos-2", sha),
@@ -87,6 +92,7 @@ test_that("chronos2_resolve_revision returns SHAs unchanged offline", {
 })
 
 test_that("formula method builds context with covariates", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -104,6 +110,7 @@ test_that("formula method builds context with covariates", {
 })
 
 test_that("recipe method detects id/time roles via hardhat extras", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -123,6 +130,7 @@ test_that("recipe method detects id/time roles via hardhat extras", {
 })
 
 test_that("recipe method synthesizes id when the id role is missing", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -141,6 +149,7 @@ test_that("recipe method synthesizes id when the id role is missing", {
 })
 
 test_that("recipe method synthesizes timestamp when the time role is missing", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -158,6 +167,7 @@ test_that("recipe method synthesizes timestamp when the time role is missing", {
 })
 
 test_that("recipe method synthesizes both when neither role is set", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -174,6 +184,7 @@ test_that("recipe method synthesizes both when neither role is set", {
 })
 
 test_that("data.frame method builds context with item_id/timestamp vectors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -193,6 +204,7 @@ test_that("data.frame method builds context with item_id/timestamp vectors", {
 })
 
 test_that("matrix input dispatches to the default method and errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   stub_chronos_loaders()
   expect_snapshot(error = TRUE, {
@@ -204,6 +216,7 @@ test_that("matrix input dispatches to the default method and errors", {
 })
 
 test_that("non-numeric predictors are rejected when mold doesn't encode them", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -219,6 +232,7 @@ test_that("non-numeric predictors are rejected when mold doesn't encode them", {
 })
 
 test_that("formula factor predictors are encoded by hardhat and pass the check", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -237,6 +251,7 @@ test_that("formula factor predictors are encoded by hardhat and pass the check",
 })
 
 test_that("length mismatch between y and item_id errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -255,6 +270,7 @@ test_that("length mismatch between y and item_id errors", {
 })
 
 test_that("length mismatch between y and timestamp errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -273,6 +289,7 @@ test_that("length mismatch between y and timestamp errors", {
 })
 
 test_that("quantile_levels outside (0,1) errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -291,6 +308,7 @@ test_that("quantile_levels outside (0,1) errors", {
 })
 
 test_that("negative prediction_length errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -309,6 +327,7 @@ test_that("negative prediction_length errors", {
 })
 
 test_that("quantile_levels not available in model errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -330,6 +349,7 @@ test_that("quantile_levels not available in model errors", {
 # Forge round-trips on the stored blueprint
 
 test_that("formula blueprint forges new_data back to predictors + outcome", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -348,6 +368,7 @@ test_that("formula blueprint forges new_data back to predictors + outcome", {
 })
 
 test_that("recipe blueprint forges id/time through extras roles", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -370,6 +391,7 @@ test_that("recipe blueprint forges id/time through extras roles", {
 # predict.brulee_chronos output shape / types
 
 test_that("predict() returns a tibble with .pred + .pred_quantile (single series)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -394,6 +416,7 @@ test_that("predict() returns a tibble with .pred + .pred_quantile (single series
 })
 
 test_that("predict() keeps the id column when there are multiple series", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -419,6 +442,7 @@ test_that("predict() keeps the id column when there are multiple series", {
 })
 
 test_that("predict() respects a custom quantile_levels override", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -447,6 +471,7 @@ test_that("predict() respects a custom quantile_levels override", {
 })
 
 test_that("predict() does not return any timestamp column", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -475,6 +500,7 @@ test_that("predict() does not return any timestamp column", {
 # Optional id_column / timestamp_column on the formula method
 
 test_that("formula synthesizes id and timestamp when both are omitted", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -494,6 +520,7 @@ test_that("formula synthesizes id and timestamp when both are omitted", {
 })
 
 test_that("formula tidyselect with c() resolves id and timestamp columns", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -513,6 +540,7 @@ test_that("formula tidyselect with c() resolves id and timestamp columns", {
 })
 
 test_that("formula tidyselect with bare names resolves id and timestamp", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -530,6 +558,7 @@ test_that("formula tidyselect with bare names resolves id and timestamp", {
 })
 
 test_that("formula accepts character strings for id and timestamp (back-compat)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -547,6 +576,7 @@ test_that("formula accepts character strings for id and timestamp (back-compat)"
 })
 
 test_that("formula errors when id_column tidyselect picks more than one column", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -562,6 +592,7 @@ test_that("formula errors when id_column tidyselect picks more than one column",
 })
 
 test_that("formula errors when id_column tidyselect picks no column", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -577,6 +608,7 @@ test_that("formula errors when id_column tidyselect picks no column", {
 })
 
 test_that("formula errors when string id_column is not a column in data", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -595,6 +627,7 @@ test_that("formula errors when string id_column is not a column in data", {
 # Optional item_id / timestamp on the data.frame method
 
 test_that("data.frame method synthesizes id and timestamp when omitted", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -619,6 +652,7 @@ test_that("data.frame method synthesizes id and timestamp when omitted", {
 # predict round-trip with new_data on a model that has no id / timestamp
 
 test_that("predict accepts new_data without id/timestamp when model was synthesized", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
@@ -637,6 +671,7 @@ test_that("predict accepts new_data without id/timestamp when model was synthesi
 # Print method
 
 test_that("print.brulee_chronos lists model + context details", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -661,6 +696,7 @@ test_that("print.brulee_chronos lists model + context details", {
 })
 
 test_that("print uses 'unknown' when revision is missing", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -680,6 +716,7 @@ test_that("print uses 'unknown' when revision is missing", {
 })
 
 test_that("print handles invalid external pointer gracefully", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -706,6 +743,7 @@ test_that("print handles invalid external pointer gracefully", {
 # Bridge validation extras
 
 test_that("prediction_length above the model maximum errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -724,6 +762,7 @@ test_that("prediction_length above the model maximum errors", {
 })
 
 test_that("non-numeric model_id errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -742,6 +781,7 @@ test_that("non-numeric model_id errors", {
 })
 
 test_that("NA values in item_id error", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -760,6 +800,7 @@ test_that("NA values in item_id error", {
 })
 
 test_that("NA values in timestamp error", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -778,6 +819,7 @@ test_that("NA values in timestamp error", {
 })
 
 test_that("non-numeric target errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -794,6 +836,7 @@ test_that("non-numeric target errors", {
 })
 
 test_that("quantile_levels of length zero errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -815,6 +858,7 @@ test_that("quantile_levels of length zero errors", {
 # Recipe role validation extras
 
 test_that("recipe with more than one id role errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -831,6 +875,7 @@ test_that("recipe with more than one id role errors", {
 })
 
 test_that("recipe with more than one time role errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("recipes")
   skip_if_not_installed("modeldata")
@@ -850,6 +895,7 @@ test_that("recipe with more than one time role errors", {
 # chronos2_split_by_series
 
 test_that("chronos2_split_by_series sorts each series by timestamp", {
+  skip_on_cran()
   unsorted_target <- c(3, 1, 2, 30, 10, 20)
   unsorted_ts <- c(3, 1, 2, 3, 1, 2)
   item_id <- c("A", "A", "A", "B", "B", "B")
@@ -876,6 +922,7 @@ test_that("chronos2_split_by_series sorts each series by timestamp", {
 })
 
 test_that("formula method drops covariates correctly when only timestamp is named", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -897,6 +944,7 @@ test_that("formula method drops covariates correctly when only timestamp is name
 # torch not installed guard
 
 test_that("bridge errors when torch is not installed", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -922,6 +970,7 @@ test_that("bridge errors when torch is not installed", {
 # Device validation
 
 test_that("non-character device argument errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -943,6 +992,7 @@ test_that("non-character device argument errors", {
 # numeric prediction_length coercion
 
 test_that("numeric prediction_length is coerced to integer without error", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -964,6 +1014,7 @@ test_that("numeric prediction_length is coerced to integer without error", {
 # quantile_levels boundary checks
 
 test_that("quantile_levels at 1.0 errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -982,6 +1033,7 @@ test_that("quantile_levels at 1.0 errors", {
 })
 
 test_that("non-numeric quantile_levels errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1003,6 +1055,7 @@ test_that("non-numeric quantile_levels errors", {
 # Formula LHS validation
 
 test_that("formula with multiple LHS variables errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1019,6 +1072,7 @@ test_that("formula with multiple LHS variables errors", {
 })
 
 test_that("formula with target not in data errors (no-covariate path)", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1038,6 +1092,7 @@ test_that("formula with target not in data errors (no-covariate path)", {
 # Multiple series via formula
 
 test_that("formula method handles multiple series correctly", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1064,6 +1119,7 @@ test_that("formula method handles multiple series correctly", {
 # data.frame method with zero-column covariates
 
 test_that("data.frame method with empty covariate frame works", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1086,6 +1142,7 @@ test_that("data.frame method with empty covariate frame works", {
 # formula with `~ .` drops id and timestamp from predictors
 
 test_that("formula with `~ .` excludes id and timestamp from covariates", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1107,6 +1164,7 @@ test_that("formula with `~ .` excludes id and timestamp from covariates", {
 # chronos2_split_by_series with a single series (synthetic flags)
 
 test_that("chronos2_split_by_series works for single series with synthetic flags", {
+  skip_on_cran()
   target <- c(10, 20, 30)
   ts <- c(3, 1, 2)
   item_id <- rep("X", 3)
@@ -1135,6 +1193,7 @@ test_that("chronos2_split_by_series works for single series with synthetic flags
 # chronos2_resolve_column edge cases
 
 test_that("chronos2_resolve_column errors for string not in data", {
+  skip_on_cran()
   df <- data.frame(a = 1:3, b = 4:6)
   quo <- rlang::quo("missing_col")
 
@@ -1144,6 +1203,7 @@ test_that("chronos2_resolve_column errors for string not in data", {
 })
 
 test_that("chronos2_resolve_column errors on invalid tidyselect expression", {
+  skip_on_cran()
   skip_if_not_installed("tidyselect")
   df <- data.frame(a = 1:3, b = 4:6)
   quo <- rlang::quo(c(not_a_col))
@@ -1157,6 +1217,7 @@ test_that("chronos2_resolve_column errors on invalid tidyselect expression", {
 # print with multiple series and covariates
 
 test_that("print works with multiple series and covariates", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1183,6 +1244,7 @@ test_that("print works with multiple series and covariates", {
 # Additional bridge validation
 
 test_that("non-character revision argument errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1201,6 +1263,7 @@ test_that("non-character revision argument errors", {
 })
 
 test_that("non-character cache_dir argument errors", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()
@@ -1219,6 +1282,7 @@ test_that("non-character cache_dir argument errors", {
 })
 
 test_that("prediction_length defaults to model max when NULL", {
+  skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders()

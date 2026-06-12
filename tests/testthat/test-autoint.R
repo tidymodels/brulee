@@ -2,6 +2,7 @@
 # Regression tests
 
 test_that("autoint regression - formula interface", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -31,6 +32,7 @@ test_that("autoint regression - formula interface", {
 })
 
 test_that("autoint regression - data.frame interface (numeric only)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -50,6 +52,7 @@ test_that("autoint regression - data.frame interface (numeric only)", {
 })
 
 test_that("autoint regression - matrix interface", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -67,6 +70,7 @@ test_that("autoint regression - matrix interface", {
 })
 
 test_that("autoint regression - recipe interface", {
+  skip_on_cran()
   skip_if_not_installed("torch")
   skip_if_not_installed("recipes")
 
@@ -92,6 +96,7 @@ test_that("autoint regression - recipe interface", {
 # Classification tests
 
 test_that("autoint binary classification", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -120,6 +125,7 @@ test_that("autoint binary classification", {
 })
 
 test_that("autoint multiclass classification", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -144,6 +150,7 @@ test_that("autoint multiclass classification", {
 })
 
 test_that("autoint classification with class_weights", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -172,6 +179,7 @@ test_that("autoint classification with class_weights", {
 # Hidden layer tests
 
 test_that("autoint with single hidden layer", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -202,6 +210,7 @@ test_that("autoint with single hidden layer", {
 })
 
 test_that("autoint with multiple hidden layers", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -227,6 +236,7 @@ test_that("autoint with multiple hidden layers", {
 })
 
 test_that("autoint hidden layer activation recycling", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -248,6 +258,7 @@ test_that("autoint hidden layer activation recycling", {
 })
 
 test_that("autoint hidden layer dropout", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -277,6 +288,7 @@ test_that("autoint hidden layer dropout", {
 # Validation error tests
 
 test_that("autoint hidden layer validation errors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -316,6 +328,7 @@ test_that("autoint hidden layer validation errors", {
 })
 
 test_that("autoint attention parameter validation errors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -350,6 +363,7 @@ test_that("autoint attention parameter validation errors", {
 })
 
 test_that("autoint default method errors on unsupported types", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   expect_snapshot(
@@ -362,6 +376,7 @@ test_that("autoint default method errors on unsupported types", {
 # Feature handling tests
 
 test_that("autoint with only categorical predictors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -384,6 +399,7 @@ test_that("autoint with only categorical predictors", {
 })
 
 test_that("autoint with only continuous predictors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -402,6 +418,7 @@ test_that("autoint with only continuous predictors", {
 })
 
 test_that("autoint with mixed predictors", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -426,6 +443,7 @@ test_that("autoint with mixed predictors", {
 # Prediction tests
 
 test_that("autoint prediction with specific epoch", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -444,6 +462,7 @@ test_that("autoint prediction with specific epoch", {
 })
 
 test_that("autoint prediction with epoch = 0 and epoch = max", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -467,6 +486,7 @@ test_that("autoint prediction with epoch = 0 and epoch = max", {
 # Optimizer and training tests
 
 test_that("autoint with different optimizers", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -498,6 +518,7 @@ test_that("autoint with different optimizers", {
 })
 
 test_that("autoint with validation = 0", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -518,6 +539,7 @@ test_that("autoint with validation = 0", {
 })
 
 test_that("autoint with penalty and mixture", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -537,6 +559,7 @@ test_that("autoint with penalty and mixture", {
 })
 
 test_that("autoint with batch_size", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -559,6 +582,7 @@ test_that("autoint with batch_size", {
 # Attention parameter tests
 
 test_that("autoint with various attention configurations", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -587,6 +611,7 @@ test_that("autoint with various attention configurations", {
 })
 
 test_that("autoint with dropout_attn and dropout_embedding", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -612,6 +637,7 @@ test_that("autoint with dropout_attn and dropout_embedding", {
 # Top interactions
 
 test_that("autoint returns top interactions", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -639,6 +665,7 @@ test_that("autoint returns top interactions", {
 # Print and autoplot tests
 
 test_that("autoint print method works (no hidden layers)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -655,6 +682,7 @@ test_that("autoint print method works (no hidden layers)", {
 })
 
 test_that("autoint print method works (with hidden layers + dropout)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -678,6 +706,7 @@ test_that("autoint print method works (with hidden layers + dropout)", {
 })
 
 test_that("autoint print method shows validation loss for regression", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -691,6 +720,7 @@ test_that("autoint print method shows validation loss for regression", {
 })
 
 test_that("autoint print method shows training loss when validation = 0", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -710,6 +740,7 @@ test_that("autoint print method shows training loss when validation = 0", {
 })
 
 test_that("autoint print method for classification", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -727,6 +758,7 @@ test_that("autoint print method for classification", {
 })
 
 test_that("autoint autoplot works", {
+  skip_on_cran()
   skip_if_not_installed("torch")
   skip_if_not_installed("ggplot2")
 
@@ -745,6 +777,7 @@ test_that("autoint autoplot works", {
 # Learning rate schedule test
 
 test_that("autoint with learning rate schedule", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -768,6 +801,7 @@ test_that("autoint with learning rate schedule", {
 # Additional coverage tests
 
 test_that("autoint print shows dropout_attn/dropout_embedding", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -789,6 +823,7 @@ test_that("autoint print shows dropout_attn/dropout_embedding", {
 })
 
 test_that("autoint print with LBFGS (no batch size displayed)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -810,6 +845,7 @@ test_that("autoint print with LBFGS (no batch size displayed)", {
 })
 
 test_that("autoint print with no penalty", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -830,6 +866,7 @@ test_that("autoint print with no penalty", {
 })
 
 test_that("autoint classification with validation = 0", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -857,6 +894,7 @@ test_that("autoint classification with validation = 0", {
 })
 
 test_that("autoint with L1 penalty via SGD", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -880,6 +918,7 @@ test_that("autoint with L1 penalty via SGD", {
 })
 
 test_that("autoint with early stopping", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -899,6 +938,7 @@ test_that("autoint with early stopping", {
 })
 
 test_that("autoint coef method returns estimates", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -912,6 +952,7 @@ test_that("autoint coef method returns estimates", {
 })
 
 test_that("autoint with numeric hidden_units (coerced to integer)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)
@@ -932,6 +973,7 @@ test_that("autoint with numeric hidden_units (coerced to integer)", {
 })
 
 test_that("autoint with numeric attention params (coerced to integer)", {
+  skip_on_cran()
   skip_if_not_installed("torch")
 
   set.seed(1)

@@ -1,4 +1,4 @@
-# brulee (development version)
+# brulee 0.7.0
 
 New models for tabular data:
 

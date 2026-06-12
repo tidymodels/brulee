@@ -1,4 +1,5 @@
 test_that("penalty affects model parameters during training", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -58,6 +59,7 @@ test_that("penalty affects model parameters during training", {
 })
 
 test_that("L1 penalty encourages sparsity more than L2", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -119,6 +121,7 @@ test_that("L1 penalty encourages sparsity more than L2", {
 })
 
 test_that("penalty consistency across epochs", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -153,6 +156,7 @@ test_that("penalty consistency across epochs", {
 })
 
 test_that("extreme penalty values behave reasonably", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -219,6 +223,7 @@ test_that("extreme penalty values behave reasonably", {
 })
 
 test_that("penalty works correctly with validation split", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -271,6 +276,7 @@ test_that("penalty works correctly with validation split", {
 })
 
 test_that("penalty works with different batch sizes", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 
@@ -321,6 +327,7 @@ test_that("penalty works with different batch sizes", {
 })
 
 test_that("penalty parameter is stored correctly in model object", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
 

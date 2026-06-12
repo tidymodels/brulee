@@ -1,4 +1,5 @@
 test_that("basic multinomial mlp LBFGS", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")
@@ -81,6 +82,7 @@ test_that("basic multinomial mlp LBFGS", {
 })
 
 test_that("basic multinomial mlp SGD", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")
@@ -146,6 +148,7 @@ test_that("basic multinomial mlp SGD", {
 # ------------------------------------------------------------------------------
 
 test_that("multinomial mlp class weights", {
+  skip_on_cran()
   skip_if_not(torch::torch_is_installed())
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")
