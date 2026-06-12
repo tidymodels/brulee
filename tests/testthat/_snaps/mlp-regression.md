@@ -4,7 +4,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = NA)
     Condition
       Error in `brulee_mlp()`:
-      ! `epochs` must be integer.
+      ! `epochs` must be a whole number, not `NA`.
 
 ---
 
@@ -12,7 +12,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 1:2)
     Condition
       Error in `brulee_mlp()`:
-      ! `epochs` must be a single integer.
+      ! `epochs` must be a whole number, not an integer vector.
 
 ---
 
@@ -20,7 +20,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 0L)
     Condition
       Error in `brulee_mlp()`:
-      ! `epochs` must be an integer on [1, Inf].
+      ! `epochs` must be in the range [1, Inf].
 
 ---
 
@@ -28,7 +28,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = NA)
     Condition
       Error in `brulee_mlp()`:
-      ! `hidden_units` must be integer.
+      ! `hidden_units` must be integer-valued.
 
 ---
 
@@ -36,7 +36,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = -1L)
     Condition
       Error in `brulee_mlp()`:
-      ! `hidden_units` must be an integer on [1, Inf].
+      ! `hidden_units` must be in the range [1, Inf].
 
 ---
 
@@ -52,7 +52,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = NA)
     Condition
       Error in `brulee_mlp()`:
-      ! `penalty` must be a double.
+      ! `penalty` must be a number, not `NA`.
 
 ---
 
@@ -60,7 +60,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = runif(2))
     Condition
       Error in `brulee_mlp()`:
-      ! `penalty` must be a single double.
+      ! `penalty` must be a number, not a double vector.
 
 ---
 
@@ -68,7 +68,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = -1.1)
     Condition
       Error in `brulee_mlp()`:
-      ! `penalty` must be a double on [0, Inf].
+      ! `penalty` must be in the range [0, Inf].
 
 ---
 
@@ -76,7 +76,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = NA)
     Condition
       Error in `brulee_mlp()`:
-      ! `dropout` must be a double.
+      ! `dropout` must be a number, not `NA`.
 
 ---
 
@@ -84,7 +84,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = runif(2))
     Condition
       Error in `brulee_mlp()`:
-      ! `dropout` must be a single double.
+      ! `dropout` must be a number, not a double vector.
 
 ---
 
@@ -92,7 +92,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = -1.1)
     Condition
       Error in `brulee_mlp()`:
-      ! `dropout` must be a double on [0, 1).
+      ! `dropout` must be in the range [0, 1).
 
 ---
 
@@ -100,7 +100,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 1)
     Condition
       Error in `brulee_mlp()`:
-      ! `dropout` must be a double on [0, 1).
+      ! `dropout` must be in the range [0, 1).
 
 ---
 
@@ -108,7 +108,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = NA)
     Condition
       Error in `brulee_mlp()`:
-      ! `validation` must be a double.
+      ! `validation` must be a number, not `NA`.
 
 ---
 
@@ -116,7 +116,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = runif(2))
     Condition
       Error in `brulee_mlp()`:
-      ! `validation` must be a single double.
+      ! `validation` must be a number, not a double vector.
 
 ---
 
@@ -124,7 +124,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = -1.1)
     Condition
       Error in `brulee_mlp()`:
-      ! `validation` must be a double on [0, 1).
+      ! `validation` must be in the range [0, 1).
 
 ---
 
@@ -132,7 +132,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 1)
     Condition
       Error in `brulee_mlp()`:
-      ! `validation` must be a double on [0, 1).
+      ! `validation` must be in the range [0, 1).
 
 ---
 
@@ -140,7 +140,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = NA)
     Condition
       Error in `brulee_mlp()`:
-      ! `learn_rate` must be a double.
+      ! `learn_rate` must be a number, not `NA`.
 
 ---
 
@@ -148,7 +148,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = runif(2))
     Condition
       Error in `brulee_mlp()`:
-      ! `learn_rate` must be a single double.
+      ! `learn_rate` must be a number, not a double vector.
 
 ---
 
@@ -156,7 +156,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = -1.1)
     Condition
       Error in `brulee_mlp()`:
-      ! `learn_rate` must be a double on (0, Inf].
+      ! `learn_rate` must be in the range (0, Inf].
 
 ---
 
@@ -164,7 +164,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = 2)
     Condition
       Error in `brulee_mlp()`:
-      ! `verbose` must be logical.
+      ! `verbose` must be `TRUE` or `FALSE`, not the number 2.
 
 ---
 
@@ -172,7 +172,7 @@
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = rep(TRUE, 10))
     Condition
       Error in `brulee_mlp()`:
-      ! `verbose` must be a single logical.
+      ! `verbose` must be `TRUE` or `FALSE`, not a logical vector.
 
 ---
 

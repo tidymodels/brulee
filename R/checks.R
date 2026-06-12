@@ -36,7 +36,6 @@ check_number_decimal_vec <- function(
 }
 
 # ------------------------------------------------------------------------------
-# soon to be replaced checkers
 
 check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
   compl_data <- complete.cases(x, y)
@@ -69,69 +68,36 @@ check_data_att <- function(x, y, call = rlang::caller_env()) {
   invisible(NULL)
 }
 
+# ------------------------------------------------------------------------------
+# Scalar type checkers (thin wrappers around rlang standalone)
 
-check_rng <- function(x, x_min, x_max, incl = c(TRUE, TRUE)) {
-  if (incl[[1]]) {
-    pass_low <- x >= x_min
+check_integer <- function(
+  x,
+  single = TRUE,
+  x_min = -Inf,
+  x_max = Inf,
+  incl = c(TRUE, TRUE),
+  arg = rlang::caller_arg(x),
+  call = rlang::caller_env()
+) {
+  if (single) {
+    check_number_whole(x, min = NULL, max = NULL, arg = arg, call = call)
   } else {
-    pass_low <- x > x_min
+    if (!is.numeric(x) || !all(x == trunc(x), na.rm = TRUE)) {
+      cli::cli_abort("{.arg {arg}} must be integer-valued.", call = call)
+    }
   }
-  if (incl[[2]]) {
-    pass_high <- x <= x_max
-  } else {
-    pass_high <- x < x_max
-  }
-  any(!pass_low | !pass_high)
-}
 
-numeric_loss_values <- c("mse", "poisson", "smooth_l1", "l1")
-check_regression_loss <- function(loss_function) {
-  check_character(loss_function, single = TRUE, vals = numeric_loss_values)
-
-  # TODO return a different format
-  dplyr::case_when(
-    loss_function == "poisson" ~ "torch::nnf_poisson_nll_loss",
-    loss_function == "smooth_l1" ~ "torch::nnf_smooth_l1_loss",
-    loss_function == "l1" ~ "torch::nnf_l1_loss",
-    TRUE ~ "torch::nnf_mse_loss"
-  )
-}
-
-check_classification_loss <- function(x) {}
-
-check_optimizer <- function(x) {}
-
-
-check_integer <-
-  function(
+  check_range(
     x,
-    single = TRUE,
-    x_min = -Inf,
-    x_max = Inf,
-    incl = c(TRUE, TRUE),
-    call = rlang::caller_env()
-  ) {
-    cl <- match.call()
-    arg <- as.character(cl$x)
-
-    if (!is.integer(x)) {
-      cli::cli_abort("{.arg {arg}} must be integer.", call = call)
-    }
-
-    if (single && length(x) > 1) {
-      cli::cli_abort("{.arg {arg}} must be a single integer.", call = call)
-    }
-
-    out_of_range <- check_rng(x, x_min, x_max, incl)
-    if (any(out_of_range)) {
-      cli::cli_abort(
-        "{.arg {arg}} must be an integer on {ifelse(incl[[1]], '[', '(')}{x_min}, {x_max}{ifelse(incl[[2]], ']', ')')}.",
-        call = call
-      )
-    }
-
-    invisible(TRUE)
-  }
+    x_min = x_min,
+    x_max = x_max,
+    incl = incl,
+    arg = arg,
+    call = call
+  )
+  invisible(x)
+}
 
 check_double <- function(
   x,
@@ -139,73 +105,98 @@ check_double <- function(
   x_min = -Inf,
   x_max = Inf,
   incl = c(TRUE, TRUE),
+  arg = rlang::caller_arg(x),
   call = rlang::caller_env()
 ) {
-  cl <- match.call()
-  arg <- as.character(cl$x)
-
-  if (!is.double(x)) {
-    cli::cli_abort("{.arg {arg}} must be a double.", call = call)
-  }
-
-  if (single && length(x) > 1) {
-    cli::cli_abort("{.arg {arg}} must be a single double.", call = call)
-  }
-
-  out_of_range <- check_rng(x, x_min, x_max, incl)
-  if (any(out_of_range)) {
-    cli::cli_abort(
-      "{.arg {arg}} must be a double on {ifelse(incl[[1]], '[', '(')}{x_min}, {x_max}{ifelse(incl[[2]], ']', ')')}.",
-      call = call
-    )
-  }
-
-  invisible(TRUE)
-}
-
-check_character <- function(
-  x,
-  single = TRUE,
-  vals = NULL,
-  call = rlang::caller_env()
-) {
-  cl <- match.call()
-  arg <- as.character(cl$x)
-
-  if (!is.character(x)) {
-    cli::cli_abort("{.arg {arg}} must be character.", call = call)
-  }
-
-  if (single && length(x) > 1) {
-    cli::cli_abort(
-      "{.arg {arg}} must be a single character string.",
-      call = call
-    )
-  }
-
-  if (!is.null(vals)) {
-    if (any(!(x %in% vals))) {
-      cli::cli_abort("{.arg {arg}} contains an incorrect value.", call = call)
+  if (single) {
+    check_number_decimal(x, min = NULL, max = NULL, arg = arg, call = call)
+  } else {
+    if (!is.numeric(x)) {
+      cli::cli_abort("{.arg {arg}} must be numeric.", call = call)
     }
   }
 
-  invisible(TRUE)
+  check_range(
+    x,
+    x_min = x_min,
+    x_max = x_max,
+    incl = incl,
+    arg = arg,
+    call = call
+  )
+  invisible(x)
 }
 
-check_logical <- function(x, single = TRUE, call = rlang::caller_env()) {
-  cl <- match.call()
-  arg <- as.character(cl$x)
+check_range <- function(
+  x,
+  x_min = -Inf,
+  x_max = Inf,
 
-  if (!is.logical(x)) {
-    cli::cli_abort("{.arg {arg}} must be logical.", call = call)
+  incl = c(TRUE, TRUE),
+  arg = rlang::caller_arg(x),
+  call = rlang::caller_env()
+) {
+  if (incl[[1]]) {
+    low_fail <- any(x < x_min)
+  } else {
+    low_fail <- any(x <= x_min)
   }
 
-  if (single && length(x) > 1) {
-    cli::cli_abort("{.arg {arg}} must be a single logical.", call = call)
+  if (incl[[2]]) {
+    high_fail <- any(x > x_max)
+  } else {
+    high_fail <- any(x >= x_max)
   }
-  invisible(TRUE)
+
+  if (low_fail || high_fail) {
+    lbr <- if (incl[[1]]) "[" else "("
+    rbr <- if (incl[[2]]) "]" else ")"
+    cli::cli_abort(
+      "{.arg {arg}} must be in the range {lbr}{x_min}, {x_max}{rbr}.",
+      call = call
+    )
+  }
+  invisible(x)
 }
 
+# ------------------------------------------------------------------------------
+# Domain-specific validators
+
+optimizer_values <- c("SGD", "ADAMw", "Adadelta", "Adagrad", "RMSprop", "LBFGS")
+
+check_optimizer <- function(
+  x,
+  arg = rlang::caller_arg(x),
+  call = rlang::caller_env()
+) {
+  check_string(x, arg = arg, call = call)
+  if (!x %in% optimizer_values) {
+    cli::cli_abort(
+      "{.arg {arg}} must be one of {.val {optimizer_values}}, not {.val {x}}.",
+      call = call
+    )
+  }
+  invisible(x)
+}
+
+classification_loss_values <- c("nll", "focal")
+
+check_classification_loss <- function(
+  x,
+  arg = rlang::caller_arg(x),
+  call = rlang::caller_env()
+) {
+  check_string(x, arg = arg, call = call)
+  if (!x %in% classification_loss_values) {
+    cli::cli_abort(
+      "{.arg {arg}} must be one of {.val {classification_loss_values}}, not {.val {x}}.",
+      call = call
+    )
+  }
+  invisible(x)
+}
+
+# ------------------------------------------------------------------------------
 
 check_class_weights <- function(wts, lvls, xtab, call = rlang::caller_env()) {
   if (length(lvls) == 0) {

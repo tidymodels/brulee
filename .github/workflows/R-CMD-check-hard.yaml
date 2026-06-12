@@ -52,7 +52,13 @@ jobs:
             any::testthat
             any::knitr
             any::rmarkdown
+            local::.
           needs: check
+
+      - name: Install Chronos2 weights
+        run: |
+          brulee:::chronos2_download()
+        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:

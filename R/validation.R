@@ -52,7 +52,7 @@ validate_common_args <- function(
   )
   check_double(momentum, single = TRUE, 0, 1, incl = c(TRUE, TRUE), call = call)
   check_double(learn_rate, single = TRUE, 0, incl = c(FALSE, TRUE), call = call)
-  check_logical(verbose, single = TRUE, call = call)
+  check_bool(verbose, call = call)
 
   # Return validated values (some may have been coerced)
   list(
@@ -152,7 +152,7 @@ validate_mlp_args <- function(
     incl = c(FALSE, TRUE),
     call = call
   )
-  check_character(activation, single = FALSE, call = call)
+  check_character(activation, call = call)
 
   list(
     hidden_units = hidden_units,
@@ -286,7 +286,7 @@ validate_resnet_args <- function(
     incl = c(FALSE, TRUE),
     call = call
   )
-  check_character(activation, single = FALSE, call = call)
+  check_character(activation, call = call)
 
   list(
     hidden_units = hidden_units,
@@ -430,7 +430,7 @@ validate_rln_args <- function(
       call = call
     )
   }
-  check_character(activation, single = TRUE, call = call)
+  check_string(activation, call = call)
 
   list(
     hidden_units = hidden_units,

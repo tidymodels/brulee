@@ -792,10 +792,6 @@ resnet_fit_imp <-
       ## ---------------------------------------------------------------------------
       # Initialize model and optimizer
 
-      d_type <- torch::torch_get_default_dtype()
-      on.exit(torch::torch_set_default_dtype(d_type))
-      torch::torch_set_default_dtype(torch::torch_float64())
-
       model <- resnet_module(
         num_pred = ncol(x),
         bottleneck_units = bottleneck_units,

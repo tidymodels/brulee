@@ -718,7 +718,7 @@ validate_auto_int_args <- function(
     cli::cli_abort("{.arg dropout_embedding} must be less than 1.", call = call)
   }
 
-  check_character(activation, single = TRUE, call = call)
+  check_string(activation, call = call)
   act_choices <- brulee_activations()
   if (!(activation %in% act_choices)) {
     cli::cli_abort(
@@ -971,10 +971,6 @@ auto_int_fit_imp <- function(
   torch::torch_set_default_dtype(torch::torch_float64())
 
   training_output <- torch::with_device(device = device, {
-    d_type <- torch::torch_get_default_dtype()
-    on.exit(torch::torch_set_default_dtype(d_type))
-    torch::torch_set_default_dtype(torch::torch_float64())
-
     torch::torch_manual_seed(start_seed + 1)
 
     make_auto_int_tensors <- function(xc, xn, yv) {

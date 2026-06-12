@@ -18,23 +18,29 @@ Depends:
 Imports:
     cli,
     coro (>= 1.0.1),
+    curl,
     dplyr,
     generics,
     ggplot2,
     hardhat,
+    jsonlite,
     purrr,
     rlang (>= 1.1.1),
+    safetensors,
     stats,
     tibble,
+    tidyselect,
     torch (>= 0.13.0),
     utils
 Suggests: 
     covr,
+    lubridate,
     modeldata,
     recipes,
     spelling,
     testthat,
-    yardstick
+    yardstick,
+    withr
 Config/Needs/website: tidyverse/tidytemplate
 Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3

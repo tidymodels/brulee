@@ -832,10 +832,6 @@ mlp_fit_imp <-
       ## ---------------------------------------------------------------------------
       # Initialize model and optimizer
 
-      d_type <- torch::torch_get_default_dtype()
-      on.exit(torch::torch_set_default_dtype(d_type))
-      torch::torch_set_default_dtype(torch::torch_float64())
-
       model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
       model$to(device = device)
       mixture <- check_mixture(mixture, optimizer)
