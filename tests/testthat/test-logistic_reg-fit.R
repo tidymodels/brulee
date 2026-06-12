@@ -16,13 +16,12 @@ test_that("basic logistic regression LBFGS", {
 
   glm_fit <- glm(class ~ ., data = bin_tr, family = "binomial")
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_lbfgs <-
         brulee_logistic_reg(class ~ ., bin_tr, penlaty = 0, epochs = 1)
-    },
-    regex = NA
+    }
   )
 
   expect_equal(
@@ -31,12 +30,11 @@ test_that("basic logistic regression LBFGS", {
     tolerance = 1
   )
 
-  expect_error(
+  expect_no_error(
     bin_pred_lbfgs <-
       predict(bin_fit_lbfgs, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs, bin_te, type = "prob")) |>
-      bind_cols(bin_te),
-    regex = NA
+      bind_cols(bin_te)
   )
 
   fact_str <- structure(integer(0), levels = c("one", "two"), class = "factor")
@@ -81,7 +79,7 @@ test_that("basic logistic regression SGD", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_sgd <-
@@ -95,8 +93,7 @@ test_that("basic logistic regression SGD", {
           batch_size = 32L,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
   glm_fit <- glm(class ~ ., data = bin_tr, family = "binomial")
@@ -107,12 +104,11 @@ test_that("basic logistic regression SGD", {
     tolerance = .5
   )
 
-  expect_error(
+  expect_no_error(
     bin_pred_sgd <-
       predict(bin_fit_sgd, bin_te) |>
       bind_cols(predict(bin_fit_sgd, bin_te, type = "prob")) |>
-      bind_cols(bin_te),
-    regex = NA
+      bind_cols(bin_te)
   )
 
   # Did it learn anything?
@@ -182,7 +178,7 @@ test_that("logistic regression class weights", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_lbfgs_wts <-
@@ -195,21 +191,19 @@ test_that("logistic regression class weights", {
           class_weights = cls_wts,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     bin_pred_lbfgs_wts <-
       predict(bin_fit_lbfgs_wts, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs_wts, bin_te, type = "prob")) |>
-      bind_cols(bin_te),
-    regex = NA
+      bind_cols(bin_te)
   )
 
   ### matched unweighted model
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_lbfgs_unwt <-
@@ -221,16 +215,14 @@ test_that("logistic regression class weights", {
           rate_schedule = "decay_time",
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     bin_pred_lbfgs_unwt <-
       predict(bin_fit_lbfgs_unwt, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs_unwt, bin_te, type = "prob")) |>
-      bind_cols(bin_te),
-    regex = NA
+      bind_cols(bin_te)
   )
 
   # did weighting predict the majority class more often?

@@ -24,9 +24,9 @@ test_that("set_optimizer returns correct optimizer types", {
   expect_s3_class(opt_adagrad, "optim_adagrad")
 
   # Test invalid optimizer
-  expect_error(
+  expect_snapshot(
     brulee:::set_optimizer("Invalid", model, 0.1, 0.9, 0.01, 0),
-    "Unsupported optimizer"
+    error = TRUE
   )
 })
 

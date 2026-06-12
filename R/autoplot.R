@@ -84,4 +84,13 @@ autoplot.brulee_resnet <- brulee_plot
 
 #' @rdname brulee-autoplot
 #' @export
+
+autoplot.brulee_auto_int <- brulee_plot
+
+#' @rdname brulee-autoplot
+#' @export
+autoplot.brulee_saint <- brulee_plot
+
+#' @rdname brulee-autoplot
+#' @export
 autoplot.brulee_rln <- brulee_plot

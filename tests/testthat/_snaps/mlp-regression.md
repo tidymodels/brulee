@@ -3,47 +3,47 @@
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = NA)
     Condition
-      Error in `check_integer()`:
-      ! brulee_mlp() expected 'epochs' to be integer.
+      Error in `brulee_mlp()`:
+      ! `epochs` must be integer.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 1:2)
     Condition
-      Error in `check_integer()`:
-      ! brulee_mlp() expected 'epochs' to be a single integer.
+      Error in `brulee_mlp()`:
+      ! `epochs` must be a single integer.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 0L)
     Condition
-      Error in `check_integer()`:
-      ! brulee_mlp() expected 'epochs' to be an integer on [1, Inf].
+      Error in `brulee_mlp()`:
+      ! `epochs` must be an integer on [1, Inf].
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = NA)
     Condition
-      Error in `check_integer()`:
-      ! brulee_mlp() expected 'hidden_units' to be integer.
+      Error in `brulee_mlp()`:
+      ! `hidden_units` must be integer.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = -1L)
     Condition
-      Error in `check_integer()`:
-      ! brulee_mlp() expected 'hidden_units' to be an integer on [1, Inf].
+      Error in `brulee_mlp()`:
+      ! `hidden_units` must be an integer on [1, Inf].
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, activation = NA)
     Condition
-      Error in `validate_mlp_args()`:
+      Error in `brulee_mlp()`:
       ! `activation` should be one of: celu, elu, gelu, hardshrink, hardsigmoid, hardtanh, leaky_relu, linear, log_sigmoid, relu, relu6, rrelu, selu, sigmoid, silu, softplus, softshrink, softsign, tanh, and tanhshrink, not NA.
 
 ---
@@ -51,128 +51,128 @@
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = NA)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'penalty' to be a double.
+      Error in `brulee_mlp()`:
+      ! `penalty` must be a double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = runif(2))
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'penalty' to be a single double.
+      Error in `brulee_mlp()`:
+      ! `penalty` must be a single double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, penalty = -1.1)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'penalty' to be a double on [0, Inf].
+      Error in `brulee_mlp()`:
+      ! `penalty` must be a double on [0, Inf].
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = NA)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'dropout' to be a double.
+      Error in `brulee_mlp()`:
+      ! `dropout` must be a double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = runif(2))
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'dropout' to be a single double.
+      Error in `brulee_mlp()`:
+      ! `dropout` must be a single double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = -1.1)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'dropout' to be a double on [0, 1).
+      Error in `brulee_mlp()`:
+      ! `dropout` must be a double on [0, 1).
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 1)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'dropout' to be a double on [0, 1).
+      Error in `brulee_mlp()`:
+      ! `dropout` must be a double on [0, 1).
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = NA)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'validation' to be a double.
+      Error in `brulee_mlp()`:
+      ! `validation` must be a double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = runif(2))
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'validation' to be a single double.
+      Error in `brulee_mlp()`:
+      ! `validation` must be a single double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = -1.1)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'validation' to be a double on [0, 1).
+      Error in `brulee_mlp()`:
+      ! `validation` must be a double on [0, 1).
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 1)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'validation' to be a double on [0, 1).
+      Error in `brulee_mlp()`:
+      ! `validation` must be a double on [0, 1).
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = NA)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'learn_rate' to be a double.
+      Error in `brulee_mlp()`:
+      ! `learn_rate` must be a double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = runif(2))
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'learn_rate' to be a single double.
+      Error in `brulee_mlp()`:
+      ! `learn_rate` must be a single double.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, learn_rate = -1.1)
     Condition
-      Error in `check_double()`:
-      ! brulee_mlp() expected 'learn_rate' to be a double on (0, Inf].
+      Error in `brulee_mlp()`:
+      ! `learn_rate` must be a double on (0, Inf].
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = 2)
     Condition
-      Error in `check_logical()`:
-      ! brulee_mlp() expected 'verbose' to be logical.
+      Error in `brulee_mlp()`:
+      ! `verbose` must be logical.
 
 ---
 
     Code
       brulee_mlp(reg_x_mat, reg_y, epochs = 2, verbose = rep(TRUE, 10))
     Condition
-      Error in `check_logical()`:
-      ! brulee_mlp() expected 'verbose' to be a single logical.
+      Error in `brulee_mlp()`:
+      ! `verbose` must be a single logical.
 
 ---
 
@@ -182,8 +182,8 @@
         dims, y_stats = bad_models$y_stats, parameters = bad_models$parameters,
       blueprint = bad_models$blueprint)
     Condition
-      Error in `brulee:::new_brulee_mlp()`:
-      ! 'model_obj' should be a raw vector.
+      Error:
+      ! `model_obj` should be a raw vector.
 
 ---
 
@@ -193,8 +193,8 @@
         dims, y_stats = bad_est$y_stats, parameters = bad_est$parameters, blueprint = bad_est$
         blueprint)
     Condition
-      Error in `brulee:::new_brulee_mlp()`:
-      ! 'parameters' should be a list
+      Error:
+      ! `estimates` should be a list.
 
 ---
 
@@ -204,8 +204,8 @@
         dims, y_stats = bad_loss$y_stats, parameters = bad_loss$parameters,
       blueprint = bad_loss$blueprint)
     Condition
-      Error in `brulee:::new_brulee_mlp()`:
-      ! 'loss' should be a numeric vector
+      Error:
+      ! `loss` should be a numeric vector.
 
 ---
 
@@ -215,8 +215,8 @@
         dims, y_stats = bad_dims$y_stats, parameters = bad_dims$parameters,
       blueprint = bad_dims$blueprint)
     Condition
-      Error in `brulee:::new_brulee_mlp()`:
-      ! 'dims' should be a list
+      Error:
+      ! `dims` should be a list.
 
 ---
 
@@ -226,8 +226,8 @@
       dims = bad_parameters$dims, y_stats = bad_parameters$y_stats, parameters = bad_parameters$
         parameters, blueprint = bad_parameters$blueprint)
     Condition
-      Error in `brulee:::new_brulee_mlp()`:
-      ! 'dims' should be a list
+      Error:
+      ! `dims` should be a list.
 
 ---
 
@@ -237,8 +237,8 @@
       dims = bad_blueprint$dims, y_stats = bad_blueprint$y_stats, parameters = bad_blueprint$
         parameters, blueprint = bad_blueprint$blueprint)
     Condition
-      Error in `brulee:::new_brulee_mlp()`:
-      ! 'blueprint' should be a hardhat blueprint
+      Error:
+      ! `blueprint` should be a hardhat blueprint.
 
 # variable hidden_units length
 
@@ -246,8 +246,8 @@
       model <- brulee_mlp(x, y, hidden_units = c(2, 3, 4), epochs = 1, activation = c(
         "relu", "tanh"))
     Condition
-      Error in `validate_mlp_args()`:
-      ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
+      Error in `brulee_mlp()`:
+      ! `activation` must be a single value or a vector with the same length as `hidden_units`.
 
 ---
 
@@ -255,6 +255,6 @@
       model <- brulee_mlp(x, y, hidden_units = c(1), epochs = 1, activation = c(
         "relu", "tanh"))
     Condition
-      Error in `validate_mlp_args()`:
-      ! 'activation' must be a single value or a vector with the same length as 'hidden_units'
+      Error in `brulee_mlp()`:
+      ! `activation` must be a single value or a vector with the same length as `hidden_units`.
 

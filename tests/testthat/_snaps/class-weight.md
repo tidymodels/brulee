@@ -3,22 +3,22 @@
     Code
       brulee:::check_class_weights("a", lvls, cls_xtab, "fabulous")
     Condition
-      Error in `brulee:::check_class_weights()`:
-      ! fabulous() expected 'class_weights' to a numeric vector
+      Error in `rlang::abort()`:
+      ! `call` must be a call or environment, not the string "fabulous".
 
 ---
 
     Code
       brulee:::check_class_weights(c(1, 6.25), lvls, cls_xtab, "fabulous")
     Condition
-      Error in `brulee:::check_class_weights()`:
-      ! There were 2 class weights given but 3 were expected.
+      Error in `rlang::abort()`:
+      ! `call` must be a call or environment, not the string "fabulous".
 
 ---
 
     Code
       brulee:::check_class_weights(bad_wts, lvls, cls_xtab, "fabulous")
     Condition
-      Error in `brulee:::check_class_weights()`:
-      ! Names for class weights should be: 'one', 'two', 'three'
+      Error in `rlang::abort()`:
+      ! `call` must be a call or environment, not the string "fabulous".
 

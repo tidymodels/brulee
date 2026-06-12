@@ -20,7 +20,7 @@ test_that("basic binomial mlp LBFGS", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_f_lbfgs <-
@@ -32,11 +32,10 @@ test_that("basic binomial mlp LBFGS", {
           rate_schedule = "cyclic",
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_lbfgs <-
@@ -48,17 +47,15 @@ test_that("basic binomial mlp LBFGS", {
           rate_schedule = "cyclic",
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     bin_pred_lbfgs <-
       predict(bin_fit_lbfgs, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
-      select(starts_with(".pred"), class),
-    regex = NA
+      select(starts_with(".pred"), class)
   )
 
   fact_str <- structure(
@@ -112,7 +109,7 @@ test_that("basic binomial mlp SGD", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_f_sgd <-
@@ -128,11 +125,10 @@ test_that("basic binomial mlp SGD", {
           momentum = 0.5,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(392)
       bin_fit_sgd <-
@@ -148,17 +144,15 @@ test_that("basic binomial mlp SGD", {
           momentum = 0.5,
           learn_rate = 0.1
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     bin_pred_sgd <-
       predict(bin_fit_sgd, bin_te) |>
       bind_cols(predict(bin_fit_sgd, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
-      select(starts_with(".pred"), class),
-    regex = NA
+      select(starts_with(".pred"), class)
   )
 
   fact_str <- structure(
@@ -212,7 +206,7 @@ test_that("binomial mlp case weights", {
 
   # ------------------------------------------------------------------------------
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(391)
       weighted <-
@@ -225,20 +219,18 @@ test_that("binomial mlp case weights", {
           class_weights = 10,
           learn_rate = 0.01
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     weighted_pred <-
       predict(weighted, bin_te) |>
       bind_cols(predict(weighted, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
-      select(starts_with(".pred"), class),
-    regex = NA
+      select(starts_with(".pred"), class)
   )
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(391)
       unweighted <-
@@ -250,17 +242,15 @@ test_that("binomial mlp case weights", {
           rate_schedule = "cyclic",
           learn_rate = 0.01
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     unweighted_pred <-
       predict(unweighted, bin_te) |>
       bind_cols(predict(unweighted, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
-      select(starts_with(".pred"), class),
-    regex = NA
+      select(starts_with(".pred"), class)
   )
 
   expect_true(

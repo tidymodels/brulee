@@ -18,7 +18,7 @@ brulee_resnet(x, ...)
   y,
   epochs = 100L,
   hidden_units = 3L,
-  batch_norm_units = hidden_units,
+  bottleneck_units = hidden_units,
   residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
@@ -44,7 +44,7 @@ brulee_resnet(x, ...)
   y,
   epochs = 100L,
   hidden_units = 3L,
-  batch_norm_units = hidden_units,
+  bottleneck_units = hidden_units,
   residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
@@ -70,7 +70,7 @@ brulee_resnet(x, ...)
   data,
   epochs = 100L,
   hidden_units = 3L,
-  batch_norm_units = hidden_units,
+  bottleneck_units = hidden_units,
   residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
@@ -96,7 +96,7 @@ brulee_resnet(x, ...)
   data,
   epochs = 100L,
   hidden_units = 3L,
-  batch_norm_units = hidden_units,
+  bottleneck_units = hidden_units,
   residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
@@ -146,17 +146,16 @@ specified as:
 in each layer. The length of this vector determines the number of layers.
 Each value must be >= 1.}
 
-\item{batch_norm_units}{An integer vector specifying the intermediate dimension
+\item{bottleneck_units}{An integer vector specifying the intermediate dimension
 within each layer. Must have the same length as \code{hidden_units}. Each value
 must be >= 2.}
 
 \item{residual_at}{An integer vector specifying which layer indices should
 have residual (skip) connections. For example, \code{residual_at = c(2, 4)}
 creates residual connections after layers 2 and 4, forming two residual
-blocks (layers 1-2 and 3-4). If \code{NULL} (default), a residual connection
-is placed at the last layer, making the entire network one residual block.
-Use \code{integer(0)} for no residual connections (i.e., a purely feed-forward
-model only).}
+blocks (layers 1-2 and 3-4). If \code{NULL} (default), every layer gets its own
+skip connection. Use \code{integer(0)} for no residual connections (i.e., a
+purely feed-forward model only).}
 
 \item{activation}{A character vector for the activation function (such as
 "relu", "tanh", "sigmoid", and so on). See \code{\link[=brulee_activations]{brulee_activations()}} for
@@ -264,10 +263,10 @@ layers via the \code{residual_at} parameter.
 Each layer follows this pattern:
 \itemize{
 \item Batch normalization (input dimension)
-\item Linear transformation (input dimension -> \code{batch_norm_units[i]})
+\item Linear transformation (input dimension -> \code{bottleneck_units[i]})
 \item Activation function (ReLU by default)
-\item Linear transformation (\code{batch_norm_units[i]} -> \code{hidden_units[i]})
-\item Activation function
+\item Dropout (if specified)
+\item Linear transformation (\code{bottleneck_units[i]} -> \code{hidden_units[i]})
 \item Dropout (if specified)
 }
 
@@ -282,7 +281,7 @@ The \code{residual_at} parameter defines where skip connections occur:
 \itemize{
 \item \code{residual_at = 3} creates one block spanning layers 1-3
 \item \code{residual_at = c(2, 4)} creates two blocks: layers 1-2 and layers 3-4
-\item \code{residual_at = NULL} (default) creates one block spanning all layers
+\item \code{residual_at = NULL} (default) places a skip connection at every layer
 \item \code{residual_at = integer(0)} creates no residual connections (a purely
 feed-forward model)
 }
@@ -348,10 +347,12 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  set.seed(2)
  fit <- brulee_resnet(ames_rec, data = ames_train,
-                      hidden_units = c(20, 10), batch_norm_units = c(15, 8),
+                      hidden_units = c(20, 10), bottleneck_units = c(15, 8),
                       residual_at = 2,
                       epochs = 50, batch_size = 32)
  fit
+
+ summary(fit)
 
  autoplot(fit)
 
@@ -374,7 +375,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  set.seed(2)
  cls_fit <- brulee_resnet(class ~ ., data = parabolic_tr,
-                          hidden_units = c(8, 5), batch_norm_units = c(6, 4),
+                          hidden_units = c(8, 5), bottleneck_units = c(6, 4),
                           residual_at = 1:2,
                           epochs = 200L, learn_rate = 0.1, activation = "elu",
                           penalty = 0.1, batch_size = 2^8)

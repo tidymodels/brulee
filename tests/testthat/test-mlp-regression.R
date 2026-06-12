@@ -25,45 +25,40 @@ test_that('basic regression mlp LBFGS', {
   # ------------------------------------------------------------------------------
 
   # matrix x
-  expect_error(
+  expect_no_error(
     {
       set.seed(1)
       mlp_reg_mat_lbfgs_fit <-
         brulee_mlp(reg_tr_x_mat, reg_tr_y, mixture = 0, learn_rate = .1)
-    },
-    regex = NA
+    }
   )
 
   # data frame x (all numeric)
-  expect_error(
-    mlp_reg_df_lbfgs_fit <- brulee_mlp(reg_tr_x_df, reg_tr_y, validation = .2),
-    regex = NA
+  expect_no_error(
+    mlp_reg_df_lbfgs_fit <- brulee_mlp(reg_tr_x_df, reg_tr_y, validation = .2)
   )
 
   # formula (mixed)
-  expect_error(
+  expect_no_error(
     {
       set.seed(8373)
       mlp_reg_f_lbfgs_fit <- brulee_mlp(outcome ~ ., reg_tr)
-    },
-    regex = NA
+    }
   )
 
   # recipe
-  expect_error(
+  expect_no_error(
     {
       set.seed(8373)
       mlp_reg_rec_lbfgs_fit <- brulee_mlp(reg_rec, reg_tr)
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     reg_pred_lbfgs <-
       predict(mlp_reg_rec_lbfgs_fit, reg_te) |>
       bind_cols(reg_te) |>
-      select(-starts_with("predictor")),
-    regex = NA
+      select(-starts_with("predictor"))
   )
 
   exp_str <-
@@ -130,9 +125,8 @@ test_that('bad args', {
     brulee_mlp(reg_x_mat, reg_y, epochs = 0L),
     error = TRUE
   )
-  expect_error(
-    brulee_mlp(reg_x_mat, reg_y, epochs = 2),
-    regex = NA
+  expect_no_error(
+    brulee_mlp(reg_x_mat, reg_y, epochs = 2)
   )
 
   expect_snapshot(
@@ -144,9 +138,8 @@ test_that('bad args', {
     brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = -1L),
     error = TRUE
   )
-  expect_error(
-    brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = 2),
-    regex = NA
+  expect_no_error(
+    brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = 2)
   )
 
   expect_snapshot(
@@ -183,9 +176,8 @@ test_that('bad args', {
     brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 1.0),
     error = TRUE
   )
-  expect_error(
-    brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 0),
-    regex = NA
+  expect_no_error(
+    brulee_mlp(reg_x_mat, reg_y, epochs = 2, dropout = 0)
   )
 
   expect_snapshot(
@@ -204,9 +196,8 @@ test_that('bad args', {
     brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 1.0),
     error = TRUE
   )
-  expect_error(
-    brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 0),
-    regex = NA
+  expect_no_error(
+    brulee_mlp(reg_x_mat, reg_y, epochs = 2, validation = 0)
   )
 
   expect_snapshot(
@@ -361,9 +352,8 @@ test_that("variable hidden_units length", {
   x <- data.frame(x = rnorm(1000))
   y <- 2 * x$x
 
-  expect_error(
-    model <- brulee_mlp(x, y, hidden_units = c(2, 3), epochs = 1),
-    regexp = NA
+  expect_no_error(
+    model <- brulee_mlp(x, y, hidden_units = c(2, 3), epochs = 1)
   )
 
   expect_equal(
@@ -424,7 +414,7 @@ test_that('two-layer networks', {
 
   # This fails only on linux for unknown reasons
   # matrix x
-  expect_error(
+  expect_no_error(
     {
       set.seed(1)
       mlp_reg_mat_two_fit <-
@@ -438,11 +428,10 @@ test_that('two-layer networks', {
           activation = "relu",
           activation_2 = "elu"
         )
-    },
-    regex = NA
+    }
   )
 
-  expect_error(
+  expect_no_error(
     {
       set.seed(1)
       mlp_reg_mat_two_check_fit <-
@@ -454,14 +443,13 @@ test_that('two-layer networks', {
           hidden_units = c(5, 10),
           activation = c("relu", "elu")
         )
-    },
-    regex = NA
+    }
   )
 
   expect_equal(mlp_reg_mat_two_fit$loss, mlp_reg_mat_two_check_fit$loss)
 
   # data frame x (all numeric)
-  expect_error(
+  expect_no_error(
     mlp_reg_df_two_fit <-
       brulee_mlp_two_layer(
         reg_tr_x_df,
@@ -471,12 +459,11 @@ test_that('two-layer networks', {
         hidden_units_2 = 10,
         activation = "celu",
         activation_2 = "gelu"
-      ),
-    regex = NA
+      )
   )
 
   # formula (mixed)
-  expect_error(
+  expect_no_error(
     {
       set.seed(8373)
       mlp_reg_f_two_fit <- brulee_mlp_two_layer(
@@ -487,12 +474,11 @@ test_that('two-layer networks', {
         activation = "hardshrink",
         activation_2 = "hardsigmoid"
       )
-    },
-    regex = NA
+    }
   )
 
   # recipe
-  expect_error(
+  expect_no_error(
     {
       set.seed(8373)
       mlp_reg_rec_two_fit <- brulee_mlp_two_layer(
@@ -503,7 +489,69 @@ test_that('two-layer networks', {
         activation = "hardtanh",
         activation_2 = "sigmoid"
       )
-    },
-    regex = NA
+    }
   )
+})
+
+test_that("summary.brulee_mlp prints layers and total parameters", {
+  skip_if(!torch::torch_is_installed())
+  skip_if_not_installed("recipes")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 100
+  sim_x <- matrix(rnorm(n * 3), ncol = 3)
+  colnames(sim_x) <- c("x1", "x2", "x3")
+  sim_y <- sim_x[, 1] + 2 * sim_x[, 2] + rnorm(n, sd = 0.1)
+
+  set.seed(1)
+  fit <- brulee_mlp(
+    x = sim_x,
+    y = sim_y,
+    hidden_units = c(8, 4),
+    dropout = 0.1,
+    epochs = 2,
+    verbose = FALSE
+  )
+
+  out <- capture.output(result <- summary(fit))
+
+  expect_identical(result, fit)
+  expect_true(any(grepl("Multilayer perceptron architecture", out)))
+  expect_true(any(grepl("Linear\\(3 -> 8\\)", out)))
+  expect_true(any(grepl("Linear\\(8 -> 4\\)", out)))
+  expect_true(any(grepl("Linear\\(4 -> 1\\)", out)))
+  expect_true(any(grepl("Dropout\\(p = 0.1\\)", out)))
+
+  module <- brulee:::revive_model(fit$model_obj)
+  total <- sum(vapply(module$parameters, function(p) p$numel(), integer(1)))
+  expect_true(any(grepl(
+    paste0("Total parameters: ", format(total, big.mark = ",")),
+    out
+  )))
+})
+
+test_that("summary.brulee_mlp shows Softmax for multinomial fits", {
+  skip_if(!torch::torch_is_installed())
+  skip_if_not_installed("recipes")
+  skip_on_cran()
+
+  set.seed(1)
+  n <- 80
+  sim_x <- matrix(rnorm(n * 3), ncol = 3)
+  colnames(sim_x) <- c("x1", "x2", "x3")
+  sim_y <- factor(sample(letters[1:3], n, replace = TRUE))
+
+  set.seed(1)
+  fit <- brulee_mlp(
+    x = sim_x,
+    y = sim_y,
+    hidden_units = 5,
+    epochs = 2,
+    verbose = FALSE
+  )
+
+  out <- capture.output(summary(fit))
+  expect_true(any(grepl("Softmax", out)))
+  expect_true(any(grepl("output dim: 3", out)))
 })

@@ -3,7 +3,7 @@
     Code
       check_number_decimal_vec(letters)
     Condition
-      Error in `check_number_decimal_vec()`:
+      Error:
       ! `letters` should be a double vector.
 
 ---
@@ -11,7 +11,7 @@
     Code
       check_number_decimal_vec(variable)
     Condition
-      Error in `check_number_decimal_vec()`:
+      Error:
       ! `variable` should not contain missing values.
 
 ---
@@ -19,7 +19,7 @@
     Code
       check_number_decimal_vec(variable)
     Condition
-      Error in `check_number_decimal_vec()`:
+      Error:
       ! `variable` should be a double vector.
 
 # checking whole number vectors

@@ -1,6 +1,6 @@
-#' Predict from a `brulee_resnet`
+#' Predict from a `brulee_saint`
 #'
-#' @param object A `brulee_resnet` object.
+#' @param object A `brulee_saint` object.
 #'
 #' @param new_data A data frame or matrix of new predictors.
 #' @param epoch An integer for the epoch to make predictions. If this value
@@ -24,34 +24,24 @@
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
-#'  # regression example:
+#'   set.seed(87261)
+#'   tr_data <- modeldata::sim_classification(500)
+#'   te_data <- modeldata::sim_classification(50)
 #'
-#'  data(ames, package = "modeldata")
+#'   set.seed(2)
+#'   fit <- brulee_saint(class ~ ., data = tr_data,
+#'                       epochs = 50L, batch_size = 64L, stop_iter = 10L,
+#'                       learn_rate = 0.001)
+#'   fit
 #'
-#'  ames$Sale_Price <- log10(ames$Sale_Price)
+#'   autoplot(fit)
 #'
-#'  set.seed(1)
-#'  in_train <- sample(1:nrow(ames), 2000)
-#'  ames_train <- ames[ in_train,]
-#'  ames_test  <- ames[-in_train,]
-#'
-#'  # Using recipe
-#'  library(recipes)
-#'
-#'  ames_rec <-
-#'   recipe(Sale_Price ~ Longitude + Latitude, data = ames_train) |>
-#'     step_normalize(all_numeric_predictors())
-#'
-#'  set.seed(2)
-#'  fit <- brulee_resnet(ames_rec, data = ames_train,
-#'                       hidden_units = 2, num_layers = 2, bottleneck_units = 10,
-#'                       epochs = 50, batch_size = 32)
-#'
-#'  predict(fit, ames_test)
+#'  predict(fit, te_data)
+#'  predict(fit, te_data, type = "prob")
 #' }
 #' }
 #' @export
-predict.brulee_resnet <- function(
+predict.brulee_saint <- function(
   object,
   new_data,
   type = NULL,
@@ -64,7 +54,7 @@ predict.brulee_resnet <- function(
   if (is.null(epoch)) {
     epoch <- object$best_epoch
   }
-  predict_brulee_resnet_bridge(
+  predict_brulee_saint_bridge(
     type,
     object,
     forged$predictors,
@@ -76,19 +66,14 @@ predict.brulee_resnet <- function(
 # ------------------------------------------------------------------------------
 # Bridge
 
-predict_brulee_resnet_bridge <- function(
+predict_brulee_saint_bridge <- function(
   type,
   model,
   predictors,
   epoch,
   call = rlang::caller_env()
 ) {
-  if (!is.matrix(predictors)) {
-    predictors <- as.matrix(predictors)
-    check_character_matrix(predictors, call = call)
-  }
-
-  predict_function <- get_resnet_predict_function(type)
+  predict_function <- get_saint_predict_function(type)
 
   max_epoch <- length(model$estimates)
   last_epoch_note(epoch, max_epoch, call = call)
@@ -98,54 +83,86 @@ predict_brulee_resnet_bridge <- function(
   predictions
 }
 
-get_resnet_predict_function <- function(type) {
+get_saint_predict_function <- function(type) {
   switch(
     type,
-    numeric = predict_brulee_resnet_numeric,
-    prob = predict_brulee_resnet_prob,
-    class = predict_brulee_resnet_class
+    numeric = predict_brulee_saint_numeric,
+    prob = predict_brulee_saint_prob,
+    class = predict_brulee_saint_class
   )
 }
 
 # ------------------------------------------------------------------------------
 # Implementation
 
-predict_brulee_resnet_raw <- function(model, predictors, epoch) {
-  # Get safe device (falls back to CPU with warning if unavailable)
+predict_brulee_saint_raw <- function(model, predictors, epoch) {
   device <- get_safe_device(model$device)
 
-  # convert from raw format
-  module <- revive_model(model$model_obj, device)
-  # get current model parameters
-  estimates <- model$estimates[[epoch + 1]]
-  # convert to torch representation
-  estimates <- lapply(estimates, float_64, device = device)
+  cat_names <- model$dims$cat_names
+  cont_names <- model$dims$cont_names
 
-  # stuff back into the model
+  x_cat <- NULL
+  if (length(cat_names) > 0) {
+    cat_cols <- intersect(cat_names, names(predictors))
+    if (length(cat_cols) > 0) {
+      cat_mat <- do.call(
+        cbind,
+        lapply(cat_cols, function(nm) {
+          as.integer(predictors[[nm]])
+        })
+      )
+      x_cat <- torch::torch_tensor(
+        cat_mat,
+        dtype = torch::torch_long(),
+        device = device
+      )
+    }
+  }
+
+  x_cont <- NULL
+  if (length(cont_names) > 0) {
+    cont_cols <- intersect(cont_names, names(predictors))
+    if (length(cont_cols) > 0) {
+      x_cont <- float_64(
+        as.matrix(predictors[, cont_cols, drop = FALSE]),
+        device = device
+      )
+    }
+  }
+
+  module <- revive_model(model$model_obj, device)
+
+  estimates <- model$estimates[[epoch + 1]]
+  estimates <- lapply(estimates, float_64, device = device)
   module$load_state_dict(estimates)
-  module$eval() # put the model in evaluation mode
-  predictions <- module(float_64(predictors, device))
+  module$eval()
+
+  row_attn <- model$parameters$row_attention_on_predict %||% FALSE
+  if (!is.null(module$backbone$use_row_attention)) {
+    module$backbone$use_row_attention <- row_attn
+  }
+
+  predictions <- module(x_cat, x_cont)
   predictions <- as.array(predictions)
-  # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA
   predictions
 }
 
-predict_brulee_resnet_numeric <- function(model, predictors, epoch) {
-  predictions <- predict_brulee_resnet_raw(model, predictors, epoch)
+predict_brulee_saint_numeric <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_saint_raw(model, predictors, epoch)
   predictions <- predictions * model$y_stats$sd + model$y_stats$mean
   hardhat::spruce_numeric(predictions[, 1])
 }
 
-predict_brulee_resnet_prob <- function(model, predictors, epoch) {
-  predictions <- predict_brulee_resnet_raw(model, predictors, epoch)
+predict_brulee_saint_prob <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_saint_raw(model, predictors, epoch)
   lvs <- get_levels(model)
   hardhat::spruce_prob(pred_levels = lvs, predictions)
 }
 
-predict_brulee_resnet_class <- function(model, predictors, epoch) {
-  predictions <- predict_brulee_resnet_raw(model, predictors, epoch)
-  predictions <- apply(predictions, 1, which.max2) # take the maximum value
+predict_brulee_saint_class <- function(model, predictors, epoch) {
+  predictions <- predict_brulee_saint_raw(model, predictors, epoch)
+  predictions <- apply(predictions, 1, which.max2)
   lvs <- get_levels(model)
   hardhat::spruce_class(factor(lvs[predictions], levels = lvs))
 }

@@ -6,16 +6,15 @@
 #' @param hidden_units An integer vector specifying the number of hidden units
 #'   in each layer. The length of this vector determines the number of layers.
 #'   Each value must be >= 1.
-#' @param batch_norm_units An integer vector specifying the intermediate dimension
+#' @param bottleneck_units An integer vector specifying the intermediate dimension
 #'   within each layer. Must have the same length as `hidden_units`. Each value
 #'   must be >= 2.
 #' @param residual_at An integer vector specifying which layer indices should
 #'   have residual (skip) connections. For example, `residual_at = c(2, 4)`
 #'   creates residual connections after layers 2 and 4, forming two residual
-#'   blocks (layers 1-2 and 3-4). If `NULL` (default), a residual connection
-#'   is placed at the last layer, making the entire network one residual block.
-#'   Use `integer(0)` for no residual connections (i.e., a purely feed-forward
-#'   model only).
+#'   blocks (layers 1-2 and 3-4). If `NULL` (default), every layer gets its own
+#'   skip connection. Use `integer(0)` for no residual connections (i.e., a
+#'   purely feed-forward model only).
 #'
 #' @details
 #'
@@ -34,10 +33,10 @@
 #'
 #' Each layer follows this pattern:
 #' - Batch normalization (input dimension)
-#' - Linear transformation (input dimension -> `batch_norm_units[i]`)
+#' - Linear transformation (input dimension -> `bottleneck_units[i]`)
 #' - Activation function (ReLU by default)
-#' - Linear transformation (`batch_norm_units[i]` -> `hidden_units[i]`)
-#' - Activation function
+#' - Dropout (if specified)
+#' - Linear transformation (`bottleneck_units[i]` -> `hidden_units[i]`)
 #' - Dropout (if specified)
 #'
 #' When a residual connection is specified at layer `i` via `residual_at`, the
@@ -49,7 +48,7 @@
 #' The `residual_at` parameter defines where skip connections occur:
 #' - `residual_at = 3` creates one block spanning layers 1-3
 #' - `residual_at = c(2, 4)` creates two blocks: layers 1-2 and layers 3-4
-#' - `residual_at = NULL` (default) creates one block spanning all layers
+#' - `residual_at = NULL` (default) places a skip connection at every layer
 #' - `residual_at = integer(0)` creates no residual connections (a purely
 #'    feed-forward model)
 #'
@@ -146,10 +145,12 @@
 #'
 #'  set.seed(2)
 #'  fit <- brulee_resnet(ames_rec, data = ames_train,
-#'                       hidden_units = c(20, 10), batch_norm_units = c(15, 8),
+#'                       hidden_units = c(20, 10), bottleneck_units = c(15, 8),
 #'                       residual_at = 2,
 #'                       epochs = 50, batch_size = 32)
 #'  fit
+#'
+#'  summary(fit)
 #'
 #'  autoplot(fit)
 #'
@@ -172,7 +173,7 @@
 #'
 #'  set.seed(2)
 #'  cls_fit <- brulee_resnet(class ~ ., data = parabolic_tr,
-#'                           hidden_units = c(8, 5), batch_norm_units = c(6, 4),
+#'                           hidden_units = c(8, 5), bottleneck_units = c(6, 4),
 #'                           residual_at = 1:2,
 #'                           epochs = 200L, learn_rate = 0.1, activation = "elu",
 #'                           penalty = 0.1, batch_size = 2^8)
@@ -210,7 +211,7 @@ brulee_resnet.data.frame <-
     y,
     epochs = 100L,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
@@ -236,7 +237,7 @@ brulee_resnet.data.frame <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -267,7 +268,7 @@ brulee_resnet.matrix <- function(
   y,
   epochs = 100L,
   hidden_units = 3L,
-  batch_norm_units = hidden_units,
+  bottleneck_units = hidden_units,
   residual_at = NULL,
   activation = "relu",
   penalty = 0.001,
@@ -293,7 +294,7 @@ brulee_resnet.matrix <- function(
     processed,
     epochs = epochs,
     hidden_units = hidden_units,
-    batch_norm_units = batch_norm_units,
+    bottleneck_units = bottleneck_units,
     residual_at = residual_at,
     activation = activation,
     learn_rate = learn_rate,
@@ -325,7 +326,7 @@ brulee_resnet.formula <-
     data,
     epochs = 100L,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
@@ -351,7 +352,7 @@ brulee_resnet.formula <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -383,7 +384,7 @@ brulee_resnet.recipe <-
     data,
     epochs = 100L,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     activation = "relu",
     penalty = 0.001,
@@ -409,7 +410,7 @@ brulee_resnet.recipe <-
       processed,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -438,7 +439,7 @@ brulee_resnet_bridge <- function(
   processed,
   epochs,
   hidden_units,
-  batch_norm_units,
+  bottleneck_units,
   residual_at,
   activation,
   learn_rate,
@@ -456,34 +457,34 @@ brulee_resnet_bridge <- function(
   grad_norm_clip,
   verbose,
   device,
-  ...
+  ...,
+  call = rlang::caller_env()
 ) {
   if (!torch::torch_is_installed()) {
     cli::cli_abort(
-      "The torch backend has not been installed; use `torch::install_torch()`."
+      "The torch backend has not been installed; use {.run torch::install_torch()}.",
+      call = call
     )
   }
 
   # Guess device if not specified
   device <- guess_brulee_device(device)
 
-  f_nm <- "brulee_resnet"
-
   # Validate ResNet-specific arguments
   resnet_validated <- validate_resnet_args(
     hidden_units = hidden_units,
-    batch_norm_units = batch_norm_units,
+    bottleneck_units = bottleneck_units,
     residual_at = residual_at,
     activation = activation,
     dropout = dropout,
     grad_value_clip = grad_value_clip,
     grad_norm_clip = grad_norm_clip,
-    fn = f_nm
+    call = call
   )
 
   # Extract validated/coerced values
   hidden_units <- resnet_validated$hidden_units
-  batch_norm_units <- resnet_validated$batch_norm_units
+  bottleneck_units <- resnet_validated$bottleneck_units
   residual_at <- resnet_validated$residual_at
   activation <- resnet_validated$activation
 
@@ -492,7 +493,7 @@ brulee_resnet_bridge <- function(
     if (is.numeric(batch_size) & !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
-    check_integer(batch_size, single = TRUE, 1, fn = f_nm)
+    check_integer(batch_size, single = TRUE, 1, call = call)
   }
 
   # Validate common arguments
@@ -505,7 +506,7 @@ brulee_resnet_bridge <- function(
     momentum = momentum,
     learn_rate = learn_rate,
     verbose = verbose,
-    fn = f_nm
+    call = call
   )
 
   # Extract validated/coerced values
@@ -515,7 +516,7 @@ brulee_resnet_bridge <- function(
   ## -----------------------------------------------------------------------------
 
   # Process predictors
-  predictors <- process_predictors(processed$predictors, fn = f_nm)
+  predictors <- process_predictors(processed$predictors, call = call)
 
   if (is.null(batch_size) & optimizer != "LBFGS") {
     batch_size <- 32L
@@ -528,13 +529,13 @@ brulee_resnet_bridge <- function(
   ## -----------------------------------------------------------------------------
 
   # Validate outcome (ResNet accepts both numeric and factor)
-  outcome <- validate_mlp_outcome(processed$outcomes[[1]], fn = f_nm)
+  outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
 
   # ------------------------------------------------------------------------------
 
   lvls <- levels(outcome)
   xtab <- table(outcome)
-  class_weights <- check_class_weights(class_weights, lvls, xtab, f_nm)
+  class_weights <- check_class_weights(class_weights, lvls, xtab, call = call)
 
   ## -----------------------------------------------------------------------------
 
@@ -544,7 +545,7 @@ brulee_resnet_bridge <- function(
       y = outcome,
       epochs = epochs,
       hidden_units = hidden_units,
-      batch_norm_units = batch_norm_units,
+      bottleneck_units = bottleneck_units,
       residual_at = residual_at,
       activation = activation,
       learn_rate = learn_rate,
@@ -590,28 +591,31 @@ new_brulee_resnet <- function(
   blueprint
 ) {
   if (!inherits(model_obj, "raw")) {
-    cli::cli_abort("'model_obj' should be a raw vector.")
+    cli::cli_abort("{.arg model_obj} should be a raw vector.", call = NULL)
   }
   if (!is.list(estimates)) {
-    cli::cli_abort("'parameters' should be a list")
+    cli::cli_abort("{.arg estimates} should be a list.", call = NULL)
   }
   if (!is.vector(best_epoch) || !is.integer(best_epoch)) {
-    cli::cli_abort("'best_epoch' should be an integer")
+    cli::cli_abort("{.arg best_epoch} should be an integer.", call = NULL)
   }
   if (!is.vector(loss) || !is.numeric(loss)) {
-    cli::cli_abort("'loss' should be a numeric vector")
+    cli::cli_abort("{.arg loss} should be a numeric vector.", call = NULL)
   }
   if (!is.list(dims)) {
-    cli::cli_abort("'dims' should be a list")
+    cli::cli_abort("{.arg dims} should be a list.", call = NULL)
   }
   if (!is.list(y_stats)) {
-    cli::cli_abort("'y_stats' should be a list")
+    cli::cli_abort("{.arg y_stats} should be a list.", call = NULL)
   }
   if (!is.list(parameters)) {
-    cli::cli_abort("'parameters' should be a list")
+    cli::cli_abort("{.arg parameters} should be a list.", call = NULL)
   }
   if (!inherits(blueprint, "hardhat_blueprint")) {
-    cli::cli_abort("'blueprint' should be a hardhat blueprint")
+    cli::cli_abort(
+      "{.arg blueprint} should be a hardhat blueprint.",
+      call = NULL
+    )
   }
 
   # Save the estimates that have values
@@ -642,7 +646,7 @@ resnet_fit_imp <-
     epochs = 100L,
     batch_size = 32,
     hidden_units = 3L,
-    batch_norm_units = hidden_units,
+    bottleneck_units = hidden_units,
     residual_at = NULL,
     penalty = 0.001,
     mixture = 0,
@@ -663,13 +667,6 @@ resnet_fit_imp <-
   ) {
     start_seed <- sample.int(10^5, 1)
     torch::torch_manual_seed(start_seed)
-
-    ## ---------------------------------------------------------------------------
-    # Handle residual_at default
-
-    if (is.null(residual_at)) {
-      residual_at <- length(hidden_units)
-    }
 
     ## ---------------------------------------------------------------------------
     # General data checks:
@@ -764,7 +761,7 @@ resnet_fit_imp <-
             n = n,
             h = hidden_units,
             num_layers = length(hidden_units),
-            batch_norm_units = batch_norm_units,
+            bottleneck_units = bottleneck_units,
             y = y_dim,
             levels = lvls,
             features = colnames(x)
@@ -773,7 +770,7 @@ resnet_fit_imp <-
           parameters = list(
             activation = activation,
             hidden_units = hidden_units,
-            batch_norm_units = batch_norm_units,
+            bottleneck_units = bottleneck_units,
             residual_at = residual_at,
             learn_rate = learn_rate,
             class_weights = as.numeric(class_weights),
@@ -801,7 +798,7 @@ resnet_fit_imp <-
 
       model <- resnet_module(
         num_pred = ncol(x),
-        batch_norm_units = batch_norm_units,
+        bottleneck_units = bottleneck_units,
         hidden_units = hidden_units,
         residual_at = residual_at,
         activation = activation,
@@ -850,7 +847,7 @@ resnet_fit_imp <-
       loss_min <- loss_prev
 
       if (verbose) {
-        epoch_chr <- gsub(" ", "0", format(0:epochs))
+        epoch_chr <- format_epoch_labels(0:epochs)
         cli::cli_inform(
           "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
         )
@@ -925,26 +922,26 @@ resnet_layer_module <-
     "resnet_layer_module",
     initialize = function(
       input_dim,
-      batch_norm_units,
+      bottleneck_units,
       hidden_units,
       activation,
       dropout
     ) {
       self$bn <- torch::nn_batch_norm1d(input_dim)
-      self$linear1 <- torch::nn_linear(input_dim, batch_norm_units)
-      self$act1 <- get_activation_fn(activation)
-      self$linear2 <- torch::nn_linear(batch_norm_units, hidden_units)
-      self$act2 <- get_activation_fn(activation)
-      self$dropout <- torch::nn_dropout(dropout)
+      self$linear1 <- torch::nn_linear(input_dim, bottleneck_units)
+      self$act <- get_activation_fn(activation)
+      self$dropout1 <- torch::nn_dropout(dropout)
+      self$linear2 <- torch::nn_linear(bottleneck_units, hidden_units)
+      self$dropout2 <- torch::nn_dropout(dropout)
     },
     forward = function(x) {
       x |>
         self$bn() |>
         self$linear1() |>
-        self$act1() |>
+        self$act() |>
+        self$dropout1() |>
         self$linear2() |>
-        self$act2() |>
-        self$dropout()
+        self$dropout2()
     }
   )
 
@@ -953,7 +950,7 @@ resnet_module <-
     "resnet_module",
     initialize = function(
       num_pred,
-      batch_norm_units,
+      bottleneck_units,
       hidden_units,
       residual_at,
       activation,
@@ -963,8 +960,8 @@ resnet_module <-
       num_layers <- length(hidden_units)
 
       # Validate lengths match
-      if (length(batch_norm_units) != num_layers) {
-        stop("batch_norm_units and hidden_units must have the same length")
+      if (length(bottleneck_units) != num_layers) {
+        stop("bottleneck_units and hidden_units must have the same length")
       }
 
       # Ensure activation is a vector
@@ -988,7 +985,7 @@ resnet_module <-
       for (i in seq_len(num_layers)) {
         layer <- resnet_layer_module(
           input_dim = current_dim,
-          batch_norm_units = batch_norm_units[i],
+          bottleneck_units = bottleneck_units[i],
           hidden_units = hidden_units[i],
           activation = activation[i],
           dropout = dropout
