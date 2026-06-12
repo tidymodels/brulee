@@ -11,7 +11,7 @@
 #' ## Computing Requirements
 #'
 #' This model can be used with or without a graphics processing unit (GPU).
-#' However, it may be limited when used with a CPU (and no GPU).
+#' However, it may be computationally slow when used with a CPU (and no GPU).
 #'
 #' ## Model Weight File Download
 #'
@@ -34,7 +34,7 @@
 #'     measured alongside the target.
 #'
 #' `brulee_chronos()` is a generic with three interfaces for supplying that
-#' information; this intended to add flexability in how you decalre the model as
+#' information; this intended to add flexibility in how you declare the model as
 #' well as what data are given as inputs. All three produce an object that
 #' behaves the same way at predict time.
 #'
@@ -43,8 +43,8 @@
 #' There is a `date` column, as well as a set of 14-day lagged ridership data
 #' from our station of interest and from others in the Chicago system.
 #'
-#' We could use Chronos in the simplest way by just passing in the column c
-#' ontaining past ridership values. It assumes that there are no gaps in the
+#' You could use Chronos in the simplest way by just passing in the column
+#' containing past ridership values. It assumes that there are no gaps in the
 #' data and that the data are arranged/sorted in the proper order (past to
 #' present). The simplest interfaces to use in this case are the formula and
 #' matrix ones.
@@ -145,14 +145,15 @@
 #'
 #' ## What happens at `predict()` time
 #'
-#' By default, [predict.brulee_chronos()] forecasts from the context data
-#' that was supplied at construction. There's no need to pass `new_data`.
-#' Override `prediction_length` or `quantile_levels` per call to change
-#' the horizon or which quantiles are returned. Pass `future_df` to supply
-#' known future values of any covariate (e.g. holiday flags, planned
-#' promotions). To forecast a __different__ series with the same schema,
-#' pass it as `new_data`. It will be processed through the same blueprint
-#' as the original context.
+#' By default, [predict.brulee_chronos()] forecasts from the context data that
+#' was supplied at construction. The use of `new_data` should be determined by
+#' how the `brulee_chronos()` call passed the data. For example, if no
+#' covariates were originally given to the model, there is no need to pass in
+#' values when calling `predict()` and so on. Pass `future_df` to supply known
+#' future values of any covariate (e.g., holiday flags, planned promotions).
+#' To forecast a __different__ series with the same schema, pass it as
+#' `new_data`. It will be processed through the same blueprint as the original
+#' context.
 #'
 #' @param x Depending on the context:
 #'
@@ -177,14 +178,14 @@
 #' @param id_column For the formula method, a tidyselect expression
 #'   selecting the id column in `data` (e.g. `c(series_id)`, `series_id`,
 #'   or `"series_id"`). For the data frame `x_y` method, a character
-#'   string used as the output label only (the actual id values come from
+#'   string is used as the output label only (the actual id values come from
 #'   `item_id`). Default: `NULL` for the formula method and `".id_column"`
 #'   for the `x_y` method. When omitted, all rows are treated as one
 #'   series. For the recipe method, identify the id column with
 #'   `recipes::update_role(..., new_role = "id")`.
 #' @param timestamp_column For the formula method, a tidyselect expression
 #'   selecting the timestamp column in `data`. For the data frame `x_y`
-#'   method, a character string used as the output label only. Default:
+#'   method, a character string is used as the output label only. Default:
 #'   `NULL` for the formula method and `".timestamp_column"` for the `x_y`
 #'   method. When omitted, row order is used as the time order. For the
 #'   recipe method, identify the timestamp column with
