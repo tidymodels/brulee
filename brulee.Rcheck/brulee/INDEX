@@ -1,0 +1,32 @@
+brulee-autoplot         Plot model loss over epochs
+brulee-coefs            Extract Model Coefficients
+brulee_activations      Activation functions for neural networks in
+                        brulee
+brulee_auto_int         Fit AutoInt models for tabular data
+brulee_chronos          Chronos-2 pretrained forecasting model
+brulee_linear_reg       Fit a linear regression model
+brulee_logistic_reg     Fit a logistic regression model
+brulee_mlp              Fit neural networks
+brulee_multinomial_reg
+                        Fit a multinomial regression model
+brulee_resnet           Fit residual neural networks (ResNet)
+brulee_rln              Fit Regularization Learning Networks (RLN)
+brulee_saint            Fit SAINT models for tabular data
+matrix_to_dataset       Convert data to torch format
+predict.brulee_auto_int
+                        Predict from a 'brulee_auto_int'
+predict.brulee_chronos
+                        Predict from a 'brulee_chronos' model
+predict.brulee_linear_reg
+                        Predict from a 'brulee_linear_reg'
+predict.brulee_logistic_reg
+                        Predict from a 'brulee_logistic_reg'
+predict.brulee_mlp      Predict from a 'brulee_mlp'
+predict.brulee_multinomial_reg
+                        Predict from a 'brulee_multinomial_reg'
+predict.brulee_resnet   Predict from a 'brulee_resnet'
+predict.brulee_rln      Predict from a 'brulee_rln'
+predict.brulee_saint    Predict from a 'brulee_saint'
+schedule_decay_time     Change the learning rate over time
+summary.brulee_mlp      Summarize the architecture of a brulee model
+training_efficiency     Training Efficiency

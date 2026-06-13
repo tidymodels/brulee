@@ -1,0 +1,46 @@
+#' Convert data to torch format
+#'
+#' For an x/y interface, `matrix_to_dataset()` converts the data to proper
+#'  encodings then formats the results for consumption by `torch`.
+#'
+#' @param x A numeric matrix of predictors.
+#' @param y A vector. If regression than `y` is numeric. For classification, it
+#'  is a factor.
+#' @param device A single character string for the device to use (e.g., `"cpu"`
+#'   or `"cuda"`). The default of `NULL` uses the CPU. See [training_efficiency].
+#' @return An R6 index sampler object with classes "training_set",
+#'  "dataset", and "R6".
+#' @details Missing values should be removed before passing data to this function.
+#' @examplesIf !brulee:::is_cran_check()
+#' if (torch::torch_is_installed()) {
+#'   matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
+#' }
+#' @export
+matrix_to_dataset <- function(x, y, device = NULL) {
+  x <- float_32(x, device = device)
+  if (is.factor(y)) {
+    y <- as.numeric(y)
+    if (is.null(device)) {
+      y <- torch::torch_tensor(y, dtype = torch::torch_long())
+    } else {
+      y <- torch::torch_tensor(y, dtype = torch::torch_long(), device = device)
+    }
+  } else {
+    y <- float_32(y, device = device)
+  }
+  torch::tensor_dataset(x = x, y = y)
+}
+
+# ------------------------------------------------------------------------------
+
+scale_stats <- function(x, call = rlang::caller_env()) {
+  res <- list(mean = mean(x, na.rm = TRUE), sd = stats::sd(x, na.rm = TRUE))
+  if (res$sd == 0) {
+    cli::cli_abort("There is no variation in {.arg y}.", call = call)
+  }
+  res
+}
+
+scale_y <- function(y, stats) {
+  (y - stats$mean) / stats$sd
+}

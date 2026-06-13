@@ -1,0 +1,668 @@
+pkgname <- "brulee"
+source(file.path(R.home("share"), "R", "examples-header.R"))
+options(warn = 1)
+library('brulee')
+
+base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
+cleanEx()
+nameEx("brulee-autoplot")
+### * brulee-autoplot
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee-autoplot
+### Title: Plot model loss over epochs
+### Aliases: brulee-autoplot autoplot.brulee_mlp
+###   autoplot.brulee_logistic_reg autoplot.brulee_multinomial_reg
+###   autoplot.brulee_linear_reg autoplot.brulee_resnet
+###   autoplot.brulee_auto_int autoplot.brulee_saint autoplot.brulee_rln
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee-coefs")
+### * brulee-coefs
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee-coefs
+### Title: Extract Model Coefficients
+### Aliases: brulee-coefs coef.brulee_logistic_reg coef.brulee_linear_reg
+###   coef.brulee_mlp coef.brulee_multinomial_reg coef.brulee_resnet
+###   coef.brulee_rln
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_auto_int")
+### * brulee_auto_int
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_auto_int
+### Title: Fit AutoInt models for tabular data
+### Aliases: brulee_auto_int brulee_auto_int.default
+###   brulee_auto_int.data.frame brulee_auto_int.matrix
+###   brulee_auto_int.formula brulee_auto_int.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_chronos")
+### * brulee_chronos
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_chronos
+### Title: Chronos-2 pretrained forecasting model
+### Aliases: brulee_chronos brulee_chronos.default
+###   brulee_chronos.data.frame brulee_chronos.formula
+###   brulee_chronos.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
+
+## Not run: 
+##D if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+##D  library(dplyr)
+##D  library(ggplot2)
+##D 
+##D  n <- nrow(modeldata::Chicago)
+##D 
+##D  prior_data <- modeldata::Chicago[-((n-13):n),]
+##D  test_data <-
+##D   modeldata::Chicago[(n-13):n,] |>
+##D   mutate(day = lubridate::wday(date, label = TRUE))
+##D 
+##D  # ------------------------------------------------------------------------------
+##D  # Simple, no covariate model
+##D 
+##D  mod_1 <-
+##D   brulee_chronos(
+##D    ridership ~ 1,
+##D    data = prior_data,
+##D    # Removing `timestamp_column` does not affect the fit
+##D    timestamp_column = c(date),
+##D    prediction_length = 14)
+##D 
+##D  # ------------------------------------------------------------------------------
+##D  # Some covariates via the formula method
+##D 
+##D mod_2 <-
+##D   brulee_chronos(
+##D    ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
+##D    data = prior_data,
+##D    timestamp_column = c(date),
+##D    prediction_length = 14)
+##D 
+##D  # ------------------------------------------------------------------------------
+##D  # Covariates using recipes
+##D 
+##D  rec <-
+##D   recipe(ridership ~ ., data = prior_data) |>
+##D   update_role(date, new_role = "time")
+##D 
+##D  mod_3 <- brulee_chronos(rec, data = prior_data, prediction_length = 14)
+##D }
+## End(Not run)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_linear_reg")
+### * brulee_linear_reg
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_linear_reg
+### Title: Fit a linear regression model
+### Aliases: brulee_linear_reg brulee_linear_reg.default
+###   brulee_linear_reg.data.frame brulee_linear_reg.matrix
+###   brulee_linear_reg.formula brulee_linear_reg.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_logistic_reg")
+### * brulee_logistic_reg
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_logistic_reg
+### Title: Fit a logistic regression model
+### Aliases: brulee_logistic_reg brulee_logistic_reg.default
+###   brulee_logistic_reg.data.frame brulee_logistic_reg.matrix
+###   brulee_logistic_reg.formula brulee_logistic_reg.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_mlp")
+### * brulee_mlp
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_mlp
+### Title: Fit neural networks
+### Aliases: brulee_mlp brulee_mlp.default brulee_mlp.data.frame
+###   brulee_mlp.matrix brulee_mlp.formula brulee_mlp.recipe
+###   brulee_mlp_two_layer brulee_mlp_two_layer.default
+###   brulee_mlp_two_layer.data.frame brulee_mlp_two_layer.matrix
+###   brulee_mlp_two_layer.formula brulee_mlp_two_layer.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_multinomial_reg")
+### * brulee_multinomial_reg
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_multinomial_reg
+### Title: Fit a multinomial regression model
+### Aliases: brulee_multinomial_reg brulee_multinomial_reg.default
+###   brulee_multinomial_reg.data.frame brulee_multinomial_reg.matrix
+###   brulee_multinomial_reg.formula brulee_multinomial_reg.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_resnet")
+### * brulee_resnet
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_resnet
+### Title: Fit residual neural networks (ResNet)
+### Aliases: brulee_resnet brulee_resnet.default brulee_resnet.data.frame
+###   brulee_resnet.matrix brulee_resnet.formula brulee_resnet.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_rln")
+### * brulee_rln
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_rln
+### Title: Fit Regularization Learning Networks (RLN)
+### Aliases: brulee_rln brulee_rln.default brulee_rln.data.frame
+###   brulee_rln.matrix brulee_rln.formula brulee_rln.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("brulee_saint")
+### * brulee_saint
+
+flush(stderr()); flush(stdout())
+
+### Name: brulee_saint
+### Title: Fit SAINT models for tabular data
+### Aliases: brulee_saint brulee_saint.default brulee_saint.data.frame
+###   brulee_saint.matrix brulee_saint.formula brulee_saint.recipe
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("matrix_to_dataset")
+### * matrix_to_dataset
+
+flush(stderr()); flush(stdout())
+
+### Name: matrix_to_dataset
+### Title: Convert data to torch format
+### Aliases: matrix_to_dataset
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+if (torch::torch_is_installed()) {
+  matrix_to_dataset(as.matrix(mtcars[, -1]), mtcars$mpg)
+}
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_auto_int")
+### * predict.brulee_auto_int
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_auto_int
+### Title: Predict from a 'brulee_auto_int'
+### Aliases: predict.brulee_auto_int
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_chronos")
+### * predict.brulee_chronos
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_chronos
+### Title: Predict from a 'brulee_chronos' model
+### Aliases: predict.brulee_chronos
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
+
+## Not run: 
+##D if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+##D  library(dplyr)
+##D  library(ggplot2)
+##D 
+##D  n <- nrow(modeldata::Chicago)
+##D 
+##D  prior_data <- modeldata::Chicago[-((n-13):n),]
+##D  test_data <-
+##D   modeldata::Chicago[(n-13):n,] |>
+##D   mutate(day = lubridate::wday(date, label = TRUE))
+##D 
+##D  # ------------------------------------------------------------------------------
+##D  # Simple, no covariate model
+##D 
+##D  mod_1 <-
+##D   brulee_chronos(
+##D    ridership ~ 1,
+##D    data = prior_data,
+##D    # Removing `timestamp_column` does not affect the fit
+##D    timestamp_column = c(date),
+##D    prediction_length = 14)
+##D 
+##D  pred_1 <- predict(mod_1, test_data)
+##D  pred_1
+##D 
+##D  pred_1 |>
+##D   bind_cols(test_data) |>
+##D   ggplot(aes(date)) +
+##D   geom_point(aes(y = ridership, col = day)) +
+##D   geom_line(aes(y = .pred)) +
+##D   labs(title = "No covariates: Meh") +
+##D   theme_bw()
+##D 
+##D  # ------------------------------------------------------------------------------
+##D  # Some covariates via the formula method
+##D 
+##D mod_2 <-
+##D   brulee_chronos(
+##D    ridership ~ Clark_Lake + Belmont + Harlem + Monroe,
+##D    data = prior_data,
+##D    timestamp_column = c(date),
+##D    prediction_length = 14)
+##D 
+##D  pred_2 <- predict(mod_2, future_df = test_data)
+##D 
+##D  pred_2 |>
+##D   bind_cols(test_data) |>
+##D   ggplot(aes(date)) +
+##D   geom_point(aes(y = ridership, col = day)) +
+##D   geom_line(aes(y = .pred)) +
+##D   labs(title = "Four covariates: Pretty good") +
+##D   theme_bw()
+##D 
+##D  # ------------------------------------------------------------------------------
+##D  # Covariates using recipes
+##D 
+##D  rec <-
+##D   recipe(ridership ~ ., data = prior_data) |>
+##D   update_role(date, new_role = "time")
+##D 
+##D  mod_3 <- brulee_chronos(rec, data = prior_data, prediction_length = 14)
+##D 
+##D  pred_3 <- predict(mod_3, future_df = test_data)
+##D 
+##D  pred_3 |>
+##D   bind_cols(test_data) |>
+##D   ggplot(aes(date)) +
+##D   geom_point(aes(y = ridership, col = day)) +
+##D   geom_line(aes(y = .pred)) +
+##D   labs(title = "All covariates: Better Saturdays") +
+##D   theme_bw()
+##D }
+## End(Not run)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_linear_reg")
+### * predict.brulee_linear_reg
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_linear_reg
+### Title: Predict from a 'brulee_linear_reg'
+### Aliases: predict.brulee_linear_reg
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_logistic_reg")
+### * predict.brulee_logistic_reg
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_logistic_reg
+### Title: Predict from a 'brulee_logistic_reg'
+### Aliases: predict.brulee_logistic_reg
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_mlp")
+### * predict.brulee_mlp
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_mlp
+### Title: Predict from a 'brulee_mlp'
+### Aliases: predict.brulee_mlp
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_multinomial_reg")
+### * predict.brulee_multinomial_reg
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_multinomial_reg
+### Title: Predict from a 'brulee_multinomial_reg'
+### Aliases: predict.brulee_multinomial_reg
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_resnet")
+### * predict.brulee_resnet
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_resnet
+### Title: Predict from a 'brulee_resnet'
+### Aliases: predict.brulee_resnet
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_rln")
+### * predict.brulee_rln
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_rln
+### Title: Predict from a 'brulee_rln'
+### Aliases: predict.brulee_rln
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("predict.brulee_saint")
+### * predict.brulee_saint
+
+flush(stderr()); flush(stdout())
+
+### Name: predict.brulee_saint
+### Title: Predict from a 'brulee_saint'
+### Aliases: predict.brulee_saint
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("schedule_decay_time")
+### * schedule_decay_time
+
+flush(stderr()); flush(stdout())
+
+### Name: schedule_decay_time
+### Title: Change the learning rate over time
+### Aliases: schedule_decay_time schedule_decay_expo schedule_step
+###   schedule_cyclic set_learn_rate
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+if (rlang::is_installed("purrr")) {
+ library(ggplot2)
+ library(dplyr)
+ library(purrr)
+
+ iters <- 0:50
+
+ bind_rows(
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_time), type = "decay_time"),
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_decay_expo), type = "decay_expo"),
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_step), type = "step"),
+  tibble(epoch = iters, rate = map_dbl(iters, schedule_cyclic), type = "cyclic")
+ ) |>
+  ggplot(aes(epoch, rate)) +
+  geom_line() +
+  facet_wrap(~ type)
+
+}
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+cleanEx()
+nameEx("summary.brulee")
+### * summary.brulee
+
+flush(stderr()); flush(stdout())
+
+### Name: summary.brulee_mlp
+### Title: Summarize the architecture of a brulee model
+### Aliases: summary.brulee_mlp summary.brulee summary.brulee_resnet
+###   summary.brulee_rln summary.brulee_auto_int summary.brulee_saint
+
+### ** Examples
+
+## Don't show: 
+if (!brulee:::is_cran_check()) withAutoprint({ # examplesIf
+## End(Don't show)
+## Don't show: 
+}) # examplesIf
+## End(Don't show)
+
+
+
+### * <FOOTER>
+###
+cleanEx()
+options(digits = 7L)
+base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+grDevices::dev.off()
+###
+### Local variables: ***
+### mode: outline-minor ***
+### outline-regexp: "\\(> \\)?### [*]+" ***
+### End: ***
+quit('no')
