@@ -20,8 +20,9 @@ test_that("basic logistic regression LBFGS", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_lbfgs <-
-        brulee_logistic_reg(class ~ ., bin_tr, penlaty = 0, epochs = 1)
+        brulee_logistic_reg(class ~ ., bin_tr, penlaty = 0, epochs = 1, device = "cpu")
     }
   )
 
@@ -84,6 +85,7 @@ test_that("basic logistic regression SGD", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_sgd <-
         brulee_logistic_reg(
           class ~ .,
@@ -93,7 +95,8 @@ test_that("basic logistic regression SGD", {
           dropout = .1,
           optimize = "SGD",
           batch_size = 32L,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -127,7 +130,7 @@ test_that("coef works when recipes are used", {
   skip_if_not_installed("modeldata")
   skip_if_not_installed("recipes")
   skip_if(packageVersion("rlang") < "1.0.0")
-  skip_on_os(c("windows", "linux", "solaris"))
+  # skip_on_os(c("windows", "linux", "solaris"))
 
   data("lending_club", package = "modeldata")
   lending_club <- head(lending_club, 1000)
@@ -140,7 +143,9 @@ test_that("coef works when recipes are used", {
     recipes::step_dummy(emp_length, one_hot = TRUE) |>
     recipes::step_normalize(recipes::all_predictors())
 
-  fit_rec <- brulee_logistic_reg(rec, lending_club, epochs = 10L)
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit_rec <- brulee_logistic_reg(rec, lending_club, epochs = 10L, device = "cpu")
 
   coefs <- coef(fit_rec)
   expect_true(all(is.numeric(coefs)))
@@ -185,6 +190,7 @@ test_that("logistic regression class weights", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_lbfgs_wts <-
         brulee_logistic_reg(
           class ~ .,
@@ -193,7 +199,8 @@ test_that("logistic regression class weights", {
           mixture = 0.5,
           rate_schedule = "decay_time",
           class_weights = cls_wts,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -210,6 +217,7 @@ test_that("logistic regression class weights", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_lbfgs_unwt <-
         brulee_logistic_reg(
           class ~ .,
@@ -217,7 +225,8 @@ test_that("logistic regression class weights", {
           epochs = 30,
           mixture = 0.5,
           rate_schedule = "decay_time",
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )

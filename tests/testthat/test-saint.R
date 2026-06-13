@@ -15,8 +15,9 @@ test_that("saint regression - formula interface", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.5)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
 
-  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE, device = "cpu")
 
   expect_s3_class(fit, "brulee_saint")
   expect_true(inherits(fit$model_obj, "raw"))
@@ -40,7 +41,8 @@ test_that("saint regression - data.frame interface (numeric only)", {
   y <- data.frame(outcome = x$x1 + rnorm(n, sd = 0.1))
 
   set.seed(1)
-  fit <- brulee_saint(x = x, y = y, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(x = x, y = y, epochs = 3, verbose = FALSE, device = "cpu")
 
   expect_s3_class(fit, "brulee_saint")
   expect_equal(fit$dims$p_cat, 0L)
@@ -61,7 +63,8 @@ test_that("saint regression - matrix interface", {
   y <- x[, 1] + x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_saint(x = x, y = y, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(x = x, y = y, epochs = 3, verbose = FALSE, device = "cpu")
 
   expect_s3_class(fit, "brulee_saint")
   pred <- predict(fit, x)
@@ -84,7 +87,8 @@ test_that("saint regression - recipe interface", {
 
   rec <- recipes::recipe(y ~ ., data = df)
   set.seed(1)
-  fit <- brulee_saint(rec, data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(rec, data = df, epochs = 3, verbose = FALSE, device = "cpu")
 
   expect_s3_class(fit, "brulee_saint")
   pred <- predict(fit, df)
@@ -107,7 +111,8 @@ test_that("saint binary classification", {
   )
 
   set.seed(1)
-  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE, device = "cpu")
 
   expect_s3_class(fit, "brulee_saint")
 
@@ -136,7 +141,8 @@ test_that("saint multiclass classification", {
   )
 
   set.seed(1)
-  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE, device = "cpu")
 
   pred_class <- predict(fit, df, type = "class")
   expect_equal(nrow(pred_class), n)
@@ -161,12 +167,14 @@ test_that("saint with col attention type", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_saint(
     y ~ .,
     data = df,
     epochs = 3,
     attention_type = "column",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_saint")
@@ -186,13 +194,15 @@ test_that("saint with row attention type", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_saint(
     y ~ .,
     data = df,
     epochs = 3,
     attention_type = "row",
     num_attn_blocks = 1L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_saint")
@@ -212,13 +222,15 @@ test_that("saint with colrow attention type (default)", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_saint(
     y ~ .,
     data = df,
     epochs = 3,
     attention_type = "both",
     num_attn_blocks = 2L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_saint")
@@ -241,6 +253,7 @@ test_that("saint row_attention_on_predict=FALSE (default) gives batch-independen
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_saint(
     y ~ .,
     data = df,
@@ -248,7 +261,8 @@ test_that("saint row_attention_on_predict=FALSE (default) gives batch-independen
     attention_type = "both",
     num_attn_blocks = 2L,
     row_attention_on_predict = FALSE,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Currrent slightly different for R-devel (4.6.1) on linux
@@ -272,6 +286,7 @@ test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_saint(
     y ~ .,
     data = df,
@@ -279,7 +294,8 @@ test_that("saint row_attention_on_predict=TRUE gives batch-dependent predictions
     attention_type = "both",
     num_attn_blocks = 2L,
     row_attention_on_predict = TRUE,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   pred_full <- predict(fit, df)
@@ -305,7 +321,8 @@ test_that("saint with only categorical predictors", {
   )
 
   set.seed(1)
-  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE, device = "cpu")
 
   expect_s3_class(fit, "brulee_saint")
   expect_equal(fit$dims$p_cat, 2L)
@@ -325,7 +342,8 @@ test_that("saint with only continuous predictors", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE, device = "cpu")
 
   expect_equal(fit$dims$p_cat, 0L)
   expect_equal(fit$dims$p_cont, 3L)
@@ -349,7 +367,8 @@ test_that("saint with mixed predictors", {
   )
 
   set.seed(1)
-  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE, device = "cpu")
 
   expect_equal(fit$dims$p_cat, 2L)
   expect_equal(fit$dims$p_cont, 2L)
@@ -369,13 +388,15 @@ test_that("saint with hidden layers", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_saint(
     y ~ .,
     data = df,
     epochs = 5,
     hidden_units = c(64L, 32L),
     hidden_activations = c("relu", "relu"),
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_saint")
@@ -426,7 +447,8 @@ test_that("saint prediction with specific epoch", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE, device = "cpu")
 
   pred_best <- predict(fit, df)
   pred_epoch1 <- predict(fit, df, epoch = 1)
@@ -448,12 +470,14 @@ test_that("saint with validation = 0", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_saint(
     y ~ .,
     data = df,
     epochs = 3,
     validation = 0,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_s3_class(fit, "brulee_saint")
   expect_equal(fit$parameters$validation, 0)
@@ -469,12 +493,14 @@ test_that("saint with early stopping", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_saint(
     y ~ .,
     data = df,
     epochs = 200,
     stop_iter = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_true(fit$best_epoch < 200)
 })
@@ -491,7 +517,9 @@ test_that("saint print method works", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
-  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 3, verbose = FALSE, device = "cpu")
 
   output <- capture_all_output(print(fit))
   expect_true(any(grepl("SAINT network", output)))
@@ -508,7 +536,9 @@ test_that("saint autoplot works", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
-  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_saint(y ~ ., data = df, epochs = 5, verbose = FALSE, device = "cpu")
 
   p <- ggplot2::autoplot(fit)
   expect_s3_class(p, "ggplot")

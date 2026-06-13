@@ -21,6 +21,7 @@ test_that("activation functions", {
     expect_no_error(
       {
         set.seed(2)
+        torch::torch_manual_seed(2)
         model <- brulee_mlp(
           outcome ~ .,
           data = df[1:400, ],
@@ -31,6 +32,7 @@ test_that("activation functions", {
           hidden_units = 20L,
           optimizer = "ADAMw",
           batch_size = 16,
+          device = "cpu"
         )
       }
     )

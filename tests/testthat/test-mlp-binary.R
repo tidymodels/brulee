@@ -24,6 +24,7 @@ test_that("basic binomial mlp LBFGS", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_f_lbfgs <-
         brulee_mlp(
           class ~ .,
@@ -31,7 +32,8 @@ test_that("basic binomial mlp LBFGS", {
           epochs = 200,
           hidden_units = 5,
           rate_schedule = "cyclic",
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -39,6 +41,7 @@ test_that("basic binomial mlp LBFGS", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_lbfgs <-
         brulee_mlp(
           rec,
@@ -46,7 +49,8 @@ test_that("basic binomial mlp LBFGS", {
           epochs = 200,
           hidden_units = 5,
           rate_schedule = "cyclic",
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -114,6 +118,7 @@ test_that("basic binomial mlp SGD", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_f_sgd <-
         brulee_mlp(
           class ~ .,
@@ -125,7 +130,8 @@ test_that("basic binomial mlp SGD", {
           optimize = "SGD",
           batch_size = 64L,
           momentum = 0.5,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -133,6 +139,7 @@ test_that("basic binomial mlp SGD", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       bin_fit_sgd <-
         brulee_mlp(
           rec,
@@ -144,7 +151,8 @@ test_that("basic binomial mlp SGD", {
           optimize = "SGD",
           batch_size = 64L,
           momentum = 0.5,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -212,6 +220,7 @@ test_that("binomial mlp case weights", {
   expect_no_error(
     {
       set.seed(391)
+      torch::torch_manual_seed(391)
       weighted <-
         brulee_mlp(
           rec,
@@ -220,7 +229,8 @@ test_that("binomial mlp case weights", {
           hidden_units = 5,
           rate_schedule = "cyclic",
           class_weights = 10,
-          learn_rate = 0.01
+          learn_rate = 0.01,
+          device = "cpu"
         )
     }
   )
@@ -236,6 +246,7 @@ test_that("binomial mlp case weights", {
   expect_no_error(
     {
       set.seed(391)
+      torch::torch_manual_seed(391)
       unweighted <-
         brulee_mlp(
           rec,
@@ -243,7 +254,8 @@ test_that("binomial mlp case weights", {
           epochs = 5,
           hidden_units = 5,
           rate_schedule = "cyclic",
-          learn_rate = 0.01
+          learn_rate = 0.01,
+          device = "cpu"
         )
     }
   )
@@ -270,6 +282,7 @@ test_that('linear activations', {
 
   data(bivariate, package = "modeldata")
   set.seed(20)
+  torch::torch_manual_seed(20)
   nn_log_biv <-
     try(
       brulee_mlp(
@@ -277,7 +290,8 @@ test_that('linear activations', {
         data = bivariate_train,
         epochs = 150,
         hidden_units = 3,
-        activation = "linear"
+        activation = "linear",
+        device = "cpu"
       ),
       silent = TRUE
     )

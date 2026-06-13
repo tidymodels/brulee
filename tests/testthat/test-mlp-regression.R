@@ -29,21 +29,27 @@ test_that('basic regression mlp LBFGS', {
   expect_no_error(
     {
       set.seed(1)
+      torch::torch_manual_seed(1)
       mlp_reg_mat_lbfgs_fit <-
-        brulee_mlp(reg_tr_x_mat, reg_tr_y, mixture = 0, learn_rate = .1)
+        brulee_mlp(reg_tr_x_mat, reg_tr_y, mixture = 0, learn_rate = .1, device = "cpu")
     }
   )
 
   # data frame x (all numeric)
   expect_no_error(
-    mlp_reg_df_lbfgs_fit <- brulee_mlp(reg_tr_x_df, reg_tr_y, validation = .2)
+    {
+      set.seed(1)
+      torch::torch_manual_seed(1)
+      mlp_reg_df_lbfgs_fit <- brulee_mlp(reg_tr_x_df, reg_tr_y, validation = .2, device = "cpu")
+    }
   )
 
   # formula (mixed)
   expect_no_error(
     {
       set.seed(8373)
-      mlp_reg_f_lbfgs_fit <- brulee_mlp(outcome ~ ., reg_tr)
+      torch::torch_manual_seed(8373)
+      mlp_reg_f_lbfgs_fit <- brulee_mlp(outcome ~ ., reg_tr, device = "cpu")
     }
   )
 
@@ -51,7 +57,8 @@ test_that('basic regression mlp LBFGS', {
   expect_no_error(
     {
       set.seed(8373)
-      mlp_reg_rec_lbfgs_fit <- brulee_mlp(reg_rec, reg_tr)
+      torch::torch_manual_seed(8373)
+      mlp_reg_rec_lbfgs_fit <- brulee_mlp(reg_rec, reg_tr, device = "cpu")
     }
   )
 
@@ -222,6 +229,8 @@ test_that('bad args', {
   )
   # ------------------------------------------------------------------------------
 
+  set.seed(1)
+  torch::torch_manual_seed(1)
   fit_mat <- brulee_mlp(reg_x_mat, reg_y, epochs = 10L)
 
   bad_models <- fit_mat
@@ -332,6 +341,7 @@ test_that("mlp learns something", {
   y <- 2 * x$x
 
   set.seed(2)
+  torch::torch_manual_seed(2)
   model <- brulee_mlp(
     x,
     y,
@@ -341,7 +351,8 @@ test_that("mlp learns something", {
     activation = "relu",
     hidden_units = 5L,
     learn_rate = 0.1,
-    dropout = 0
+    dropout = 0,
+    device = "cpu"
   )
 
   expect_true(tail(model$loss, 1) < 0.03)
@@ -350,11 +361,16 @@ test_that("variable hidden_units length", {
   skip_on_cran()
   skip_if(!torch::torch_is_installed())
 
+  set.seed(1)
   x <- data.frame(x = rnorm(1000))
   y <- 2 * x$x
 
   expect_no_error(
-    model <- brulee_mlp(x, y, hidden_units = c(2, 3), epochs = 1)
+    {
+      set.seed(2)
+      torch::torch_manual_seed(2)
+      model <- brulee_mlp(x, y, hidden_units = c(2, 3), epochs = 1, device = "cpu")
+    }
   )
 
   expect_equal(
@@ -389,7 +405,7 @@ test_that("variable hidden_units length", {
 test_that('two-layer networks', {
   skip_on_cran()
   skip_if(!torch::torch_is_installed())
-  skip_on_os("linux")
+  # skip_on_os("linux")
 
   skip_if_not_installed("modeldata")
   skip_if_not_installed("yardstick")
@@ -419,6 +435,7 @@ test_that('two-layer networks', {
   expect_no_error(
     {
       set.seed(1)
+      torch::torch_manual_seed(1)
       mlp_reg_mat_two_fit <-
         brulee_mlp_two_layer(
           reg_tr_x_mat,
@@ -428,7 +445,8 @@ test_that('two-layer networks', {
           hidden_units = 5,
           hidden_units_2 = 10,
           activation = "relu",
-          activation_2 = "elu"
+          activation_2 = "elu",
+          device = "cpu"
         )
     }
   )
@@ -436,6 +454,7 @@ test_that('two-layer networks', {
   expect_no_error(
     {
       set.seed(1)
+      torch::torch_manual_seed(1)
       mlp_reg_mat_two_check_fit <-
         brulee_mlp(
           reg_tr_x_mat,
@@ -443,7 +462,8 @@ test_that('two-layer networks', {
           mixture = 0,
           learn_rate = .1,
           hidden_units = c(5, 10),
-          activation = c("relu", "elu")
+          activation = c("relu", "elu"),
+          device = "cpu"
         )
     }
   )
@@ -452,29 +472,36 @@ test_that('two-layer networks', {
 
   # data frame x (all numeric)
   expect_no_error(
-    mlp_reg_df_two_fit <-
-      brulee_mlp_two_layer(
-        reg_tr_x_df,
-        reg_tr_y,
-        validation = .2,
-        hidden_units = 5,
-        hidden_units_2 = 10,
-        activation = "celu",
-        activation_2 = "gelu"
-      )
+    {
+      set.seed(1)
+      torch::torch_manual_seed(1)
+      mlp_reg_df_two_fit <-
+        brulee_mlp_two_layer(
+          reg_tr_x_df,
+          reg_tr_y,
+          validation = .2,
+          hidden_units = 5,
+          hidden_units_2 = 10,
+          activation = "celu",
+          activation_2 = "gelu",
+          device = "cpu"
+        )
+    }
   )
 
   # formula (mixed)
   expect_no_error(
     {
       set.seed(8373)
+      torch::torch_manual_seed(8373)
       mlp_reg_f_two_fit <- brulee_mlp_two_layer(
         outcome ~ .,
         reg_tr,
         hidden_units = 5,
         hidden_units_2 = 10,
         activation = "hardshrink",
-        activation_2 = "hardsigmoid"
+        activation_2 = "hardsigmoid",
+        device = "cpu"
       )
     }
   )
@@ -483,13 +510,15 @@ test_that('two-layer networks', {
   expect_no_error(
     {
       set.seed(8373)
+      torch::torch_manual_seed(8373)
       mlp_reg_rec_two_fit <- brulee_mlp_two_layer(
         reg_rec,
         reg_tr,
         hidden_units = 5,
         hidden_units_2 = 10,
         activation = "hardtanh",
-        activation_2 = "sigmoid"
+        activation_2 = "sigmoid",
+        device = "cpu"
       )
     }
   )
@@ -507,13 +536,15 @@ test_that("summary.brulee_mlp prints layers and total parameters", {
   sim_y <- sim_x[, 1] + 2 * sim_x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_mlp(
     x = sim_x,
     y = sim_y,
     hidden_units = c(8, 4),
     dropout = 0.1,
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   out <- capture.output(result <- summary(fit))
@@ -545,12 +576,14 @@ test_that("summary.brulee_mlp shows output dim for multinomial fits", {
   sim_y <- factor(sample(letters[1:3], n, replace = TRUE))
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_mlp(
     x = sim_x,
     y = sim_y,
     hidden_units = 5,
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Softmax is now applied at predict time (so the loss can use

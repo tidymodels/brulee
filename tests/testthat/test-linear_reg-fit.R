@@ -27,8 +27,9 @@ test_that("basic linear regression LBFGS", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       lin_fit_lbfgs <-
-        brulee_linear_reg(outcome ~ ., lin_tr, penlaty = 0)
+        brulee_linear_reg(outcome ~ ., lin_tr, penlaty = 0, device = "cpu")
     }
   )
 
@@ -102,6 +103,7 @@ test_that("basic Linear regression sgd", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       lin_fit_sgd <-
         brulee_linear_reg(
           outcome ~ .,
@@ -111,7 +113,8 @@ test_that("basic Linear regression sgd", {
           batch_size = 32L,
           learn_rate = 0.1,
           optimizer = "SGD",
-          stop_iter = 20
+          stop_iter = 20,
+          device = "cpu"
         )
     }
   )
