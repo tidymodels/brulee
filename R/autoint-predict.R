@@ -144,6 +144,7 @@ predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
   module$eval()
 
   predictions <- module(x_cat, x_cont)
+  predictions <- to_probs(predictions, model)
   predictions <- as.array(predictions)
   predictions[is.nan(predictions)] <- NA
   predictions

@@ -590,6 +590,7 @@ brulee_saint_bridge <- function(
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -661,6 +662,7 @@ new_brulee_saint <- function(
   loss,
   dims,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -703,6 +705,7 @@ new_brulee_saint <- function(
     loss = loss,
     dims = dims,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -762,10 +765,10 @@ saint_fit_imp <- function(
     lvls <- levels(y)
     y_dim <- length(lvls)
     loss_fn <- function(input, target, wts = NULL) {
-      nnf_nll_loss(
-        weight = weights_to_tensor(wts, device = input$device),
-        input = torch::torch_log(input),
-        target = target
+      torch::nnf_cross_entropy(
+        input = input,
+        target = target,
+        weight = weights_to_tensor(wts, device = input$device)
       )
     }
   } else {
@@ -932,6 +935,7 @@ saint_fit_imp <- function(
         features = all_features
       ),
       y_stats = y_stats,
+      output_type = "logits",
       parameters = list(
         num_embedding = num_embedding,
         attention_type = attention_type,
@@ -1522,13 +1526,9 @@ saint_module <- torch::nn_module(
         h_flat <- self$hidden_drop(h_flat)
       }
     }
-    x <- self$output_head(h_flat)
-
-    if (self$y_dim > 1L) {
-      x <- torch::nnf_softmax(x, dim = 2L)
-    }
-
-    x
+    # Classification returns raw logits; softmax is applied at predict time
+    # so the loss can use nnf_cross_entropy (numerically stable).
+    self$output_head(h_flat)
   }
 )
 

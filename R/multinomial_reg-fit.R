@@ -371,6 +371,7 @@ brulee_multinomial_reg_bridge <- function(
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -384,6 +385,7 @@ new_brulee_multinomial_reg <- function(
   loss,
   dims,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -416,6 +418,7 @@ new_brulee_multinomial_reg <- function(
     loss = loss,
     dims = dims,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -460,14 +463,11 @@ multinomial_reg_fit_imp <-
 
     lvls <- levels(y)
     y_dim <- length(lvls)
-    # the model will output softmax values.
-    # so we need to use negative likelihood loss and
-    # pass the log of softmax.
     loss_fn <- function(input, target, wts = NULL) {
-      nnf_nll_loss(
-        weight = weights_to_tensor(wts, device = input$device),
-        input = torch::torch_log(input),
-        target = target
+      torch::nnf_cross_entropy(
+        input = input,
+        target = target,
+        weight = weights_to_tensor(wts, device = input$device)
       )
     }
 
@@ -581,6 +581,7 @@ multinomial_reg_fit_imp <-
         features = colnames(x)
       ),
       y_stats = y_stats,
+      output_type = "logits",
       parameters = list(
         learn_rate = learn_rate,
         penalty = penalty,
@@ -599,12 +600,11 @@ multinomial_module <-
     "multinomial_reg_module",
     initialize = function(num_pred, num_classes) {
       self$fc1 <- torch::nn_linear(num_pred, num_classes)
-      self$transform <- torch::nn_softmax(dim = 2)
     },
     forward = function(x) {
-      x |>
-        self$fc1() |>
-        self$transform()
+      # Output is raw logits; softmax is applied at predict time so the loss
+      # can use nnf_cross_entropy (numerically stable).
+      self$fc1(x)
     }
   )
 

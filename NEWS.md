@@ -9,11 +9,13 @@ New models for tabular data:
 
 * All modeling functions now support GPU acceleration via the `device` parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or `device = "mps"` (Apple Silicon). When `device = NULL` (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn't support float64 dtype required by brulee. See`?training_efficiency` for some related notes. 
 
-## Breaking Change
+## Breaking Changes
 
-Float tensors were changed from 64-bit floats to 32-bit. This is to enable GPU usage on MPS devices. 
+* Float tensors were changed from 64-bit floats to 32-bit. This is to enable GPU usage on MPS devices. 
 
-Parameters are initialized on CPU devices and then converted to the chosen device. In some cases, the RGN initialization code is independent of the seed. 
+* Parameters are initialized on CPU devices and then converted to the chosen device. In some cases, the RGN initialization code is independent of the seed. 
+
+* For classification, the softmax was moved out of every model's forward pass so the loss can use `torch::nnf_cross_entropy()` (which applies the log-sum-exp trick internally) instead of `nll_loss(log(softmax(x)))`. This avoids `log(0)` underflow that produced `NaN` losses and "numerical overflow" early stopping on overspecified `brulee_saint()` / `brulee_auto_int()` fits. Affects `brulee_mlp()`, `brulee_logistic_reg()`, `brulee_multinomial_reg()`, `brulee_resnet()`, `brulee_auto_int()`, and `brulee_saint()`. New fits carry `output_type = "logits"` so the predict path applies softmax; serialized fits from earlier versions of brulee continue to predict correctly.
 
 # brulee 0.6.0
 

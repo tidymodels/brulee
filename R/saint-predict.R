@@ -143,6 +143,7 @@ predict_brulee_saint_raw <- function(model, predictors, epoch) {
   }
 
   predictions <- module(x_cat, x_cont)
+  predictions <- to_probs(predictions, model)
   predictions <- as.array(predictions)
   predictions[is.nan(predictions)] <- NA
   predictions

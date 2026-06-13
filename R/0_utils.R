@@ -352,6 +352,20 @@ arch_is_noop <- function(m) {
   inherits(m, "nn_dropout") && isTRUE(m$p == 0)
 }
 
+# Convert classification model output to a row-stochastic probability tensor.
+# Modules fit on brulee >= the cross-entropy refactor emit raw logits and carry
+# `output_type = "logits"` on the result; older fits emitted softmax-normalized
+# probabilities and have no `output_type`, so we leave them alone.
+to_probs <- function(x, model) {
+  if (
+    isTRUE(model$dims$y > 1L) &&
+      identical(model$output_type, "logits")
+  ) {
+    x <- torch::nnf_softmax(x, dim = 2L)
+  }
+  x
+}
+
 last_epoch_note <- function(epoch, max_epoch, call = rlang::caller_env()) {
   if (epoch > max_epoch) {
     cli::cli_warn(

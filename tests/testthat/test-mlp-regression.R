@@ -536,7 +536,7 @@ test_that("summary.brulee_mlp prints layers and total parameters", {
   )))
 })
 
-test_that("summary.brulee_mlp shows Softmax for multinomial fits", {
+test_that("summary.brulee_mlp shows output dim for multinomial fits", {
   skip_if(!torch::torch_is_installed())
   skip_if_not_installed("recipes")
   skip_on_cran()
@@ -556,7 +556,10 @@ test_that("summary.brulee_mlp shows Softmax for multinomial fits", {
     verbose = FALSE
   )
 
+  # Softmax is now applied at predict time (so the loss can use
+  # nnf_cross_entropy for numerical stability); it is no longer a layer in
+  # the architecture summary.
   out <- capture.output(summary(fit))
-  expect_true(any(grepl("Softmax", out)))
   expect_true(any(grepl("output dim: 3", out)))
+  expect_false(any(grepl("Softmax", out)))
 })

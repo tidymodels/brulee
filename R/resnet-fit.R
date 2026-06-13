@@ -573,6 +573,7 @@ brulee_resnet_bridge <- function(
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -586,6 +587,7 @@ new_brulee_resnet <- function(
   loss,
   dims,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -629,6 +631,7 @@ new_brulee_resnet <- function(
     loss = loss,
     dims = dims,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -683,14 +686,11 @@ resnet_fit_imp <-
     if (is.factor(y)) {
       lvls <- levels(y)
       y_dim <- length(lvls)
-      # the model will output softmax values.
-      # so we need to use negative likelihood loss and
-      # pass the log of softmax.
       loss_fn <- function(input, target, wts = NULL) {
-        nnf_nll_loss(
-          weight = weights_to_tensor(wts, device = input$device),
-          input = torch::torch_log(input),
+        torch::nnf_cross_entropy(
+          input = input,
           target = target,
+          weight = weights_to_tensor(wts, device = input$device)
         )
       }
     } else {
@@ -787,6 +787,7 @@ resnet_fit_imp <-
             features = colnames(x)
           ),
           y_stats = y_stats,
+          output_type = "logits",
           parameters = list(
             activation = activation,
             hidden_units = hidden_units,
@@ -1074,14 +1075,11 @@ resnet_module <-
         }
       }
 
-      # Output head
+      # Output head. Classification returns raw logits; softmax is applied at
+      # predict time so the loss can use nnf_cross_entropy (numerically stable).
       x <- x |>
         self$bn_out() |>
         self$linear_out()
-
-      if (self$y_dim > 1L) {
-        x <- torch::nn_softmax(dim = 2)(x)
-      }
 
       x
     }

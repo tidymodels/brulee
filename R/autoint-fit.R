@@ -593,6 +593,7 @@ brulee_auto_int_bridge <- function(
     dims = fit$dims,
     top_interactions = fit$top_interactions,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -796,6 +797,7 @@ new_brulee_auto_int <- function(
   dims,
   top_interactions,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -850,6 +852,7 @@ new_brulee_auto_int <- function(
     dims = dims,
     top_interactions = top_interactions,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -909,10 +912,10 @@ auto_int_fit_imp <- function(
     lvls <- levels(y)
     y_dim <- length(lvls)
     loss_fn <- function(input, target, wts = NULL) {
-      nnf_nll_loss(
-        weight = weights_to_tensor(wts, device = input$device),
-        input = torch::torch_log(input),
-        target = target
+      torch::nnf_cross_entropy(
+        input = input,
+        target = target,
+        weight = weights_to_tensor(wts, device = input$device)
       )
     }
   } else {
@@ -1087,6 +1090,7 @@ auto_int_fit_imp <- function(
         features = all_features
       ),
       y_stats = y_stats,
+      output_type = "logits",
       parameters = list(
         activation = activation,
         hidden_units = hidden_units,
@@ -1571,13 +1575,9 @@ auto_int_module <- torch::nn_module(
         h_flat <- self$hidden_drop(h_flat)
       }
     }
-    x <- self$output_head(h_flat)
-
-    if (self$y_dim > 1L) {
-      x <- torch::nn_softmax(dim = 2)(x)
-    }
-
-    x
+    # Classification returns raw logits; softmax is applied at predict time
+    # so the loss can use nnf_cross_entropy (numerically stable).
+    self$output_head(h_flat)
   }
 )
 
