@@ -4,3 +4,5 @@
 docs
 revdep
 .positai
+*.Rcheck
+*.tar.gz

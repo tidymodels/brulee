@@ -876,7 +876,7 @@ mlp_fit_imp <-
       if (verbose) {
         epoch_chr <- format_epoch_labels(0:epochs)
         cli::cli_inform(
-          "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+          "epoch: {epoch_chr[1]}, learn rate: {sprintf('%.5f', learn_rate)}, {loss_label} {signif(loss_curr, 3)}"
         )
         epoch_chr <- epoch_chr[-1]
       }
