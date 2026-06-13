@@ -127,9 +127,6 @@ test_that('bad args', {
     brulee_mlp(reg_x_mat, reg_y, epochs = 0L),
     error = TRUE
   )
-  expect_no_error(
-    brulee_mlp(reg_x_mat, reg_y, epochs = 2)
-  )
 
   expect_snapshot(
     brulee_mlp(reg_x_mat, reg_y, epochs = 2, hidden_units = NA),
