@@ -18,7 +18,7 @@ test_that("guess_brulee_device returns input when not NULL", {
   expect_equal(brulee:::guess_brulee_device("CPU"), "cpu") # case-insensitive
 })
 
-test_that("guess_brulee_device prefers cuda over mps and cpu", {
+test_that("guess_brulee_device prefers cuda when available", {
   skip_if(!torch::torch_is_installed())
   skip_if(!torch::cuda_is_available(), message = "CUDA not available")
 
@@ -26,15 +26,13 @@ test_that("guess_brulee_device prefers cuda over mps and cpu", {
   expect_equal(device, "cuda")
 })
 
-test_that("guess_brulee_device skips mps (float64 incompatibility)", {
+test_that("guess_brulee_device does not auto-select mps", {
   skip_if(!torch::torch_is_installed())
-  skip_if(
-    torch::cuda_is_available(),
-    message = "CUDA available - skipping MPS test"
-  )
+  skip_if(torch::cuda_is_available(), message = "CUDA available")
   skip_if(!torch::backends_mps_is_available(), message = "MPS not available")
 
-  # MPS should be skipped in auto-detection because it doesn't support float64
+  # MPS works as opt-in via device = "mps" but is not auto-selected pending
+  # the per-model device-handling audit.
   device <- brulee:::guess_brulee_device(NULL)
   expect_equal(device, "cpu")
 })
@@ -96,26 +94,26 @@ test_that("get_safe_device returns mps when available", {
   expect_equal(device, "mps")
 })
 
-test_that("float_64 creates tensors on cpu by default", {
+test_that("float_32 creates tensors on cpu by default", {
   skip_if(!torch::torch_is_installed())
 
-  tensor <- brulee:::float_64(c(1, 2, 3))
+  tensor <- brulee:::float_32(c(1, 2, 3))
   expect_equal(tensor$device$type, "cpu")
-  expect_equal(as.character(tensor$dtype), "Double")
+  expect_equal(as.character(tensor$dtype), "Float")
 })
 
-test_that("float_64 creates tensors on specified device", {
+test_that("float_32 creates tensors on specified device", {
   skip_if(!torch::torch_is_installed())
 
-  tensor <- brulee:::float_64(c(1, 2, 3), device = "cpu")
+  tensor <- brulee:::float_32(c(1, 2, 3), device = "cpu")
   expect_equal(tensor$device$type, "cpu")
 })
 
-test_that("float_64 respects device context from with_device", {
+test_that("float_32 respects device context from with_device", {
   skip_if(!torch::torch_is_installed())
 
   device_type <- torch::with_device(device = "cpu", {
-    tensor <- brulee:::float_64(c(1, 2, 3))
+    tensor <- brulee:::float_32(c(1, 2, 3))
     tensor$device$type
   })
   expect_equal(device_type, "cpu")

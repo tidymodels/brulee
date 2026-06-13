@@ -565,7 +565,7 @@ rln_fit_imp <- function(
 
   or_dtype <- torch::torch_get_default_dtype()
   on.exit(torch::torch_set_default_dtype(or_dtype))
-  torch::torch_set_default_dtype(torch::torch_float64())
+  torch::torch_set_default_dtype(torch::torch_float32())
 
   torch::torch_manual_seed(start_seed + 1)
 
@@ -753,7 +753,7 @@ make_rln_state <- function(
 
     torch::with_no_grad({
       first_linear$weight$copy_(
-        torch::torch_tensor(new_weights, dtype = torch::torch_float64())
+        torch::torch_tensor(new_weights, dtype = torch::torch_float32())
       )
     })
 

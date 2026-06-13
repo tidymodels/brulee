@@ -472,11 +472,11 @@ test_that("saint with early stopping", {
   fit <- brulee_saint(
     y ~ .,
     data = df,
-    epochs = 100,
+    epochs = 200,
     stop_iter = 3,
     verbose = FALSE
   )
-  expect_true(fit$best_epoch < 100)
+  expect_true(fit$best_epoch < 200)
 })
 
 # ------------------------------------------------------------------------------

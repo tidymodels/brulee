@@ -215,10 +215,10 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
     if (penalty > 0) {
       l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
       # Create penalty tensor on the same device as l_term
-      # l_term is already float64 from model parameters, on the correct device
+      # l_term is already float32 from model parameters, on the correct device
       penalty_tensor <- torch::torch_tensor(
         penalty,
-        dtype = torch::torch_float64(),
+        dtype = torch::torch_float32(),
         device = l_term$device
       )
       loss <- loss + penalty_tensor * l_term
@@ -236,23 +236,23 @@ is_cran_check <- function() {
   }
 }
 
-float_64 <- function(x, device = NULL) {
+float_32 <- function(x, device = NULL) {
   if (is.null(device)) {
     # Let torch_tensor use the current device context (from with_device)
-    torch::torch_tensor(x, dtype = torch::torch_float64())
+    torch::torch_tensor(x, dtype = torch::torch_float32())
   } else {
     # Explicitly specify device when provided
-    torch::torch_tensor(x, dtype = torch::torch_float64(), device = device)
+    torch::torch_tensor(x, dtype = torch::torch_float32(), device = device)
   }
 }
 
 # Convert class weights to tensor on current device
-# Returns NULL if weights are NULL, otherwise converts to float64 tensor
+# Returns NULL if weights are NULL, otherwise converts to float32 tensor
 weights_to_tensor <- function(wts) {
   if (is.null(wts)) {
     return(NULL)
   }
-  float_64(wts)
+  float_32(wts)
 }
 
 # ------------------------------------------------------------------------------

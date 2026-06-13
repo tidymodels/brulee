@@ -513,7 +513,7 @@ linear_reg_fit_imp <-
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
-    torch::torch_set_default_dtype(torch::torch_float64())
+    torch::torch_set_default_dtype(torch::torch_float32())
 
     # Set device context for training
     training_output <- torch::with_device(device = device, {

@@ -817,7 +817,7 @@ saint_fit_imp <- function(
 
   or_dtype <- torch::torch_get_default_dtype()
   on.exit(torch::torch_set_default_dtype(or_dtype))
-  torch::torch_set_default_dtype(torch::torch_float64())
+  torch::torch_set_default_dtype(torch::torch_float32())
 
   training_output <- torch::with_device(device = device, {
     torch::torch_manual_seed(start_seed + 1)
@@ -828,11 +828,11 @@ saint_fit_imp <- function(
       } else {
         NULL
       }
-      t_cont <- if (!is.null(xn)) float_64(xn) else NULL
+      t_cont <- if (!is.null(xn)) float_32(xn) else NULL
       if (is.factor(yv)) {
         t_y <- torch::torch_tensor(as.numeric(yv), dtype = torch::torch_long())
       } else {
-        t_y <- float_64(yv)
+        t_y <- float_32(yv)
       }
       list(x_cat = t_cat, x_cont = t_cont, y = t_y)
     }
