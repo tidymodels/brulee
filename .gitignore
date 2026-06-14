@@ -4,6 +4,6 @@
 docs
 revdep
 .positai
-^brulee_[0-9]
-^brulee\.Rcheck$
+*.Rcheck
+*.tar.gz
 Rplots.pdf

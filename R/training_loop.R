@@ -262,7 +262,7 @@ run_training_loop <- function(
     # Verbose output
     if (verbose) {
       cli::cli_inform(
-        "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+        "epoch: {epoch_chr[epoch]}, learn rate: {sprintf('%.5f', learn_rate)}, {loss_label} {signif(loss_curr, 3)}"
       )
     }
 

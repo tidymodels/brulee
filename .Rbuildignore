@@ -15,3 +15,5 @@
 ^\.positai$
 ^\.claude$
 ^Rplots.pdf$
+^.*\.Rcheck$
+^.*\.tar\.gz$

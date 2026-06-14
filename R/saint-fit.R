@@ -1004,7 +1004,7 @@ saint_fit_imp <- function(
     if (verbose) {
       epoch_chr <- format_epoch_labels(0:epochs)
       cli::cli_inform(
-        "epoch: {epoch_chr[1]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_vec[1], 3)}"
+        "epoch: {epoch_chr[1]}, learn rate: {sprintf('%.5f', learn_rate)}, {loss_label} {signif(loss_vec[1], 3)}"
       )
       epoch_chr <- epoch_chr[-1]
     }
@@ -1171,7 +1171,7 @@ run_saint_training_loop <- function(
 
     if (verbose) {
       cli::cli_inform(
-        "epoch: {epoch_chr[epoch]}, learn rate: {signif(learn_rate, 3)}, {loss_label} {signif(loss_curr, 3)}"
+        "epoch: {epoch_chr[epoch]}, learn rate: {sprintf('%.5f', learn_rate)}, {loss_label} {signif(loss_curr, 3)}"
       )
     }
 
