@@ -30,6 +30,7 @@ test_that("basic multinomial mlp LBFGS", {
   expect_no_error(
     {
       set.seed(92)
+      torch::torch_manual_seed(92)
       mnl_fit_lbfgs <-
         brulee_mlp(
           class ~ .,
@@ -38,7 +39,8 @@ test_that("basic multinomial mlp LBFGS", {
           hidden_units = 5,
           optimizer = "LBFGS",
           rate_schedule = "cyclic",
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -113,6 +115,7 @@ test_that("basic multinomial mlp SGD", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_sgd <-
         brulee_mlp(
           class ~ .,
@@ -124,7 +127,8 @@ test_that("basic multinomial mlp SGD", {
           optimize = "SGD",
           batch_size = 64L,
           momentum = 0.5,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -185,6 +189,7 @@ test_that("multinomial mlp class weights", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_lbfgs_wts <-
         brulee_mlp(
           class ~ .,
@@ -195,7 +200,8 @@ test_that("multinomial mlp class weights", {
           rate_schedule = "decay_time",
           class_weights = cls_wts,
           stop_iter = 100,
-          learn_rate = 0.01
+          learn_rate = 0.01,
+          device = "cpu"
         )
     }
   )
@@ -218,6 +224,7 @@ test_that("multinomial mlp class weights", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_lbfgs_unwt <-
         brulee_mlp(
           class ~ .,
@@ -227,7 +234,8 @@ test_that("multinomial mlp class weights", {
           optimizer = "LBFGS",
           rate_schedule = "decay_time",
           stop_iter = 100,
-          learn_rate = 0.01
+          learn_rate = 0.01,
+          device = "cpu"
         )
     }
   )

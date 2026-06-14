@@ -619,6 +619,7 @@ brulee_mlp_bridge <- function(
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -632,6 +633,7 @@ new_brulee_mlp <- function(
   loss,
   dims,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -675,6 +677,7 @@ new_brulee_mlp <- function(
     loss = loss,
     dims = dims,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -727,14 +730,11 @@ mlp_fit_imp <-
     if (is.factor(y)) {
       lvls <- levels(y)
       y_dim <- length(lvls)
-      # the model will output softmax values.
-      # so we need to use negative likelihood loss and
-      # pass the log of softmax.
       loss_fn <- function(input, target, wts = NULL) {
-        nnf_nll_loss(
-          weight = weights_to_tensor(wts),
-          input = torch::torch_log(input),
+        torch::nnf_cross_entropy(
+          input = input,
           target = target,
+          weight = weights_to_tensor(wts, device = input$device)
         )
       }
     } else {
@@ -776,13 +776,25 @@ mlp_fit_imp <-
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
-    torch::torch_set_default_dtype(torch::torch_float64())
+    torch::torch_set_default_dtype(torch::torch_float32())
+
+    ## ---------------------------------------------------------------------------
+    # Re-seed and build the module on the CPU, then move it to `device`. See
+    # the "Device-handling notes" comment block at the top of R/0_utils.R for
+    # the full rationale. The re-seed `start_seed + 1` lets different
+    # optimizers start from identical initial weights for the same input
+    # seed. Building on the CPU is necessary because `nn_linear()` inside
+    # `with_device(mps, ...)` allocates parameters on MPS, and `nn_init_*`
+    # then draws from the MPS RNG, which `torch_manual_seed()` does NOT
+    # reliably reset. CPU init lets the properly-seeded CPU RNG drive
+    # initialization, so MPS/CUDA/CPU runs all produce reproducible initial
+    # weights from the same seed.
+    torch::torch_manual_seed(start_seed + 1)
+    model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
+    model$to(device = device)
 
     # Set device context for training
     training_output <- torch::with_device(device = device, {
-      # Reset the seed so that different optimizers start from the same values
-      torch::torch_manual_seed(start_seed + 1)
-
       torch_data <- setup_torch_data(
         x,
         y,
@@ -809,6 +821,7 @@ mlp_fit_imp <-
             features = colnames(x)
           ),
           y_stats = y_stats,
+          output_type = "logits",
           parameters = list(
             activation = activation,
             hidden_units = hidden_units,
@@ -830,10 +843,8 @@ mlp_fit_imp <-
         )
 
       ## ---------------------------------------------------------------------------
-      # Initialize model and optimizer
+      # Loss and optimizer (model now lives on the target device)
 
-      model <- mlp_module(ncol(x), hidden_units, activation, dropout, y_dim)
-      model$to(device = device)
       mixture <- check_mixture(mixture, optimizer)
 
       # Note that if a penalty is used, it might affect the `loss_fn` _or_ the
@@ -978,10 +989,8 @@ mlp_module <-
       )
       layers[[length(layers)]] <- init_layer(layers[[length(layers)]], "linear")
 
-      # conditionally add the softmax layer
-      if (y_dim > 1) {
-        layers[[length(layers) + 1]] <- torch::nn_softmax(dim = 2)
-      }
+      # Classification output is raw logits; softmax is applied at predict time
+      # so the loss can use nnf_cross_entropy (numerically stable).
 
       # create a sequential module that calls the layers in the same order.
       self$model <- torch::nn_sequential(!!!layers)

@@ -391,6 +391,7 @@ brulee_logistic_reg_bridge <- function(
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -404,6 +405,7 @@ new_brulee_logistic_reg <- function(
   loss,
   dims,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -436,6 +438,7 @@ new_brulee_logistic_reg <- function(
     loss = loss,
     dims = dims,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -480,14 +483,17 @@ logistic_reg_fit_imp <-
 
     lvls <- levels(y)
     y_dim <- length(lvls)
-    # the model will output softmax values.
-    # so we need to use negative likelihood loss and
-    # pass the log of softmax.
+    # NOTE on `device = input$device`: this loss is called from inside the
+    # coro::loop / dataloader closure in run_training_loop(), where
+    # `with_device` context does NOT propagate. Passing `device = input$device`
+    # forces the class-weight tensor to live on the same device as the model
+    # outputs, avoiding "Placeholder storage" errors on MPS and cross-device
+    # tensor errors elsewhere. See R/0_utils.R for the broader explanation.
     loss_fn <- function(input, target, wts = NULL) {
-      nnf_nll_loss(
-        weight = weights_to_tensor(wts),
-        input = torch::torch_log(input),
-        target = target
+      torch::nnf_cross_entropy(
+        input = input,
+        target = target,
+        weight = weights_to_tensor(wts, device = input$device)
       )
     }
 
@@ -509,7 +515,19 @@ logistic_reg_fit_imp <-
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
-    torch::torch_set_default_dtype(torch::torch_float64())
+    torch::torch_set_default_dtype(torch::torch_float32())
+
+    ## ---------------------------------------------------------------------------
+    # Build the module on the CPU, then move it to `device`. See the
+    # "Device-handling notes" comment block at the top of R/0_utils.R for the
+    # full rationale. In short: `nn_linear()` inside `with_device(mps, ...)`
+    # allocates parameters on MPS and `nn_init_*` then uses the MPS RNG,
+    # which `torch_manual_seed()` does NOT reliably seed. Constructing on the
+    # CPU first means initialization is driven by the (properly seeded) CPU
+    # RNG, so MPS/CUDA/CPU all give reproducible initial weights from the
+    # same seed.
+    model <- logistic_module(ncol(x), y_dim)
+    model$to(device = device)
 
     # Set device context for training
     training_output <- torch::with_device(device = device, {
@@ -527,9 +545,7 @@ logistic_reg_fit_imp <-
       dl_val <- torch_data$dl_val
 
       ## -------------------------------------------------------------------------
-      # Initialize model and optimizer
-      model <- logistic_module(ncol(x), y_dim)
-      model$to(device = device) # Move model to the correct device
+      # Loss and optimizer (model now lives on the target device)
       loss_fn <- make_penalized_loss(
         loss_fn,
         model,
@@ -592,6 +608,7 @@ logistic_reg_fit_imp <-
         features = colnames(x)
       ),
       y_stats = y_stats,
+      output_type = "logits",
       parameters = list(
         learn_rate = learn_rate,
         penalty = penalty,
@@ -610,12 +627,11 @@ logistic_module <-
     "logistic_reg_module",
     initialize = function(num_pred, num_classes) {
       self$fc1 <- torch::nn_linear(num_pred, num_classes)
-      self$transform <- torch::nn_softmax(dim = 2)
     },
     forward = function(x) {
-      x |>
-        self$fc1() |>
-        self$transform()
+      # Output is raw logits; softmax is applied at predict time so the loss
+      # can use nnf_cross_entropy (numerically stable).
+      self$fc1(x)
     }
   )
 

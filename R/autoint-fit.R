@@ -593,6 +593,7 @@ brulee_auto_int_bridge <- function(
     dims = fit$dims,
     top_interactions = fit$top_interactions,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -796,6 +797,7 @@ new_brulee_auto_int <- function(
   dims,
   top_interactions,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -850,6 +852,7 @@ new_brulee_auto_int <- function(
     dims = dims,
     top_interactions = top_interactions,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -909,10 +912,10 @@ auto_int_fit_imp <- function(
     lvls <- levels(y)
     y_dim <- length(lvls)
     loss_fn <- function(input, target, wts = NULL) {
-      nnf_nll_loss(
-        weight = weights_to_tensor(wts),
-        input = torch::torch_log(input),
-        target = target
+      torch::nnf_cross_entropy(
+        input = input,
+        target = target,
+        weight = weights_to_tensor(wts, device = input$device)
       )
     }
   } else {
@@ -968,22 +971,58 @@ auto_int_fit_imp <- function(
 
   or_dtype <- torch::torch_get_default_dtype()
   on.exit(torch::torch_set_default_dtype(or_dtype))
-  torch::torch_set_default_dtype(torch::torch_float64())
+  torch::torch_set_default_dtype(torch::torch_float32())
+
+  # Build the module on the CPU, then move it to `device`. See the
+  # "Device-handling notes" comment block at the top of R/0_utils.R for the
+  # full rationale. AutoInt's embedding layer holds a learnable
+  # `cont_weights` parameter (registered via `nn_parameter`) plus categorical
+  # `nn_embedding` modules; inside `with_device(mps, ...)` these would be
+  # allocated and initialized on MPS, drawing from the MPS RNG, which
+  # `torch_manual_seed()` does NOT reliably reset. CPU init drives those
+  # draws from the properly-seeded CPU RNG, then `model$to(device)` moves
+  # everything to the target backend, giving reproducible initial weights
+  # from the same seed on every backend.
+  torch::torch_manual_seed(start_seed + 1)
+  model <- auto_int_module(
+    pred_lvls = pred_lvls,
+    n_continuous = p_cont,
+    num_embedding = num_embedding,
+    num_attn_feat = num_attn_feat,
+    num_attn_heads = num_attn_heads,
+    num_attn_blocks = num_attn_blocks,
+    dropout_attn = dropout_attn,
+    dropout_embedding = dropout_embedding,
+    activation = activation,
+    hidden_units = hidden_units,
+    hidden_activations = hidden_activations,
+    dropout = dropout,
+    y_dim = y_dim
+  )
+  model$to(device = device)
 
   training_output <- torch::with_device(device = device, {
-    torch::torch_manual_seed(start_seed + 1)
-
+    # NOTE: every torch_tensor() / float_32() call below passes `device`
+    # explicitly. `with_device(...)` looks like it should set a default
+    # device for these calls, but it does NOT propagate to torch_tensor() --
+    # see the "Device-handling notes" at the top of R/0_utils.R. Without
+    # the explicit `device =` arg these tensors would land on the CPU and
+    # later trigger device-mismatch errors when fed to the MPS/CUDA model.
     make_auto_int_tensors <- function(xc, xn, yv) {
       t_cat <- if (!is.null(xc)) {
-        torch::torch_tensor(xc, dtype = torch::torch_long())
+        torch::torch_tensor(xc, dtype = torch::torch_long(), device = device)
       } else {
         NULL
       }
-      t_cont <- if (!is.null(xn)) float_64(xn) else NULL
+      t_cont <- if (!is.null(xn)) float_32(xn, device = device) else NULL
       if (is.factor(yv)) {
-        t_y <- torch::torch_tensor(as.numeric(yv), dtype = torch::torch_long())
+        t_y <- torch::torch_tensor(
+          as.numeric(yv),
+          dtype = torch::torch_long(),
+          device = device
+        )
       } else {
-        t_y <- float_64(yv)
+        t_y <- float_32(yv, device = device)
       }
       list(x_cat = t_cat, x_cont = t_cont, y = t_y)
     }
@@ -1051,6 +1090,7 @@ auto_int_fit_imp <- function(
         features = all_features
       ),
       y_stats = y_stats,
+      output_type = "logits",
       parameters = list(
         activation = activation,
         hidden_units = hidden_units,
@@ -1077,24 +1117,7 @@ auto_int_fit_imp <- function(
     )
 
     ## ---------------------------------------------------------------------------
-    # Initialize model
-
-    model <- auto_int_module(
-      pred_lvls = pred_lvls,
-      n_continuous = p_cont,
-      num_embedding = num_embedding,
-      num_attn_feat = num_attn_feat,
-      num_attn_heads = num_attn_heads,
-      num_attn_blocks = num_attn_blocks,
-      dropout_attn = dropout_attn,
-      dropout_embedding = dropout_embedding,
-      activation = activation,
-      hidden_units = hidden_units,
-      hidden_activations = hidden_activations,
-      dropout = dropout,
-      y_dim = y_dim
-    )
-    model$to(device = device)
+    # Loss and optimizer (model now lives on the target device)
 
     mixture <- check_mixture(mixture, optimizer)
     loss_fn <- make_penalized_loss(loss_fn, model, penalty, mixture, optimizer)
@@ -1552,13 +1575,9 @@ auto_int_module <- torch::nn_module(
         h_flat <- self$hidden_drop(h_flat)
       }
     }
-    x <- self$output_head(h_flat)
-
-    if (self$y_dim > 1L) {
-      x <- torch::nn_softmax(dim = 2)(x)
-    }
-
-    x
+    # Classification returns raw logits; softmax is applied at predict time
+    # so the loss can use nnf_cross_entropy (numerically stable).
+    self$output_head(h_flat)
   }
 )
 
@@ -1630,6 +1649,9 @@ print.brulee_auto_int <- function(x, ...) {
   param_lst <- c(param_lst, " " = "Optimizer: {.val {x$parameters$optimizer}}")
   if (x$parameters$optimizer != "LBFGS") {
     param_lst <- c(param_lst, " " = "Batch Size: {x$parameters$batch_size}")
+  }
+  if (!is.null(x$device)) {
+    param_lst <- c(param_lst, " " = "Device: {.val {x$device}}")
   }
 
   cli::cli_bullets(param_lst)

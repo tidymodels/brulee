@@ -513,7 +513,20 @@ linear_reg_fit_imp <-
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
-    torch::torch_set_default_dtype(torch::torch_float64())
+    torch::torch_set_default_dtype(torch::torch_float32())
+
+    ## ---------------------------------------------------------------------------
+    # Build the module on the CPU, then move it to `device`. See the
+    # "Device-handling notes" comment block at the top of R/0_utils.R for the
+    # full rationale. In short: when `nn_linear()` runs inside
+    # `with_device(mps, ...)`, its parameters are allocated on MPS and the
+    # subsequent `nn_init_*` draws use the MPS RNG, which `torch_manual_seed()`
+    # does NOT reliably seed -- so two MPS fits with the same seed get
+    # different initial weights. Constructing on the CPU first ensures the
+    # CPU RNG (which IS properly seeded) drives initialization, giving
+    # reproducible results on every backend.
+    model <- linear_reg_module(ncol(x))
+    model$to(device = device)
 
     # Set device context for training
     training_output <- torch::with_device(device = device, {
@@ -531,9 +544,7 @@ linear_reg_fit_imp <-
       dl_val <- torch_data$dl_val
 
       ## -------------------------------------------------------------------------
-      # Initialize model and optimizer
-      model <- linear_reg_module(ncol(x))
-      model$to(device = device) # Move model to the correct device
+      # Loss and optimizer (model now lives on the target device)
       loss_fn <- make_penalized_loss(
         loss_fn,
         model,

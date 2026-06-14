@@ -12,6 +12,7 @@ test_that("penalty affects model parameters during training", {
 
   # Train with no penalty
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_no_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -23,11 +24,13 @@ test_that("penalty affects model parameters during training", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Train with moderate penalty
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_with_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -39,7 +42,8 @@ test_that("penalty affects model parameters during training", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Get coefficients
@@ -74,6 +78,7 @@ test_that("L1 penalty encourages sparsity more than L2", {
 
   # L2 penalty
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_l2 <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -85,11 +90,13 @@ test_that("L1 penalty encourages sparsity more than L2", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # L1 penalty
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_l1 <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -101,7 +108,8 @@ test_that("L1 penalty encourages sparsity more than L2", {
     mixture = 1,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Get coefficients
@@ -131,6 +139,7 @@ test_that("penalty consistency across epochs", {
   parabolic_tr <- parabolic[in_train, ]
 
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -142,7 +151,8 @@ test_that("penalty consistency across epochs", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Loss should generally decrease or stabilize (not increase erratically)
@@ -167,6 +177,7 @@ test_that("extreme penalty values behave reasonably", {
 
   # Very small penalty should behave similar to no penalty
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_no_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -178,10 +189,12 @@ test_that("extreme penalty values behave reasonably", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_tiny_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -193,7 +206,8 @@ test_that("extreme penalty values behave reasonably", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Very small penalty should produce similar results
@@ -203,6 +217,7 @@ test_that("extreme penalty values behave reasonably", {
 
   # Very large penalty should still produce valid model
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_huge_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -214,7 +229,8 @@ test_that("extreme penalty values behave reasonably", {
     mixture = 0,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Should complete without error and produce finite loss
@@ -234,6 +250,7 @@ test_that("penalty works correctly with validation split", {
 
   # With validation split
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_no_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -246,10 +263,12 @@ test_that("penalty works correctly with validation split", {
     validation = 0.2,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit_with_penalty <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -262,7 +281,8 @@ test_that("penalty works correctly with validation split", {
     validation = 0.2,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Should produce different results
@@ -289,6 +309,7 @@ test_that("penalty works with different batch sizes", {
 
   for (bs in batch_sizes) {
     set.seed(123)
+    torch::torch_manual_seed(123)
     fit_no_penalty <- brulee_mlp(
       class ~ .,
       data = parabolic_tr,
@@ -300,10 +321,12 @@ test_that("penalty works with different batch sizes", {
       mixture = 0,
       batch_size = bs,
       optimizer = "SGD",
-      verbose = FALSE
+      verbose = FALSE,
+      device = "cpu"
     )
 
     set.seed(123)
+    torch::torch_manual_seed(123)
     fit_with_penalty <- brulee_mlp(
       class ~ .,
       data = parabolic_tr,
@@ -315,7 +338,8 @@ test_that("penalty works with different batch sizes", {
       mixture = 0,
       batch_size = bs,
       optimizer = "SGD",
-      verbose = FALSE
+      verbose = FALSE,
+      device = "cpu"
     )
 
     # Penalty should make a difference regardless of batch size
@@ -340,6 +364,7 @@ test_that("penalty parameter is stored correctly in model object", {
   mixture_val <- 0.3
 
   set.seed(123)
+  torch::torch_manual_seed(123)
   fit <- brulee_mlp(
     class ~ .,
     data = parabolic_tr,
@@ -351,7 +376,8 @@ test_that("penalty parameter is stored correctly in model object", {
     mixture = mixture_val,
     batch_size = 128,
     optimizer = "SGD",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Check that penalty and mixture are stored in the model object

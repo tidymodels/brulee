@@ -8,13 +8,15 @@ test_that("rln regression - matrix interface", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
     hidden_units = 4L,
     epochs = 5L,
     batch_size = 32L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_rln")
@@ -41,12 +43,14 @@ test_that("rln regression - data.frame interface", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = df[, c("x1", "x2")],
     y = df$y,
     hidden_units = 4L,
     epochs = 3L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_rln")
@@ -64,12 +68,14 @@ test_that("rln regression - formula interface", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     y ~ x1 + x2,
     data = df,
     hidden_units = 4L,
     epochs = 3L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_rln")
@@ -93,12 +99,14 @@ test_that("rln regression - recipe interface", {
     step_normalize(all_numeric_predictors())
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     rec,
     data = df,
     hidden_units = 4L,
     epochs = 3L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_rln")
@@ -117,12 +125,14 @@ test_that("rln regression - epoch parameter", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
     hidden_units = 4L,
     epochs = 5L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   pred1 <- predict(fit, x, epoch = 1)
@@ -144,12 +154,14 @@ test_that("rln print method works", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
     hidden_units = 4L,
     epochs = 2L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   print_output <- capture.output(capture.output(print(fit), type = "message"))
@@ -167,12 +179,14 @@ test_that("rln autoplot works", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
     hidden_units = 4L,
     epochs = 3L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   p <- autoplot(fit)
@@ -229,12 +243,14 @@ test_that("predict call threading surfaces predict() not the bridge", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
     hidden_units = 4L,
     epochs = 3L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   cnd <- rlang::catch_cnd(predict(fit, x, epoch = 9999), classes = "warning")
@@ -252,6 +268,7 @@ test_that("rln stores parameters correctly", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
@@ -261,7 +278,8 @@ test_that("rln stores parameters correctly", {
     step_rate = 1e5,
     activation = "tanh",
     epochs = 3L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_equal(fit$parameters$hidden_units, 6L)
@@ -282,13 +300,15 @@ test_that("summary.brulee_rln prints layers and totals", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_rln(
     x = x,
     y = y,
     hidden_units = 8L,
     epochs = 3L,
     activation = "relu",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   out <- capture.output(result <- summary(fit))

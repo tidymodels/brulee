@@ -12,13 +12,15 @@ test_that("resnet binary classification - data.frame interface", {
   df$y <- factor(ifelse(df$x1 + df$x2 > 0, "A", "B"))
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
     hidden_units = c(5, 3),
     bottleneck_units = c(4, 4),
     epochs = 5,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -50,13 +52,15 @@ test_that("resnet binary classification - formula interface", {
   df$y <- factor(ifelse(df$x1 + df$x2 > 0, "A", "B"))
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     y ~ x1 + x2,
     data = df,
     hidden_units = c(5, 3),
     bottleneck_units = c(4, 4),
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -84,13 +88,15 @@ test_that("resnet binary classification - recipe interface", {
     step_normalize(all_numeric_predictors())
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     rec,
     data = df,
     hidden_units = c(5, 3),
     bottleneck_units = c(4, 4),
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -117,6 +123,7 @@ test_that("resnet binary classification - class weights", {
   df$y[71:100] <- "B"
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
@@ -124,7 +131,8 @@ test_that("resnet binary classification - class weights", {
     bottleneck_units = c(4, 4),
     class_weights = c(A = 1, B = 2),
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")

@@ -119,12 +119,13 @@ predict_brulee_resnet_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation
-  estimates <- lapply(estimates, float_64, device = device)
+  estimates <- lapply(estimates, float_32, device = device)
 
   # stuff back into the model
   module$load_state_dict(estimates)
   module$eval() # put the model in evaluation mode
-  predictions <- module(float_64(predictors, device))
+  predictions <- module(float_32(predictors, device))
+  predictions <- to_probs(predictions, model)
   predictions <- as.array(predictions)
   # torch doesn't have a NA type so it returns NaN
   predictions[is.nan(predictions)] <- NA

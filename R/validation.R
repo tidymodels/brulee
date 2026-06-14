@@ -309,21 +309,21 @@ validate_resnet_args <- function(
 #' @noRd
 #'
 #' @details
-#' Note: MPS (Apple Metal Performance Shaders) is not automatically selected because
-#' it doesn't support float64 dtype, which is required by brulee. Users can explicitly
-#' specify device="mps" if they modify their code to use float32.
+#' Auto-detection is platform-driven: on macOS, MPS (Apple Metal Performance
+#' Shaders) is preferred when available; on other platforms, CUDA is preferred
+#' when available. Falls back to CPU otherwise. Users on an Intel Mac with a
+#' CUDA-capable eGPU must pass `device = "cuda"` explicitly.
 guess_brulee_device <- function(device = NULL) {
   if (!is.null(device)) {
     return(tolower(device))
   }
-
-  if (torch::cuda_is_available()) {
+  is_mac <- Sys.info()[["sysname"]] == "Darwin"
+  if (is_mac && torch::backends_mps_is_available()) {
+    return("mps")
+  }
+  if (!is_mac && torch::cuda_is_available()) {
     return("cuda")
   }
-  # Skip MPS auto-detection as it doesn't support float64
-  # if (torch::backends_mps_is_available()) {
-  #   return("mps")
-  # }
   "cpu"
 }
 

@@ -215,10 +215,10 @@ make_penalized_loss <- function(loss_fn, model, penalty, mixture, opt) {
     if (penalty > 0) {
       l_term <- mixture * l1_term(model) + (1 - mixture) / 2 * l2_term(model)
       # Create penalty tensor on the same device as l_term
-      # l_term is already float64 from model parameters, on the correct device
+      # l_term is already float32 from model parameters, on the correct device
       penalty_tensor <- torch::torch_tensor(
         penalty,
-        dtype = torch::torch_float64(),
+        dtype = torch::torch_float32(),
         device = l_term$device
       )
       loss <- loss + penalty_tensor * l_term
@@ -236,23 +236,69 @@ is_cran_check <- function() {
   }
 }
 
-float_64 <- function(x, device = NULL) {
+# --- Device-handling notes (read once, applied throughout brulee) ------------
+#
+# brulee runs on three torch backends: CPU, CUDA, and MPS (Apple Metal). Two
+# subtleties with how torch (R) and the MPS backend behave shape the code in
+# this file and in every *-fit.R / *-predict.R helper:
+#
+# 1. `torch::with_device(device = X, { ... })` does NOT make `torch_tensor()`
+#    calls inside the block default to device X. New tensors created with
+#    `torch_tensor()` land on the CPU regardless of the surrounding
+#    `with_device` block. The fit/predict code therefore passes
+#    `device = device` explicitly to every `torch_tensor()` / `float_32()` /
+#    `weights_to_tensor()` call. Without this, tensors land on the CPU while
+#    the model is on MPS/CUDA, producing "Placeholder storage" errors at
+#    forward time on MPS or device-mismatch errors on CUDA.
+#
+# 2. The MPS RNG is not reliably reset by `torch::torch_manual_seed()`.
+#    Inside a `with_device(mps, ...)` block, `nn_linear()` and related
+#    constructors *do* allocate parameters directly on MPS, and the
+#    subsequent `nn_init_*` calls then draw from the MPS RNG. Even after
+#    calling `set.seed(s)` + `torch_manual_seed(s)`, two fits on MPS will
+#    produce different initial weights. The fix is to construct modules
+#    OUTSIDE `with_device` so initialization runs on the CPU (whose RNG IS
+#    properly seeded), then move the module to the target device with
+#    `model$to(device = device)`. CUDA's RNG is well-behaved with
+#    `torch_manual_seed()`, but the same pattern is applied uniformly so
+#    that all three backends produce reproducible inits from the same seed.
+#
+# Pattern in every fit function:
+#   torch::torch_manual_seed(start_seed + 1)  # seed CPU RNG
+#   model <- foo_module(...)                  # build params on CPU
+#   model$to(device = device)                 # move to target device
+#   training_output <- torch::with_device(device = device, {
+#     ...                                     # data loaders + training loop
+#   })
+# -----------------------------------------------------------------------------
+
+# Create a float32 tensor on the given device. `device = NULL` is *not* a
+# request for "the current with_device context" -- torch does not propagate
+# that to torch_tensor(). NULL just means "let torch pick", which in practice
+# is the CPU. Callers from inside training loops or dataloader closures must
+# pass `device` explicitly.
+float_32 <- function(x, device = NULL) {
   if (is.null(device)) {
-    # Let torch_tensor use the current device context (from with_device)
-    torch::torch_tensor(x, dtype = torch::torch_float64())
+    torch::torch_tensor(x, dtype = torch::torch_float32())
   } else {
-    # Explicitly specify device when provided
-    torch::torch_tensor(x, dtype = torch::torch_float64(), device = device)
+    torch::torch_tensor(x, dtype = torch::torch_float32(), device = device)
   }
 }
 
-# Convert class weights to tensor on current device
-# Returns NULL if weights are NULL, otherwise converts to float64 tensor
-weights_to_tensor <- function(wts) {
+# Convert class weights to a float32 tensor on the given device.
+# Returns NULL if weights are NULL.
+#
+# `device` must be passed explicitly when called from inside a training-loop
+# closure: `with_device` context does not propagate through coro/dataloader
+# closure execution, so without an explicit device the weight tensor lands on
+# the CPU while inputs/targets live on the GPU. The per-call signature
+# `weights_to_tensor(wts, device = input$device)` ensures co-location with
+# whatever the loss function received.
+weights_to_tensor <- function(wts, device = NULL) {
   if (is.null(wts)) {
     return(NULL)
   }
-  float_64(wts)
+  float_32(wts, device = device)
 }
 
 # ------------------------------------------------------------------------------
@@ -304,6 +350,20 @@ arch_fmt_row <- function(label, n_par, indent = "    ") {
 
 arch_is_noop <- function(m) {
   inherits(m, "nn_dropout") && isTRUE(m$p == 0)
+}
+
+# Convert classification model output to a row-stochastic probability tensor.
+# Modules fit on brulee >= the cross-entropy refactor emit raw logits and carry
+# `output_type = "logits"` on the result; older fits emitted softmax-normalized
+# probabilities and have no `output_type`, so we leave them alone.
+to_probs <- function(x, model) {
+  if (
+    isTRUE(model$dims$y > 1L) &&
+      identical(model$output_type, "logits")
+  ) {
+    x <- torch::nnf_softmax(x, dim = 2L)
+  }
+  x
 }
 
 last_epoch_note <- function(epoch, max_epoch, call = rlang::caller_env()) {
