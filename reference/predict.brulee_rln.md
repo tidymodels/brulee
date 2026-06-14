@@ -66,13 +66,13 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
 #> # A tibble: 930 × 1
 #>    .pred
 #>    <dbl>
-#>  1  5.20
+#>  1  5.19
 #>  2  5.36
 #>  3  5.36
-#>  4  5.28
+#>  4  5.27
 #>  5  5.29
 #>  6  5.24
-#>  7  5.23
+#>  7  5.22
 #>  8  5.22
 #>  9  5.24
 #> 10  5.21

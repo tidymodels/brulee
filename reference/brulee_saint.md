@@ -480,32 +480,23 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
   rsq(outcome, .pred)
 
 }
-#> epoch: 00, learn rate: 0.01, Loss (scaled): 0.559
-#> epoch: 01, learn rate: 0.01, Loss (scaled): 0.299
-#> epoch: 02, learn rate: 0.01, Loss (scaled): 0.304
-#> epoch: 03, learn rate: 0.01, Loss (scaled): 0.461
-#> epoch: 04, learn rate: 0.01, Loss (scaled): 0.424
-#> epoch: 05, learn rate: 0.01, Loss (scaled): 0.29
-#> epoch: 06, learn rate: 0.01, Loss (scaled): 0.349
-#> epoch: 07, learn rate: 0.01, Loss (scaled): 0.298
-#> epoch: 08, learn rate: 0.01, Loss (scaled): 0.401
-#> epoch: 09, learn rate: 0.01, Loss (scaled): 0.348
-#> epoch: 10, learn rate: 0.01, Loss (scaled): 0.268
-#> epoch: 11, learn rate: 0.01, Loss (scaled): 0.267
-#> epoch: 12, learn rate: 0.01, Loss (scaled): 0.341
-#> epoch: 13, learn rate: 0.01, Loss (scaled): 0.23
-#> epoch: 14, learn rate: 0.01, Loss (scaled): 0.401
+#> epoch: 00, learn rate: 0.01, Loss (scaled): 0.325
+#> epoch: 01, learn rate: 0.01, Loss (scaled): 0.622
+#> epoch: 02, learn rate: 0.01, Loss (scaled): 0.271
+#> epoch: 03, learn rate: 0.01, Loss (scaled): 0.325
+#> epoch: 04, learn rate: 0.01, Loss (scaled): 0.283
+#> epoch: 05, learn rate: 0.01, Loss (scaled): 0.265
+#> epoch: 06, learn rate: 0.01, Loss (scaled): 0.287
+#> epoch: 07, learn rate: 0.01, Loss (scaled): 0.294
+#> epoch: 08, learn rate: 0.01, Loss (scaled): 0.278
+#> epoch: 09, learn rate: 0.01, Loss (scaled): 0.227
+#> epoch: 10, learn rate: 0.01, Loss (scaled): 0.302
+#> epoch: 11, learn rate: 0.01, Loss (scaled): 0.2
+#> epoch: 12, learn rate: 0.01, Loss (scaled): 0.277
+#> epoch: 13, learn rate: 0.01, Loss (scaled): 0.268
+#> epoch: 14, learn rate: 0.01, Loss (scaled): 1.06
 #> epoch: 15, learn rate: 0.01, Loss (scaled): 0.288
-#> epoch: 16, learn rate: 0.01, Loss (scaled): 0.198
-#> epoch: 17, learn rate: 0.01, Loss (scaled): 0.638
-#> epoch: 18, learn rate: 0.01, Loss (scaled): 0.398
-#> epoch: 19, learn rate: 0.01, Loss (scaled): 0.167
-#> epoch: 20, learn rate: 0.01, Loss (scaled): 0.165
-#> epoch: 21, learn rate: 0.01, Loss (scaled): 0.31
-#> epoch: 22, learn rate: 0.01, Loss (scaled): 0.25
-#> epoch: 23, learn rate: 0.01, Loss (scaled): 0.397
-#> epoch: 24, learn rate: 0.01, Loss (scaled): 0.747
-#> epoch: 25, learn rate: 0.01, Loss (scaled): 0.233
+#> epoch: 16, learn rate: 0.01, Loss (scaled): 0.234
 #> SAINT architecture
 #> inputs: 8 (0 categorical, 8 numeric) | output dim: 1
 #> attention: both | embedding dim: 3
@@ -570,6 +561,6 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rsq     standard       0.540
+#> 1 rsq     standard       0.557
 # }
 ```

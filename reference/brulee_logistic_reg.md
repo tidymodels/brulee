@@ -306,8 +306,6 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
   bind_cols(cells_test) |>
   roc_auc(class, .pred_PS)
 }
-#> Warning: Early stopping occurred at epoch 1 due to numerical overflow of the
-#> loss function.
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>

@@ -32,6 +32,37 @@ New models for tabular data:
   See[`?training_efficiency`](https://brulee.tidymodels.org/reference/training_efficiency.md)
   for some related notes.
 
+### Breaking Changes
+
+- Float tensors were changed from 64-bit floats to 32-bit. This is to
+  enable GPU usage on MPS devices.
+
+- Parameters are initialized on CPU devices and then converted to the
+  chosen device. In some cases, the RGN initialization code is
+  independent of the seed.
+
+- For classification, the softmax was moved out of every model’s forward
+  pass so the loss can use
+  [`torch::nnf_cross_entropy()`](https://torch.mlverse.org/docs/reference/nnf_cross_entropy.html)
+  (which applies the log-sum-exp trick internally) instead of
+  `nll_loss(log(softmax(x)))`. This avoids `log(0)` underflow that
+  produced `NaN` losses and “numerical overflow” early stopping on
+  overspecified
+  [`brulee_saint()`](https://brulee.tidymodels.org/reference/brulee_saint.md)
+  /
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/reference/brulee_auto_int.md)
+  fits. Affects
+  [`brulee_mlp()`](https://brulee.tidymodels.org/reference/brulee_mlp.md),
+  [`brulee_logistic_reg()`](https://brulee.tidymodels.org/reference/brulee_logistic_reg.md),
+  [`brulee_multinomial_reg()`](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.md),
+  [`brulee_resnet()`](https://brulee.tidymodels.org/reference/brulee_resnet.md),
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/reference/brulee_auto_int.md),
+  and
+  [`brulee_saint()`](https://brulee.tidymodels.org/reference/brulee_saint.md).
+  New fits carry `output_type = "logits"` so the predict path applies
+  softmax; serialized fits from earlier versions of brulee continue to
+  predict correctly.
+
 ## brulee 0.6.0
 
 CRAN release: 2025-09-02

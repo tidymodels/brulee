@@ -483,6 +483,6 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rmse    standard        16.5
+#> 1 rmse    standard        13.2
 # }
 ```
