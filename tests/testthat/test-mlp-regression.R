@@ -31,7 +31,13 @@ test_that('basic regression mlp LBFGS', {
       set.seed(1)
       torch::torch_manual_seed(1)
       mlp_reg_mat_lbfgs_fit <-
-        brulee_mlp(reg_tr_x_mat, reg_tr_y, mixture = 0, learn_rate = .1, device = "cpu")
+        brulee_mlp(
+          reg_tr_x_mat,
+          reg_tr_y,
+          mixture = 0,
+          learn_rate = .1,
+          device = "cpu"
+        )
     }
   )
 
@@ -40,7 +46,12 @@ test_that('basic regression mlp LBFGS', {
     {
       set.seed(1)
       torch::torch_manual_seed(1)
-      mlp_reg_df_lbfgs_fit <- brulee_mlp(reg_tr_x_df, reg_tr_y, validation = .2, device = "cpu")
+      mlp_reg_df_lbfgs_fit <- brulee_mlp(
+        reg_tr_x_df,
+        reg_tr_y,
+        validation = .2,
+        device = "cpu"
+      )
     }
   )
 
@@ -369,7 +380,13 @@ test_that("variable hidden_units length", {
     {
       set.seed(2)
       torch::torch_manual_seed(2)
-      model <- brulee_mlp(x, y, hidden_units = c(2, 3), epochs = 1, device = "cpu")
+      model <- brulee_mlp(
+        x,
+        y,
+        hidden_units = c(2, 3),
+        epochs = 1,
+        device = "cpu"
+      )
     }
   )
 

@@ -22,7 +22,13 @@ test_that("basic logistic regression LBFGS", {
       set.seed(392)
       torch::torch_manual_seed(392)
       bin_fit_lbfgs <-
-        brulee_logistic_reg(class ~ ., bin_tr, penlaty = 0, epochs = 1, device = "cpu")
+        brulee_logistic_reg(
+          class ~ .,
+          bin_tr,
+          penlaty = 0,
+          epochs = 1,
+          device = "cpu"
+        )
     }
   )
 
@@ -145,7 +151,12 @@ test_that("coef works when recipes are used", {
 
   set.seed(1)
   torch::torch_manual_seed(1)
-  fit_rec <- brulee_logistic_reg(rec, lending_club, epochs = 10L, device = "cpu")
+  fit_rec <- brulee_logistic_reg(
+    rec,
+    lending_club,
+    epochs = 10L,
+    device = "cpu"
+  )
 
   coefs <- coef(fit_rec)
   expect_true(all(is.numeric(coefs)))
