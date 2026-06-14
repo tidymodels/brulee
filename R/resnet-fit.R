@@ -573,6 +573,7 @@ brulee_resnet_bridge <- function(
     loss = fit$loss,
     dims = fit$dims,
     y_stats = fit$y_stats,
+    output_type = fit$output_type,
     parameters = fit$parameters,
     device = fit$device,
     blueprint = processed$blueprint
@@ -586,6 +587,7 @@ new_brulee_resnet <- function(
   loss,
   dims,
   y_stats,
+  output_type,
   parameters,
   device,
   blueprint
@@ -629,6 +631,7 @@ new_brulee_resnet <- function(
     loss = loss,
     dims = dims,
     y_stats = y_stats,
+    output_type = output_type,
     parameters = parameters,
     device = device,
     blueprint = blueprint,
@@ -683,14 +686,11 @@ resnet_fit_imp <-
     if (is.factor(y)) {
       lvls <- levels(y)
       y_dim <- length(lvls)
-      # the model will output softmax values.
-      # so we need to use negative likelihood loss and
-      # pass the log of softmax.
       loss_fn <- function(input, target, wts = NULL) {
-        nnf_nll_loss(
-          weight = weights_to_tensor(wts),
-          input = torch::torch_log(input),
+        torch::nnf_cross_entropy(
+          input = input,
           target = target,
+          weight = weights_to_tensor(wts, device = input$device)
         )
       }
     } else {
@@ -732,13 +732,33 @@ resnet_fit_imp <-
 
     or_dtype <- torch::torch_get_default_dtype()
     on.exit(torch::torch_set_default_dtype(or_dtype))
-    torch::torch_set_default_dtype(torch::torch_float64())
+    torch::torch_set_default_dtype(torch::torch_float32())
+
+    ## ---------------------------------------------------------------------------
+    # Re-seed and build the module on the CPU, then move it to `device`. See
+    # the "Device-handling notes" comment block at the top of R/0_utils.R for
+    # the full rationale. The re-seed `start_seed + 1` lets different
+    # optimizers start from identical initial weights for the same input
+    # seed. Building on the CPU is necessary because `nn_linear()` and
+    # `nn_batch_norm1d()` inside `with_device(mps, ...)` allocate parameters
+    # on MPS, where `nn_init_*` then draws from the MPS RNG (which
+    # `torch_manual_seed()` does NOT reliably reset). CPU init lets the
+    # properly-seeded CPU RNG drive initialization, so MPS/CUDA/CPU runs all
+    # produce reproducible initial weights from the same seed.
+    torch::torch_manual_seed(start_seed + 1)
+    model <- resnet_module(
+      num_pred = ncol(x),
+      bottleneck_units = bottleneck_units,
+      hidden_units = hidden_units,
+      residual_at = residual_at,
+      activation = activation,
+      dropout = dropout,
+      y_dim = y_dim
+    )
+    model$to(device = device)
 
     # Set device context for training
     training_output <- torch::with_device(device = device, {
-      # Reset the seed so that different optimizers start from the same values
-      torch::torch_manual_seed(start_seed + 1)
-
       torch_data <- setup_torch_data(
         x,
         y,
@@ -767,6 +787,7 @@ resnet_fit_imp <-
             features = colnames(x)
           ),
           y_stats = y_stats,
+          output_type = "logits",
           parameters = list(
             activation = activation,
             hidden_units = hidden_units,
@@ -790,18 +811,7 @@ resnet_fit_imp <-
         )
 
       ## ---------------------------------------------------------------------------
-      # Initialize model and optimizer
-
-      model <- resnet_module(
-        num_pred = ncol(x),
-        bottleneck_units = bottleneck_units,
-        hidden_units = hidden_units,
-        residual_at = residual_at,
-        activation = activation,
-        dropout = dropout,
-        y_dim = y_dim
-      )
-      model$to(device = device) # Move model to the correct device
+      # Loss and optimizer (model now lives on the target device)
 
       mixture <- check_mixture(mixture, optimizer)
 
@@ -1065,14 +1075,11 @@ resnet_module <-
         }
       }
 
-      # Output head
+      # Output head. Classification returns raw logits; softmax is applied at
+      # predict time so the loss can use nnf_cross_entropy (numerically stable).
       x <- x |>
         self$bn_out() |>
         self$linear_out()
-
-      if (self$y_dim > 1L) {
-        x <- torch::nn_softmax(dim = 2)(x)
-      }
 
       x
     }

@@ -11,6 +11,7 @@ test_that("resnet regression - matrix interface", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = x,
     y = y,
@@ -19,7 +20,8 @@ test_that("resnet regression - matrix interface", {
     bottleneck_units = 5,
     epochs = 5,
     batch_size = 32,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -53,6 +55,7 @@ test_that("resnet regression - data.frame interface", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
@@ -60,7 +63,8 @@ test_that("resnet regression - data.frame interface", {
     num_layers = 1,
     bottleneck_units = 5,
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -83,6 +87,7 @@ test_that("resnet regression - formula interface", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     y ~ x1 + x2,
     data = df,
@@ -90,7 +95,8 @@ test_that("resnet regression - formula interface", {
     num_layers = 2,
     bottleneck_units = 5,
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -118,6 +124,7 @@ test_that("resnet regression - recipe interface", {
     step_normalize(all_numeric_predictors())
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     rec,
     data = df,
@@ -125,7 +132,8 @@ test_that("resnet regression - recipe interface", {
     num_layers = 2,
     bottleneck_units = 5,
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -146,6 +154,7 @@ test_that("resnet regression - epoch parameter", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = x,
     y = y,
@@ -153,7 +162,8 @@ test_that("resnet regression - epoch parameter", {
     num_layers = 2,
     bottleneck_units = 5,
     epochs = 5,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   # Test prediction with different epochs
@@ -181,6 +191,7 @@ test_that("resnet print method works", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = x,
     y = y,
@@ -188,7 +199,8 @@ test_that("resnet print method works", {
     num_layers = 2,
     bottleneck_units = 5,
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   print_output <- capture.output(capture.output(print(fit), type = "message"))
@@ -209,6 +221,7 @@ test_that("resnet autoplot works", {
   y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = x,
     y = y,
@@ -216,7 +229,8 @@ test_that("resnet autoplot works", {
     num_layers = 2,
     bottleneck_units = 5,
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   p <- autoplot(fit)
@@ -285,6 +299,7 @@ test_that("resnet with vector hidden_units and bottleneck_units", {
 
   # Test with different hidden_units and bottleneck_units per layer
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = x,
     y = y,
@@ -292,7 +307,8 @@ test_that("resnet with vector hidden_units and bottleneck_units", {
     bottleneck_units = c(5, 6, 7), # Different output widths
     residual_at = 3, # Single residual block
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -304,13 +320,15 @@ test_that("resnet with vector hidden_units and bottleneck_units", {
 
   # Test with single layer
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit2 <- brulee_resnet(
     x = x,
     y = y,
     hidden_units = 10,
     bottleneck_units = 5,
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit2, "brulee_resnet")
@@ -330,6 +348,7 @@ test_that("summary.brulee_resnet prints layers, skips, and totals", {
   ames_y <- ames_x[, 1] + 2 * ames_x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = ames_x,
     y = ames_y,
@@ -337,7 +356,8 @@ test_that("summary.brulee_resnet prints layers, skips, and totals", {
     bottleneck_units = c(5, 3, 4),
     residual_at = c(2, 3),
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   out <- capture.output(result <- summary(fit))
@@ -371,6 +391,7 @@ test_that("summary.brulee_resnet handles no-residual and multinomial cases", {
   ames_y <- ames_x[, 1] + ames_x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit_no_skip <- brulee_resnet(
     x = ames_x,
     y = ames_y,
@@ -378,7 +399,8 @@ test_that("summary.brulee_resnet handles no-residual and multinomial cases", {
     bottleneck_units = c(4, 3),
     residual_at = integer(0),
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   out_no_skip <- capture.output(summary(fit_no_skip))
@@ -389,13 +411,15 @@ test_that("summary.brulee_resnet handles no-residual and multinomial cases", {
   y_cls <- factor(sample(letters[1:3], n, replace = TRUE))
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit_cls <- brulee_resnet(
     x = ames_x,
     y = y_cls,
     hidden_units = c(6, 4),
     bottleneck_units = c(4, 3),
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   out_cls <- capture.output(summary(fit_cls))
@@ -415,13 +439,15 @@ test_that("resnet block structure follows Gorishniy et al. 2021", {
   ames_y <- ames_x[, 1] + 2 * ames_x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = ames_x,
     y = ames_y,
     hidden_units = 4,
     bottleneck_units = 6,
     epochs = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   module <- brulee:::revive_model(fit$model_obj)

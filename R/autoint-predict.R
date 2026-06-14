@@ -127,7 +127,7 @@ predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
   if (length(cont_names) > 0) {
     cont_cols <- intersect(cont_names, names(predictors))
     if (length(cont_cols) > 0) {
-      x_cont <- float_64(
+      x_cont <- float_32(
         as.matrix(predictors[, cont_cols, drop = FALSE]),
         device = device
       )
@@ -139,11 +139,12 @@ predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
 
   # Load parameters for the requested epoch
   estimates <- model$estimates[[epoch + 1]]
-  estimates <- lapply(estimates, float_64, device = device)
+  estimates <- lapply(estimates, float_32, device = device)
   module$load_state_dict(estimates)
   module$eval()
 
   predictions <- module(x_cat, x_cont)
+  predictions <- to_probs(predictions, model)
   predictions <- as.array(predictions)
   predictions[is.nan(predictions)] <- NA
   predictions

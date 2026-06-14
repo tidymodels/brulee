@@ -15,7 +15,14 @@ test_that("autoint regression - formula interface", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.5)
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 5,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_s3_class(fit, "brulee_auto_int")
   expect_true(inherits(fit$model_obj, "raw"))
@@ -41,7 +48,14 @@ test_that("autoint regression - data.frame interface (numeric only)", {
   y <- data.frame(outcome = x$x1 + rnorm(n, sd = 0.1))
 
   set.seed(1)
-  fit <- brulee_auto_int(x = x, y = y, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    x = x,
+    y = y,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_s3_class(fit, "brulee_auto_int")
   expect_equal(fit$dims$p_cat, 0L)
@@ -62,7 +76,14 @@ test_that("autoint regression - matrix interface", {
   y <- x[, 1] + x[, 2] + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_auto_int(x = x, y = y, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    x = x,
+    y = y,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_s3_class(fit, "brulee_auto_int")
   pred <- predict(fit, x)
@@ -85,7 +106,14 @@ test_that("autoint regression - recipe interface", {
 
   rec <- recipes::recipe(y ~ ., data = df)
   set.seed(1)
-  fit <- brulee_auto_int(rec, data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    rec,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_s3_class(fit, "brulee_auto_int")
   pred <- predict(fit, df)
@@ -108,7 +136,14 @@ test_that("autoint binary classification", {
   )
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 5,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_s3_class(fit, "brulee_auto_int")
 
@@ -137,7 +172,14 @@ test_that("autoint multiclass classification", {
   )
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 5,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   pred_class <- predict(fit, df, type = "class")
   expect_equal(nrow(pred_class), n)
@@ -162,12 +204,14 @@ test_that("autoint classification with class_weights", {
   )
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 5,
     class_weights = c(a = 1, b = 4),
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_auto_int")
@@ -192,13 +236,15 @@ test_that("autoint with single hidden layer", {
   df$y <- df$x1 + 2 * df$x2 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 5,
     hidden_units = 32L,
     hidden_activations = "relu",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_auto_int")
@@ -219,13 +265,15 @@ test_that("autoint with multiple hidden layers", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 5,
     hidden_units = c(64L, 32L),
     hidden_activations = c("relu", "tanh"),
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_equal(fit$parameters$hidden_units, c(64L, 32L))
@@ -245,13 +293,15 @@ test_that("autoint hidden layer activation recycling", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     hidden_units = c(16L, 8L),
     hidden_activations = "tanh",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_equal(fit$parameters$hidden_activations, c("tanh", "tanh"))
@@ -267,6 +317,7 @@ test_that("autoint hidden layer dropout", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
@@ -274,7 +325,8 @@ test_that("autoint hidden layer dropout", {
     hidden_units = 32L,
     hidden_activations = "relu",
     dropout = 0.5,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_auto_int")
@@ -388,7 +440,14 @@ test_that("autoint with only categorical predictors", {
   )
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_s3_class(fit, "brulee_auto_int")
   expect_equal(fit$dims$p_cat, 2L)
@@ -408,7 +467,14 @@ test_that("autoint with only continuous predictors", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_equal(fit$dims$p_cat, 0L)
   expect_equal(fit$dims$p_cont, 3L)
@@ -432,7 +498,14 @@ test_that("autoint with mixed predictors", {
   )
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_equal(fit$dims$p_cat, 2L)
   expect_equal(fit$dims$p_cont, 2L)
@@ -452,7 +525,14 @@ test_that("autoint prediction with specific epoch", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 5,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   pred_best <- predict(fit, df)
   pred_epoch1 <- predict(fit, df, epoch = 1)
@@ -471,7 +551,14 @@ test_that("autoint prediction with epoch = 0 and epoch = max", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   # epoch 0 should work (initial parameters)
   pred0 <- predict(fit, df, epoch = 0)
@@ -495,6 +582,7 @@ test_that("autoint with different optimizers", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit_sgd <- brulee_auto_int(
     y ~ .,
     data = df,
@@ -502,17 +590,20 @@ test_that("autoint with different optimizers", {
     optimizer = "SGD",
     learn_rate = 0.001,
     momentum = 0.9,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_s3_class(fit_sgd, "brulee_auto_int")
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit_lbfgs <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     optimizer = "LBFGS",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_s3_class(fit_lbfgs, "brulee_auto_int")
 })
@@ -527,12 +618,14 @@ test_that("autoint with validation = 0", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     validation = 0,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_s3_class(fit, "brulee_auto_int")
   expect_equal(fit$parameters$validation, 0)
@@ -548,12 +641,14 @@ test_that("autoint with penalty and mixture", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     penalty = 0.1,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_equal(fit$parameters$penalty, 0.1)
 })
@@ -568,12 +663,14 @@ test_that("autoint with batch_size", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     batch_size = 32L,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_equal(fit$parameters$batch_size, 32L)
 })
@@ -591,6 +688,7 @@ test_that("autoint with various attention configurations", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
@@ -600,7 +698,8 @@ test_that("autoint with various attention configurations", {
     num_attn_heads = 4L,
     num_attn_blocks = 2L,
     activation = "tanh",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_equal(fit$parameters$num_embedding, 8L)
@@ -620,13 +719,15 @@ test_that("autoint with dropout_attn and dropout_embedding", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     dropout_attn = 0.2,
     dropout_embedding = 0.1,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_equal(fit$parameters$dropout_attn, 0.2)
@@ -650,7 +751,14 @@ test_that("autoint returns top interactions", {
   )
 
   set.seed(1)
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  torch::torch_manual_seed(1)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 5,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   expect_true("top_interactions" %in% names(fit))
   expect_s3_class(fit$top_interactions, "tbl_df")
@@ -673,7 +781,15 @@ test_that("autoint print method works (no hidden layers)", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   output <- capture_all_output(print(fit))
   expect_true(any(grepl("AutoInt network", output)))
@@ -690,6 +806,8 @@ test_that("autoint print method works (with hidden layers + dropout)", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
+  set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
@@ -697,7 +815,8 @@ test_that("autoint print method works (with hidden layers + dropout)", {
     hidden_units = 32L,
     hidden_activations = "relu",
     dropout = 0.2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   output <- capture_all_output(print(fit))
@@ -714,7 +833,15 @@ test_that("autoint print method shows validation loss for regression", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
   output <- capture_all_output(print(fit))
   expect_true(any(grepl("scaled validation loss", output)))
 })
@@ -728,12 +855,15 @@ test_that("autoint print method shows training loss when validation = 0", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
+  set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     validation = 0,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   output <- capture_all_output(print(fit))
   expect_true(any(grepl("training set loss", output)))
@@ -751,7 +881,15 @@ test_that("autoint print method for classification", {
     y = factor(sample(c("a", "b"), n, replace = TRUE))
   )
 
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
   output <- capture_all_output(print(fit))
   expect_true(any(grepl("Classes", output)))
   expect_true(any(grepl("validation loss", output)))
@@ -767,7 +905,15 @@ test_that("autoint autoplot works", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 5, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 5,
+    verbose = FALSE,
+    device = "cpu"
+  )
 
   p <- ggplot2::autoplot(fit)
   expect_s3_class(p, "ggplot")
@@ -786,12 +932,14 @@ test_that("autoint with learning rate schedule", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 5,
     rate_schedule = "decay_time",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_s3_class(fit, "brulee_auto_int")
   expect_equal(fit$parameters$sched, "decay_time")
@@ -809,13 +957,16 @@ test_that("autoint print shows dropout_attn/dropout_embedding", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
+  set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     dropout_attn = 0.1,
     dropout_embedding = 0.2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   output <- capture_all_output(print(fit))
@@ -831,12 +982,15 @@ test_that("autoint print with LBFGS (no batch size displayed)", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
+  set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     optimizer = "LBFGS",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   output <- capture_all_output(print(fit))
@@ -853,12 +1007,15 @@ test_that("autoint print with no penalty", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
+  set.seed(2)
+  torch::torch_manual_seed(2)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     penalty = 0,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   output <- capture_all_output(print(fit))
@@ -878,12 +1035,14 @@ test_that("autoint classification with validation = 0", {
   )
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     validation = 0,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   output <- capture_all_output(print(fit))
@@ -903,6 +1062,7 @@ test_that("autoint with L1 penalty via SGD", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
@@ -912,7 +1072,8 @@ test_that("autoint with L1 penalty via SGD", {
     momentum = 0.9,
     penalty = 0.01,
     mixture = 1.0,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_s3_class(fit, "brulee_auto_int")
 })
@@ -927,12 +1088,14 @@ test_that("autoint with early stopping", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 100,
     stop_iter = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_true(fit$best_epoch < 100)
 })
@@ -946,7 +1109,15 @@ test_that("autoint coef method returns estimates", {
   df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
-  fit <- brulee_auto_int(y ~ ., data = df, epochs = 3, verbose = FALSE)
+  set.seed(2)
+  torch::torch_manual_seed(2)
+  fit <- brulee_auto_int(
+    y ~ .,
+    data = df,
+    epochs = 3,
+    verbose = FALSE,
+    device = "cpu"
+  )
   expect_true(is.list(fit$estimates))
   expect_true(length(fit$estimates) > 0)
 })
@@ -961,13 +1132,15 @@ test_that("autoint with numeric hidden_units (coerced to integer)", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
     epochs = 3,
     hidden_units = 16,
     hidden_activations = "relu",
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_equal(fit$parameters$hidden_units, 16L)
 })
@@ -982,6 +1155,7 @@ test_that("autoint with numeric attention params (coerced to integer)", {
   df$y <- df$x1 + rnorm(n, sd = 0.1)
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_auto_int(
     y ~ .,
     data = df,
@@ -990,7 +1164,8 @@ test_that("autoint with numeric attention params (coerced to integer)", {
     num_attn_feat = 8,
     num_attn_heads = 2,
     num_attn_blocks = 2,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
   expect_equal(fit$parameters$num_embedding, 8L)
   expect_equal(fit$parameters$num_attn_feat, 8L)

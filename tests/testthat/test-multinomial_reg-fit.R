@@ -30,13 +30,15 @@ test_that("basic multinomial regression LBFGS", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_lbfgs <-
         brulee_multinomial_reg(
           class ~ .,
           mnl_tr,
           epochs = 200,
           rate_schedule = "cyclic",
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -111,6 +113,7 @@ test_that("basic multinomial regression SGD", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_sgd <-
         brulee_multinomial_reg(
           class ~ .,
@@ -121,7 +124,8 @@ test_that("basic multinomial regression SGD", {
           optimize = "SGD",
           batch_size = 64L,
           momentum = 0.5,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -182,6 +186,7 @@ test_that("multinomial regression class weights", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_lbfgs_wts <-
         brulee_multinomial_reg(
           class ~ .,
@@ -190,7 +195,8 @@ test_that("multinomial regression class weights", {
           mixture = 0.5,
           rate_schedule = "decay_time",
           class_weights = cls_wts,
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )
@@ -207,6 +213,7 @@ test_that("multinomial regression class weights", {
   expect_no_error(
     {
       set.seed(392)
+      torch::torch_manual_seed(392)
       mnl_fit_lbfgs_unwt <-
         brulee_multinomial_reg(
           class ~ .,
@@ -214,7 +221,8 @@ test_that("multinomial regression class weights", {
           epochs = 30,
           mixture = 0.5,
           rate_schedule = "decay_time",
-          learn_rate = 0.1
+          learn_rate = 0.1,
+          device = "cpu"
         )
     }
   )

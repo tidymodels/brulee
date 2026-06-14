@@ -17,7 +17,7 @@
 #' }
 #' @export
 matrix_to_dataset <- function(x, y, device = NULL) {
-  x <- float_64(x, device = device)
+  x <- float_32(x, device = device)
   if (is.factor(y)) {
     y <- as.numeric(y)
     if (is.null(device)) {
@@ -26,7 +26,7 @@ matrix_to_dataset <- function(x, y, device = NULL) {
       y <- torch::torch_tensor(y, dtype = torch::torch_long(), device = device)
     }
   } else {
-    y <- float_64(y, device = device)
+    y <- float_32(y, device = device)
   }
   torch::tensor_dataset(x = x, y = y)
 }

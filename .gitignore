@@ -6,3 +6,4 @@ revdep
 .positai
 *.Rcheck
 *.tar.gz
+Rplots.pdf

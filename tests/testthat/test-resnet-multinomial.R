@@ -15,13 +15,15 @@ test_that("resnet multinomial classification - data.frame interface", {
   )
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
     hidden_units = c(8, 5),
     bottleneck_units = c(6, 4),
     epochs = 5,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -59,13 +61,15 @@ test_that("resnet multinomial classification - formula interface", {
   )
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     y ~ x1 + x2,
     data = df,
     hidden_units = c(8, 5),
     bottleneck_units = c(6, 4),
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -95,13 +99,15 @@ test_that("resnet multinomial classification - recipe interface", {
     step_normalize(all_numeric_predictors())
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     rec,
     data = df,
     hidden_units = c(8, 5),
     bottleneck_units = c(6, 4),
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")
@@ -126,6 +132,7 @@ test_that("resnet multinomial classification - class weights", {
   )
 
   set.seed(1)
+  torch::torch_manual_seed(1)
   fit <- brulee_resnet(
     x = df[, c("x1", "x2")],
     y = df$y,
@@ -133,7 +140,8 @@ test_that("resnet multinomial classification - class weights", {
     bottleneck_units = c(6, 4),
     class_weights = c(A = 1, B = 2, C = 1),
     epochs = 3,
-    verbose = FALSE
+    verbose = FALSE,
+    device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_resnet")

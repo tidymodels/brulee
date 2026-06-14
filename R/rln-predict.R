@@ -93,10 +93,10 @@ predict_brulee_rln_raw <- function(model, predictors, epoch) {
   device <- get_safe_device(model$device)
   module <- revive_model(model$model_obj, device)
   estimates <- model$estimates[[epoch + 1]]
-  estimates <- lapply(estimates, float_64, device = device)
+  estimates <- lapply(estimates, float_32, device = device)
   module$load_state_dict(estimates)
   module$eval()
-  predictions <- module(float_64(predictors, device))
+  predictions <- module(float_32(predictors, device))
   predictions <- as.array(predictions)
   predictions[is.nan(predictions)] <- NA
   predictions

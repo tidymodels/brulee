@@ -565,9 +565,23 @@ rln_fit_imp <- function(
 
   or_dtype <- torch::torch_get_default_dtype()
   on.exit(torch::torch_set_default_dtype(or_dtype))
-  torch::torch_set_default_dtype(torch::torch_float64())
+  torch::torch_set_default_dtype(torch::torch_float32())
 
+  # Build the module on the CPU, then move it to `device`. See the
+  # "Device-handling notes" comment block at the top of R/0_utils.R for the
+  # full rationale. rln_module uses explicit Xavier-normal init for its
+  # linear layers; if construction happened inside `with_device(mps, ...)`
+  # those `nn_init_xavier_normal_` calls would draw from the MPS RNG, which
+  # `torch_manual_seed()` does NOT reliably reset. Constructing on the CPU
+  # first lets the properly-seeded CPU RNG drive initialization, so the
+  # initial weights are reproducible from the same seed on every backend.
   torch::torch_manual_seed(start_seed + 1)
+  model <- rln_module(
+    num_pred = ncol(x),
+    hidden_units = hidden_units,
+    activation = activation
+  )
+  model$to(device = device)
 
   training_output <- torch::with_device(device = device, {
     torch_data <- setup_torch_data(
@@ -581,14 +595,6 @@ rln_fit_imp <- function(
     )
     dl <- torch_data$dl
     dl_val <- torch_data$dl_val
-
-    # Xavier normal init in rln_module (see below)
-    model <- rln_module(
-      num_pred = ncol(x),
-      hidden_units = hidden_units,
-      activation = activation
-    )
-    model$to(device = device)
 
     # No make_penalized_loss call: Standard L1/L2 wrapping is skipped entirely
     # because regularization is handled per-weight by rln_state below
@@ -753,7 +759,7 @@ make_rln_state <- function(
 
     torch::with_no_grad({
       first_linear$weight$copy_(
-        torch::torch_tensor(new_weights, dtype = torch::torch_float64())
+        torch::torch_tensor(new_weights, dtype = torch::torch_float32())
       )
     })
 
