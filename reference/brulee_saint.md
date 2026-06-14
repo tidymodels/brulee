@@ -480,23 +480,23 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
   rsq(outcome, .pred)
 
 }
-#> epoch: 00, learn rate: 0.01, Loss (scaled): 0.325
-#> epoch: 01, learn rate: 0.01, Loss (scaled): 0.622
-#> epoch: 02, learn rate: 0.01, Loss (scaled): 0.271
-#> epoch: 03, learn rate: 0.01, Loss (scaled): 0.325
-#> epoch: 04, learn rate: 0.01, Loss (scaled): 0.283
-#> epoch: 05, learn rate: 0.01, Loss (scaled): 0.265
-#> epoch: 06, learn rate: 0.01, Loss (scaled): 0.287
-#> epoch: 07, learn rate: 0.01, Loss (scaled): 0.294
-#> epoch: 08, learn rate: 0.01, Loss (scaled): 0.278
-#> epoch: 09, learn rate: 0.01, Loss (scaled): 0.227
-#> epoch: 10, learn rate: 0.01, Loss (scaled): 0.302
-#> epoch: 11, learn rate: 0.01, Loss (scaled): 0.2
-#> epoch: 12, learn rate: 0.01, Loss (scaled): 0.277
-#> epoch: 13, learn rate: 0.01, Loss (scaled): 0.268
-#> epoch: 14, learn rate: 0.01, Loss (scaled): 1.06
-#> epoch: 15, learn rate: 0.01, Loss (scaled): 0.288
-#> epoch: 16, learn rate: 0.01, Loss (scaled): 0.234
+#> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.325
+#> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.622
+#> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.271
+#> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.325
+#> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.283
+#> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.265
+#> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.287
+#> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.294
+#> epoch: 08, learn rate: 0.01000, Loss (scaled): 0.278
+#> epoch: 09, learn rate: 0.01000, Loss (scaled): 0.227
+#> epoch: 10, learn rate: 0.01000, Loss (scaled): 0.302
+#> epoch: 11, learn rate: 0.01000, Loss (scaled): 0.2
+#> epoch: 12, learn rate: 0.01000, Loss (scaled): 0.277
+#> epoch: 13, learn rate: 0.01000, Loss (scaled): 0.268
+#> epoch: 14, learn rate: 0.01000, Loss (scaled): 1.06
+#> epoch: 15, learn rate: 0.01000, Loss (scaled): 0.288
+#> epoch: 16, learn rate: 0.01000, Loss (scaled): 0.234
 #> SAINT architecture
 #> inputs: 8 (0 categorical, 8 numeric) | output dim: 1
 #> attention: both | embedding dim: 3
