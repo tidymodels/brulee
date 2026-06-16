@@ -353,6 +353,76 @@ def dump_full_model(gen, name, max_classes, bias_free_ln):
     write(name, tensors, {"config": config, "train_size": train_size, "seed": SEED})
 
 
+def _softmax_np(x, temperature=0.9):
+    import numpy as np
+
+    x = x / temperature
+    x = x - x.max(axis=-1, keepdims=True)
+    e = np.exp(x)
+    return e / e.sum(axis=-1, keepdims=True)
+
+
+def dump_engine_golden(gen, name, max_classes, bias_free_ln):
+    # End-to-end prediction-engine golden on a SMALL random model (so the
+    # committed test needs no released checkpoint): preprocess "none" -> model
+    # forward -> classification softmax / regression quantile-mean, the single
+    # deterministic ensemble member. Mirrors the sklearn wrappers' n_estimators=1.
+    import numpy as np
+    from tabicl._sklearn.preprocessing import PreprocessingPipeline
+
+    config = _small_tabicl_config(max_classes, bias_free_ln)
+    model = TabICL(**config)
+    model.eval()
+    randomize_(model, gen)
+
+    n_train, n_test, n_feat = 20, 5, 4
+    x_train = np.asarray(torch.randn(n_train, n_feat, generator=gen))
+    x_test = np.asarray(torch.randn(n_test, n_feat, generator=gen))
+
+    pipe = PreprocessingPipeline(normalization_method="none")
+    pipe.fit(x_train)
+    xtr_pp = pipe.X_transformed_
+    xte_pp = pipe.transform(x_test)
+    x_cat = np.concatenate([xtr_pp, xte_pp], axis=0)
+    x_t = torch.from_numpy(x_cat).float().unsqueeze(0)
+
+    tensors = {
+        k: v.detach()
+        for k, v in model.state_dict().items()
+        if k.startswith(("col_embedder.", "row_interactor.", "icl_predictor."))
+    }
+    tensors["X_train"] = torch.from_numpy(x_train).float()
+    tensors["X_test"] = torch.from_numpy(x_test).float()
+
+    if max_classes > 0:
+        y_train = torch.randint(0, 3, (n_train,), generator=gen)
+        y_t = y_train.float().unsqueeze(0)
+        with torch.no_grad():
+            logits = model(x_t, y_t, return_logits=True, softmax_temperature=0.9)
+        logits = logits.squeeze(0).numpy()
+        proba = _softmax_np(logits, 0.9)
+        proba = proba / proba.sum(axis=1, keepdims=True)
+        tensors["y_train"] = y_train.float()
+        tensors["proba"] = torch.from_numpy(proba).float()
+    else:
+        y_train = torch.randn(n_train, generator=gen)
+        y_np = y_train.numpy()
+        y_mean = y_np.mean()
+        y_scale = y_np.std()
+        y_scale = y_scale if y_scale != 0 else 1.0
+        y_scaled = (y_np - y_mean) / y_scale
+        y_t = torch.from_numpy(y_scaled).float().unsqueeze(0)
+        with torch.no_grad():
+            quantiles = model(x_t, y_t)
+        dist = QuantileToDistribution(num_quantiles=config["num_quantiles"])(quantiles)
+        mean_scaled = dist.quantiles.mean(dim=-1).squeeze(0).numpy()
+        mean = mean_scaled * y_scale + y_mean
+        tensors["y_train"] = y_train.float()
+        tensors["mean"] = torch.from_numpy(mean).float()
+
+    write(name, tensors, {"config": config, "seed": SEED})
+
+
 def dump_quantile_dist(gen):
     # Regression head: predicted quantiles -> distribution stats. Uses the
     # released defaults (tail_type="exp", crossing_method="sort"). num_quantiles
@@ -423,6 +493,9 @@ def main():
     dump_full_model(gen, "full_model_reg", max_classes=0, bias_free_ln=True)
     # Regression head: quantiles -> distribution stats.
     dump_quantile_dist(gen)
+    # Prediction engine (single-member) on a small model.
+    dump_engine_golden(gen, "engine_clf", max_classes=10, bias_free_ln=False)
+    dump_engine_golden(gen, "engine_reg", max_classes=0, bias_free_ln=True)
     # Stage 2: full RowInteraction, with and without LayerNorm biases.
     dump_row_interaction(gen, "row_interaction", bias_free_ln=False)
     dump_row_interaction(gen, "row_interaction_biasfree", bias_free_ln=True)
