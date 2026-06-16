@@ -267,7 +267,7 @@ test_that("saint with colrow attention type (default)", {
 # ------------------------------------------------------------------------------
 # row_attention_on_predict tests
 
-test_that("saint row_attention_on_predict=FALSE (default) gives batch-independent predictions", {
+test_that("saint row_attention_on_predict=FALSE gives batch-independent predictions", {
   skip_on_cran()
   skip_if_not_installed("torch")
 

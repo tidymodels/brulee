@@ -24,7 +24,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -54,7 +54,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -84,7 +84,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -114,7 +114,7 @@ brulee_saint(x, ...)
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -190,11 +190,12 @@ between the last hidden layer and the output head. Only has effect when
 \code{hidden_units} is not \code{NULL}. Default is 0 (no dropout).}
 
 \item{row_attention_on_predict}{A logical value. Should row (inter-sample)
-attention be applied during prediction? Default is \code{FALSE}. When \code{FALSE},
-row attention is only used during training and predictions use column
-attention only — this ensures that predictions for a given row are
-independent of what other rows are in the prediction set. This is only
-relevant when \code{attention_type} is \code{"row"} or \code{"both"}.}
+attention be applied during prediction? Default is \code{TRUE}, matching the
+training-time behavior. When \code{FALSE}, row attention is bypassed at
+predict time so that predictions for a given row do not depend on what
+other rows are in the prediction set; column attention is used on its
+own. This is only relevant when \code{attention_type} is \code{"row"} or
+\code{"both"}.}
 
 \item{hidden_units}{An integer vector for the number of units in optional
 hidden layers between the transformer backbone and the output head.
@@ -303,7 +304,8 @@ The SAINT architecture has three stages:
 \item \strong{Embedding layer}: Categorical features are mapped through per-feature
 embedding tables. Continuous features are passed through per-feature MLPs
 (1 -> 100 -> \code{num_embedding}). These initial embeddings are per-feature;
-there is a distinct embedding MLP for each predictor.
+there is a distinct embedding MLP for each predictor. Also, see the
+"Target Token Pooling" section below.
 \item \strong{Transformer backbone}: A stack of \code{num_attn_blocks} transformer layers.
 Each layer contains multi-head self-attention followed by a feed-forward
 network with GeGLU activation. For \code{attention_type = "both"}, each block
@@ -374,9 +376,14 @@ path and for users who want the original brulee behavior.
 Row attention computations adjust the internal embeddings based on the rows
 that are available at any given time. During training, the other rows in the
 batch are used to compute attention. After training, when \code{predict()} is
-called, the default behavior is to bypass row attention. This is because the
-predictions would depend on the other data available at the time. If this is
-what you want, set \code{row_attention_on_predict} to \code{TRUE}.
+called, the default behavior is to keep row attention on, mirroring the
+training-time computation. Because row attention is computed across the
+samples present in a given call, predictions for a row depend on what
+other rows are passed alongside it. To get batch-independent predictions
+(where the prediction for a given row is the same regardless of what
+other rows are in the input), set \code{row_attention_on_predict} to \code{FALSE};
+row attention is then bypassed at predict time and column attention is
+used on its own.
 }
 
 \subsection{Learning Rates}{
