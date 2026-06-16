@@ -21,7 +21,8 @@ for (f in c(
   "tabicl-interaction",
   "tabicl-learning",
   "tabicl-model",
-  "tabicl-embedding"
+  "tabicl-embedding",
+  "tabicl-quantile"
 )) {
   source(file.path("R", paste0(f, ".R")))
 }
@@ -265,9 +266,34 @@ check_full <- function(kind) {
   report_stage(kind, "full_forward", out, a$golden$icl_out)
 }
 
+# Regression head: raw model quantiles -> distribution stats.
+check_regression_stats <- function() {
+  a <- load_artifacts("regressor")
+  dist <- tabicl_quantile_dist(a$golden$icl_out)
+  report_stage(
+    "regressor",
+    "qd_mean",
+    tabicl_qdist_mean(dist),
+    a$golden$qd_mean
+  )
+  report_stage(
+    "regressor",
+    "qd_median",
+    tabicl_qdist_median(dist),
+    a$golden$qd_median
+  )
+  report_stage(
+    "regressor",
+    "qd_quantiles",
+    tabicl_qdist_quantiles(dist, c(0.1, 0.5, 0.9)),
+    a$golden$qd_quantiles
+  )
+}
+
 for (kind in c("classifier", "regressor")) {
   check_col_embedding(kind)
   check_row_interaction(kind)
   check_icl(kind)
   check_full(kind)
 }
+check_regression_stats()

@@ -58,10 +58,11 @@ python -m venv .venv
    Writes small gzipped safetensors + json fixtures to
    `tests/testthat/fixtures/tabicl/` (tracked): `rope`, `ssmax`, four MHA
    configurations, the stage-1 `col_embedding[_reg]`, stage-2
-   `row_interaction[_biasfree]`, stage-3 `icl_learning[_reg]`, and the end-to-end
-   `full_model[_reg]`. The R modules (`R/tabicl-rope.R`, `tabicl-attention.R`,
-   `tabicl-layers.R`, `tabicl-embedding.R`, `tabicl-interaction.R`,
-   `tabicl-learning.R`, `tabicl-model.R`) are validated against these by
+   `row_interaction[_biasfree]`, stage-3 `icl_learning[_reg]`, the end-to-end
+   `full_model[_reg]`, and the regression head `quantile_dist`. The R modules
+   (`R/tabicl-rope.R`, `tabicl-attention.R`, `tabicl-layers.R`,
+   `tabicl-embedding.R`, `tabicl-interaction.R`, `tabicl-learning.R`,
+   `tabicl-model.R`, `tabicl-quantile.R`) are validated against these by
    `tests/testthat/test-tabicl-*.R`. Weights use fan-in scaling so most
    activations stay O(1) (absolute tol 1e-5); the column embedder keeps -100 skip
    values through residuals, so that test uses a relative tolerance.

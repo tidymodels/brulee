@@ -30,6 +30,7 @@ from tabicl._model.interaction import RowInteraction
 from tabicl._model.embedding import ColEmbedding
 from tabicl._model.learning import ICLearning
 from tabicl._model.tabicl import TabICL
+from tabicl._model.quantile_dist import QuantileToDistribution
 
 OUT = Path(__file__).resolve().parents[2] / "tests" / "testthat" / "fixtures" / "tabicl"
 SEED = int(hashlib.sha256(b"brulee-tabicl-primitives-v1").hexdigest(), 16) % (2**31 - 1)
@@ -352,6 +353,45 @@ def dump_full_model(gen, name, max_classes, bias_free_ln):
     write(name, tensors, {"config": config, "train_size": train_size, "seed": SEED})
 
 
+def dump_quantile_dist(gen):
+    # Regression head: predicted quantiles -> distribution stats. Uses the
+    # released defaults (tail_type="exp", crossing_method="sort"). num_quantiles
+    # = 99 keeps the fixture small while leaving 20 tail quantiles per side for
+    # the exp-tail estimation (k = min(20, 99 // 4) = 20).
+    num_quantiles = 99
+    b, t = 1, 4
+    # Noisy, not-yet-monotonic quantiles: a rising trend plus jitter so the
+    # crossing fix (sort) and tail estimation both do real work.
+    base = torch.linspace(-3.0, 3.0, num_quantiles).reshape(1, 1, num_quantiles)
+    quantiles = base + 0.3 * torch.randn(b, t, num_quantiles, generator=gen)
+
+    qd = QuantileToDistribution(num_quantiles=num_quantiles)
+    dist = qd(quantiles)
+
+    # alphas chosen to hit the left tail, the spline interior, and the right
+    # tail (0.005 < alpha_l = 0.01; 0.995 > alpha_r = 0.99).
+    alphas = [0.005, 0.05, 0.5, 0.95, 0.995]
+    with torch.no_grad():
+        mean = dist.quantiles.mean(dim=-1)
+        variance = dist.quantiles.var(dim=-1)
+        median = dist.icdf(torch.tensor(0.5))
+        qs = dist.icdf(torch.tensor(alphas))
+        raw = dist.quantiles
+
+    write(
+        "quantile_dist",
+        {
+            "quantiles": quantiles,
+            "mean": mean,
+            "variance": variance,
+            "median": median,
+            "quantiles_at_alphas": qs,
+            "raw_quantiles": raw,
+        },
+        {"num_quantiles": num_quantiles, "alphas": alphas, "seed": SEED},
+    )
+
+
 def main():
     torch.manual_seed(SEED)
     gen = torch.Generator().manual_seed(SEED)
@@ -381,6 +421,8 @@ def main():
     # Full model forward, classification and regression.
     dump_full_model(gen, "full_model", max_classes=10, bias_free_ln=False)
     dump_full_model(gen, "full_model_reg", max_classes=0, bias_free_ln=True)
+    # Regression head: quantiles -> distribution stats.
+    dump_quantile_dist(gen)
     # Stage 2: full RowInteraction, with and without LayerNorm biases.
     dump_row_interaction(gen, "row_interaction", bias_free_ln=False)
     dump_row_interaction(gen, "row_interaction_biasfree", bias_free_ln=True)

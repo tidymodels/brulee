@@ -93,14 +93,22 @@ def dump(kind: str) -> None:
         {"X": X.contiguous(), "y_train": y_train.contiguous().to(torch.float32)},
         str(out_dir / "inputs.safetensors"),
     )
-    save_file(
-        {
-            "col_embed": col_embed.contiguous(),
-            "row_interact": row_interact.contiguous(),
-            "icl_out": icl_out.contiguous(),
-        },
-        str(out_dir / "stage_outputs.safetensors"),
-    )
+    stage_tensors = {
+        "col_embed": col_embed.contiguous(),
+        "row_interact": row_interact.contiguous(),
+        "icl_out": icl_out.contiguous(),
+    }
+    # Regression head stats from the raw quantiles, so the R port can validate
+    # the full regression pipeline (X -> model -> quantiles -> stats).
+    if config["max_classes"] == 0:
+        with torch.no_grad():
+            dist = model.quantile_dist(icl_out)
+            stage_tensors["qd_mean"] = dist.quantiles.mean(dim=-1).contiguous()
+            stage_tensors["qd_median"] = dist.icdf(torch.tensor(0.5)).contiguous()
+            stage_tensors["qd_quantiles"] = dist.icdf(
+                torch.tensor([0.1, 0.5, 0.9])
+            ).contiguous()
+    save_file(stage_tensors, str(out_dir / "stage_outputs.safetensors"))
 
     meta = {
         "kind": kind,
