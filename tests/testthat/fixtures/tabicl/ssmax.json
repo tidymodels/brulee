@@ -1,0 +1,9 @@
+{
+  "num_heads": 8,
+  "head_dim": 8,
+  "n_hidden": 64,
+  "seq": 6,
+  "n": 11,
+  "elementwise": true,
+  "seed": 1329923014
+}

@@ -1,0 +1,8 @@
+{
+  "head_dim": 8,
+  "num_heads": 8,
+  "seq": 7,
+  "interleaved": false,
+  "theta": 100000,
+  "seed": 1329923014
+}

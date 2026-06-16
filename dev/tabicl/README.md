@@ -47,6 +47,22 @@ python -m venv .venv
    Loads the config, all state_dict tensors (no skips), and the golden
    fixtures, checking shapes against `meta.json`.
 
+4. **Per-primitive parity fixtures** (step 2): build each primitive with random
+   (fan-in scaled) weights, run a forward pass, and save weights + inputs +
+   golden output.
+
+   ```sh
+   .venv/bin/python dump_primitives.py
+   ```
+
+   Writes small safetensors + json fixtures to
+   `tests/testthat/fixtures/tabicl/` (tracked): `rope`, `ssmax`, and four MHA
+   configurations (`mha_rope`, `mha_ssmax_self`, `mha_ssmax_cross`,
+   `mha_plain_cross`). The R modules in `R/tabicl-rope.R` / `R/tabicl-attention.R`
+   are validated against these by `tests/testthat/test-tabicl-rope.R` and
+   `test-tabicl-attention.R` (atol 1e-5). Weights use fan-in scaling so
+   activations stay O(1) and the absolute tolerance is meaningful.
+
 ## Stage shapes (fixed dataset: B=1, n_train=12, n_test=5, H=4)
 
 | Tensor       | classifier      | regressor       |
