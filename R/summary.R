@@ -345,6 +345,7 @@ summary.brulee_saint <- function(object, ...) {
   num_attn_heads <- object$parameters$num_attn_heads
   num_attn_blocks <- object$parameters$num_attn_blocks
   attention_type <- object$parameters$attention_type
+  use_target_token <- isTRUE(object$parameters$use_target_token)
 
   total <- 0L
   cat(cli::style_bold("SAINT architecture"), "\n", sep = "")
@@ -363,6 +364,8 @@ summary.brulee_saint <- function(object, ...) {
     attention_type,
     " | embedding dim: ",
     num_embedding,
+    " | target token: ",
+    use_target_token,
     "\n\n",
     sep = ""
   )
@@ -379,6 +382,15 @@ summary.brulee_saint <- function(object, ...) {
   # --- Embedding layer ---
   cat(cli::style_bold("Embedding layer"), "\n", sep = "")
   emb <- module$embedding
+
+  if (isTRUE(emb$use_target_token)) {
+    n_par_target <- as.integer(prod(emb$target_token$shape))
+    total <- total + n_par_target
+    cat(fmt_row(
+      paste0("Target token (1 x ", num_embedding, ")"),
+      n_par_target
+    ))
+  }
 
   if (emb$n_cat > 0) {
     for (i in seq_len(emb$n_cat)) {

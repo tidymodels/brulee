@@ -603,3 +603,97 @@ test_that("saint autoplot works", {
   p <- ggplot2::autoplot(fit)
   expect_s3_class(p, "ggplot")
 })
+
+# ------------------------------------------------------------------------------
+# Target token (CLS) pooling tests
+
+test_that("saint use_target_token=FALSE fits and predicts (column attention)", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(1)
+  n <- 80
+  parabolic <- data.frame(
+    x1 = rnorm(n),
+    x2 = rnorm(n),
+    x3 = rnorm(n)
+  )
+  parabolic$y <- parabolic$x1 + 2 * parabolic$x2 + rnorm(n, sd = 0.2)
+
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(
+    y ~ .,
+    data = parabolic,
+    epochs = 5,
+    attention_type = "column",
+    use_target_token = FALSE,
+    verbose = FALSE,
+    device = "cpu"
+  )
+
+  expect_s3_class(fit, "brulee_saint")
+  expect_false(fit$parameters$use_target_token)
+
+  pred <- predict(fit, parabolic)
+  expect_equal(nrow(pred), n)
+  expect_true(all(is.finite(pred$.pred)))
+})
+
+test_that("saint use_target_token=TRUE (default) works with row+column attention", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(1)
+  n <- 80
+  parabolic <- data.frame(
+    x1 = rnorm(n),
+    x2 = rnorm(n),
+    g = factor(sample(c("a", "b"), n, replace = TRUE))
+  )
+  parabolic$y <- factor(
+    ifelse(parabolic$x1 + rnorm(n, sd = 0.5) > 0, "pos", "neg")
+  )
+
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit <- brulee_saint(
+    y ~ .,
+    data = parabolic,
+    epochs = 5,
+    attention_type = "both",
+    num_attn_blocks = 1L,
+    verbose = FALSE,
+    device = "cpu"
+  )
+
+  expect_s3_class(fit, "brulee_saint")
+  expect_true(fit$parameters$use_target_token)
+
+  pred_prob <- predict(fit, parabolic, type = "prob")
+  expect_equal(nrow(pred_prob), n)
+  row_sums <- rowSums(as.matrix(pred_prob))
+  expect_true(all(abs(row_sums - 1) < 1e-5))
+})
+
+test_that("saint use_target_token argument is validated", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(1)
+  n <- 30
+  single_series <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  single_series$y <- single_series$x1 + rnorm(n, sd = 0.1)
+
+  expect_snapshot(
+    error = TRUE,
+    brulee_saint(
+      y ~ .,
+      data = single_series,
+      epochs = 2,
+      use_target_token = "nope",
+      verbose = FALSE,
+      device = "cpu"
+    )
+  )
+})

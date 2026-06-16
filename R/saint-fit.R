@@ -31,7 +31,7 @@
 #'   relevant when `attention_type` is `"row"` or `"both"`.
 #' @param hidden_units An integer vector for the number of units in optional
 #'   hidden layers between the transformer backbone and the output head.
-#'   When `NULL` (the default), no hidden layers are added and the flattened
+#'   When `NULL` (the default), no hidden layers are added and the pooled
 #'   transformer output is projected directly to the output.
 #' @param hidden_activations A character vector of activation functions for the
 #'   hidden layers. Must be the same length as `hidden_units` or a single value
@@ -41,6 +41,14 @@
 #' @param dropout_last A number in `[0, 1)` for the dropout rate applied
 #'   between the last hidden layer and the output head. Only has effect when
 #'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
+#' @param use_target_token A logical value. When `TRUE` (the default), a
+#'   learnable target token (`[CLS]` in the SAINT paper) is prepended to
+#'   each sample's feature sequence and only its final-layer embedding is
+#'   fed to the head. This matches the architecture described in the SAINT
+#'   paper (Section 3 and Figure 1); see the **Target Token Pooling**
+#'   section in **Details**. When `FALSE`, the head instead consumes the
+#'   concatenation of every feature token, which matches the SAINT
+#'   reference implementation at <https://github.com/somepago/saint>.
 #' @details
 #'
 #' ## Architecture
@@ -56,11 +64,17 @@
 #'    network with GeGLU activation. For `attention_type = "both"`, each block
 #'    alternates between column attention (across features) and row attention
 #'    (across samples within the batch).
-#' 3. **Output head**: Flattens the transformer output and projects through
+#' 3. **Output head**: Pools the transformer output (either the target
+#'    token's embedding or the flattened concatenation of all feature
+#'    embeddings, controlled by `use_target_token`) and projects it through
 #'    optional hidden layers to the output dimension.
 #'
 #' There is a `summary()` methods that can provide details of the architecture
 #' for a specific model fit.
+#'
+#' Differences in this implementation and the orignal paper:
+#'
+#'  - Pretraining isn't supported.
 #'
 #' ## Attention Types
 #'
@@ -71,6 +85,38 @@
 #'   then applies attention across all samples in the batch.
 #' - **Both** (`"both"`): Alternates between column and row attention in each
 #'   transformer block. This is the full SAINT model.
+#'
+#' ## Target Token Pooling
+#'
+#' Borrowing from BERT, SAINT prepends a learnable target token (the
+#' paper calls it `[CLS]`) to each sample's feature sequence before the
+#' transformer. With embeddings `E(x_i^{(1)}), ..., E(x_i^{(n)})` for the
+#' `n` predictors of sample `i`, the input sequence becomes
+#'
+#' `[target, E(x_i^{(1)}), E(x_i^{(2)}), ..., E(x_i^{(n)})]`
+#'
+#' giving `n + 1` tokens of dimension `num_embedding`. The target token has
+#' no input value; it is a free parameter of the model that is trained
+#' alongside the rest of the network. Column attention lets every feature
+#' token attend to the target and vice versa, so the target slot accumulates
+#' a contextual summary of the sample. When `attention_type` is `"row"` or
+#' `"both"`, inter-sample attention sees the full `n + 1` token sequence per
+#' sample, so the target slot also exchanges information across samples in
+#' the batch.
+#'
+#' After the transformer backbone, the head reads _only_ the final-layer
+#' embedding of the target token (the first position) and feeds it through
+#' the optional `hidden_units` MLP and the output layer. This is what the
+#' paper describes in Figure 1: "We take the contextual embeddings from
+#' SAINT and pass only the embedding correspond to the CLS token through an
+#' MLP to obtain the final prediction."
+#'
+#' With `use_target_token = FALSE`, no target token is added and the head
+#' instead consumes the concatenation of all `n` feature tokens. That
+#' option is provided because the SAINT reference Python implementation
+#' (<https://github.com/somepago/saint>) departs from the paper and uses
+#' flatten-pooling; it is kept available for compatibility with that code
+#' path and for users who want the original brulee behavior.
 #'
 #' ## Row Attention at Prediction Time
 #'
@@ -216,6 +262,7 @@ brulee_saint.data.frame <- function(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -245,6 +292,7 @@ brulee_saint.data.frame <- function(
     stop_iter = stop_iter,
     verbose = verbose,
     device = device,
+    use_target_token = use_target_token,
     ...
   )
 }
@@ -279,6 +327,7 @@ brulee_saint.matrix <- function(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -308,6 +357,7 @@ brulee_saint.matrix <- function(
     stop_iter = stop_iter,
     verbose = verbose,
     device = device,
+    use_target_token = use_target_token,
     ...
   )
 }
@@ -342,6 +392,7 @@ brulee_saint.formula <- function(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(
@@ -375,6 +426,7 @@ brulee_saint.formula <- function(
     stop_iter = stop_iter,
     verbose = verbose,
     device = device,
+    use_target_token = use_target_token,
     ...
   )
 }
@@ -409,6 +461,7 @@ brulee_saint.recipe <- function(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(x, data)
@@ -438,6 +491,7 @@ brulee_saint.recipe <- function(
     stop_iter = stop_iter,
     verbose = verbose,
     device = device,
+    use_target_token = use_target_token,
     ...
   )
 }
@@ -470,6 +524,7 @@ brulee_saint_bridge <- function(
   stop_iter,
   verbose,
   device,
+  use_target_token,
   ...,
   call = rlang::caller_env()
 ) {
@@ -489,6 +544,7 @@ brulee_saint_bridge <- function(
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
     dropout_hidden = dropout_hidden,
+    use_target_token = use_target_token,
     call = call
   )
 
@@ -580,6 +636,7 @@ brulee_saint_bridge <- function(
     stop_iter = stop_iter,
     verbose = verbose,
     device = device,
+    use_target_token = saint_validated$use_target_token,
     ...
   )
 
@@ -607,6 +664,7 @@ validate_saint_args <- function(
   num_attn_blocks,
   dropout_attn,
   dropout_hidden,
+  use_target_token,
   call = rlang::caller_env()
 ) {
   if (is.numeric(num_embedding) & !is.integer(num_embedding)) {
@@ -632,6 +690,8 @@ validate_saint_args <- function(
     )
   }
 
+  check_bool(use_target_token, call = call)
+
   check_double(dropout_attn, single = TRUE, 0, call = call)
   if (dropout_attn >= 1) {
     cli::cli_abort("{.arg dropout_attn} must be less than 1.", call = call)
@@ -648,7 +708,8 @@ validate_saint_args <- function(
     num_attn_heads = num_attn_heads,
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
-    dropout_hidden = dropout_hidden
+    dropout_hidden = dropout_hidden,
+    use_target_token = use_target_token
   )
 }
 
@@ -746,6 +807,7 @@ saint_fit_imp <- function(
   stop_iter = 5,
   verbose = FALSE,
   device = "cpu",
+  use_target_token = TRUE,
   ...
 ) {
   start_seed <- sample.int(10^5, 1)
@@ -845,7 +907,8 @@ saint_fit_imp <- function(
     dropout_last = dropout_last,
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
-    y_dim = y_dim
+    y_dim = y_dim,
+    use_target_token = use_target_token
   )
   model$to(device = device)
 
@@ -957,6 +1020,7 @@ saint_fit_imp <- function(
         momentum = momentum,
         stop_iter = stop_iter,
         sched = rate_schedule,
+        use_target_token = use_target_token,
         sched_opt = list(...)
       )
     )
@@ -1384,10 +1448,16 @@ saint_rowcol_transformer_module <- torch::nn_module(
 
 saint_embedding_module <- torch::nn_module(
   "saint_embedding",
-  initialize = function(pred_lvls, n_continuous, num_embedding) {
+  initialize = function(
+    pred_lvls,
+    n_continuous,
+    num_embedding,
+    use_target_token = FALSE
+  ) {
     self$n_cat <- length(pred_lvls)
     self$n_cont <- n_continuous
     self$num_embedding <- num_embedding
+    self$use_target_token <- isTRUE(use_target_token)
 
     if (self$n_cat > 0) {
       self$cat_embeddings <- torch::nn_module_list(lapply(
@@ -1413,6 +1483,12 @@ saint_embedding_module <- torch::nn_module(
         }
       ))
     }
+
+    if (self$use_target_token) {
+      self$target_token <- torch::nn_parameter(
+        torch::torch_randn(1L, 1L, num_embedding)
+      )
+    }
   },
   forward = function(x_cat = NULL, x_cont = NULL) {
     parts <- list()
@@ -1433,7 +1509,15 @@ saint_embedding_module <- torch::nn_module(
       parts <- c(parts, list(torch::torch_stack(cont_embeds, dim = 2L)))
     }
 
-    torch::torch_cat(parts, dim = 2L)
+    feats <- torch::torch_cat(parts, dim = 2L)
+
+    if (self$use_target_token) {
+      batch <- feats$shape[1]
+      tgt <- self$target_token$expand(c(batch, 1L, self$num_embedding))
+      feats <- torch::torch_cat(list(tgt, feats), dim = 2L)
+    }
+
+    feats
   }
 )
 
@@ -1451,16 +1535,20 @@ saint_module <- torch::nn_module(
     dropout_last,
     hidden_units,
     hidden_activations,
-    y_dim
+    y_dim,
+    use_target_token = FALSE
   ) {
     num_features <- length(pred_lvls) + n_continuous
     self$num_features <- num_features
     self$num_embedding <- num_embedding
+    self$use_target_token <- isTRUE(use_target_token)
+    seq_len <- num_features + as.integer(self$use_target_token)
 
     self$embedding <- saint_embedding_module(
       pred_lvls = pred_lvls,
       n_continuous = n_continuous,
-      num_embedding = num_embedding
+      num_embedding = num_embedding,
+      use_target_token = self$use_target_token
     )
 
     if (attention_type == "column") {
@@ -1475,7 +1563,7 @@ saint_module <- torch::nn_module(
     } else {
       self$backbone <- saint_rowcol_transformer_module(
         dim = num_embedding,
-        nfeats = num_features,
+        nfeats = seq_len,
         depth = num_attn_blocks,
         heads = num_attn_heads,
         dim_head = 16L,
@@ -1485,11 +1573,15 @@ saint_module <- torch::nn_module(
       )
     }
 
-    flattened_dim <- num_features * num_embedding
+    head_input_dim <- if (self$use_target_token) {
+      num_embedding
+    } else {
+      seq_len * num_embedding
+    }
 
     if (!is.null(hidden_units)) {
       hidden_layers <- list()
-      input_dim <- flattened_dim
+      input_dim <- head_input_dim
       for (i in seq_along(hidden_units)) {
         hidden_layers[[length(hidden_layers) + 1]] <-
           torch::nn_linear(input_dim, hidden_units[i])
@@ -1510,7 +1602,7 @@ saint_module <- torch::nn_module(
     } else {
       self$hidden <- NULL
       self$hidden_drop <- NULL
-      self$output_head <- torch::nn_linear(flattened_dim, y_dim)
+      self$output_head <- torch::nn_linear(head_input_dim, y_dim)
     }
 
     self$y_dim <- y_dim
@@ -1518,17 +1610,22 @@ saint_module <- torch::nn_module(
   forward = function(x_cat = NULL, x_cont = NULL) {
     embeds <- self$embedding(x_cat, x_cont)
     h <- self$backbone(embeds)
-    h_flat <- h$reshape(c(h$shape[1], -1L))
+
+    if (self$use_target_token) {
+      h_pooled <- h[, 1L, ]
+    } else {
+      h_pooled <- h$reshape(c(h$shape[1], -1L))
+    }
 
     if (!is.null(self$hidden)) {
-      h_flat <- self$hidden(h_flat)
+      h_pooled <- self$hidden(h_pooled)
       if (!is.null(self$hidden_drop)) {
-        h_flat <- self$hidden_drop(h_flat)
+        h_pooled <- self$hidden_drop(h_pooled)
       }
     }
     # Classification returns raw logits; softmax is applied at predict time
     # so the loss can use nnf_cross_entropy (numerically stable).
-    self$output_head(h_flat)
+    self$output_head(h_pooled)
   }
 )
 

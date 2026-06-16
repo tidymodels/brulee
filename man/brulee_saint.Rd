@@ -39,6 +39,7 @@ brulee_saint(x, ...)
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 
@@ -68,6 +69,7 @@ brulee_saint(x, ...)
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 
@@ -97,6 +99,7 @@ brulee_saint(x, ...)
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 
@@ -126,6 +129,7 @@ brulee_saint(x, ...)
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 }
@@ -194,7 +198,7 @@ relevant when \code{attention_type} is \code{"row"} or \code{"both"}.}
 
 \item{hidden_units}{An integer vector for the number of units in optional
 hidden layers between the transformer backbone and the output head.
-When \code{NULL} (the default), no hidden layers are added and the flattened
+When \code{NULL} (the default), no hidden layers are added and the pooled
 transformer output is projected directly to the output.}
 
 \item{hidden_activations}{A character vector of activation functions for the
@@ -252,6 +256,15 @@ improvement before stopping.}
 \code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
 available, otherwise CPU. See \link{training_efficiency}.}
 
+\item{use_target_token}{A logical value. When \code{TRUE} (the default), a
+learnable target token (\verb{[CLS]} in the SAINT paper) is prepended to
+each sample's feature sequence and only its final-layer embedding is
+fed to the head. This matches the architecture described in the SAINT
+paper (Section 3 and Figure 1); see the \strong{Target Token Pooling}
+section in \strong{Details}. When \code{FALSE}, the head instead consumes the
+concatenation of every feature token, which matches the SAINT
+reference implementation at \url{https://github.com/somepago/saint}.}
+
 \item{formula}{A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.}
 
@@ -296,12 +309,19 @@ Each layer contains multi-head self-attention followed by a feed-forward
 network with GeGLU activation. For \code{attention_type = "both"}, each block
 alternates between column attention (across features) and row attention
 (across samples within the batch).
-\item \strong{Output head}: Flattens the transformer output and projects through
+\item \strong{Output head}: Pools the transformer output (either the target
+token's embedding or the flattened concatenation of all feature
+embeddings, controlled by \code{use_target_token}) and projects it through
 optional hidden layers to the output dimension.
 }
 
 There is a \code{summary()} methods that can provide details of the architecture
 for a specific model fit.
+
+Differences in this implementation and the orignal paper:
+\itemize{
+\item Pretraining isn't supported.
+}
 }
 
 \subsection{Attention Types}{
@@ -314,6 +334,39 @@ then applies attention across all samples in the batch.
 \item \strong{Both} (\code{"both"}): Alternates between column and row attention in each
 transformer block. This is the full SAINT model.
 }
+}
+
+\subsection{Target Token Pooling}{
+
+Borrowing from BERT, SAINT prepends a learnable target token (the
+paper calls it \verb{[CLS]}) to each sample's feature sequence before the
+transformer. With embeddings \verb{E(x_i^\{(1)\}), ..., E(x_i^\{(n)\})} for the
+\code{n} predictors of sample \code{i}, the input sequence becomes
+
+\verb{[target, E(x_i^\{(1)\}), E(x_i^\{(2)\}), ..., E(x_i^\{(n)\})]}
+
+giving \code{n + 1} tokens of dimension \code{num_embedding}. The target token has
+no input value; it is a free parameter of the model that is trained
+alongside the rest of the network. Column attention lets every feature
+token attend to the target and vice versa, so the target slot accumulates
+a contextual summary of the sample. When \code{attention_type} is \code{"row"} or
+\code{"both"}, inter-sample attention sees the full \code{n + 1} token sequence per
+sample, so the target slot also exchanges information across samples in
+the batch.
+
+After the transformer backbone, the head reads \emph{only} the final-layer
+embedding of the target token (the first position) and feeds it through
+the optional \code{hidden_units} MLP and the output layer. This is what the
+paper describes in Figure 1: "We take the contextual embeddings from
+SAINT and pass only the embedding correspond to the CLS token through an
+MLP to obtain the final prediction."
+
+With \code{use_target_token = FALSE}, no target token is added and the head
+instead consumes the concatenation of all \code{n} feature tokens. That
+option is provided because the SAINT reference Python implementation
+(\url{https://github.com/somepago/saint}) departs from the paper and uses
+flatten-pooling; it is kept available for compatibility with that code
+path and for users who want the original brulee behavior.
 }
 
 \subsection{Row Attention at Prediction Time}{
