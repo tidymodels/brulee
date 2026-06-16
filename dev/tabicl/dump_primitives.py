@@ -28,6 +28,8 @@ from tabicl._model.ssmax import QASSMaxMLP
 from tabicl._model.layers import MultiheadAttention
 from tabicl._model.interaction import RowInteraction
 from tabicl._model.embedding import ColEmbedding
+from tabicl._model.learning import ICLearning
+from tabicl._model.tabicl import TabICL
 
 OUT = Path(__file__).resolve().parents[2] / "tests" / "testthat" / "fixtures" / "tabicl"
 SEED = int(hashlib.sha256(b"brulee-tabicl-primitives-v1").hexdigest(), 16) % (2**31 - 1)
@@ -248,6 +250,108 @@ def dump_col_embedding(gen, name, max_classes, bias_free_ln):
     )
 
 
+def dump_icl_learning(gen, name, max_classes, bias_free_ln):
+    # Stage-3 ICLearning. Classification (one-hot encoder, biased LN, out_dim =
+    # max_classes) and regression (linear encoder, bias-free LN, out_dim = small
+    # quantile count).
+    d_model, num_blocks, nhead = 32, 2, 4
+    out_dim = max_classes if max_classes > 0 else 16
+    icl = ICLearning(
+        max_classes=max_classes,
+        out_dim=out_dim,
+        d_model=d_model,
+        num_blocks=num_blocks,
+        nhead=nhead,
+        dim_feedforward=2 * d_model,
+        activation="gelu",
+        norm_first=True,
+        bias_free_ln=bias_free_ln,
+        ssmax="qassmax-mlp-elementwise",
+    )
+    icl.eval()
+    randomize_(icl, gen)
+
+    b, t, train_size = 1, 6, 4
+    r = torch.randn(b, t, d_model, generator=gen)
+    if max_classes > 0:
+        y_train = torch.randint(0, 3, (b, train_size), generator=gen).float()
+    else:
+        y_train = torch.randn(b, train_size, generator=gen)
+    with torch.no_grad():
+        out = icl(r.clone(), y_train)  # icl mutates R in place; clone the saved input
+
+    tensors = {f"icl.{k}": v.detach() for k, v in icl.state_dict().items()}
+    tensors["R"] = r
+    tensors["y_train"] = y_train
+    tensors["out"] = out
+    write(
+        name,
+        tensors,
+        {"d_model": d_model, "num_blocks": num_blocks, "nhead": nhead,
+         "out_dim": out_dim, "max_classes": max_classes,
+         "bias_free_ln": bias_free_ln, "train_size": train_size, "seed": SEED},
+    )
+
+
+def _small_tabicl_config(max_classes, bias_free_ln):
+    return dict(
+        max_classes=max_classes,
+        num_quantiles=16,
+        embed_dim=16,
+        col_num_blocks=2,
+        col_nhead=4,
+        col_num_inds=8,
+        col_affine=False,
+        col_feature_group="same",
+        col_feature_group_size=3,
+        col_target_aware=True,
+        col_ssmax="qassmax-mlp-elementwise",
+        row_num_blocks=2,
+        row_nhead=4,
+        row_num_cls=2,
+        row_rope_base=100000,
+        row_rope_interleaved=False,
+        icl_num_blocks=2,
+        icl_nhead=4,
+        icl_ssmax="qassmax-mlp-elementwise",
+        ff_factor=2,
+        dropout=0.0,
+        activation="gelu",
+        norm_first=True,
+        bias_free_ln=bias_free_ln,
+    )
+
+
+def dump_full_model(gen, name, max_classes, bias_free_ln):
+    # End-to-end TabICL forward (col -> row -> icl) on a small config. Validates
+    # the full wiring and the weight-key mapping the production loader will use.
+    config = _small_tabicl_config(max_classes, bias_free_ln)
+    model = TabICL(**config)
+    model.eval()
+    randomize_(model, gen)
+
+    b, t, h, train_size = 1, 9, 4, 6
+    x = torch.randn(b, t, h, generator=gen)
+    if max_classes > 0:
+        y_train = torch.randint(0, 3, (b, train_size), generator=gen).float()
+    else:
+        y_train = torch.randn(b, train_size, generator=gen)
+    with torch.no_grad():
+        out = model(x, y_train)  # return_logits=True default
+
+    # Keep only the three forward stages (drop e.g. quantile_dist params).
+    keep = ("col_embedder.", "row_interactor.", "icl_predictor.")
+    tensors = {
+        k: v.detach()
+        for k, v in model.state_dict().items()
+        if k.startswith(keep)
+    }
+    tensors["X"] = x
+    tensors["y_train"] = y_train
+    tensors["out"] = out
+    write(name, tensors, {"config": config, "train_size": train_size, "seed": SEED})
+
+
 def main():
     torch.manual_seed(SEED)
     gen = torch.Generator().manual_seed(SEED)
@@ -271,6 +375,12 @@ def main():
     # regression (linear encoder, bias-free LN).
     dump_col_embedding(gen, "col_embedding", max_classes=10, bias_free_ln=False)
     dump_col_embedding(gen, "col_embedding_reg", max_classes=0, bias_free_ln=True)
+    # Stage 3: ICLearning, classification and regression.
+    dump_icl_learning(gen, "icl_learning", max_classes=10, bias_free_ln=False)
+    dump_icl_learning(gen, "icl_learning_reg", max_classes=0, bias_free_ln=True)
+    # Full model forward, classification and regression.
+    dump_full_model(gen, "full_model", max_classes=10, bias_free_ln=False)
+    dump_full_model(gen, "full_model_reg", max_classes=0, bias_free_ln=True)
     # Stage 2: full RowInteraction, with and without LayerNorm biases.
     dump_row_interaction(gen, "row_interaction", bias_free_ln=False)
     dump_row_interaction(gen, "row_interaction_biasfree", bias_free_ln=True)

@@ -1,0 +1,10 @@
+{
+  "d_model": 32,
+  "num_blocks": 2,
+  "nhead": 4,
+  "out_dim": 16,
+  "max_classes": 0,
+  "bias_free_ln": true,
+  "train_size": 4,
+  "seed": 1329923014
+}

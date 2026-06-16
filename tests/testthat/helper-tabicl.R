@@ -143,40 +143,81 @@ tabicl_copy_isab <- function(isab, f, prefix) {
   invisible(isab)
 }
 
-# Copy a tabicl_col_embedding from fixture tensors keyed under "ce.".
-tabicl_copy_col_embedding <- function(ce, f) {
+# Copy a tabicl_col_embedding from fixture tensors keyed under `prefix`
+# (standalone fixtures use "ce."; the full-model fixture uses "col_embedder.").
+tabicl_copy_col_embedding <- function(ce, f, prefix = "ce.") {
   torch::with_no_grad({
-    ce$in_linear$weight$copy_(f[["ce.in_linear.weight"]])
-    ce$in_linear$bias$copy_(f[["ce.in_linear.bias"]])
-    ce$y_encoder$weight$copy_(f[["ce.y_encoder.weight"]])
-    ce$y_encoder$bias$copy_(f[["ce.y_encoder.bias"]])
+    ce$in_linear$weight$copy_(f[[paste0(prefix, "in_linear.weight")]])
+    ce$in_linear$bias$copy_(f[[paste0(prefix, "in_linear.bias")]])
+    ce$y_encoder$weight$copy_(f[[paste0(prefix, "y_encoder.weight")]])
+    ce$y_encoder$bias$copy_(f[[paste0(prefix, "y_encoder.bias")]])
   })
   for (i in seq_along(ce$tf_col$blocks)) {
     tabicl_copy_isab(
       ce$tf_col$blocks[[i]],
       f,
-      prefix = sprintf("ce.tf_col.blocks.%d.", i - 1L)
+      prefix = sprintf("%stf_col.blocks.%d.", prefix, i - 1L)
     )
   }
   invisible(ce)
 }
 
-# Copy a tabicl_row_interaction from fixture tensors keyed under "ri.".
-tabicl_copy_row_interaction <- function(ri, f) {
+# Copy a tabicl_row_interaction from fixture tensors keyed under `prefix`
+# ("ri." standalone; "row_interactor." in the full-model fixture).
+tabicl_copy_row_interaction <- function(ri, f, prefix = "ri.") {
   torch::with_no_grad({
-    ri$cls_tokens$copy_(f[["ri.cls_tokens"]])
-    ri$out_ln$weight$copy_(f[["ri.out_ln.weight"]])
+    ri$cls_tokens$copy_(f[[paste0(prefix, "cls_tokens")]])
+    ri$out_ln$weight$copy_(f[[paste0(prefix, "out_ln.weight")]])
     if (!is.null(ri$out_ln$bias)) {
-      ri$out_ln$bias$copy_(f[["ri.out_ln.bias"]])
+      ri$out_ln$bias$copy_(f[[paste0(prefix, "out_ln.bias")]])
     }
-    ri$tf_row$rope$freqs$copy_(f[["ri.tf_row.rope.freqs"]])
+    ri$tf_row$rope$freqs$copy_(f[[paste0(prefix, "tf_row.rope.freqs")]])
   })
   for (i in seq_along(ri$tf_row$blocks)) {
     tabicl_copy_mha_block(
       ri$tf_row$blocks[[i]],
       f,
-      prefix = sprintf("ri.tf_row.blocks.%d.", i - 1L)
+      prefix = sprintf("%stf_row.blocks.%d.", prefix, i - 1L)
     )
   }
   invisible(ri)
+}
+
+# Copy a tabicl_icl_learning from fixture tensors keyed under `prefix`
+# ("icl." standalone; "icl_predictor." in the full-model fixture).
+tabicl_copy_icl_learning <- function(icl, f, prefix = "icl.") {
+  torch::with_no_grad({
+    if (!is.null(icl$ln)) {
+      icl$ln$weight$copy_(f[[paste0(prefix, "ln.weight")]])
+      if (!is.null(icl$ln$bias)) {
+        icl$ln$bias$copy_(f[[paste0(prefix, "ln.bias")]])
+      }
+    }
+    icl$y_encoder$weight$copy_(f[[paste0(prefix, "y_encoder.weight")]])
+    icl$y_encoder$bias$copy_(f[[paste0(prefix, "y_encoder.bias")]])
+    icl$decoder[[1]]$weight$copy_(f[[paste0(prefix, "decoder.0.weight")]])
+    icl$decoder[[1]]$bias$copy_(f[[paste0(prefix, "decoder.0.bias")]])
+    icl$decoder[[3]]$weight$copy_(f[[paste0(prefix, "decoder.2.weight")]])
+    icl$decoder[[3]]$bias$copy_(f[[paste0(prefix, "decoder.2.bias")]])
+  })
+  for (i in seq_along(icl$tf_icl$blocks)) {
+    tabicl_copy_mha_block(
+      icl$tf_icl$blocks[[i]],
+      f,
+      prefix = sprintf("%stf_icl.blocks.%d.", prefix, i - 1L)
+    )
+  }
+  invisible(icl)
+}
+
+# Copy a full tabicl_model from a full-model fixture (top-level module prefixes).
+tabicl_copy_model <- function(model, f) {
+  tabicl_copy_col_embedding(model$col_embedder, f, prefix = "col_embedder.")
+  tabicl_copy_row_interaction(
+    model$row_interactor,
+    f,
+    prefix = "row_interactor."
+  )
+  tabicl_copy_icl_learning(model$icl_predictor, f, prefix = "icl_predictor.")
+  invisible(model)
 }
