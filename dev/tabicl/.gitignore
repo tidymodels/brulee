@@ -1,0 +1,7 @@
+# Python venv for the spike (recreate with: python -m venv .venv)
+.venv/
+
+# Large released weights, re-derivable by running convert_ckpt.py.
+# Golden fixtures (artifacts/*/golden/*) are small and tracked on purpose.
+artifacts/*/model.safetensors
+__pycache__/
