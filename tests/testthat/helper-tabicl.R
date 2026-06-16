@@ -53,6 +53,15 @@ tabicl_max_abs_diff <- function(a, b) {
   as.numeric(torch::torch_max(torch::torch_abs(a - b)))
 }
 
+# Relative max error: max abs diff scaled by the reference's max magnitude. Used
+# for stage outputs that legitimately contain large values (e.g. the column
+# embedder's CLS slots keep the -100 skip value through residual connections),
+# where an absolute float32 tolerance would be misleading.
+tabicl_rel_max_diff <- function(actual, expected) {
+  scale <- max(as.numeric(torch::torch_max(torch::torch_abs(expected))), 1e-8)
+  tabicl_max_abs_diff(actual, expected) / scale
+}
+
 # Copy a qassmax-mlp-elementwise SSMax layer's weights from a fixture. Python
 # nn.Sequential indices 0/2 (Linear, GELU, Linear) map to R 1-based [[1]]/[[3]].
 tabicl_copy_ssmax <- function(layer, f, prefix = "ssmax.") {
@@ -109,10 +118,47 @@ tabicl_copy_mha_block <- function(block, f, prefix) {
     tabicl_copy_ssmax(
       block$attn$ssmax_layer,
       f,
-      prefix = paste0(prefix, "attn.ssmax.")
+      prefix = paste0(prefix, "attn.ssmax_layer.")
     )
   }
   invisible(block)
+}
+
+# Copy an induced-self-attention block (ISAB) from fixture tensors keyed by
+# `prefix` (e.g. "ce.tf_col.blocks.0.").
+tabicl_copy_isab <- function(isab, f, prefix) {
+  torch::with_no_grad(
+    isab$ind_vectors$copy_(f[[paste0(prefix, "ind_vectors")]])
+  )
+  tabicl_copy_mha_block(
+    isab$multihead_attn1,
+    f,
+    paste0(prefix, "multihead_attn1.")
+  )
+  tabicl_copy_mha_block(
+    isab$multihead_attn2,
+    f,
+    paste0(prefix, "multihead_attn2.")
+  )
+  invisible(isab)
+}
+
+# Copy a tabicl_col_embedding from fixture tensors keyed under "ce.".
+tabicl_copy_col_embedding <- function(ce, f) {
+  torch::with_no_grad({
+    ce$in_linear$weight$copy_(f[["ce.in_linear.weight"]])
+    ce$in_linear$bias$copy_(f[["ce.in_linear.bias"]])
+    ce$y_encoder$weight$copy_(f[["ce.y_encoder.weight"]])
+    ce$y_encoder$bias$copy_(f[["ce.y_encoder.bias"]])
+  })
+  for (i in seq_along(ce$tf_col$blocks)) {
+    tabicl_copy_isab(
+      ce$tf_col$blocks[[i]],
+      f,
+      prefix = sprintf("ce.tf_col.blocks.%d.", i - 1L)
+    )
+  }
+  invisible(ce)
 }
 
 # Copy a tabicl_row_interaction from fixture tensors keyed under "ri.".

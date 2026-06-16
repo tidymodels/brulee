@@ -55,15 +55,16 @@ python -m venv .venv
    .venv/bin/python dump_primitives.py
    ```
 
-   Writes small safetensors + json fixtures to
+   Writes small gzipped safetensors + json fixtures to
    `tests/testthat/fixtures/tabicl/` (tracked): `rope`, `ssmax`, four MHA
    configurations (`mha_rope`, `mha_ssmax_self`, `mha_ssmax_cross`,
-   `mha_plain_cross`), and the stage-2 `row_interaction` /
-   `row_interaction_biasfree`. The R modules (`R/tabicl-rope.R`,
-   `tabicl-attention.R`, `tabicl-layers.R`, `tabicl-interaction.R`) are validated
-   against these by `tests/testthat/test-tabicl-*.R` (atol 1e-5). Weights use
-   fan-in scaling so activations stay O(1) and the absolute tolerance is
-   meaningful.
+   `mha_plain_cross`), the stage-1 `col_embedding` / `col_embedding_reg`, and the
+   stage-2 `row_interaction` / `row_interaction_biasfree`. The R modules
+   (`R/tabicl-rope.R`, `tabicl-attention.R`, `tabicl-layers.R`,
+   `tabicl-embedding.R`, `tabicl-interaction.R`) are validated against these by
+   `tests/testthat/test-tabicl-*.R`. Weights use fan-in scaling so most
+   activations stay O(1) (absolute tol 1e-5); the column embedder keeps -100 skip
+   values through residuals, so that test uses a relative tolerance.
 
 5. **Real-weight stage checks** (dev only, needs the large `model.safetensors`):
 

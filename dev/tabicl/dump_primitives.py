@@ -27,6 +27,7 @@ from tabicl._model.rope import RotaryEmbedding
 from tabicl._model.ssmax import QASSMaxMLP
 from tabicl._model.layers import MultiheadAttention
 from tabicl._model.interaction import RowInteraction
+from tabicl._model.embedding import ColEmbedding
 
 OUT = Path(__file__).resolve().parents[2] / "tests" / "testthat" / "fixtures" / "tabicl"
 SEED = int(hashlib.sha256(b"brulee-tabicl-primitives-v1").hexdigest(), 16) % (2**31 - 1)
@@ -196,6 +197,57 @@ def dump_row_interaction(gen, name="row_interaction", bias_free_ln=False):
     )
 
 
+def dump_col_embedding(gen, name, max_classes, bias_free_ln):
+    # Stage-1 ColEmbedding in the configuration the v2 checkpoints use:
+    # feature_group="same", target_aware, affine=False, qassmax ssmax. Two
+    # variants exercise both target encoders: classification (one-hot, max_classes>0)
+    # and regression (linear, max_classes=0).
+    embed_dim, num_blocks, nhead, num_inds = 32, 2, 4, 8
+    feature_group_size, reserve_cls = 3, 2
+    ce = ColEmbedding(
+        embed_dim=embed_dim,
+        num_blocks=num_blocks,
+        nhead=nhead,
+        dim_feedforward=2 * embed_dim,
+        num_inds=num_inds,
+        activation="gelu",
+        norm_first=True,
+        bias_free_ln=bias_free_ln,
+        affine=False,
+        feature_group="same",
+        feature_group_size=feature_group_size,
+        target_aware=True,
+        max_classes=max_classes,
+        reserve_cls_tokens=reserve_cls,
+        ssmax="qassmax-mlp-elementwise",
+    )
+    ce.eval()
+    randomize_(ce, gen)
+
+    b, t, h, train_size = 1, 6, 4, 4
+    x = torch.randn(b, t, h, generator=gen)
+    if max_classes > 0:
+        y_train = torch.randint(0, 3, (b, train_size), generator=gen).float()
+    else:
+        y_train = torch.randn(b, train_size, generator=gen)
+    with torch.no_grad():
+        out = ce(x, y_train)
+
+    tensors = {f"ce.{k}": v.detach() for k, v in ce.state_dict().items()}
+    tensors["X"] = x
+    tensors["y_train"] = y_train
+    tensors["out"] = out
+    write(
+        name,
+        tensors,
+        {"embed_dim": embed_dim, "num_blocks": num_blocks, "nhead": nhead,
+         "num_inds": num_inds, "dim_feedforward": 2 * embed_dim,
+         "feature_group_size": feature_group_size, "reserve_cls_tokens": reserve_cls,
+         "max_classes": max_classes, "bias_free_ln": bias_free_ln,
+         "train_size": train_size, "seed": SEED},
+    )
+
+
 def main():
     torch.manual_seed(SEED)
     gen = torch.Generator().manual_seed(SEED)
@@ -215,6 +267,10 @@ def main():
     # Col ISAB attn2: cross-attn (data -> inducing points), plain.
     dump_mha("mha_plain_cross", 64, 8, use_rope=False, ssmax="none",
              q_len=9, kv_len=5, gen=gen)
+    # Stage 1: ColEmbedding, classification (one-hot encoder, biased LN) and
+    # regression (linear encoder, bias-free LN).
+    dump_col_embedding(gen, "col_embedding", max_classes=10, bias_free_ln=False)
+    dump_col_embedding(gen, "col_embedding_reg", max_classes=0, bias_free_ln=True)
     # Stage 2: full RowInteraction, with and without LayerNorm biases.
     dump_row_interaction(gen, "row_interaction", bias_free_ln=False)
     dump_row_interaction(gen, "row_interaction_biasfree", bias_free_ln=True)

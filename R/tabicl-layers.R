@@ -116,6 +116,168 @@ tabicl_mha_block <- nn_module(
   }
 )
 
+# Linear layer that passes "skip" rows through unchanged. A row whose inputs are
+# all `skip_value` (a padded / empty feature slot) produces `skip_value` outputs
+# instead of the linear projection. Mirrors `SkippableLinear` in layers.py;
+# parameters are exposed as `weight` / `bias` to match the checkpoint keys.
+tabicl_skippable_linear <- nn_module(
+  "tabicl_skippable_linear",
+  initialize = function(in_features, out_features, skip_value = -100) {
+    self$weight <- nn_parameter(torch_empty(out_features, in_features))
+    self$bias <- nn_parameter(torch_zeros(out_features))
+    self$skip_value <- skip_value
+  },
+  forward = function(x) {
+    out <- nnf_linear(x, self$weight, self$bias)
+    skip <- (x == self$skip_value)$all(dim = -1, keepdim = TRUE)
+    torch_where(
+      skip,
+      torch_scalar_tensor(
+        self$skip_value,
+        dtype = out$dtype,
+        device = out$device
+      ),
+      out
+    )
+  }
+)
+
+# One-hot encoding followed by a linear projection, in one module. Mirrors
+# `OneHotAndLinear` (an nn.Linear subclass), so parameters are `weight` / `bias`.
+# Used as the classification target encoder. R torch's `nnf_one_hot` is 1-indexed,
+# so the one-hot is built by comparison to keep 0-based class indices.
+tabicl_onehot_linear <- nn_module(
+  "tabicl_onehot_linear",
+  initialize = function(num_classes, embed_dim) {
+    self$num_classes <- num_classes
+    self$weight <- nn_parameter(torch_empty(embed_dim, num_classes))
+    self$bias <- nn_parameter(torch_zeros(embed_dim))
+  },
+  forward = function(src) {
+    classes <- torch_arange(
+      start = 0,
+      end = self$num_classes - 1,
+      dtype = torch_long(),
+      device = src$device
+    )
+    one_hot <- (src$to(dtype = torch_long())$unsqueeze(-1) == classes)$to(
+      dtype = self$weight$dtype
+    )
+    nnf_linear(one_hot, self$weight, self$bias)
+  }
+)
+
+# Induced self-attention block (Set Transformer): inducing points attend to the
+# input (optionally only its first `train_size` positions), then the input
+# attends back to that bottleneck. Mirrors `InducedSelfAttentionBlock`.
+#
+# Skip handling: a batch slot whose entire (seq, d_model) slice equals
+# `skip_value` is restored to `skip_value` on output. Attention treats batch
+# dims independently, so running induced attention over all slots and then
+# masking the skip slots is identical to the reference's masked-subset compute.
+tabicl_isab <- nn_module(
+  "tabicl_isab",
+  initialize = function(
+    d_model,
+    nhead,
+    dim_feedforward,
+    num_inds,
+    activation = "gelu",
+    norm_first = TRUE,
+    bias_free_ln = FALSE,
+    ssmax = "none",
+    skip_value = -100
+  ) {
+    self$num_inds <- num_inds
+    self$skip_value <- skip_value
+    self$multihead_attn1 <- tabicl_mha_block(
+      d_model,
+      nhead,
+      dim_feedforward,
+      activation = activation,
+      norm_first = norm_first,
+      bias_free_ln = bias_free_ln,
+      ssmax = ssmax
+    )
+    self$multihead_attn2 <- tabicl_mha_block(
+      d_model,
+      nhead,
+      dim_feedforward,
+      activation = activation,
+      norm_first = norm_first,
+      bias_free_ln = bias_free_ln,
+      ssmax = "none"
+    )
+    self$ind_vectors <- nn_parameter(torch_empty(num_inds, d_model))
+  },
+  induced_attention = function(src, train_size = NULL) {
+    sizes <- dim(src)
+    d_model <- sizes[length(sizes)]
+    batch_shape <- utils::head(sizes, -2)
+    ind <- self$ind_vectors$expand(c(batch_shape, self$num_inds, d_model))
+    ctx <- if (is.null(train_size)) {
+      src
+    } else {
+      src$narrow(dim = -2, start = 1, length = train_size)
+    }
+    hidden <- self$multihead_attn1(ind, ctx, ctx)
+    self$multihead_attn2(src, hidden, hidden)
+  },
+  forward = function(src, train_size = NULL) {
+    out <- self$induced_attention(src, train_size)
+    skip <- (src == self$skip_value)$all(dim = -1)$all(dim = -1)
+    skip <- skip$unsqueeze(-1)$unsqueeze(-1)
+    torch_where(
+      skip,
+      torch_scalar_tensor(
+        self$skip_value,
+        dtype = out$dtype,
+        device = out$device
+      ),
+      out
+    )
+  }
+)
+
+# A stack of induced self-attention blocks. Mirrors `SetTransformer`.
+tabicl_set_transformer <- nn_module(
+  "tabicl_set_transformer",
+  initialize = function(
+    num_blocks,
+    d_model,
+    nhead,
+    dim_feedforward,
+    num_inds,
+    activation = "gelu",
+    norm_first = TRUE,
+    bias_free_ln = FALSE,
+    ssmax = "none"
+  ) {
+    self$blocks <- nn_module_list(lapply(
+      seq_len(num_blocks),
+      function(i) {
+        tabicl_isab(
+          d_model = d_model,
+          nhead = nhead,
+          dim_feedforward = dim_feedforward,
+          num_inds = num_inds,
+          activation = activation,
+          norm_first = norm_first,
+          bias_free_ln = bias_free_ln,
+          ssmax = ssmax
+        )
+      }
+    ))
+  },
+  forward = function(src, train_size = NULL) {
+    out <- src
+    for (i in seq_along(self$blocks)) {
+      out <- self$blocks[[i]](out, train_size = train_size)
+    }
+    out
+  }
+)
+
 # A stack of `tabicl_mha_block`s plus an optional shared RoPE module. Mirrors
 # `Encoder`: `blocks` (a module list) and `rope`. The plain `forward` runs each
 # block in sequence; the row interactor drives the blocks directly for its
