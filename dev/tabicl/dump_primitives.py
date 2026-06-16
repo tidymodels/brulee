@@ -14,16 +14,19 @@ Output: tests/testthat/fixtures/tabicl/<name>.safetensors  (+ <name>.json meta)
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import torch
-from safetensors.torch import save_file
+from safetensors.torch import save
 
 from tabicl._model.rope import RotaryEmbedding
 from tabicl._model.ssmax import QASSMaxMLP
 from tabicl._model.layers import MultiheadAttention
+from tabicl._model.interaction import RowInteraction
 
 OUT = Path(__file__).resolve().parents[2] / "tests" / "testthat" / "fixtures" / "tabicl"
 SEED = int(hashlib.sha256(b"brulee-tabicl-primitives-v1").hexdigest(), 16) % (2**31 - 1)
@@ -48,12 +51,19 @@ def randomize_(module: torch.nn.Module, gen: torch.Generator) -> None:
 
 def write(name: str, tensors: dict, meta: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    save_file(
-        {k: v.contiguous().to(torch.float32) for k, v in tensors.items()},
-        str(OUT / f"{name}.safetensors"),
-    )
-    with open(OUT / f"{name}.json", "w") as fh:
+    # Gzip the safetensors blob. The raw safetensors header is a u64 length
+    # prefix whose leading byte can coincide with an executable opcode (e.g.
+    # 0xb8), which R CMD check flags as a bundled executable. gzip's magic bytes
+    # avoid that for every fixture; the R loader decompresses on read.
+    blob = save({k: v.contiguous().to(torch.float32) for k, v in tensors.items()})
+    gz_path = OUT / f"{name}.safetensors.gz"
+    with gzip.open(gz_path, "wb") as fh:
+        fh.write(blob)
+    json_path = OUT / f"{name}.json"
+    with open(json_path, "w") as fh:
         json.dump(meta, fh, indent=2)
+    os.chmod(gz_path, 0o644)
+    os.chmod(json_path, 0o644)
     shapes = {k: list(v.shape) for k, v in tensors.items()}
     print(f"{name}: {shapes}")
 
@@ -143,6 +153,49 @@ def dump_mha(name, embed_dim, num_heads, use_rope, ssmax, q_len, kv_len, gen):
     )
 
 
+def dump_row_interaction(gen, name="row_interaction", bias_free_ln=False):
+    # Stage-2 RowInteraction, shrunk: embed_dim 32, 3 blocks, 4 heads, 2 CLS.
+    # num_blocks=3 exercises both the self-attention blocks and the final
+    # CLS-as-query cross-attention block. bias_free_ln toggles LayerNorm biases
+    # (the classifier checkpoint has them, the regressor does not).
+    embed_dim, num_blocks, nhead, num_cls = 32, 3, 4, 2
+    ff = 2 * embed_dim
+    ri = RowInteraction(
+        embed_dim=embed_dim,
+        num_blocks=num_blocks,
+        nhead=nhead,
+        dim_feedforward=ff,
+        num_cls=num_cls,
+        rope_base=100000,
+        rope_interleaved=False,
+        bias_free_ln=bias_free_ln,
+    )
+    ri.eval()
+    randomize_(ri, gen)
+    # Give the RoPE frequencies realistic decay rather than tiny random noise.
+    with torch.no_grad():
+        idx = torch.arange(0, embed_dim // nhead, 2, dtype=torch.float32)
+        ri.tf_row.rope.freqs.copy_(1.0 / (100000 ** (idx / (embed_dim // nhead))))
+
+    # col_embed-shaped input: (B, T, H + C, E). The first num_cls slots are
+    # placeholders the module overwrites with its CLS tokens.
+    b, t, h = 1, 5, 3
+    inp = torch.randn(b, t, h + num_cls, embed_dim, generator=gen)
+    with torch.no_grad():
+        out = ri(inp.clone())  # clone: RowInteraction mutates its input in place
+
+    tensors = {f"ri.{k}": v.detach() for k, v in ri.state_dict().items()}
+    tensors["input"] = inp
+    tensors["out"] = out
+    write(
+        name,
+        tensors,
+        {"embed_dim": embed_dim, "num_blocks": num_blocks, "nhead": nhead,
+         "num_cls": num_cls, "dim_feedforward": ff, "rope_base": 100000,
+         "bias_free_ln": bias_free_ln, "seed": SEED},
+    )
+
+
 def main():
     torch.manual_seed(SEED)
     gen = torch.Generator().manual_seed(SEED)
@@ -162,6 +215,9 @@ def main():
     # Col ISAB attn2: cross-attn (data -> inducing points), plain.
     dump_mha("mha_plain_cross", 64, 8, use_rope=False, ssmax="none",
              q_len=9, kv_len=5, gen=gen)
+    # Stage 2: full RowInteraction, with and without LayerNorm biases.
+    dump_row_interaction(gen, "row_interaction", bias_free_ln=False)
+    dump_row_interaction(gen, "row_interaction_biasfree", bias_free_ln=True)
     print(f"\nseed = {SEED}")
     print(f"fixtures in {OUT}")
 

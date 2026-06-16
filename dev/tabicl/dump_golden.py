@@ -77,10 +77,14 @@ def dump(kind: str) -> None:
     model, config = build_model(kind)
     X, y_train = make_dataset(config, gen)
 
+    # NOTE: row_interactor mutates its input in place (overwrites the first
+    # num_cls slots with the CLS tokens), so snapshot each stage's output with a
+    # clone before feeding it onward. Otherwise the saved col_embed is the
+    # mutated tensor and is inconsistent with the saved row_interact.
     with torch.no_grad():
-        col_embed = model.col_embedder(X, y_train=y_train, d=None, embed_with_test=False)
-        row_interact = model.row_interactor(col_embed, d=None)
-        icl_out = model.icl_predictor(row_interact, y_train=y_train)
+        col_embed = model.col_embedder(X, y_train=y_train, d=None, embed_with_test=False).clone()
+        row_interact = model.row_interactor(col_embed.clone(), d=None).clone()
+        icl_out = model.icl_predictor(row_interact.clone(), y_train=y_train).clone()
 
     out_dir = ART / kind / "golden"
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -56,12 +56,24 @@ python -m venv .venv
    ```
 
    Writes small safetensors + json fixtures to
-   `tests/testthat/fixtures/tabicl/` (tracked): `rope`, `ssmax`, and four MHA
+   `tests/testthat/fixtures/tabicl/` (tracked): `rope`, `ssmax`, four MHA
    configurations (`mha_rope`, `mha_ssmax_self`, `mha_ssmax_cross`,
-   `mha_plain_cross`). The R modules in `R/tabicl-rope.R` / `R/tabicl-attention.R`
-   are validated against these by `tests/testthat/test-tabicl-rope.R` and
-   `test-tabicl-attention.R` (atol 1e-5). Weights use fan-in scaling so
-   activations stay O(1) and the absolute tolerance is meaningful.
+   `mha_plain_cross`), and the stage-2 `row_interaction` /
+   `row_interaction_biasfree`. The R modules (`R/tabicl-rope.R`,
+   `tabicl-attention.R`, `tabicl-layers.R`, `tabicl-interaction.R`) are validated
+   against these by `tests/testthat/test-tabicl-*.R` (atol 1e-5). Weights use
+   fan-in scaling so activations stay O(1) and the absolute tolerance is
+   meaningful.
+
+5. **Real-weight stage checks** (dev only, needs the large `model.safetensors`):
+
+   ```sh
+   Rscript dev/tabicl/check_stages.R
+   ```
+
+   Loads the actual converted checkpoint + step-1 golden stage outputs, builds
+   each R stage, copies the real weights in, and compares to the golden. Covers
+   both `classifier` (biased LayerNorms) and `regressor` (`bias_free_ln`).
 
 ## Stage shapes (fixed dataset: B=1, n_train=12, n_test=5, H=4)
 

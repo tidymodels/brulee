@@ -15,7 +15,7 @@ skip_if_no_tabicl_fixtures <- function(name) {
   if (!torch::torch_is_installed()) {
     skip("libtorch not installed")
   }
-  if (!file.exists(tabicl_fixture_path(name, "safetensors"))) {
+  if (!file.exists(tabicl_fixture_path(name, "safetensors.gz"))) {
     skip(paste0("fixture not found: ", name))
   }
 }
@@ -24,11 +24,24 @@ tabicl_fixture_path <- function(name, ext) {
   testthat::test_path("fixtures", "tabicl", paste0(name, ".", ext))
 }
 
+# Fixtures are stored gzip-compressed (see dev/tabicl/dump_primitives.py) so the
+# raw safetensors header never trips R CMD check's executable-magic heuristic.
+# safe_load_file needs a real path, so decompress to a temp file first.
 tabicl_load_fixture <- function(name) {
-  safetensors::safe_load_file(
-    tabicl_fixture_path(name, "safetensors"),
-    framework = "torch"
-  )
+  gz <- tabicl_fixture_path(name, "safetensors.gz")
+  con <- gzfile(gz, "rb")
+  on.exit(close(con))
+  chunks <- list()
+  repeat {
+    chunk <- readBin(con, "raw", n = 1024L^2)
+    if (length(chunk) == 0L) {
+      break
+    }
+    chunks[[length(chunks) + 1L]] <- chunk
+  }
+  tmp <- tempfile(fileext = ".safetensors")
+  writeBin(do.call(c, chunks), tmp)
+  safetensors::safe_load_file(tmp, framework = "torch")
 }
 
 tabicl_fixture_meta <- function(name) {
@@ -68,4 +81,56 @@ tabicl_copy_mha <- function(mha, f) {
     tabicl_copy_ssmax(mha$ssmax_layer, f)
   }
   invisible(mha)
+}
+
+# Copy a tabicl_mha_block's parameters from fixture tensors keyed by `prefix`
+# (e.g. "ri.tf_row.blocks.0.").
+tabicl_copy_mha_block <- function(block, f, prefix) {
+  torch::with_no_grad({
+    block$norm1$weight$copy_(f[[paste0(prefix, "norm1.weight")]])
+    block$norm2$weight$copy_(f[[paste0(prefix, "norm2.weight")]])
+    if (!is.null(block$norm1$bias)) {
+      block$norm1$bias$copy_(f[[paste0(prefix, "norm1.bias")]])
+      block$norm2$bias$copy_(f[[paste0(prefix, "norm2.bias")]])
+    }
+    block$linear1$weight$copy_(f[[paste0(prefix, "linear1.weight")]])
+    block$linear1$bias$copy_(f[[paste0(prefix, "linear1.bias")]])
+    block$linear2$weight$copy_(f[[paste0(prefix, "linear2.weight")]])
+    block$linear2$bias$copy_(f[[paste0(prefix, "linear2.bias")]])
+    block$attn$in_proj_weight$copy_(f[[paste0(prefix, "attn.in_proj_weight")]])
+    block$attn$in_proj_bias$copy_(f[[paste0(prefix, "attn.in_proj_bias")]])
+    block$attn$out_proj$weight$copy_(f[[paste0(
+      prefix,
+      "attn.out_proj.weight"
+    )]])
+    block$attn$out_proj$bias$copy_(f[[paste0(prefix, "attn.out_proj.bias")]])
+  })
+  if (!is.null(block$attn$ssmax_layer)) {
+    tabicl_copy_ssmax(
+      block$attn$ssmax_layer,
+      f,
+      prefix = paste0(prefix, "attn.ssmax.")
+    )
+  }
+  invisible(block)
+}
+
+# Copy a tabicl_row_interaction from fixture tensors keyed under "ri.".
+tabicl_copy_row_interaction <- function(ri, f) {
+  torch::with_no_grad({
+    ri$cls_tokens$copy_(f[["ri.cls_tokens"]])
+    ri$out_ln$weight$copy_(f[["ri.out_ln.weight"]])
+    if (!is.null(ri$out_ln$bias)) {
+      ri$out_ln$bias$copy_(f[["ri.out_ln.bias"]])
+    }
+    ri$tf_row$rope$freqs$copy_(f[["ri.tf_row.rope.freqs"]])
+  })
+  for (i in seq_along(ri$tf_row$blocks)) {
+    tabicl_copy_mha_block(
+      ri$tf_row$blocks[[i]],
+      f,
+      prefix = sprintf("ri.tf_row.blocks.%d.", i - 1L)
+    )
+  }
+  invisible(ri)
 }
