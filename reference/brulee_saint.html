@@ -64,7 +64,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  dropout_attn <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_hidden <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_last <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  hidden_activations <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -79,6 +79,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -94,7 +95,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  dropout_attn <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_hidden <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_last <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  hidden_activations <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -109,6 +110,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -124,7 +126,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  dropout_attn <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_hidden <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_last <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  hidden_activations <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -139,6 +141,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -154,7 +157,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  dropout_attn <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_hidden <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  dropout_last <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  row_attention_on_predict <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  hidden_units <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  hidden_activations <span class="op">=</span> <span class="st">"relu"</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fl">0.001</span>,</span>
@@ -169,6 +172,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -248,17 +252,18 @@ between the last hidden layer and the output head. Only has effect when
 
 <dt id="arg-row-attention-on-predict">row_attention_on_predict<a class="anchor" aria-label="anchor" href="#arg-row-attention-on-predict"></a></dt>
 <dd><p>A logical value. Should row (inter-sample)
-attention be applied during prediction? Default is <code>FALSE</code>. When <code>FALSE</code>,
-row attention is only used during training and predictions use column
-attention only — this ensures that predictions for a given row are
-independent of what other rows are in the prediction set. This is only
-relevant when <code>attention_type</code> is <code>"row"</code> or <code>"both"</code>.</p></dd>
+attention be applied during prediction? Default is <code>TRUE</code>, matching the
+training-time behavior. When <code>FALSE</code>, row attention is bypassed at
+predict time so that predictions for a given row do not depend on what
+other rows are in the prediction set; column attention is used on its
+own. This is only relevant when <code>attention_type</code> is <code>"row"</code> or
+<code>"both"</code>.</p></dd>
 
 
 <dt id="arg-hidden-units">hidden_units<a class="anchor" aria-label="anchor" href="#arg-hidden-units"></a></dt>
 <dd><p>An integer vector for the number of units in optional
 hidden layers between the transformer backbone and the output head.
-When <code>NULL</code> (the default), no hidden layers are added and the flattened
+When <code>NULL</code> (the default), no hidden layers are added and the pooled
 transformer output is projected directly to the output.</p></dd>
 
 
@@ -341,6 +346,17 @@ improvement before stopping.</p></dd>
 available, otherwise CPU. See <a href="training_efficiency.html">training_efficiency</a>.</p></dd>
 
 
+<dt id="arg-use-target-token">use_target_token<a class="anchor" aria-label="anchor" href="#arg-use-target-token"></a></dt>
+<dd><p>A logical value. When <code>TRUE</code> (the default), a
+learnable target token (<code>[CLS]</code> in the SAINT paper) is prepended to
+each sample's feature sequence and only its final-layer embedding is
+fed to the head. This matches the architecture described in the SAINT
+paper (Section 3 and Figure 1); see the <strong>Target Token Pooling</strong>
+section in <strong>Details</strong>. When <code>FALSE</code>, the head instead consumes the
+concatenation of every feature token, which matches the SAINT
+reference implementation at <a href="https://github.com/somepago/saint" class="external-link">https://github.com/somepago/saint</a>.</p></dd>
+
+
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A formula specifying the outcome term(s) on the left-hand side,
 and the predictor term(s) on the right-hand side.</p></dd>
@@ -375,17 +391,21 @@ likelihood for classification) at each epoch.</p></li>
 <p>The SAINT architecture has three stages:</p><ol><li><p><strong>Embedding layer</strong>: Categorical features are mapped through per-feature
 embedding tables. Continuous features are passed through per-feature MLPs
 (1 -&gt; 100 -&gt; <code>num_embedding</code>). These initial embeddings are per-feature;
-there is a distinct embedding MLP for each predictor.</p></li>
+there is a distinct embedding MLP for each predictor. Also, see the
+"Target Token Pooling" section below.</p></li>
 <li><p><strong>Transformer backbone</strong>: A stack of <code>num_attn_blocks</code> transformer layers.
 Each layer contains multi-head self-attention followed by a feed-forward
 network with GeGLU activation. For <code>attention_type = "both"</code>, each block
 alternates between column attention (across features) and row attention
 (across samples within the batch).</p></li>
-<li><p><strong>Output head</strong>: Flattens the transformer output and projects through
+<li><p><strong>Output head</strong>: Pools the transformer output (either the target
+token's embedding or the flattened concatenation of all feature
+embeddings, controlled by <code>use_target_token</code>) and projects it through
 optional hidden layers to the output dimension.</p></li>
 </ol><p>There is a <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods that can provide details of the architecture
 for a specific model fit.</p>
-</div>
+<p>Differences in this implementation and the orignal paper:</p><ul><li><p>Pretraining isn't supported.</p></li>
+</ul></div>
 
 <div class="section">
 <h3 id="attention-types">Attention Types<a class="anchor" aria-label="anchor" href="#attention-types"></a></h3>
@@ -400,15 +420,51 @@ transformer block. This is the full SAINT model.</p></li>
 </ul></div>
 
 <div class="section">
+<h3 id="target-token-pooling">Target Token Pooling<a class="anchor" aria-label="anchor" href="#target-token-pooling"></a></h3>
+
+
+<p>Borrowing from BERT, SAINT prepends a learnable target token (the
+paper calls it <code>[CLS]</code>) to each sample's feature sequence before the
+transformer. With embeddings <code>E(x_i^{(1)}), ..., E(x_i^{(n)})</code> for the
+<code>n</code> predictors of sample <code>i</code>, the input sequence becomes</p>
+<p><code>[target, E(x_i^{(1)}), E(x_i^{(2)}), ..., E(x_i^{(n)})]</code></p>
+<p>giving <code>n + 1</code> tokens of dimension <code>num_embedding</code>. The target token has
+no input value; it is a free parameter of the model that is trained
+alongside the rest of the network. Column attention lets every feature
+token attend to the target and vice versa, so the target slot accumulates
+a contextual summary of the sample. When <code>attention_type</code> is <code>"row"</code> or
+<code>"both"</code>, inter-sample attention sees the full <code>n + 1</code> token sequence per
+sample, so the target slot also exchanges information across samples in
+the batch.</p>
+<p>After the transformer backbone, the head reads <em>only</em> the final-layer
+embedding of the target token (the first position) and feeds it through
+the optional <code>hidden_units</code> MLP and the output layer. This is what the
+paper describes in Figure 1: "We take the contextual embeddings from
+SAINT and pass only the embedding correspond to the CLS token through an
+MLP to obtain the final prediction."</p>
+<p>With <code>use_target_token = FALSE</code>, no target token is added and the head
+instead consumes the concatenation of all <code>n</code> feature tokens. That
+option is provided because the SAINT reference Python implementation
+(<a href="https://github.com/somepago/saint" class="external-link">https://github.com/somepago/saint</a>) departs from the paper and uses
+flatten-pooling; it is kept available for compatibility with that code
+path and for users who want the original brulee behavior.</p>
+</div>
+
+<div class="section">
 <h3 id="row-attention-at-prediction-time">Row Attention at Prediction Time<a class="anchor" aria-label="anchor" href="#row-attention-at-prediction-time"></a></h3>
 
 
 <p>Row attention computations adjust the internal embeddings based on the rows
 that are available at any given time. During training, the other rows in the
 batch are used to compute attention. After training, when <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> is
-called, the default behavior is to bypass row attention. This is because the
-predictions would depend on the other data available at the time. If this is
-what you want, set <code>row_attention_on_predict</code> to <code>TRUE</code>.</p>
+called, the default behavior is to keep row attention on, mirroring the
+training-time computation. Because row attention is computed across the
+samples present in a given call, predictions for a row depend on what
+other rows are passed alongside it. To get batch-independent predictions
+(where the prediction for a given row is the same regardless of what
+other rows are in the input), set <code>row_attention_on_predict</code> to <code>FALSE</code>;
+row attention is then bypassed at predict time and column attention is
+used on its own.</p>
 </div>
 
 <div class="section">
@@ -491,28 +547,20 @@ arXiv:2106.01342.</p>
 <span class="r-in"><span>  <span class="fu"><a href="https://yardstick.tidymodels.org/reference/rsq.html" class="external-link">rsq</a></span><span class="op">(</span><span class="va">outcome</span>, <span class="va">.pred</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.325</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.622</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.271</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.325</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.283</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.265</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.287</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.294</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 08, learn rate: 0.01000, Loss (scaled): 0.278</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 09, learn rate: 0.01000, Loss (scaled): 0.227</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 10, learn rate: 0.01000, Loss (scaled): 0.302</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 11, learn rate: 0.01000, Loss (scaled): 0.2</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 12, learn rate: 0.01000, Loss (scaled): 0.277</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 13, learn rate: 0.01000, Loss (scaled): 0.268</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 14, learn rate: 0.01000, Loss (scaled): 1.06</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 15, learn rate: 0.01000, Loss (scaled): 0.288</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 16, learn rate: 0.01000, Loss (scaled): 0.234</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.311</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.295</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.288</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.289</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.298</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.315</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.289</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.305</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">SAINT architecture</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> inputs: 8 (0 categorical, 8 numeric) | output dim: 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attention: both | embedding dim: 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attention: both | embedding dim: 3 | target token: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Embedding layer</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Target token (1 x 3)                         3 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   8 x MLP(1 -&gt; 100 -&gt; 3)                   4,024 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Transformer backbone</span> (4 blocks, column + row attention)</span>
@@ -523,10 +571,10 @@ arXiv:2106.01342.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(3, GEGLU)                      135 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Row attention:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=24, heads=5)              30,744 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(24, GEGLU)                   7,128 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=27, heads=5)              34,587 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(27, GEGLU)                   8,991 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Block 2:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Column attention:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
@@ -534,10 +582,10 @@ arXiv:2106.01342.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(3, GEGLU)                      135 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Row attention:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=24, heads=5)              30,744 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(24, GEGLU)                   7,128 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=27, heads=5)              34,587 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(27, GEGLU)                   8,991 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Block 3:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Column attention:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
@@ -545,10 +593,10 @@ arXiv:2106.01342.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(3, GEGLU)                      135 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Row attention:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=24, heads=5)              30,744 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(24, GEGLU)                   7,128 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=27, heads=5)              34,587 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(27, GEGLU)                   8,991 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Block 4:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Column attention:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
@@ -556,23 +604,23 @@ arXiv:2106.01342.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(3)                                 6 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(3, GEGLU)                      135 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Row attention:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=24, heads=5)              30,744 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(24)                               48 params</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(24, GEGLU)                   7,128 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Attention(dim=27, heads=5)              34,587 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       LayerNorm(27)                               54 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       FeedForward(27, GEGLU)                   8,991 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Hidden layers</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Linear(24 -&gt; 5)                            125 params</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Linear(3 -&gt; 5)                              20 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ReLU                                         0 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Output head</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Linear(5 -&gt; 1)                               6 params</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Total parameters: </span>160,467</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Total parameters: </span>183,237</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .metric .estimator .estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> rsq     standard       0.557</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> rsq     standard     0.001<span style="text-decoration: underline;">45</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
