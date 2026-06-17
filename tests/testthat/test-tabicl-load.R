@@ -49,16 +49,10 @@ test_that("tabicl_load_model round-trips config + safetensors from disk", {
   f <- tabicl_load_fixture("full_model")
   meta <- tabicl_fixture_meta("full_model")
 
-  dir <- withr::local_tempdir()
-  tensors <- f[tabicl_fixture_weight_keys(f)]
-  safetensors::safe_save_file(tensors, file.path(dir, "model.safetensors"))
-  jsonlite::write_json(
-    meta$config,
-    file.path(dir, "config.json"),
-    auto_unbox = TRUE
-  )
+  # Writes the task-prefixed files (full_model is a classification checkpoint).
+  dir <- tabicl_write_model_dir(f, meta)
 
-  loaded <- brulee:::tabicl_load_model(dir)
+  loaded <- brulee:::tabicl_load_model(dir, task = "classification")
   out <- loaded$model(f$X, f$y_train)
   expect_lt(tabicl_max_abs_diff(out, f$out), 1e-5)
 })

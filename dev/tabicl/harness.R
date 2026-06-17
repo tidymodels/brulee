@@ -18,26 +18,47 @@ args <- commandArgs(trailingOnly = TRUE)
 kind <- if (length(args) >= 1) args[[1]] else "classifier"
 stopifnot(kind %in% c("classifier", "regressor"))
 
-art <- file.path(
-  normalizePath(dirname(sub("--file=", "", grep("--file=", commandArgs(FALSE), value = TRUE)[1]))),
-  "artifacts",
-  kind
-)
-if (!dir.exists(art)) {
-  art <- file.path("dev", "tabicl", "artifacts", kind)
+# Resolve artifacts/<version>/<date>/<TaskLabel>, choosing the latest date.
+# Look next to this script first, then relative to the package root.
+tabicl_artifact_dir <- function(kind, root) {
+  label <- c(classifier = "Classification", regressor = "Regression")[[kind]]
+  candidates <- Sys.glob(file.path(root, "*", "*", label))
+  if (length(candidates) == 0) {
+    return(NA_character_)
+  }
+  candidates[order(basename(dirname(candidates)))][length(candidates)]
 }
+
+script_root <- file.path(
+  normalizePath(dirname(sub(
+    "--file=",
+    "",
+    grep("--file=", commandArgs(FALSE), value = TRUE)[1]
+  ))),
+  "artifacts"
+)
+art <- tabicl_artifact_dir(kind, script_root)
+if (is.na(art)) {
+  art <- tabicl_artifact_dir(kind, file.path("dev", "tabicl", "artifacts"))
+}
+stopifnot(!is.na(art))
+
+# The two brulee-read files are task-prefixed.
+prefix <- if (kind == "classifier") "classification" else "regression"
+config_file <- paste0(prefix, ".config.json")
+weights_file <- paste0(prefix, ".model.safetensors")
 
 cli_h <- function(x) cat("\n== ", x, " ==\n", sep = "")
 
 # --- config -----------------------------------------------------------------
 cli_h(paste("config:", kind))
-config <- jsonlite::fromJSON(file.path(art, "config.json"))
+config <- jsonlite::fromJSON(file.path(art, config_file))
 cat("config keys:", length(config), "\n")
 cat("max_classes =", config$max_classes, " num_quantiles =", config$num_quantiles, "\n")
 
 # --- state_dict -------------------------------------------------------------
-cli_h("state_dict (model.safetensors)")
-tensors <- safe_load_file(file.path(art, "model.safetensors"), framework = "torch")
+cli_h(paste("state_dict (", weights_file, ")"))
+tensors <- safe_load_file(file.path(art, weights_file), framework = "torch")
 expected <- readLines(file.path(art, "state_dict_keys.txt"))
 expected_names <- vapply(strsplit(expected, "\t"), `[`, character(1), 1L)
 

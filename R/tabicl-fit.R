@@ -426,16 +426,33 @@ tabicl_bridge <- function(
     )
   }
 
-  config <- tabicl_parse_config(file.path(path, "config.json"))
+  # Checkpoint files are task-prefixed, so the file for the wrong task is simply
+  # absent: a numeric outcome needs the regression checkpoint, a factor the
+  # classification one.
+  task <- if (classification) "classification" else "regression"
+  files <- tabicl_checkpoint_files(task)
+  config_path <- file.path(path, files$config)
+  if (!file.exists(config_path)) {
+    cli::cli_abort(
+      c(
+        "No {task} checkpoint found in {.path {path}}.",
+        "i" = "Expected {.file {files$config}} and {.file {files$weights}}."
+      ),
+      call = call
+    )
+  }
+  config <- tabicl_parse_config(config_path)
+  # Guard against a mislabeled file (e.g. a classification config renamed to the
+  # regression filename).
   if (classification && config$max_classes <= 0) {
     cli::cli_abort(
-      "Outcome is a factor but {.path {path}} is a regression checkpoint.",
+      "{.path {files$config}} in {.path {path}} is not a classification checkpoint.",
       call = call
     )
   }
   if (!classification && config$max_classes > 0) {
     cli::cli_abort(
-      "Outcome is numeric but {.path {path}} is a classification checkpoint.",
+      "{.path {files$config}} in {.path {path}} is not a regression checkpoint.",
       call = call
     )
   }
@@ -464,7 +481,7 @@ tabicl_bridge <- function(
   new_brulee_tab_icl(
     path = path,
     config = config,
-    task = if (classification) "classification" else "regression",
+    task = task,
     levels = levels,
     encoders = encoders,
     train_x = train_x,

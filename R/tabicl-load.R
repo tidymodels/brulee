@@ -1,7 +1,8 @@
 # Load released TabICL weights into a `tabicl_model`.
 #
-# The released `.ckpt` is converted offline to `config.json` + `model.safetensors`
-# (see dev/tabicl/convert_ckpt.py). This file parses that config, builds the R
+# The released `.ckpt` is converted offline to task-prefixed `<task>.config.json`
+# + `<task>.model.safetensors` (see dev/tabicl/convert_ckpt.py). This file parses
+# that config, builds the R
 # module tree, and copies every checkpoint tensor into the matching parameter,
 # verifying that the mapping is exact in both directions (no unmatched file keys,
 # no unfilled parameters). The map mirrors the Python state_dict dot-paths.
@@ -213,12 +214,34 @@ load_tabicl_weights <- function(model, tensors, verbose = FALSE) {
   invisible(model)
 }
 
-# Build a tabicl_model from a converted checkpoint directory (config.json +
-# model.safetensors) and load its weights. Returns the model in eval mode.
-tabicl_load_model <- function(model_dir, device = "cpu", verbose = FALSE) {
-  config <- tabicl_parse_config(file.path(model_dir, "config.json"))
+# The two files brulee reads for a task, prefixed so a loose file is
+# self-identifying: "classification.config.json" / "classification.model.safetensors"
+# (and the regression equivalents).
+tabicl_checkpoint_files <- function(task) {
+  prefix <- if (identical(task, "classification")) {
+    "classification"
+  } else {
+    "regression"
+  }
+  list(
+    config = paste0(prefix, ".config.json"),
+    weights = paste0(prefix, ".model.safetensors")
+  )
+}
+
+# Build a tabicl_model from a converted checkpoint directory and load its
+# weights. `task` selects the task-prefixed filenames. Returns the model in eval
+# mode.
+tabicl_load_model <- function(
+  model_dir,
+  task,
+  device = "cpu",
+  verbose = FALSE
+) {
+  files <- tabicl_checkpoint_files(task)
+  config <- tabicl_parse_config(file.path(model_dir, files$config))
   tensors <- safetensors::safe_load_file(
-    file.path(model_dir, "model.safetensors"),
+    file.path(model_dir, files$weights),
     framework = "torch"
   )
   model <- tabicl_model(config)

@@ -48,6 +48,9 @@ tabicl_download <- function(
     )
   }
 
+  task <- if (checkpoint == "classifier") "classification" else "regression"
+  files <- tabicl_checkpoint_files(task)
+
   sha <- chronos2_resolve_revision(repo_id, revision)
   model_dir <- file.path(
     cache_dir,
@@ -62,14 +65,10 @@ tabicl_download <- function(
   options(timeout = max(600L, old_timeout))
   on.exit(options(timeout = old_timeout), add = TRUE)
 
-  for (f in c("config.json", "model.safetensors")) {
-    url <- sprintf(
-      "https://huggingface.co/%s/resolve/%s/%s/%s",
-      repo_id,
-      sha,
-      checkpoint,
-      f
-    )
+  # The task-prefixed filenames disambiguate checkpoints sharing one repo, so
+  # they are fetched from the repo root.
+  for (f in c(files$config, files$weights)) {
+    url <- sprintf("https://huggingface.co/%s/resolve/%s/%s", repo_id, sha, f)
     chronos2_download_file(
       url,
       file.path(model_dir, f),

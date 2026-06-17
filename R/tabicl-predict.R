@@ -57,7 +57,11 @@ predict.brulee_tab_icl <- function(object, new_data, type = NULL, ...) {
   forged <- hardhat::forge(new_data, object$blueprint)
   type <- check_type(object, type, call = call)
 
-  loaded <- tabicl_load_model(object$path, device = object$device)
+  loaded <- tabicl_load_model(
+    object$path,
+    task = object$task,
+    device = object$device
+  )
   x_test <- tabicl_encode_transform(object$encoders, forged$predictors)
 
   if (object$task == "classification") {

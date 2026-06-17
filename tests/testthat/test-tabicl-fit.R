@@ -113,10 +113,11 @@ test_that("brulee_tab_icl errors on task / checkpoint mismatch", {
   x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
   y_num <- as.numeric(as.array(f$y_train))
 
-  # Numeric outcome against a classification checkpoint. The error names the
-  # (temporary) path, so match on the stable part of the message.
+  # Numeric outcome looks for the regression checkpoint, which is absent in a
+  # classification-only directory. The error names the (temporary) path, so match
+  # on the stable part of the message.
   expect_error(
     brulee_tab_icl(x_train, y_num, path = dir),
-    "is a classification checkpoint"
+    "No regression checkpoint found"
   )
 })

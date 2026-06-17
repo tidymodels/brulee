@@ -31,17 +31,18 @@ test_that("tabicl_download fetches config + safetensors into a cache dir", {
     cache_dir = cache
   )
 
-  expect_true(file.exists(file.path(dir, "config.json")))
-  expect_true(file.exists(file.path(dir, "model.safetensors")))
+  # Files are written with the task-prefixed names brulee reads.
+  expect_true(file.exists(file.path(dir, "regression.config.json")))
+  expect_true(file.exists(file.path(dir, "regression.model.safetensors")))
   # Cache layout: <cache>/<repo-slug>/<sha>/<checkpoint>.
   expect_match(dir, "org--repo")
   expect_match(dir, "regressor$")
-  # URLs point at the converted files under the checkpoint subpath.
+  # Prefixed files are fetched from the repo root.
   expect_true(any(grepl(
-    "huggingface.co/org/repo/resolve/.*/regressor/config.json",
+    "huggingface.co/org/repo/resolve/.*/regression.config.json",
     requested
   )))
-  expect_true(any(grepl("/regressor/model.safetensors", requested)))
+  expect_true(any(grepl("regression.model.safetensors", requested)))
 })
 
 test_that("tabicl_download rejects unknown checkpoints", {

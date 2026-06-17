@@ -24,8 +24,13 @@ side loads with `torch`/libtorch 0.17.0 and `safetensors` 0.2.0.
 
 ### Checksums
 
-Original `.ckpt` files (sha256), recorded in `artifacts/<kind>/manifest.json` at
-conversion time:
+Converted artifacts are stored under
+`artifacts/<version>/<date>/<Classification|Regression>/` (for example
+`artifacts/v2/2026-02-12/Classification/`), with the version and date taken from
+the checkpoint filename.
+
+Original `.ckpt` files (sha256), recorded in each `manifest.json` at conversion
+time:
 
 | File | sha256 |
 |---|---|
@@ -36,10 +41,13 @@ Converted artifacts (sha256):
 
 | File | sha256 |
 |---|---|
-| classifier `model.safetensors` | `05a13ce66b439b03fd5f9f02ff0c41410ed2c03f36b1f4219874806b12b04a83` |
-| classifier `config.json` | `74fcd36136518b50e4929cbd4fcafb0ba9f2bb799db741265902bd4d7e9bc3e1` |
-| regressor `model.safetensors` | `90c5952b4e201c265b4444a3694f3d1fc07df3864157ed6361b6c31723413d30` |
-| regressor `config.json` | `1448d3cbcc170aac2a3670aeda46257706da11860e08884128e42f14063a9960` |
+| `classification.model.safetensors` | `05a13ce66b439b03fd5f9f02ff0c41410ed2c03f36b1f4219874806b12b04a83` |
+| `classification.config.json` | `74fcd36136518b50e4929cbd4fcafb0ba9f2bb799db741265902bd4d7e9bc3e1` |
+| `regression.model.safetensors` | `90c5952b4e201c265b4444a3694f3d1fc07df3864157ed6361b6c31723413d30` |
+| `regression.config.json` | `1448d3cbcc170aac2a3670aeda46257706da11860e08884128e42f14063a9960` |
+
+(File contents, hence the sha256s, are independent of the filename, so these
+match regardless of the task prefix.)
 
 `convert_ckpt.py` writes a fresh `manifest.json` on every run capturing the
 upstream filename, the `.ckpt` sha256, and the output sha256s, so any
@@ -85,8 +93,12 @@ defeats the goal of a pure-R `torch` implementation and adds a heavy runtime
 dependency. So the checkpoints are converted **once, offline** into formats R
 reads natively:
 
-- `state_dict` → `model.safetensors` (read by `safetensors::safe_load_file`).
-- `config` → `config.json` (read by `jsonlite::fromJSON`).
+- `state_dict` → `<task>.model.safetensors` (read by
+  `safetensors::safe_load_file`).
+- `config` → `<task>.config.json` (read by `jsonlite::fromJSON`).
+
+The two files brulee reads are prefixed with the task (`classification.` /
+`regression.`) so a single file is self-identifying if moved on its own.
 
 The conversion is a Python dev-time step (`dev/tabicl/convert_ckpt.py`), not part
 of the R package or its runtime.
@@ -98,8 +110,8 @@ of the R package or its runtime.
 1. Downloads the `.ckpt` from `jingang/TabICL`.
 2. `torch.load(..., weights_only=True)` and asserts the dict has `config` and
    `state_dict`.
-3. Writes `config` verbatim to `config.json`.
-4. Writes the `state_dict` tensors to `model.safetensors` via
+3. Writes `config` verbatim to `<task>.config.json`.
+4. Writes the `state_dict` tensors to `<task>.model.safetensors` via
    `safetensors.torch.save_file` (each tensor made contiguous and cloned to
    avoid shared-storage issues; values unchanged).
 5. Writes `state_dict_keys.txt` (name/dtype/shape inventory) and `manifest.json`
@@ -123,7 +135,9 @@ The converted weights were validated end-to-end against the original model:
 
 ### Distribution format note
 
-The converted files are hosted/consumed as `config.json` + `model.safetensors`
-(per checkpoint). The filenames are conventional, not load-bearing: the readers
-parse by content, so the files can be renamed (e.g. task-prefixed) as long as the
-R code's filename references are updated to match.
+The converted files are hosted/consumed as `<task>.config.json` +
+`<task>.model.safetensors` (per checkpoint). The filenames are conventional, not
+load-bearing: the readers parse by content, so the prefix is only a convenience
+for identifying a loose file. The brulee code maps the task to these filenames in
+one place (`tabicl_checkpoint_files()`), so the naming can change there if
+needed.

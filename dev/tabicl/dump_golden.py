@@ -27,29 +27,29 @@ from safetensors.torch import save_file
 
 from tabicl._model.tabicl import TabICL
 
-ART = Path(__file__).resolve().parent / "artifacts"
+from convert_ckpt import artifact_dir, checkpoint_files
 
 # A reproducible, non-special seed: low 31 bits of a digest of a fixed phrase.
 # Emulates an RNG draw rather than hand-picking a round number.
 SEED = int(hashlib.sha256(b"brulee-tabicl-golden-v1").hexdigest(), 16) % (2**31 - 1)
 
 
-def build_model(kind: str) -> tuple[TabICL, dict]:
-    cfg_path = ART / kind / "config.json"
-    with open(cfg_path) as fh:
+def build_model(kind: str) -> tuple[TabICL, dict, Path]:
+    art = artifact_dir(kind)
+    config_name, weights_name = checkpoint_files(kind)
+    with open(art / config_name) as fh:
         config = json.load(fh)
     model = TabICL(**config)
-    state = torch.load  # not used; load via safetensors to mirror R exactly
     from safetensors.torch import load_file
 
-    sd = load_file(str(ART / kind / "model.safetensors"))
+    sd = load_file(str(art / weights_name))
     missing, unexpected = model.load_state_dict(sd, strict=False)
     if missing:
         raise RuntimeError(f"missing keys when loading: {missing}")
     if unexpected:
         raise RuntimeError(f"unexpected keys when loading: {unexpected}")
     model.eval()
-    return model, config
+    return model, config, art
 
 
 def make_dataset(config: dict, gen: torch.Generator):
@@ -74,7 +74,7 @@ def dump(kind: str) -> None:
     torch.manual_seed(SEED)
     gen = torch.Generator().manual_seed(SEED)
 
-    model, config = build_model(kind)
+    model, config, art = build_model(kind)
     X, y_train = make_dataset(config, gen)
 
     # NOTE: row_interactor mutates its input in place (overwrites the first
@@ -86,7 +86,7 @@ def dump(kind: str) -> None:
         row_interact = model.row_interactor(col_embed.clone(), d=None).clone()
         icl_out = model.icl_predictor(row_interact.clone(), y_train=y_train).clone()
 
-    out_dir = ART / kind / "golden"
+    out_dir = art / "golden"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     save_file(

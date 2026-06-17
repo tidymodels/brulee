@@ -210,10 +210,13 @@ tabicl_copy_icl_learning <- function(icl, f, prefix = "icl.") {
   invisible(icl)
 }
 
-# Write a converted-checkpoint directory (config.json + model.safetensors) from
-# a full-model / engine fixture, for testing the loader and the user-facing API.
+# Write a converted-checkpoint directory from a full-model / engine fixture, for
+# testing the loader and the user-facing API. The two files use the task-prefixed
+# names brulee reads (classification.* / regression.*), derived from the config.
 tabicl_write_model_dir <- function(f, meta) {
   dir <- withr::local_tempdir(.local_envir = parent.frame())
+  task <- if (meta$config$max_classes > 0) "classification" else "regression"
+  files <- brulee:::tabicl_checkpoint_files(task)
   weight_keys <- grep(
     "^(col_embedder|row_interactor|icl_predictor)\\.",
     names(f),
@@ -221,11 +224,11 @@ tabicl_write_model_dir <- function(f, meta) {
   )
   safetensors::safe_save_file(
     f[weight_keys],
-    file.path(dir, "model.safetensors")
+    file.path(dir, files$weights)
   )
   jsonlite::write_json(
     meta$config,
-    file.path(dir, "config.json"),
+    file.path(dir, files$config),
     auto_unbox = TRUE
   )
   dir

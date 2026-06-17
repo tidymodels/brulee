@@ -164,12 +164,30 @@ copy_icl_module <- function(mod, sd, cfg, prefix = "icl_predictor.") {
   }
 }
 
+# Resolve the converted-artifacts directory for a task, choosing the latest
+# import date under artifacts/<version>/<date>/<TaskLabel>.
+tabicl_artifact_dir <- function(kind, root = "dev/tabicl/artifacts") {
+  label <- c(classifier = "Classification", regressor = "Regression")[[kind]]
+  candidates <- Sys.glob(file.path(root, "*", "*", label))
+  if (length(candidates) == 0) {
+    stop(sprintf(
+      "No converted %s checkpoint under %s; run: python convert_ckpt.py %s",
+      label,
+      root,
+      kind
+    ))
+  }
+  # The parent directory of the task folder is the date (YYYY-MM-DD).
+  candidates[order(basename(dirname(candidates)))][length(candidates)]
+}
+
 load_artifacts <- function(kind) {
-  art <- file.path("dev/tabicl/artifacts", kind)
+  art <- tabicl_artifact_dir(kind)
+  prefix <- if (kind == "classifier") "classification" else "regression"
   list(
-    cfg = jsonlite::fromJSON(file.path(art, "config.json")),
+    cfg = jsonlite::fromJSON(file.path(art, paste0(prefix, ".config.json"))),
     sd = safe_load_file(
-      file.path(art, "model.safetensors"),
+      file.path(art, paste0(prefix, ".model.safetensors")),
       framework = "torch"
     ),
     golden = safe_load_file(

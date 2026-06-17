@@ -1,13 +1,16 @@
 {
   "repo_id": "jingang/TabICL",
-  "filename": "tabicl-regressor-v2-20260212.ckpt",
-  "kind": "regressor",
-  "ckpt_sha256": "0db9cb538f114e79026bf08f45f41ad8dd7ad2de2aaca9a5ca8cd3bd9748ae7a",
-  "config_sha256": "1448d3cbcc170aac2a3670aeda46257706da11860e08884128e42f14063a9960",
-  "safetensors_sha256": "90c5952b4e201c265b4444a3694f3d1fc07df3864157ed6361b6c31723413d30",
-  "num_tensors": 347,
+  "filename": "tabicl-classifier-v2-20260212.ckpt",
+  "kind": "classifier",
+  "task_label": "Classification",
+  "version": "v2",
+  "date": "2026-02-12",
+  "ckpt_sha256": "bdc7dbd5e4ff21f8f0456fcf90c6b7cdf72dbea960f2d05b19bec19f9b3d4ed0",
+  "config_sha256": "74fcd36136518b50e4929cbd4fcafb0ba9f2bb799db741265902bd4d7e9bc3e1",
+  "safetensors_sha256": "05a13ce66b439b03fd5f9f02ff0c41410ed2c03f36b1f4219874806b12b04a83",
+  "num_tensors": 391,
   "config": {
-    "max_classes": 0,
+    "max_classes": 10,
     "num_quantiles": 999,
     "embed_dim": 128,
     "col_num_blocks": 3,
@@ -30,7 +33,7 @@
     "dropout": 0.0,
     "activation": "gelu",
     "norm_first": true,
-    "bias_free_ln": true,
+    "bias_free_ln": false,
     "recompute": false
   }
 }

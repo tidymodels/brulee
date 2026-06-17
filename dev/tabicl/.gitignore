@@ -2,6 +2,8 @@
 .venv/
 
 # Large released weights, re-derivable by running convert_ckpt.py.
-# Golden fixtures (artifacts/*/golden/*) are small and tracked on purpose.
-artifacts/*/model.safetensors
+# Stored under artifacts/<version>/<date>/<TaskLabel>/. The small companion
+# files (config.json, manifest.json, state_dict_keys.txt, golden/) are tracked.
+artifacts/**/*model.safetensors
 __pycache__/
+.DS_Store
