@@ -2,7 +2,7 @@
 
 Spike tooling for porting TabICL v2 to brulee as pure R `torch`. Not part of the
 package build (`dev/` is in `.Rbuildignore`). See the roadmap in
-`~/.claude/plans/ticklish-whistling-walrus.md`.
+`ticklish-whistling-walrus.md`.
 
 ## Setup
 
