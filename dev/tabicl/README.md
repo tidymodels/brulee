@@ -72,16 +72,36 @@ produces inputs for it (converted weights) and checks on it (fixtures).
 
 ## 3. What the package needs at runtime
 
-For the model to run, `brulee_tab_icl(path = X)` needs the directory `X` to
-contain exactly two files, named with the task prefix so a loose file is
-self-identifying:
+`brulee_tab_icl()` reads its weights from a local cache (following the chronos2
+pattern), not from this folder. The cache lives at
+`~/.cache/TabICL/<version>/<date>/<Classification|Regression>/` and holds only
+the two files brulee reads per task, named with the task prefix so a loose file
+is self-identifying:
 
 - classification: `classification.config.json` and
   `classification.model.safetensors`
 - regression: `regression.config.json` and `regression.model.safetensors`
 
-Everything else in this folder is for producing and validating those two files.
-There is one such pair per task: a classifier pair and a regressor pair.
+`brulee_tab_icl()` takes no path argument: it looks up the cached checkpoint for
+the task and errors if none is present. The cache is populated by the downloader
+(`tabicl_download()`), which pulls these files from a URL into the cache; the URL
+is not yet decided, so for now the cache is populated offline (see "Populating
+the cache" below). Everything else in this folder produces and validates those
+two files. There is one such pair per task: a classifier pair and a regressor
+pair.
+
+### Populating the cache before the download URL exists
+
+`tabicl_download()` accepts any URL curl can reach, including a local
+`file://` location. Since `dev/tabicl/artifacts/` already has the same
+`<version>/<date>/<TaskLabel>/` layout as the cache, you can populate the cache
+from it:
+
+```r
+art <- normalizePath("dev/tabicl/artifacts")
+brulee:::tabicl_download("classification", base_url = paste0("file://", art))
+brulee:::tabicl_download("regression", base_url = paste0("file://", art))
+```
 
 ## 4. Two storage locations (and what is tracked in git)
 
@@ -344,4 +364,6 @@ change after an update, you are in the Section 8b case.
 The R port is complete and validated end to end against both the released
 checkpoints and the scikit-learn wrappers. The only outstanding piece is the live
 weight downloader, which waits on the hosting decision; until then
-`brulee_tab_icl(path = ...)` reads a local converted-checkpoint directory.
+`brulee_tab_icl()` reads from the local cache (`~/.cache/TabICL/`), which the
+downloader populates once a URL is set; until then, populate it offline as shown
+in Section 3.

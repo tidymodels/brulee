@@ -1,22 +1,19 @@
-# Tests for the TabICL weight downloader (R/tabicl-download.R). The HF network
-# helpers are mocked, so these exercise URL construction, caching layout, and the
-# not-yet-hosted guard without hitting the network.
+# Tests for the TabICL weight downloader (R/tabicl-download.R). The network
+# helper is mocked, so these exercise URL construction, the cache layout, and the
+# no-URL guard without hitting the network.
 
-test_that("tabicl_download errors when no repo is configured", {
+test_that("tabicl_download errors when no URL is configured", {
   skip_on_cran()
-  # The default repo is NULL until the converted weights are hosted.
-  expect_snapshot(error = TRUE, brulee:::tabicl_download("classifier"))
+  # The default base URL is NULL until a host is chosen.
+  expect_snapshot(error = TRUE, brulee:::tabicl_download("classification"))
 })
 
-test_that("tabicl_download fetches config + safetensors into a cache dir", {
+test_that("tabicl_download fetches the task files into the cache layout", {
   skip_on_cran()
   cache <- withr::local_tempdir()
   requested <- character()
 
   testthat::local_mocked_bindings(
-    chronos2_resolve_revision = function(model_id, revision) {
-      "0123456789abcdef0123456789abcdef01234567"
-    },
     chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
       requested[[length(requested) + 1L]] <<- url
       writeLines("stub", dest)
@@ -25,30 +22,38 @@ test_that("tabicl_download fetches config + safetensors into a cache dir", {
   )
 
   dir <- brulee:::tabicl_download(
-    "regressor",
-    repo_id = "org/repo",
-    revision = "main",
+    "regression",
+    base_url = "https://example.com/tabicl",
+    version = "v2",
+    date = "2026-02-12",
     cache_dir = cache
   )
 
+  # Cache layout: <cache>/<version>/<date>/<TaskLabel>/.
+  expect_match(dir, "v2/2026-02-12/Regression$")
   # Files are written with the task-prefixed names brulee reads.
   expect_true(file.exists(file.path(dir, "regression.config.json")))
   expect_true(file.exists(file.path(dir, "regression.model.safetensors")))
-  # Cache layout: <cache>/<repo-slug>/<sha>/<checkpoint>.
-  expect_match(dir, "org--repo")
-  expect_match(dir, "regressor$")
-  # Prefixed files are fetched from the repo root.
+  # URLs mirror the layout under the base URL.
   expect_true(any(grepl(
-    "huggingface.co/org/repo/resolve/.*/regression.config.json",
-    requested
+    "https://example.com/tabicl/v2/2026-02-12/Regression/regression.config.json",
+    requested,
+    fixed = TRUE
   )))
   expect_true(any(grepl("regression.model.safetensors", requested)))
+
+  # A download then satisfies the cache lookup.
+  withr::local_options(brulee.tabicl_cache_dir = cache)
+  expect_equal(
+    normalizePath(brulee:::tabicl_cache_lookup("regression")),
+    normalizePath(dir)
+  )
 })
 
-test_that("tabicl_download rejects unknown checkpoints", {
+test_that("tabicl_download rejects unknown tasks", {
   skip_on_cran()
   expect_error(
-    brulee:::tabicl_download("bogus", repo_id = "org/repo"),
+    brulee:::tabicl_download("bogus", base_url = "https://example.com"),
     class = "rlang_error"
   )
 })

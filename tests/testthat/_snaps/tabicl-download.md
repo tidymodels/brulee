@@ -1,9 +1,9 @@
-# tabicl_download errors when no repo is configured
+# tabicl_download errors when no URL is configured
 
     Code
-      brulee:::tabicl_download("classifier")
+      brulee:::tabicl_download("classification")
     Condition
       Error:
-      ! Automatic TabICL weight download is not available yet.
-      i Convert a released checkpoint and pass its directory via `path`.
+      ! No TabICL download URL is configured yet.
+      i Pass `base_url`, or convert and cache a checkpoint offline (see 'dev/tabicl').
 

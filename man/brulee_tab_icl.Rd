@@ -16,7 +16,6 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{data.frame}(
   x,
   y,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -27,7 +26,6 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{matrix}(
   x,
   y,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -38,7 +36,6 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{formula}(
   formula,
   data,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -49,7 +46,6 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{recipe}(
   x,
   data,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -65,12 +61,6 @@ Details).}
 
 \item{y}{When \code{x} is a data frame or matrix, a vector of outcomes: a factor
 for classification or a numeric vector for regression.}
-
-\item{path}{Path to a converted TabICL checkpoint directory containing
-\code{config.json} and \code{model.safetensors}. Use the classifier checkpoint for a
-factor outcome and the regressor checkpoint for a numeric outcome (the
-outcome type is checked against the checkpoint). See the \strong{Pretrained
-weights} section.}
 
 \item{n_estimators}{An integer for the number of ensemble members (default
 \code{8}). Each member preprocesses, permutes features, and (for classification)
@@ -94,7 +84,7 @@ default) or \code{"cuda"}. See the \strong{Device support} section.}
 \value{
 A \code{brulee_tab_icl} object with elements:
 \itemize{
-\item \code{path}: the checkpoint directory the weights are loaded from.
+\item \code{path}: the cached checkpoint directory the weights are loaded from.
 \item \code{config}: the parsed model configuration.
 \item \code{task}: \code{"classification"} or \code{"regression"}.
 \item \code{levels}: the outcome factor levels (classification only).
@@ -177,15 +167,18 @@ a warning and falls back to CPU.
 \subsection{Pretrained weights}{
 
 The released TabICL checkpoints are distributed as a Python \code{.ckpt}. They must
-first be converted to a directory holding \code{config.json} and
-\code{model.safetensors}, which \code{path} then points at. Automatic download and
-conversion of the weights is not yet available, so \code{path} is required.
+first be converted to the two files brulee reads
+(\verb{<task>.config.json} and \verb{<task>.model.safetensors}) and cached under
+\verb{~/.cache/TabICL/<version>/<date>/<Classification|Regression>/}. \code{brulee_tab_icl()}
+loads the cached checkpoint for the task automatically and errors if none is
+found. Automatic download is not yet available; populate the cache offline with
+the conversion tooling in \verb{dev/tabicl/}.
 }
 }
 \examples{
 \dontrun{
-# `path` points at a converted TabICL checkpoint directory containing
-# `config.json` and `model.safetensors`.
+# Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
+# "Pretrained weights" section and dev/tabicl/).
 
 if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
   data(penguins, package = "modeldata")
@@ -195,21 +188,13 @@ if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
   tr <- penguins[in_train, ]
   te <- penguins[-in_train, ]
 
-  # Classification
-  cls_fit <- brulee_tab_icl(
-    species ~ .,
-    data = tr,
-    path = "path/to/tabicl-classifier"
-  )
+  # Classification (uses the cached classification checkpoint)
+  cls_fit <- brulee_tab_icl(species ~ ., data = tr)
   predict(cls_fit, te)
   predict(cls_fit, te, type = "prob")
 
-  # Regression
-  reg_fit <- brulee_tab_icl(
-    body_mass_g ~ .,
-    data = tr,
-    path = "path/to/tabicl-regressor"
-  )
+  # Regression (uses the cached regression checkpoint)
+  reg_fit <- brulee_tab_icl(body_mass_g ~ ., data = tr)
   predict(reg_fit, te)
 }
 }

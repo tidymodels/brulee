@@ -38,19 +38,14 @@ test_that("brulee_tab_icl classification reproduces the single-member golden", {
 
   f <- tabicl_load_fixture("engine_clf")
   meta <- tabicl_fixture_meta("engine_clf")
-  dir <- tabicl_write_model_dir(f, meta)
+  tabicl_local_cache(f, meta)
 
   x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
   y_train <- factor(as.integer(as.numeric(as.array(f$y_train))))
   x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
   names(x_test) <- names(x_train)
 
-  fit <- brulee_tab_icl(
-    x_train,
-    y_train,
-    path = dir,
-    n_estimators = 1L
-  )
+  fit <- brulee_tab_icl(x_train, y_train, n_estimators = 1L)
   expect_s3_class(fit, "brulee_tab_icl")
 
   proba <- predict(fit, x_test, type = "prob")
@@ -73,14 +68,14 @@ test_that("brulee_tab_icl regression reproduces the single-member golden", {
 
   f <- tabicl_load_fixture("engine_reg")
   meta <- tabicl_fixture_meta("engine_reg")
-  dir <- tabicl_write_model_dir(f, meta)
+  tabicl_local_cache(f, meta)
 
   x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
   y_train <- as.numeric(as.array(f$y_train))
   x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
   names(x_test) <- names(x_train)
 
-  fit <- brulee_tab_icl(x_train, y_train, path = dir, n_estimators = 1L)
+  fit <- brulee_tab_icl(x_train, y_train, n_estimators = 1L)
   pred <- predict(fit, x_test)
 
   expect_equal(nrow(pred), nrow(x_test))
@@ -92,32 +87,37 @@ test_that("brulee_tab_icl regression reproduces the single-member golden", {
 
 # --- validation ---------------------------------------------------------------
 
-test_that("brulee_tab_icl errors when path is missing", {
+test_that("brulee_tab_icl errors when no checkpoint is cached", {
   skip_on_cran()
   skip_if_not_installed("torch")
   if (!torch::torch_is_installed()) {
     skip("libtorch not installed")
   }
+  # Point the cache at an empty directory so nothing is found. The error names
+  # the (temporary) cache path, so match the stable part.
+  withr::local_options(brulee.tabicl_cache_dir = withr::local_tempdir())
   x_train <- data.frame(a = rnorm(10), b = rnorm(10))
   y_train <- factor(sample(c("a", "b"), 10, replace = TRUE))
-  expect_snapshot(error = TRUE, brulee_tab_icl(x_train, y_train))
+  expect_error(
+    brulee_tab_icl(x_train, y_train),
+    "No cached classification"
+  )
 })
 
-test_that("brulee_tab_icl errors on task / checkpoint mismatch", {
+test_that("brulee_tab_icl errors when the task's checkpoint is not cached", {
   skip_if_no_tabicl_fixtures("engine_clf")
 
   f <- tabicl_load_fixture("engine_clf")
   meta <- tabicl_fixture_meta("engine_clf")
-  dir <- tabicl_write_model_dir(f, meta)
+  tabicl_local_cache(f, meta) # caches the classification checkpoint only
 
   x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
   y_num <- as.numeric(as.array(f$y_train))
 
-  # Numeric outcome looks for the regression checkpoint, which is absent in a
-  # classification-only directory. The error names the (temporary) path, so match
-  # on the stable part of the message.
+  # A numeric outcome needs the regression checkpoint, which is not cached. The
+  # error names the (temporary) cache path, so match the stable part.
   expect_error(
-    brulee_tab_icl(x_train, y_num, path = dir),
-    "No regression checkpoint found"
+    brulee_tab_icl(x_train, y_num),
+    "No cached regression"
   )
 })

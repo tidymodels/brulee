@@ -1,80 +1,120 @@
-# Download converted TabICL checkpoints (config.json + model.safetensors).
+# Local cache for the converted TabICL weights, and the downloader that
+# populates it.
 #
 # The released checkpoints are Python `.ckpt` pickles, which R cannot read; they
-# are converted offline to safetensors + JSON (see dev/tabicl/convert_ckpt.py)
-# and hosted for download. This reuses the chronos2 HF helpers
-# (`chronos2_resolve_revision()`, `chronos2_download_file()`) for revision
-# pinning, caching, size validation, and retries.
+# are converted offline to task-prefixed safetensors + JSON (see
+# dev/tabicl/convert_ckpt.py, which writes to dev/tabicl/artifacts) and hosted
+# for download. Following chronos2, the files brulee reads are cached under
+# `~/.cache/TabICL/<version>/<date>/<TaskLabel>/`, mirroring the artifacts layout.
 #
-# Hosting of the converted weights is not yet finalized, so `tabicl_default_repo()`
-# returns NULL and the public default asks the user to supply `path`. Once the
-# converted artifacts are hosted, set the repo and revision below and automatic
-# download is enabled with no other changes.
+# The download URL is not yet decided, so `tabicl_default_base_url()` returns
+# NULL and `tabicl_download()` errors until it is set. `brulee_tab_icl()` reads
+# from the cache and errors if nothing is cached (it does not download
+# automatically).
 
-# HuggingFace repo holding the converted checkpoints, or NULL when not yet
-# hosted. Layout expected: `<checkpoint>/config.json` and
-# `<checkpoint>/model.safetensors` for `checkpoint` in classifier / regressor.
-tabicl_default_repo <- function() {
+# Base URL the converted weights are hosted under (to be named later). Files are
+# fetched from <base_url>/<version>/<date>/<TaskLabel>/<task-prefixed file>. Any
+# location curl can reach works, including `file:///path/to/dev/tabicl/artifacts`
+# for a local copy.
+tabicl_default_base_url <- function() {
   NULL
 }
 
-# Pinned revision (40-char commit SHA recommended) for reproducibility. Replace
-# with a real SHA when the weights are hosted; do not track a moving branch.
-tabicl_default_revision <- function() {
-  "main"
+# The released checkpoint version and date the downloader fetches by default.
+tabicl_default_version <- function() {
+  "v2"
+}
+tabicl_default_date <- function() {
+  "2026-02-12"
 }
 
-tabicl_default_cache_dir <- function() {
-  file.path(Sys.getenv("HOME"), ".cache", "brulee-tabicl")
+# Root of the local TabICL weight cache, mirroring chronos2's caching approach.
+# Holds only the files brulee reads, under <version>/<date>/<TaskLabel>/ (the
+# same structure as dev/tabicl/artifacts). Overridable via an option, mainly for
+# tests.
+tabicl_cache_dir <- function() {
+  getOption(
+    "brulee.tabicl_cache_dir",
+    default = file.path(Sys.getenv("HOME"), ".cache", "TabICL")
+  )
 }
 
-# Download a converted TabICL checkpoint, returning the local directory holding
-# its `config.json` and `model.safetensors` (suitable for `tabicl_load_model()`).
-tabicl_download <- function(
-  checkpoint = c("classifier", "regressor"),
-  repo_id = tabicl_default_repo(),
-  revision = tabicl_default_revision(),
-  cache_dir = tabicl_default_cache_dir(),
-  call = rlang::caller_env()
-) {
-  checkpoint <- rlang::arg_match(checkpoint, call = call)
-  if (is.null(repo_id)) {
+# Directory label per task for the <Classification|Regression> subfolder.
+tabicl_task_label <- function(task) {
+  if (identical(task, "classification")) "Classification" else "Regression"
+}
+
+# Locate a cached checkpoint for a task, choosing the latest version/date. The
+# directory must contain both task-prefixed files. Errors if none is cached.
+tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
+  files <- tabicl_checkpoint_files(task)
+  root <- tabicl_cache_dir()
+
+  candidates <- Sys.glob(file.path(root, "*", "*", tabicl_task_label(task)))
+  has_both <- vapply(
+    candidates,
+    function(d) {
+      file.exists(file.path(d, files$config)) &&
+        file.exists(file.path(d, files$weights))
+    },
+    logical(1)
+  )
+  candidates <- candidates[has_both]
+
+  if (length(candidates) == 0) {
     cli::cli_abort(
       c(
-        "Automatic TabICL weight download is not available yet.",
-        "i" = "Convert a released checkpoint and pass its directory via {.arg path}."
+        "No cached {task} TabICL checkpoint found in {.path {root}}.",
+        "i" = "Download one with {.fn tabicl_download} once a URL is configured, \\
+               or convert and cache a checkpoint offline (see {.path dev/tabicl})."
+      ),
+      call = call
+    )
+  }
+  # The parent directory of the task folder is the date (YYYY-MM-DD).
+  candidates[order(basename(dirname(candidates)))][length(candidates)]
+}
+
+# Download a converted TabICL checkpoint into the local cache and return its
+# directory. The two task-prefixed files are pulled from
+#   <base_url>/<version>/<date>/<TaskLabel>/<file>
+# into the matching cache subdirectory, reusing chronos2's curl helper for size
+# validation and retries.
+tabicl_download <- function(
+  task = c("classification", "regression"),
+  base_url = tabicl_default_base_url(),
+  version = tabicl_default_version(),
+  date = tabicl_default_date(),
+  cache_dir = tabicl_cache_dir(),
+  call = rlang::caller_env()
+) {
+  task <- rlang::arg_match(task, call = call)
+  if (is.null(base_url)) {
+    cli::cli_abort(
+      c(
+        "No TabICL download URL is configured yet.",
+        "i" = "Pass {.arg base_url}, or convert and cache a checkpoint offline \\
+               (see {.path dev/tabicl})."
       ),
       call = call
     )
   }
 
-  task <- if (checkpoint == "classifier") "classification" else "regression"
   files <- tabicl_checkpoint_files(task)
-
-  sha <- chronos2_resolve_revision(repo_id, revision)
-  model_dir <- file.path(
-    cache_dir,
-    gsub("/", "--", repo_id),
-    sha,
-    checkpoint
-  )
-  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+  rel <- paste(version, date, tabicl_task_label(task), sep = "/")
+  dest <- file.path(cache_dir, version, date, tabicl_task_label(task))
+  dir.create(dest, recursive = TRUE, showWarnings = FALSE)
 
   # The safetensors file is large; lift download.file()'s default timeout.
   old_timeout <- getOption("timeout")
   options(timeout = max(600L, old_timeout))
   on.exit(options(timeout = old_timeout), add = TRUE)
 
-  # The task-prefixed filenames disambiguate checkpoints sharing one repo, so
-  # they are fetched from the repo root.
+  base <- sub("/+$", "", base_url)
   for (f in c(files$config, files$weights)) {
-    url <- sprintf("https://huggingface.co/%s/resolve/%s/%s", repo_id, sha, f)
-    chronos2_download_file(
-      url,
-      file.path(model_dir, f),
-      label = paste(checkpoint, f)
-    )
+    url <- sprintf("%s/%s/%s", base, rel, f)
+    chronos2_download_file(url, file.path(dest, f), label = paste(task, f))
   }
 
-  model_dir
+  dest
 }

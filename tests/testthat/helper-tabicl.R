@@ -234,6 +234,35 @@ tabicl_write_model_dir <- function(f, meta) {
   dir
 }
 
+# Build a temporary brulee weight cache from a fixture and point the
+# `brulee.tabicl_cache_dir` option at it for the calling test. Mirrors the
+# ~/.cache/TabICL/<version>/<date>/<TaskLabel>/ layout, holding only the two
+# task-prefixed files brulee reads.
+tabicl_local_cache <- function(f, meta) {
+  root <- withr::local_tempdir(.local_envir = parent.frame())
+  task <- if (meta$config$max_classes > 0) "classification" else "regression"
+  label <- if (task == "classification") "Classification" else "Regression"
+  files <- brulee:::tabicl_checkpoint_files(task)
+  dir <- file.path(root, "v0", "2020-01-01", label)
+  dir.create(dir, recursive = TRUE)
+  weight_keys <- grep(
+    "^(col_embedder|row_interactor|icl_predictor)\\.",
+    names(f),
+    value = TRUE
+  )
+  safetensors::safe_save_file(f[weight_keys], file.path(dir, files$weights))
+  jsonlite::write_json(
+    meta$config,
+    file.path(dir, files$config),
+    auto_unbox = TRUE
+  )
+  withr::local_options(
+    list(brulee.tabicl_cache_dir = root),
+    .local_envir = parent.frame()
+  )
+  invisible(root)
+}
+
 # Copy a full tabicl_model from a full-model fixture (top-level module prefixes).
 tabicl_copy_model <- function(model, f) {
   tabicl_copy_col_embedding(model$col_embedder, f, prefix = "col_embedder.")

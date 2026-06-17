@@ -163,7 +163,7 @@ def main() -> None:
     ap.add_argument(
         "--outdir",
         type=Path,
-        default=Path(__file__).resolve().parent / "artifacts",
+        default=default_artifacts_root(),
     )
     args = ap.parse_args()
     convert(args.kind, args.outdir)

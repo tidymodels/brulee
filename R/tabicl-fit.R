@@ -139,11 +139,6 @@ tabicl_make_members <- function(
 #'   for classification or a numeric vector for regression.
 #' @param data A data frame for the formula and recipe methods.
 #' @param formula A formula specifying the outcome and predictors.
-#' @param path Path to a converted TabICL checkpoint directory containing
-#'   `config.json` and `model.safetensors`. Use the classifier checkpoint for a
-#'   factor outcome and the regressor checkpoint for a numeric outcome (the
-#'   outcome type is checked against the checkpoint). See the **Pretrained
-#'   weights** section.
 #' @param n_estimators An integer for the number of ensemble members (default
 #'   `8`). Each member preprocesses, permutes features, and (for classification)
 #'   shuffles class labels differently; their predictions are averaged. Use `1`
@@ -215,9 +210,12 @@ tabicl_make_members <- function(
 #' ## Pretrained weights
 #'
 #' The released TabICL checkpoints are distributed as a Python `.ckpt`. They must
-#' first be converted to a directory holding `config.json` and
-#' `model.safetensors`, which `path` then points at. Automatic download and
-#' conversion of the weights is not yet available, so `path` is required.
+#' first be converted to the two files brulee reads
+#' (`<task>.config.json` and `<task>.model.safetensors`) and cached under
+#' `~/.cache/TabICL/<version>/<date>/<Classification|Regression>/`. `brulee_tab_icl()`
+#' loads the cached checkpoint for the task automatically and errors if none is
+#' found. Automatic download is not yet available; populate the cache offline with
+#' the conversion tooling in `dev/tabicl/`.
 #'
 #' @references
 #'
@@ -230,7 +228,7 @@ tabicl_make_members <- function(
 #' @return
 #'
 #' A `brulee_tab_icl` object with elements:
-#'  * `path`: the checkpoint directory the weights are loaded from.
+#'  * `path`: the cached checkpoint directory the weights are loaded from.
 #'  * `config`: the parsed model configuration.
 #'  * `task`: `"classification"` or `"regression"`.
 #'  * `levels`: the outcome factor levels (classification only).
@@ -242,8 +240,8 @@ tabicl_make_members <- function(
 #'
 #' @examples
 #' \dontrun{
-#' # `path` points at a converted TabICL checkpoint directory containing
-#' # `config.json` and `model.safetensors`.
+#' # Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
+#' # "Pretrained weights" section and dev/tabicl/).
 #'
 #' if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
 #'   data(penguins, package = "modeldata")
@@ -253,21 +251,13 @@ tabicl_make_members <- function(
 #'   tr <- penguins[in_train, ]
 #'   te <- penguins[-in_train, ]
 #'
-#'   # Classification
-#'   cls_fit <- brulee_tab_icl(
-#'     species ~ .,
-#'     data = tr,
-#'     path = "path/to/tabicl-classifier"
-#'   )
+#'   # Classification (uses the cached classification checkpoint)
+#'   cls_fit <- brulee_tab_icl(species ~ ., data = tr)
 #'   predict(cls_fit, te)
 #'   predict(cls_fit, te, type = "prob")
 #'
-#'   # Regression
-#'   reg_fit <- brulee_tab_icl(
-#'     body_mass_g ~ .,
-#'     data = tr,
-#'     path = "path/to/tabicl-regressor"
-#'   )
+#'   # Regression (uses the cached regression checkpoint)
+#'   reg_fit <- brulee_tab_icl(body_mass_g ~ ., data = tr)
 #'   predict(reg_fit, te)
 #' }
 #' }
@@ -290,7 +280,6 @@ brulee_tab_icl.default <- function(x, ...) {
 brulee_tab_icl.data.frame <- function(
   x,
   y,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -300,7 +289,6 @@ brulee_tab_icl.data.frame <- function(
   processed <- hardhat::mold(x, y)
   tabicl_bridge(
     processed,
-    path,
     n_estimators,
     norm_methods,
     softmax_temperature,
@@ -313,7 +301,6 @@ brulee_tab_icl.data.frame <- function(
 brulee_tab_icl.matrix <- function(
   x,
   y,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -323,7 +310,6 @@ brulee_tab_icl.matrix <- function(
   processed <- hardhat::mold(x, y)
   tabicl_bridge(
     processed,
-    path,
     n_estimators,
     norm_methods,
     softmax_temperature,
@@ -336,7 +322,6 @@ brulee_tab_icl.matrix <- function(
 brulee_tab_icl.formula <- function(
   formula,
   data,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -350,7 +335,6 @@ brulee_tab_icl.formula <- function(
   )
   tabicl_bridge(
     processed,
-    path,
     n_estimators,
     norm_methods,
     softmax_temperature,
@@ -363,7 +347,6 @@ brulee_tab_icl.formula <- function(
 brulee_tab_icl.recipe <- function(
   x,
   data,
-  path = NULL,
   n_estimators = 8L,
   norm_methods = c("none", "power"),
   softmax_temperature = 0.9,
@@ -373,7 +356,6 @@ brulee_tab_icl.recipe <- function(
   processed <- hardhat::mold(x, data)
   tabicl_bridge(
     processed,
-    path,
     n_estimators,
     norm_methods,
     softmax_temperature,
@@ -386,7 +368,6 @@ brulee_tab_icl.recipe <- function(
 
 tabicl_bridge <- function(
   processed,
-  path,
   n_estimators,
   norm_methods,
   softmax_temperature,
@@ -411,37 +392,11 @@ tabicl_bridge <- function(
   outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
   classification <- is.factor(outcome)
 
-  # Resolve the checkpoint: a user-supplied directory, or download the
-  # task-appropriate converted checkpoint.
-  if (is.null(path)) {
-    path <- tabicl_download(
-      checkpoint = if (classification) "classifier" else "regressor",
-      call = call
-    )
-  }
-  if (!dir.exists(path)) {
-    cli::cli_abort(
-      "Checkpoint directory {.path {path}} does not exist.",
-      call = call
-    )
-  }
-
-  # Checkpoint files are task-prefixed, so the file for the wrong task is simply
-  # absent: a numeric outcome needs the regression checkpoint, a factor the
-  # classification one.
+  # Locate the cached checkpoint for the task (errors if none is cached).
   task <- if (classification) "classification" else "regression"
   files <- tabicl_checkpoint_files(task)
-  config_path <- file.path(path, files$config)
-  if (!file.exists(config_path)) {
-    cli::cli_abort(
-      c(
-        "No {task} checkpoint found in {.path {path}}.",
-        "i" = "Expected {.file {files$config}} and {.file {files$weights}}."
-      ),
-      call = call
-    )
-  }
-  config <- tabicl_parse_config(config_path)
+  path <- tabicl_cache_lookup(task, call = call)
+  config <- tabicl_parse_config(file.path(path, files$config))
   # Guard against a mislabeled file (e.g. a classification config renamed to the
   # regression filename).
   if (classification && config$max_classes <= 0) {
