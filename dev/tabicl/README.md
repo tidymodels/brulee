@@ -74,8 +74,28 @@ python -m venv .venv
    ```
 
    Loads the actual converted checkpoint + step-1 golden stage outputs, builds
-   each R stage, copies the real weights in, and compares to the golden. Covers
-   both `classifier` (biased LayerNorms) and `regressor` (`bias_free_ln`).
+   each R stage (and the full model), copies the real weights in, and compares to
+   the golden. Covers both `classifier` (biased LayerNorms) and `regressor`
+   (`bias_free_ln`), all stages, the full forward, and the regression-head stats.
+
+6. **Preprocessing + end-to-end prediction goldens** (sklearn references):
+
+   ```sh
+   .venv/bin/python dump_preprocess.py        # prep_* fixtures (scaler, outlier, pipelines)
+   .venv/bin/python dump_predict_golden.py     # predict_{clf,reg}: real sklearn n_estimators=1
+   ```
+
+   `dump_predict_golden.py` runs the real `TabICLClassifier`/`TabICLRegressor`
+   (single deterministic member) for authoritative end-to-end parity.
+
+## Port status
+
+The pure-R port is complete and validated end-to-end against the released
+checkpoints and the sklearn wrappers: model forward (all stages), preprocessing,
+regression head, the prediction engine, and the user-facing `brulee_tab_icl()`
+fit/predict. The only remaining piece is the live weight **downloader**, which is
+deferred pending the hosting decision; `brulee_tab_icl(path = ...)` currently
+takes a local converted-checkpoint directory.
 
 ## Stage shapes (fixed dataset: B=1, n_train=12, n_test=5, H=4)
 

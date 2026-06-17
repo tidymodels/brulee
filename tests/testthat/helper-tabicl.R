@@ -210,6 +210,27 @@ tabicl_copy_icl_learning <- function(icl, f, prefix = "icl.") {
   invisible(icl)
 }
 
+# Write a converted-checkpoint directory (config.json + model.safetensors) from
+# a full-model / engine fixture, for testing the loader and the user-facing API.
+tabicl_write_model_dir <- function(f, meta) {
+  dir <- withr::local_tempdir(.local_envir = parent.frame())
+  weight_keys <- grep(
+    "^(col_embedder|row_interactor|icl_predictor)\\.",
+    names(f),
+    value = TRUE
+  )
+  safetensors::safe_save_file(
+    f[weight_keys],
+    file.path(dir, "model.safetensors")
+  )
+  jsonlite::write_json(
+    meta$config,
+    file.path(dir, "config.json"),
+    auto_unbox = TRUE
+  )
+  dir
+}
+
 # Copy a full tabicl_model from a full-model fixture (top-level module prefixes).
 tabicl_copy_model <- function(model, f) {
   tabicl_copy_col_embedding(model$col_embedder, f, prefix = "col_embedder.")
