@@ -47,7 +47,7 @@ vertical line shows the epoch with the best loss value.
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
  library(ggplot2)
  library(recipes)
  theme_set(theme_bw())
@@ -57,7 +57,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  ames$Sale_Price <- log10(ames$Sale_Price)
 
  set.seed(1)
- in_train <- sample(1:nrow(ames), 2000)
+ in_train <- sample(seq_len(nrow(ames)), 2000)
  ames_train <- ames[ in_train,]
  ames_test  <- ames[-in_train,]
 

@@ -8,7 +8,7 @@ test_that("penalty works with all optimizers and mixture values", {
   # Use small dataset for speed
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 300)
+  in_train <- sample(seq_len(nrow(parabolic)), 300)
   parabolic_tr <- parabolic[in_train, ]
 
   # Test parameters
@@ -155,7 +155,7 @@ test_that("ADAMw enforces pure L2 penalty", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 300)
+  in_train <- sample(seq_len(nrow(parabolic)), 300)
   parabolic_tr <- parabolic[in_train, ]
 
   # ADAMw with mixture = 0 should work fine
@@ -208,7 +208,7 @@ test_that("penalty magnitude affects regularization strength", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 300)
+  in_train <- sample(seq_len(nrow(parabolic)), 300)
   parabolic_tr <- parabolic[in_train, ]
 
   # Test with SGD - different penalty values should produce different results
@@ -274,7 +274,7 @@ test_that("L1 vs L2 vs elastic net produce different results", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 300)
+  in_train <- sample(seq_len(nrow(parabolic)), 300)
   parabolic_tr <- parabolic[in_train, ]
 
   penalty_val <- 1
@@ -340,7 +340,7 @@ test_that("LBFGS penalty works correctly", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 200)
+  in_train <- sample(seq_len(nrow(parabolic)), 200)
   parabolic_tr <- parabolic[in_train, ]
 
   # LBFGS with no penalty

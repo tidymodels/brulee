@@ -36,12 +36,11 @@ test_that("basic linear regression LBFGS", {
   expect_equal(
     unname(coef(lm_fit)),
     unname(coef(lin_fit_lbfgs)),
-    tolerance = .1
+    tolerance = 0.1
   )
 
-  expect_no_error(
-    lin_pred_lbfgs <-
-      predict(lin_fit_lbfgs, lin_te) |>
+  lin_pred_lbfgs <- expect_no_error(
+    predict(lin_fit_lbfgs, lin_te) |>
       bind_cols(lin_te)
   )
 
@@ -122,12 +121,11 @@ test_that("basic Linear regression sgd", {
   expect_equal(
     unname(coef(lm_fit)),
     unname(coef(lin_fit_sgd)),
-    tolerance = .1
+    tolerance = 0.1
   )
 
-  expect_no_error(
-    lin_pred_sgd <-
-      predict(lin_fit_sgd, lin_te) |>
+  lin_pred_sgd <- expect_no_error(
+    predict(lin_fit_sgd, lin_te) |>
       bind_cols(lin_te)
   )
 

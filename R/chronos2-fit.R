@@ -236,7 +236,7 @@
 #' pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
 #'
 #' \dontrun{
-#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+#' if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 #'  library(dplyr)
 #'  library(ggplot2)
 #'
@@ -603,10 +603,10 @@ brulee_chronos_bridge <- function(
       "{.arg timestamp} has length {length(timestamp)} but {.arg y} has length {n}."
     )
   }
-  if (any(is.na(item_id))) {
+  if (anyNA(item_id)) {
     cli::cli_abort("{.arg item_id} must not contain {.code NA}.")
   }
-  if (any(is.na(timestamp))) {
+  if (anyNA(timestamp)) {
     cli::cli_abort("{.arg timestamp} must not contain {.code NA}.")
   }
 
@@ -689,7 +689,7 @@ print.brulee_chronos <- function(x, ...) {
   )
 
   n_series <- length(x$context$item_ids)
-  history_lengths <- vapply(x$context$series_target, length, integer(1))
+  history_lengths <- lengths(x$context$series_target)
   n_covars <- length(x$context$covariate_cols)
 
   device_label <- tryCatch(

@@ -34,7 +34,7 @@
 #' pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
 #'
 #' \dontrun{
-#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+#' if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 #'  library(dplyr)
 #'  library(ggplot2)
 #'
@@ -122,7 +122,7 @@ predict.brulee_chronos <- function(
   if (is.null(quantile_levels)) {
     quantile_levels <- object$quantile_levels
   }
-  if (is.data.frame(new_data) & length(new_data) == 0L) {
+  if (is.data.frame(new_data) && length(new_data) == 0L) {
     new_data <- NULL
   }
 

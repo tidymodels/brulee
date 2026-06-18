@@ -34,14 +34,14 @@ Predict from a \code{brulee_linear_reg}
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed("recipes")) {
+if (torch::torch_is_installed() && rlang::is_installed("recipes")) {
 
  data(ames, package = "modeldata")
 
  ames$Sale_Price <- log10(ames$Sale_Price)
 
  set.seed(1)
- in_train <- sample(1:nrow(ames), 2000)
+ in_train <- sample(seq_len(nrow(ames)), 2000)
  ames_train <- ames[ in_train,]
  ames_test  <- ames[-in_train,]
 

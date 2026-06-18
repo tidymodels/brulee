@@ -151,7 +151,7 @@
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' pkgs <- c("recipes", "yardstick", "modeldata")
-#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+#' if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 #'
 #'   set.seed(87261)
 #'   tr_data <- modeldata::sim_regression(500)
@@ -507,13 +507,13 @@ brulee_auto_int_bridge <- function(
   check_double(dropout, single = TRUE, 0, 1, incl = c(TRUE, FALSE), call = call)
 
   # Handle batch_size
-  if (!is.null(batch_size) & optimizer != "LBFGS") {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+  if (!is.null(batch_size) && optimizer != "LBFGS") {
+    if (is.numeric(batch_size) && !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, call = call)
   }
-  if (is.null(batch_size) & optimizer != "LBFGS") {
+  if (is.null(batch_size) && optimizer != "LBFGS") {
     batch_size <- 256L
   }
 
@@ -614,7 +614,7 @@ split_predictors_auto_int <- function(predictors, call = rlang::caller_env()) {
   cont_idx <- vapply(
     predictors,
     function(col) {
-      is.numeric(col) || is.integer(col)
+      is.numeric(col)
     },
     logical(1)
   )
@@ -643,7 +643,7 @@ split_predictors_auto_int <- function(predictors, call = rlang::caller_env()) {
     pred_lvls <- vapply(
       cat_names,
       function(nm) {
-        length(levels(predictors[[nm]]))
+        nlevels(predictors[[nm]])
       },
       integer(1)
     )
@@ -689,22 +689,22 @@ validate_auto_int_args <- function(
   dropout_embedding,
   call = rlang::caller_env()
 ) {
-  if (is.numeric(num_embedding) & !is.integer(num_embedding)) {
+  if (is.numeric(num_embedding) && !is.integer(num_embedding)) {
     num_embedding <- as.integer(num_embedding)
   }
   check_integer(num_embedding, single = TRUE, 1, call = call)
 
-  if (is.numeric(num_attn_feat) & !is.integer(num_attn_feat)) {
+  if (is.numeric(num_attn_feat) && !is.integer(num_attn_feat)) {
     num_attn_feat <- as.integer(num_attn_feat)
   }
   check_integer(num_attn_feat, single = TRUE, 1, call = call)
 
-  if (is.numeric(num_attn_heads) & !is.integer(num_attn_heads)) {
+  if (is.numeric(num_attn_heads) && !is.integer(num_attn_heads)) {
     num_attn_heads <- as.integer(num_attn_heads)
   }
   check_integer(num_attn_heads, single = TRUE, 1, call = call)
 
-  if (is.numeric(num_attn_blocks) & !is.integer(num_attn_blocks)) {
+  if (is.numeric(num_attn_blocks) && !is.integer(num_attn_blocks)) {
     num_attn_blocks <- as.integer(num_attn_blocks)
   }
   check_integer(num_attn_blocks, single = TRUE, 1, call = call)
@@ -841,7 +841,7 @@ new_brulee_auto_int <- function(
     )
   }
 
-  num_items <- purrr::map_int(estimates, length)
+  num_items <- lengths(estimates)
   estimates <- estimates[num_items > 0]
 
   hardhat::new_model(
@@ -1382,7 +1382,7 @@ run_auto_int_training_loop <- function(
 
   list(
     param_per_epoch = param_per_epoch,
-    loss_vec = loss_vec[1:length(param_per_epoch)],
+    loss_vec = loss_vec[seq_along(param_per_epoch)],
     best_epoch = best_epoch
   )
 }

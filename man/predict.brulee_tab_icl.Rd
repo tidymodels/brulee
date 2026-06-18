@@ -42,7 +42,7 @@ For classification, \code{"prob"} returns one column per class (named
 }
 \examples{
 \dontrun{
-if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
+if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
   data(penguins, package = "modeldata")
   penguins <- na.omit(penguins)
 

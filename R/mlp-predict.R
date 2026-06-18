@@ -23,7 +23,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "modeldata"))) {
 #'  # regression example:
 #'
 #'  data(ames, package = "modeldata")
@@ -31,7 +31,7 @@
 #'  ames$Sale_Price <- log10(ames$Sale_Price)
 #'
 #'  set.seed(1)
-#'  in_train <- sample(1:nrow(ames), 2000)
+#'  in_train <- sample(seq_len(nrow(ames)), 2000)
 #'  ames_train <- ames[ in_train,]
 #'  ames_test  <- ames[-in_train,]
 #'
@@ -108,13 +108,6 @@ get_mlp_predict_function <- function(type) {
 # ------------------------------------------------------------------------------
 # Implementation
 
-add_intercept <- function(x) {
-  if (!is.array(x)) {
-    x <- as.array(x)
-  }
-  cbind(rep(1, nrow(x)), x)
-}
-
 revive_model <- function(model, device = "cpu") {
   con <- rawConnection(model)
   on.exit(
@@ -172,7 +165,7 @@ predict_brulee_mlp_class <- function(model, predictors, epoch) {
 # a which max alternative that returns NA if any
 # value is NA
 which.max2 <- function(x) {
-  if (any(is.na(x))) {
+  if (anyNA(x)) {
     NA
   } else {
     which.max(x)

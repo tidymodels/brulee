@@ -58,7 +58,25 @@ brulee_tab_icl(x, ...)
 )
 }
 \arguments{
+\item{x}{Depending on the context:
+\itemize{
+\item A \strong{data frame} of predictors.
+\item A \strong{matrix} of predictors.
+\item A \strong{recipe} specifying a set of preprocessing steps
+created from \code{\link[recipes:recipe]{recipes::recipe()}}.
+}
+
+The predictor data should be standardized (e.g. centered or scaled).}
+
 \item{...}{Not currently used.}
+
+\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
+specified as:
+\itemize{
+\item A \strong{data frame} with 1 column (numeric or factor).
+\item A \strong{matrix} with numeric column  (numeric or factor).
+\item A  \strong{vector}  (numeric or factor).
+}}
 
 \item{n_estimators}{An integer for the number of ensemble members (default
 \code{8}). Each member preprocesses, permutes features, and (for classification)
@@ -83,6 +101,14 @@ re-sent through the network on every call to \code{predict()}.}
 
 \item{device}{A character string for the compute device: \code{"cpu"} (the
 default) or \code{"cuda"}. See the \strong{Device support} section.}
+
+\item{formula}{A formula specifying the outcome term(s) on the left-hand side,
+and the predictor term(s) on the right-hand side.}
+
+\item{data}{When a \strong{recipe} or \strong{formula} is used, \code{data} is specified as:
+\itemize{
+\item A \strong{data frame} containing both the predictors and the outcome.
+}}
 }
 \value{
 A \code{brulee_tab_icl} object with elements:
@@ -240,7 +266,7 @@ first use, the values are downloaded and cached locally and are more than
 # Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
 # "Pre-trained weights" section and dev/tabicl/).
 
-if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
+if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
   data(penguins, package = "modeldata")
   penguins <- na.omit(penguins)
 

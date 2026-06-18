@@ -387,7 +387,7 @@ arguments to the schedulers can be passed via \code{...}.
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
  ## -----------------------------------------------------------------------------
  # regression examples (increase # epochs to get better results)
@@ -397,7 +397,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  ames$Sale_Price <- log10(ames$Sale_Price)
 
  set.seed(122)
- in_train <- sample(1:nrow(ames), 2000)
+ in_train <- sample(seq_len(nrow(ames)), 2000)
  ames_train <- ames[ in_train,]
  ames_test  <- ames[-in_train,]
 
@@ -439,7 +439,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
    bind_cols(ames_test) |>
    ggplot(aes(x = .pred, y = Sale_Price)) +
    geom_abline(col = "green") +
-   geom_point(alpha = .3) +
+   geom_point(alpha = 0.3) +
    lims(x = c(4, 6), y = c(4, 6)) +
    coord_fixed(ratio = 1)
 
@@ -467,7 +467,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  data("parabolic", package = "modeldata")
 
  set.seed(1)
- in_train <- sample(1:nrow(parabolic), 300)
+ in_train <- sample(seq_len(nrow(parabolic)), 300)
  parabolic_tr <- parabolic[ in_train,]
  parabolic_te <- parabolic[-in_train,]
 

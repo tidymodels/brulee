@@ -27,14 +27,14 @@ validate_binary_outcome <- function(outcome, call = rlang::caller_env()) {
     cli::cli_abort("{.arg outcome} should be a factor.", call = call)
   }
 
-  if (length(levels(outcome)) > 2) {
+  if (nlevels(outcome) > 2) {
     cli::cli_abort(
       "Logistic regression is for outcomes with two classes.",
       call = call
     )
   }
 
-  if (length(levels(outcome)) < 2) {
+  if (nlevels(outcome) < 2) {
     cli::cli_abort(
       "Logistic regression requires outcomes with two classes.",
       call = call
@@ -57,7 +57,7 @@ validate_multiclass_outcome <- function(outcome, call = rlang::caller_env()) {
     cli::cli_abort("{.arg outcome} should be a factor.", call = call)
   }
 
-  if (length(levels(outcome)) < 3) {
+  if (nlevels(outcome) < 3) {
     cli::cli_abort(
       "Multinomial regression is for outcomes with 3+ classes.",
       call = call

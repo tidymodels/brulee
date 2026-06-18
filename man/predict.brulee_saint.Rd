@@ -36,7 +36,7 @@ Predict from a \code{brulee_saint}
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "modeldata"))) {
   set.seed(87261)
   tr_data <- modeldata::sim_classification(500)
   te_data <- modeldata::sim_classification(50)

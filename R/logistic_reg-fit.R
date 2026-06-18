@@ -72,7 +72,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
 #'  library(recipes)
 #'  library(yardstick)
@@ -85,7 +85,7 @@
 #'  cells$case <- NULL
 #'
 #'  set.seed(122)
-#'  in_train <- sample(1:nrow(cells), 1000)
+#'  in_train <- sample(seq_len(nrow(cells)), 1000)
 #'  cells_train <- cells[ in_train,]
 #'  cells_test  <- cells[-in_train,]
 #'
@@ -107,7 +107,7 @@
 #'
 #'  set.seed(2)
 #'  fit <- brulee_logistic_reg(cells_rec, data = cells_train,
-#'                              penalty = .01, epochs = 5)
+#'                              penalty = 0.01, epochs = 5)
 #'  fit
 #'
 #'  autoplot(fit)
@@ -636,12 +636,6 @@ logistic_module <-
   )
 
 ## -----------------------------------------------------------------------------
-
-get_num_logistic_reg_coef <- function(x) {
-  model <- x$estimates[[1]]
-  param <- vapply(model, function(.x) prod(dim(.x)), double(1))
-  sum(unlist(param))
-}
 
 #' @export
 print.brulee_logistic_reg <- function(x, ...) {

@@ -23,7 +23,7 @@ test_that("basic multinomial mlp LBFGS", {
       ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, -2),
       ~ -0.6 * A + 0.50 * B - A * B
     )
-  num_class <- length(levels(mnl_tr$class))
+  num_class <- nlevels(mnl_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -45,9 +45,8 @@ test_that("basic multinomial mlp LBFGS", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_lbfgs <-
-      predict(mnl_fit_lbfgs, mnl_te) |>
+  mnl_pred_lbfgs <- expect_no_error(
+    predict(mnl_fit_lbfgs, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )
@@ -108,7 +107,7 @@ test_that("basic multinomial mlp SGD", {
       ~ ifelse(A > 0 & B > 0, 1.0 + 0.2 * A / B, -2),
       ~ -0.6 * A + 0.50 * B - A * B
     )
-  num_class <- length(levels(mnl_tr$class))
+  num_class <- nlevels(mnl_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -122,7 +121,7 @@ test_that("basic multinomial mlp SGD", {
           mnl_tr,
           epochs = 200,
           penalty = 0,
-          dropout = .1,
+          dropout = 0.1,
           hidden_units = 5,
           optimize = "SGD",
           batch_size = 64L,
@@ -133,9 +132,8 @@ test_that("basic multinomial mlp SGD", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_sgd <-
-      predict(mnl_fit_sgd, mnl_te) |>
+  mnl_pred_sgd <- expect_no_error(
+    predict(mnl_fit_sgd, mnl_te) |>
       bind_cols(predict(mnl_fit_sgd, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )
@@ -177,7 +175,7 @@ test_that("multinomial mlp class weights", {
       ~ -0.6 * A + 0.50 * B - A * B
     )
 
-  num_class <- length(levels(mnl_tr$class))
+  num_class <- nlevels(mnl_tr$class)
   cls_xtab <- table(mnl_tr$class)
   min_class <- names(sort(cls_xtab))[1]
   cls_wts <- rep(1, num_class)
@@ -206,9 +204,8 @@ test_that("multinomial mlp class weights", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_lbfgs_wts <-
-      predict(mnl_fit_lbfgs_wts, mnl_te) |>
+  mnl_pred_lbfgs_wts <- expect_no_error(
+    predict(mnl_fit_lbfgs_wts, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_wts, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )
@@ -240,9 +237,8 @@ test_that("multinomial mlp class weights", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_lbfgs_unwt <-
-      predict(mnl_fit_lbfgs_unwt, mnl_te) |>
+  mnl_pred_lbfgs_unwt <- expect_no_error(
+    predict(mnl_fit_lbfgs_unwt, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_unwt, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )

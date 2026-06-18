@@ -11,7 +11,7 @@ test_that("basic logistic regression LBFGS", {
   set.seed(585)
   bin_tr <- modeldata::sim_logistic(5000, ~ -1 - 3 * A + 5 * B)
   bin_te <- modeldata::sim_logistic(1000, ~ -1 - 3 * A + 5 * B)
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -38,9 +38,8 @@ test_that("basic logistic regression LBFGS", {
     tolerance = 1
   )
 
-  expect_no_error(
-    bin_pred_lbfgs <-
-      predict(bin_fit_lbfgs, bin_te) |>
+  bin_pred_lbfgs <- expect_no_error(
+    predict(bin_fit_lbfgs, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs, bin_te, type = "prob")) |>
       bind_cols(bin_te)
   )
@@ -84,7 +83,7 @@ test_that("basic logistic regression SGD", {
   set.seed(585)
   bin_tr <- modeldata::sim_logistic(5000, ~ -1 - 3 * A + 5 * B)
   bin_te <- modeldata::sim_logistic(1000, ~ -1 - 3 * A + 5 * B)
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -98,7 +97,7 @@ test_that("basic logistic regression SGD", {
           bin_tr,
           epochs = 500,
           penalty = 0,
-          dropout = .1,
+          dropout = 0.1,
           optimize = "SGD",
           batch_size = 32L,
           learn_rate = 0.1,
@@ -112,12 +111,11 @@ test_that("basic logistic regression SGD", {
   expect_equal(
     unname(coef(glm_fit)),
     unname(coef(bin_fit_sgd)),
-    tolerance = .5
+    tolerance = 0.5
   )
 
-  expect_no_error(
-    bin_pred_sgd <-
-      predict(bin_fit_sgd, bin_te) |>
+  bin_pred_sgd <- expect_no_error(
+    predict(bin_fit_sgd, bin_te) |>
       bind_cols(predict(bin_fit_sgd, bin_te, type = "prob")) |>
       bind_cols(bin_te)
   )
@@ -187,9 +185,9 @@ test_that("logistic regression class weights", {
   set.seed(585)
   bin_tr <- modeldata::sim_logistic(5000, ~ -5 - 3 * A + 5 * B)
   bin_te <- modeldata::sim_logistic(1000, ~ -5 - 3 * A + 5 * B)
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
 
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
   cls_xtab <- table(bin_tr$class)
   min_class <- names(sort(cls_xtab))[1]
   cls_wts <- rep(1, num_class)
@@ -216,9 +214,8 @@ test_that("logistic regression class weights", {
     }
   )
 
-  expect_no_error(
-    bin_pred_lbfgs_wts <-
-      predict(bin_fit_lbfgs_wts, bin_te) |>
+  bin_pred_lbfgs_wts <- expect_no_error(
+    predict(bin_fit_lbfgs_wts, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs_wts, bin_te, type = "prob")) |>
       bind_cols(bin_te)
   )
@@ -242,9 +239,8 @@ test_that("logistic regression class weights", {
     }
   )
 
-  expect_no_error(
-    bin_pred_lbfgs_unwt <-
-      predict(bin_fit_lbfgs_unwt, bin_te) |>
+  bin_pred_lbfgs_unwt <- expect_no_error(
+    predict(bin_fit_lbfgs_unwt, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs_unwt, bin_te, type = "prob")) |>
       bind_cols(bin_te)
   )

@@ -17,7 +17,7 @@ test_that("basic binomial mlp LBFGS", {
   rec <-
     recipe(class ~ ., data = bin_tr) |>
     step_normalize(all_predictors())
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -55,9 +55,8 @@ test_that("basic binomial mlp LBFGS", {
     }
   )
 
-  expect_no_error(
-    bin_pred_lbfgs <-
-      predict(bin_fit_lbfgs, bin_te) |>
+  bin_pred_lbfgs <- expect_no_error(
+    predict(bin_fit_lbfgs, bin_te) |>
       bind_cols(predict(bin_fit_lbfgs, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
       select(starts_with(".pred"), class)
@@ -111,7 +110,7 @@ test_that("basic binomial mlp SGD", {
   rec <-
     recipe(class ~ ., data = bin_tr) |>
     step_normalize(all_predictors())
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -125,7 +124,7 @@ test_that("basic binomial mlp SGD", {
           bin_tr,
           epochs = 200,
           penalty = 0,
-          dropout = .1,
+          dropout = 0.1,
           hidden_units = 5,
           optimize = "SGD",
           batch_size = 64L,
@@ -146,7 +145,7 @@ test_that("basic binomial mlp SGD", {
           bin_tr,
           epochs = 200,
           penalty = 0,
-          dropout = .1,
+          dropout = 0.1,
           hidden_units = 5,
           optimize = "SGD",
           batch_size = 64L,
@@ -157,9 +156,8 @@ test_that("basic binomial mlp SGD", {
     }
   )
 
-  expect_no_error(
-    bin_pred_sgd <-
-      predict(bin_fit_sgd, bin_te) |>
+  bin_pred_sgd <- expect_no_error(
+    predict(bin_fit_sgd, bin_te) |>
       bind_cols(predict(bin_fit_sgd, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
       select(starts_with(".pred"), class)
@@ -213,7 +211,7 @@ test_that("binomial mlp case weights", {
   rec <-
     recipe(class ~ ., data = bin_tr) |>
     step_normalize(all_predictors())
-  num_class <- length(levels(bin_tr$class))
+  num_class <- nlevels(bin_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -235,9 +233,8 @@ test_that("binomial mlp case weights", {
     }
   )
 
-  expect_no_error(
-    weighted_pred <-
-      predict(weighted, bin_te) |>
+  weighted_pred <- expect_no_error(
+    predict(weighted, bin_te) |>
       bind_cols(predict(weighted, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
       select(starts_with(".pred"), class)
@@ -260,9 +257,8 @@ test_that("binomial mlp case weights", {
     }
   )
 
-  expect_no_error(
-    unweighted_pred <-
-      predict(unweighted, bin_te) |>
+  unweighted_pred <- expect_no_error(
+    predict(unweighted, bin_te) |>
       bind_cols(predict(unweighted, bin_te, type = "prob")) |>
       bind_cols(bin_te) |>
       select(starts_with(".pred"), class)

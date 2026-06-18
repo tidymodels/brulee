@@ -122,7 +122,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
 #'  ## -----------------------------------------------------------------------------
 #'  # regression examples (increase # epochs to get better results)
@@ -132,7 +132,7 @@
 #'  ames$Sale_Price <- log10(ames$Sale_Price)
 #'
 #'  set.seed(122)
-#'  in_train <- sample(1:nrow(ames), 2000)
+#'  in_train <- sample(seq_len(nrow(ames)), 2000)
 #'  ames_train <- ames[ in_train,]
 #'  ames_test  <- ames[-in_train,]
 #'
@@ -167,7 +167,7 @@
 #'  data("parabolic", package = "modeldata")
 #'
 #'  set.seed(1)
-#'  in_train <- sample(1:nrow(parabolic), 300)
+#'  in_train <- sample(seq_len(nrow(parabolic)), 300)
 #'  parabolic_tr <- parabolic[ in_train,]
 #'  parabolic_te <- parabolic[-in_train,]
 #'
@@ -489,8 +489,8 @@ brulee_resnet_bridge <- function(
   activation <- resnet_validated$activation
 
   # Handle batch_size special logic (same as MLP)
-  if (!is.null(batch_size) & optimizer != "LBFGS") {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+  if (!is.null(batch_size) && optimizer != "LBFGS") {
+    if (is.numeric(batch_size) && !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, call = call)
@@ -518,7 +518,7 @@ brulee_resnet_bridge <- function(
   # Process predictors
   predictors <- process_predictors(processed$predictors, call = call)
 
-  if (is.null(batch_size) & optimizer != "LBFGS") {
+  if (is.null(batch_size) && optimizer != "LBFGS") {
     batch_size <- 32L
     if (batch_size >= nrow(predictors)) {
       batch_size <- max(2, ceiling(nrow(predictors) / 10))
@@ -621,7 +621,7 @@ new_brulee_resnet <- function(
   }
 
   # Save the estimates that have values
-  num_items <- purrr::map_int(estimates, length)
+  num_items <- lengths(estimates)
   estimates <- estimates[num_items > 0]
 
   hardhat::new_model(

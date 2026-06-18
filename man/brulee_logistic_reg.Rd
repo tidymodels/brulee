@@ -208,7 +208,7 @@ used in those packages.
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
  library(recipes)
  library(yardstick)
@@ -221,7 +221,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  cells$case <- NULL
 
  set.seed(122)
- in_train <- sample(1:nrow(cells), 1000)
+ in_train <- sample(seq_len(nrow(cells)), 1000)
  cells_train <- cells[ in_train,]
  cells_test  <- cells[-in_train,]
 
@@ -243,7 +243,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  set.seed(2)
  fit <- brulee_logistic_reg(cells_rec, data = cells_train,
-                             penalty = .01, epochs = 5)
+                             penalty = 0.01, epochs = 5)
  fit
 
  autoplot(fit)

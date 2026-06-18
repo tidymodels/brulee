@@ -196,7 +196,7 @@ tabicl_make_members <- function(
 #' much like a few-shot language model conditions on its prompt. Both
 #' classification and regression are supported.
 #'
-#' @inheritParams bruleee_mlp
+#' @inheritParams brulee_mlp
 #' @param n_estimators An integer for the number of ensemble members (default
 #'   `8`). Each member preprocesses, permutes features, and (for classification)
 #'   shuffles class labels differently; their predictions are averaged. Use `1`
@@ -362,7 +362,7 @@ tabicl_make_members <- function(
 #' # Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
 #' # "Pre-trained weights" section and dev/tabicl/).
 #'
-#' if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
+#' if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
 #'   data(penguins, package = "modeldata")
 #'   penguins <- na.omit(penguins)
 #'
