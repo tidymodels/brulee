@@ -85,6 +85,63 @@ tabicl_encode_transform <- function(encoders, predictors) {
 }
 
 # ------------------------------------------------------------------------------
+# Training-set subsampling
+
+# Pick row indices for a (possibly stratified) subsample of size `limit`. For
+# a factor outcome we draw proportionally from each class so no class is
+# dropped from the in-context training set. Returns NULL when no subsampling
+# is needed (limit is Inf or n <= limit).
+tabicl_subsample_indices <- function(
+  outcome,
+  limit,
+  call = rlang::caller_env()
+) {
+  n <- length(outcome)
+  if (!is.finite(limit) || n <= limit) {
+    return(NULL)
+  }
+  limit <- as.integer(limit)
+
+  if (is.factor(outcome)) {
+    lvls <- levels(outcome)
+    n_classes <- length(lvls)
+    if (limit < n_classes) {
+      cli::cli_abort(
+        "{.arg training_set_limit} ({limit}) is smaller than the number of \\
+         outcome classes ({n_classes}); cannot keep at least one row per class.",
+        call = call
+      )
+    }
+    counts <- tabulate(as.integer(outcome), nbins = n_classes)
+    alloc <- pmax(1L, as.integer(round(limit * counts / sum(counts))))
+    drift <- limit - sum(alloc)
+    while (drift != 0L) {
+      if (drift > 0L) {
+        cand <- which(alloc < counts)
+        if (length(cand) == 0L) {
+          break
+        }
+        j <- cand[which.max(counts[cand])]
+        alloc[j] <- alloc[j] + 1L
+        drift <- drift - 1L
+      } else {
+        cand <- which(alloc > 1L)
+        j <- cand[which.max(counts[cand])]
+        alloc[j] <- alloc[j] - 1L
+        drift <- drift + 1L
+      }
+    }
+    idx <- unlist(lapply(seq_len(n_classes), function(j) {
+      pool <- which(as.integer(outcome) == j)
+      sample(pool, size = min(alloc[j], length(pool)))
+    }))
+  } else {
+    idx <- sample.int(n, size = limit)
+  }
+  idx
+}
+
+# ------------------------------------------------------------------------------
 # Ensemble member configuration
 
 # Build the ensemble member configs. n_estimators = 1 yields the single
@@ -148,6 +205,14 @@ tabicl_make_members <- function(
 #'   power transform on top of standardization) are supported.
 #' @param softmax_temperature A number for the temperature applied to the
 #'   classification softmax. Only used for classification.
+#' @param training_set_limit A single number giving the maximum number of
+#'   training rows kept as in-context examples. When the training data has
+#'   more rows than this, a subsample of exactly `training_set_limit` rows
+#'   is drawn (stratified by the outcome for classification, simple random
+#'   for regression). The default is `Inf`, which keeps every row. Useful
+#'   for capping memory and prediction time on large training sets, since
+#'   the entire (kept) training set is stored on the fitted object and
+#'   re-sent through the network on every call to `predict()`.
 #' @param device A character string for the compute device: `"cpu"` (the
 #'   default) or `"cuda"`. See the **Device support** section.
 #' @param ... Not currently used.
@@ -180,13 +245,71 @@ tabicl_make_members <- function(
 #'
 #' ## Preprocessing
 #'
-#' Predictors are made numeric (factors and characters are ordinal-encoded;
-#' numeric columns are mean-imputed). For each ensemble member the predictors are
-#' then standardized, optionally transformed (`normalization`), and have outliers
-#' clipped, mirroring the reference implementation. Factor outcomes are label
-#' encoded; numeric outcomes are standardized internally and predictions are
-#' returned on the original scale. There is _no need to pre-encode factors as
-#' indicators_.
+#' TabICL applies its own preprocessing to mirror the reference implementation,
+#' so most data shaping that other tabular models require is unnecessary (and
+#' in some cases counter-productive). The pipeline runs in two stages.
+#'
+#' **Stage 1: numeric encoding (always, at fit time).**
+#'
+#' Each predictor column is converted to a numeric value:
+#'
+#' - Factor and character columns are **ordinal-encoded**: the unique values
+#'   seen during fitting are sorted lexicographically and mapped to 0-based
+#'   integers. _Do not pre-encode factors as indicator (dummy) variables._
+#'   TabICL is a per-column tokenized transformer; one ordinal column gives
+#'   the model one token per row, while a wide one-hot expansion bloats the
+#'   sequence length, blows up the row-interaction stage, and degrades
+#'   prediction quality.
+#' - Numeric columns are taken as-is.
+#'
+#' The training predictors are stored on the fitted object in this encoded
+#' form so that they can serve as context at [predict()] time.
+#'
+#' **Stage 2: per-member normalization (at predict time).**
+#'
+#' For each ensemble member, the encoded predictors pass through a small
+#' pipeline before being handed to the network:
+#'
+#' 1. **Standardization** — center by column mean and divide by the
+#'    population standard deviation (with a small epsilon and a soft clip to
+#'    \eqn{\pm 100}). This always runs.
+#' 2. **Optional Yeo-Johnson** — when the member's `normalization` slot is
+#'    `"YeoJohnson"`, a per-column Yeo-Johnson power transform is inserted
+#'    between standardization and outlier clipping. The Yeo-Johnson
+#'    \eqn{\lambda} for each column is fit on the standardized training data
+#'    via maximum likelihood, then the transformed values are re-standardized
+#'    so the downstream stages see the same mean/scale as the `"none"` path.
+#'    The transform handles negative values (unlike Box-Cox) and is helpful
+#'    when individual columns are heavily skewed or heavy-tailed. The
+#'    `normalization` argument is a vector because the default ensemble
+#'    intentionally mixes `"none"` and `"YeoJohnson"` across members to
+#'    boost predictive diversity.
+#' 3. **Outlier clipping** — a two-stage z-score clipper trims extreme
+#'    values. This always runs.
+#'
+#' All parameters in stage 2 (means, standard deviations, Yeo-Johnson
+#' lambdas, clip bounds) are estimated on the training rows alone and then
+#' applied to both training and new rows.
+#'
+#' For regression, the outcome is standardized internally and predictions
+#' are returned on the original scale. For classification, the outcome is
+#' label-encoded.
+#'
+#' ## Missing Values
+#'
+#' Missing values do not need to be imputed by the user.
+#'
+#' - **Numeric columns**: at fit time the column mean (ignoring `NA`) is
+#'   learned and reused to fill any `NA` in both the training context and
+#'   the prediction rows.
+#' - **Factor and character columns**: missing values, as well as any
+#'   _new_ factor levels seen at prediction time that were not present
+#'   during fitting, are mapped to the sentinel code `-1` and treated as a
+#'   distinct "unknown" category by the model.
+#'
+#' Pre-imputation by the user is still allowed and is sometimes desirable
+#' (for example, when a domain-appropriate imputation outperforms a column
+#' mean), but it is not required for the model to run.
 #'
 #' ## Ensembling
 #'
@@ -214,8 +337,7 @@ tabicl_make_members <- function(
 #' (`<task>.config.json` and `<task>.model.safetensors`) and cached under
 #' `~/.cache/TabICL/<version>/<date>/<Classification|Regression>/`. `brulee_tab_icl()`
 #' loads the cached checkpoint for the task automatically and errors if none is
-#' found. Automatic download is not yet available; populate the cache offline with
-#' the conversion tooling in `dev/tabicl/`.
+#' found.
 #'
 #' @references
 #'
@@ -283,6 +405,7 @@ brulee_tab_icl.data.frame <- function(
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 ) {
@@ -292,6 +415,7 @@ brulee_tab_icl.data.frame <- function(
     n_estimators,
     normalization,
     softmax_temperature,
+    training_set_limit,
     device
   )
 }
@@ -304,6 +428,7 @@ brulee_tab_icl.matrix <- function(
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 ) {
@@ -313,6 +438,7 @@ brulee_tab_icl.matrix <- function(
     n_estimators,
     normalization,
     softmax_temperature,
+    training_set_limit,
     device
   )
 }
@@ -325,6 +451,7 @@ brulee_tab_icl.formula <- function(
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 ) {
@@ -338,6 +465,7 @@ brulee_tab_icl.formula <- function(
     n_estimators,
     normalization,
     softmax_temperature,
+    training_set_limit,
     device
   )
 }
@@ -350,6 +478,7 @@ brulee_tab_icl.recipe <- function(
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 ) {
@@ -359,6 +488,7 @@ brulee_tab_icl.recipe <- function(
     n_estimators,
     normalization,
     softmax_temperature,
+    training_set_limit,
     device
   )
 }
@@ -371,6 +501,7 @@ tabicl_bridge <- function(
   n_estimators,
   normalization,
   softmax_temperature,
+  training_set_limit,
   device,
   call = rlang::caller_env()
 ) {
@@ -387,10 +518,27 @@ tabicl_bridge <- function(
     multiple = TRUE,
     call = call
   )
+  if (
+    !is.numeric(training_set_limit) ||
+      length(training_set_limit) != 1L ||
+      is.na(training_set_limit) ||
+      training_set_limit < 1
+  ) {
+    cli::cli_abort(
+      "{.arg training_set_limit} must be a single number >= 1 (or {.code Inf}).",
+      call = call
+    )
+  }
   device <- tabicl_resolve_device(device, call = call)
 
   outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
   classification <- is.factor(outcome)
+
+  sub_idx <- tabicl_subsample_indices(outcome, training_set_limit, call = call)
+  if (!is.null(sub_idx)) {
+    processed$predictors <- processed$predictors[sub_idx, , drop = FALSE]
+    outcome <- outcome[sub_idx]
+  }
 
   # Locate the cached checkpoint for the task (errors if none is cached).
   task <- if (classification) "classification" else "regression"
@@ -420,7 +568,7 @@ tabicl_bridge <- function(
     if (length(levels) > config$max_classes) {
       cli::cli_abort(
         c(
-          "Outcome has {length(levels)} classes, exceeding the model's \\
+          "Outcome has {length(levels)} classes, exceeding the model's
            {config$max_classes}.",
           "i" = "Many-class (hierarchical) classification is not yet implemented."
         ),
@@ -487,7 +635,7 @@ new_brulee_tab_icl <- function(
 print.brulee_tab_icl <- function(x, ...) {
   cli::cli_text("TabICL {x$task} model")
   cli::cli_text(
-    "{nrow(x$train_x)} training rows, {ncol(x$train_x)} predictors, \\
+    "{nrow(x$train_x)} training rows, {ncol(x$train_x)} predictors,
      {x$n_estimators} ensemble member{?s}"
   )
   if (x$task == "classification") {

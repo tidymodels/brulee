@@ -65,7 +65,7 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
     cli::cli_abort(
       c(
         "No cached {task} TabICL checkpoint found in {.path {root}}.",
-        "i" = "Download one with {.fn tabicl_download} once a URL is configured, \\
+        "i" = "Download one with {.fn tabicl_download} once a URL is configured,
                or convert and cache a checkpoint offline (see {.path dev/tabicl})."
       ),
       call = call
@@ -93,7 +93,7 @@ tabicl_download <- function(
     cli::cli_abort(
       c(
         "No TabICL download URL is configured yet.",
-        "i" = "Pass {.arg base_url}, or convert and cache a checkpoint offline \\
+        "i" = "Pass {.arg base_url}, or convert and cache a checkpoint offline
                (see {.path dev/tabicl})."
       ),
       call = call

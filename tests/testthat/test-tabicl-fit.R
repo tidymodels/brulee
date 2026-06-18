@@ -85,6 +85,52 @@ test_that("brulee_tab_icl regression reproduces the single-member golden", {
   )
 })
 
+# --- subsample helper ---------------------------------------------------------
+
+test_that("tabicl_subsample_indices returns NULL when limit is Inf or n <= limit", {
+  set.seed(20260618)
+  outcome <- factor(sample(c("a", "b"), 100, replace = TRUE))
+  expect_null(brulee:::tabicl_subsample_indices(outcome, Inf))
+  expect_null(brulee:::tabicl_subsample_indices(outcome, 100))
+  expect_null(brulee:::tabicl_subsample_indices(outcome, 200))
+})
+
+test_that("tabicl_subsample_indices keeps exactly `limit` rows", {
+  set.seed(20260618)
+  outcome_factor <- factor(sample(c("a", "b", "c"), 500, replace = TRUE))
+  outcome_num <- rnorm(500)
+
+  idx_factor <- brulee:::tabicl_subsample_indices(outcome_factor, 120)
+  expect_length(idx_factor, 120L)
+  expect_true(all(idx_factor %in% seq_along(outcome_factor)))
+
+  idx_num <- brulee:::tabicl_subsample_indices(outcome_num, 120)
+  expect_length(idx_num, 120L)
+  expect_true(all(idx_num %in% seq_along(outcome_num)))
+})
+
+test_that("tabicl_subsample_indices stratifies classification samples", {
+  set.seed(20260618)
+  outcome <- factor(c(
+    rep("rare", 5),
+    rep("common", 95),
+    rep("medium", 50)
+  ))
+  idx <- brulee:::tabicl_subsample_indices(outcome, 30)
+  expect_length(idx, 30L)
+  kept <- outcome[idx]
+  expect_named(table(kept), levels(outcome), ignore.order = TRUE)
+  expect_all_true(as.integer(table(kept)) >= 1L)
+})
+
+test_that("tabicl_subsample_indices errors when limit < number of classes", {
+  outcome <- factor(c("a", "b", "c", "d", "a", "b"))
+  expect_snapshot(
+    error = TRUE,
+    brulee:::tabicl_subsample_indices(outcome, 3)
+  )
+})
+
 # --- validation ---------------------------------------------------------------
 
 test_that("brulee_tab_icl errors when no checkpoint is cached", {

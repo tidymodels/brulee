@@ -19,6 +19,7 @@ brulee_tab_icl(x, ...)
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 )
@@ -29,6 +30,7 @@ brulee_tab_icl(x, ...)
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 )
@@ -39,6 +41,7 @@ brulee_tab_icl(x, ...)
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 )
@@ -49,6 +52,7 @@ brulee_tab_icl(x, ...)
   n_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
+  training_set_limit = Inf,
   device = NULL,
   ...
 )
@@ -73,6 +77,15 @@ power transform on top of standardization) are supported.}
 
 \item{softmax_temperature}{A number for the temperature applied to the
 classification softmax. Only used for classification.}
+
+\item{training_set_limit}{A single number giving the maximum number of
+training rows kept as in-context examples. When the training data has
+more rows than this, a subsample of exactly \code{training_set_limit} rows
+is drawn (stratified by the outcome for classification, simple random
+for regression). The default is \code{Inf}, which keeps every row. Useful
+for capping memory and prediction time on large training sets, since
+the entire (kept) training set is stored on the fitted object and
+re-sent through the network on every call to \code{predict()}.}
 
 \item{device}{A character string for the compute device: \code{"cpu"} (the
 default) or \code{"cuda"}. See the \strong{Device support} section.}
@@ -134,13 +147,75 @@ attend to the labelled training rows to produce class logits
 
 \subsection{Preprocessing}{
 
-Predictors are made numeric (factors and characters are ordinal-encoded;
-numeric columns are mean-imputed). For each ensemble member the predictors are
-then standardized, optionally transformed (\code{normalization}), and have outliers
-clipped, mirroring the reference implementation. Factor outcomes are label
-encoded; numeric outcomes are standardized internally and predictions are
-returned on the original scale. There is \emph{no need to pre-encode factors as
-indicators}.
+TabICL applies its own preprocessing to mirror the reference implementation,
+so most data shaping that other tabular models require is unnecessary (and
+in some cases counter-productive). The pipeline runs in two stages.
+
+\strong{Stage 1: numeric encoding (always, at fit time).}
+
+Each predictor column is converted to a numeric value:
+\itemize{
+\item Factor and character columns are \strong{ordinal-encoded}: the unique values
+seen during fitting are sorted lexicographically and mapped to 0-based
+integers. \emph{Do not pre-encode factors as indicator (dummy) variables.}
+TabICL is a per-column tokenized transformer; one ordinal column gives
+the model one token per row, while a wide one-hot expansion bloats the
+sequence length, blows up the row-interaction stage, and degrades
+prediction quality.
+\item Numeric columns are taken as-is.
+}
+
+The training predictors are stored on the fitted object in this encoded
+form so that they can serve as context at \code{\link[=predict]{predict()}} time.
+
+\strong{Stage 2: per-member normalization (at predict time).}
+
+For each ensemble member, the encoded predictors pass through a small
+pipeline before being handed to the network:
+\enumerate{
+\item \strong{Standardization} — center by column mean and divide by the
+population standard deviation (with a small epsilon and a soft clip to
+\eqn{\pm 100}). This always runs.
+\item \strong{Optional Yeo-Johnson} — when the member's \code{normalization} slot is
+\code{"YeoJohnson"}, a per-column Yeo-Johnson power transform is inserted
+between standardization and outlier clipping. The Yeo-Johnson
+\eqn{\lambda} for each column is fit on the standardized training data
+via maximum likelihood, then the transformed values are re-standardized
+so the downstream stages see the same mean/scale as the \code{"none"} path.
+The transform handles negative values (unlike Box-Cox) and is helpful
+when individual columns are heavily skewed or heavy-tailed. The
+\code{normalization} argument is a vector because the default ensemble
+intentionally mixes \code{"none"} and \code{"YeoJohnson"} across members to
+boost predictive diversity.
+\item \strong{Outlier clipping} — a two-stage z-score clipper trims extreme
+values. This always runs.
+}
+
+All parameters in stage 2 (means, standard deviations, Yeo-Johnson
+lambdas, clip bounds) are estimated on the training rows alone and then
+applied to both training and new rows.
+
+For regression, the outcome is standardized internally and predictions
+are returned on the original scale. For classification, the outcome is
+label-encoded.
+}
+
+\subsection{Missing Values}{
+
+Missing values do not need to be imputed by the user.
+\itemize{
+\item \strong{Numeric columns}: at fit time the column mean (ignoring \code{NA}) is
+learned and reused to fill any \code{NA} in both the training context and
+the prediction rows.
+\item \strong{Factor and character columns}: missing values, as well as any
+\emph{new} factor levels seen at prediction time that were not present
+during fitting, are mapped to the sentinel code \code{-1} and treated as a
+distinct "unknown" category by the model.
+}
+
+Pre-imputation by the user is still allowed and is sometimes desirable
+(for example, when a domain-appropriate imputation outperforms a column
+mean), but it is not required for the model to run.
 }
 
 \subsection{Ensembling}{
@@ -171,8 +246,7 @@ first be converted to the two files brulee reads
 (\verb{<task>.config.json} and \verb{<task>.model.safetensors}) and cached under
 \verb{~/.cache/TabICL/<version>/<date>/<Classification|Regression>/}. \code{brulee_tab_icl()}
 loads the cached checkpoint for the task automatically and errors if none is
-found. Automatic download is not yet available; populate the cache offline with
-the conversion tooling in \verb{dev/tabicl/}.
+found.
 }
 }
 \examples{

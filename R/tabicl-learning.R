@@ -102,7 +102,7 @@ tabicl_icl_learning <- nn_module(
       num_classes <- length(unique(as.numeric(y_train[1, ]$cpu())))
       if (num_classes > self$max_classes) {
         cli::cli_abort(
-          "Hierarchical classification for {num_classes} classes (> max_classes \\
+          "Hierarchical classification for {num_classes} classes (> max_classes
            {self$max_classes}) is not yet implemented in the brulee port."
         )
       }

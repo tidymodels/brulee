@@ -112,7 +112,7 @@ tabicl_col_embedding <- nn_module(
       num_classes <- as.integer(as.numeric(y_train$max()$item())) + 1L
       if (num_classes > self$max_classes) {
         cli::cli_abort(
-          "Mixed-radix ensembling for {num_classes} classes (> max_classes \\
+          "Mixed-radix ensembling for {num_classes} classes (> max_classes
            {self$max_classes}) is not yet implemented in the brulee port."
         )
       }
