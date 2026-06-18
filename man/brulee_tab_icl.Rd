@@ -17,7 +17,7 @@ brulee_tab_icl(x, ...)
   x,
   y,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -27,7 +27,7 @@ brulee_tab_icl(x, ...)
   x,
   y,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -37,7 +37,7 @@ brulee_tab_icl(x, ...)
   formula,
   data,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -47,7 +47,7 @@ brulee_tab_icl(x, ...)
   x,
   data,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -67,9 +67,9 @@ for classification or a numeric vector for regression.}
 shuffles class labels differently; their predictions are averaged. Use \code{1}
 for a single, fully deterministic member.}
 
-\item{norm_methods}{A character vector of per-member normalization methods.
-Currently \code{"none"} (standardize only) and \code{"power"} (Yeo-Johnson) are
-supported.}
+\item{normalization}{A character vector of per-member normalization methods.
+Currently \code{"none"} (standardize only) and \code{"YeoJohnson"} (Yeo-Johnson
+power transform on top of standardization) are supported.}
 
 \item{softmax_temperature}{A number for the temperature applied to the
 classification softmax. Only used for classification.}
@@ -90,7 +90,7 @@ A \code{brulee_tab_icl} object with elements:
 \item \code{levels}: the outcome factor levels (classification only).
 \item \code{encoders}: the fitted per-column predictor encoders.
 \item \code{train_x}, \code{train_y}: the encoded training context.
-\item \code{n_estimators}, \code{norm_methods}, \code{softmax_temperature}: ensemble settings.
+\item \code{n_estimators}, \code{normalization}, \code{softmax_temperature}: ensemble settings.
 \item \code{device}: the resolved compute device.
 \item \code{blueprint}: the \code{hardhat} blueprint.
 }
@@ -136,7 +136,7 @@ attend to the labelled training rows to produce class logits
 
 Predictors are made numeric (factors and characters are ordinal-encoded;
 numeric columns are mean-imputed). For each ensemble member the predictors are
-then standardized, optionally transformed (\code{norm_methods}), and have outliers
+then standardized, optionally transformed (\code{normalization}), and have outliers
 clipped, mirroring the reference implementation. Factor outcomes are label
 encoded; numeric outcomes are standardized internally and predictions are
 returned on the original scale. There is \emph{no need to pre-encode factors as

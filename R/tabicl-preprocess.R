@@ -5,7 +5,7 @@
 #
 # Pipeline (per ensemble member): standard scale + clip to [-100, 100] ->
 # optional normalization -> two-stage z-score outlier clipping. The default
-# normalization methods are "none" and "power" (Yeo-Johnson); "quantile",
+# normalization methods are "none" and "YeoJohnson"; "quantile",
 # "quantile_rtdl", and "robust" are not yet ported (they are not used by the
 # default ensemble) and error if requested.
 #
@@ -145,7 +145,7 @@ tabicl_power_transformer_transform <- function(params, x) {
 
 tabicl_preprocess_fit <- function(
   x,
-  normalization_method = "power",
+  normalization_method = "YeoJohnson",
   outlier_threshold = 4.0
 ) {
   scaler <- tabicl_standard_scaler_fit(x)
@@ -153,7 +153,7 @@ tabicl_preprocess_fit <- function(
 
   normalizer <- NULL
   if (!identical(normalization_method, "none")) {
-    if (identical(normalization_method, "power")) {
+    if (identical(normalization_method, "YeoJohnson")) {
       normalizer <- tabicl_power_transformer_fit(x_scaled)
     } else {
       cli::cli_abort(

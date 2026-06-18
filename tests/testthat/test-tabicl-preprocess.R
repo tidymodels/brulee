@@ -46,11 +46,14 @@ test_that("tabicl preprocessing pipeline (none) matches sklearn", {
   expect_lt(max(abs(out - f$out)), 1e-5)
 })
 
-test_that("tabicl preprocessing pipeline (power / Yeo-Johnson) matches sklearn", {
+test_that("tabicl preprocessing pipeline (Yeo-Johnson) matches sklearn", {
   skip_if_no_tabicl_fixtures("prep_pipeline_power")
   f <- tabicl_load_prep("prep_pipeline_power")
 
-  pp <- brulee:::tabicl_preprocess_fit(f$x_fit, normalization_method = "power")
+  pp <- brulee:::tabicl_preprocess_fit(
+    f$x_fit,
+    normalization_method = "YeoJohnson"
+  )
   expect_lt(max(abs(pp$normalizer$lambdas - f$lambdas)), 1e-5)
 
   out <- brulee:::tabicl_preprocess_transform(pp, f$x_apply)

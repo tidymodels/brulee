@@ -96,7 +96,7 @@ tabicl_make_members <- function(
   n_estimators,
   n_features,
   n_classes,
-  norm_methods,
+  normalization,
   classification
 ) {
   feat_id <- seq_len(n_features)
@@ -106,7 +106,7 @@ tabicl_make_members <- function(
     return(list(tabicl_member("none", feat_id, class_id)))
   }
 
-  norms <- rep(norm_methods, length.out = n_estimators)
+  norms <- rep(normalization, length.out = n_estimators)
   members <- vector("list", n_estimators)
   for (k in seq_len(n_estimators)) {
     feat <- if (k == 1L) feat_id else sample(feat_id)
@@ -143,9 +143,9 @@ tabicl_make_members <- function(
 #'   `8`). Each member preprocesses, permutes features, and (for classification)
 #'   shuffles class labels differently; their predictions are averaged. Use `1`
 #'   for a single, fully deterministic member.
-#' @param norm_methods A character vector of per-member normalization methods.
-#'   Currently `"none"` (standardize only) and `"power"` (Yeo-Johnson) are
-#'   supported.
+#' @param normalization A character vector of per-member normalization methods.
+#'   Currently `"none"` (standardize only) and `"YeoJohnson"` (Yeo-Johnson
+#'   power transform on top of standardization) are supported.
 #' @param softmax_temperature A number for the temperature applied to the
 #'   classification softmax. Only used for classification.
 #' @param device A character string for the compute device: `"cpu"` (the
@@ -182,7 +182,7 @@ tabicl_make_members <- function(
 #'
 #' Predictors are made numeric (factors and characters are ordinal-encoded;
 #' numeric columns are mean-imputed). For each ensemble member the predictors are
-#' then standardized, optionally transformed (`norm_methods`), and have outliers
+#' then standardized, optionally transformed (`normalization`), and have outliers
 #' clipped, mirroring the reference implementation. Factor outcomes are label
 #' encoded; numeric outcomes are standardized internally and predictions are
 #' returned on the original scale. There is _no need to pre-encode factors as
@@ -234,7 +234,7 @@ tabicl_make_members <- function(
 #'  * `levels`: the outcome factor levels (classification only).
 #'  * `encoders`: the fitted per-column predictor encoders.
 #'  * `train_x`, `train_y`: the encoded training context.
-#'  * `n_estimators`, `norm_methods`, `softmax_temperature`: ensemble settings.
+#'  * `n_estimators`, `normalization`, `softmax_temperature`: ensemble settings.
 #'  * `device`: the resolved compute device.
 #'  * `blueprint`: the `hardhat` blueprint.
 #'
@@ -281,7 +281,7 @@ brulee_tab_icl.data.frame <- function(
   x,
   y,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -290,7 +290,7 @@ brulee_tab_icl.data.frame <- function(
   tabicl_bridge(
     processed,
     n_estimators,
-    norm_methods,
+    normalization,
     softmax_temperature,
     device
   )
@@ -302,7 +302,7 @@ brulee_tab_icl.matrix <- function(
   x,
   y,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -311,7 +311,7 @@ brulee_tab_icl.matrix <- function(
   tabicl_bridge(
     processed,
     n_estimators,
-    norm_methods,
+    normalization,
     softmax_temperature,
     device
   )
@@ -323,7 +323,7 @@ brulee_tab_icl.formula <- function(
   formula,
   data,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -336,7 +336,7 @@ brulee_tab_icl.formula <- function(
   tabicl_bridge(
     processed,
     n_estimators,
-    norm_methods,
+    normalization,
     softmax_temperature,
     device
   )
@@ -348,7 +348,7 @@ brulee_tab_icl.recipe <- function(
   x,
   data,
   n_estimators = 8L,
-  norm_methods = c("none", "power"),
+  normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   device = NULL,
   ...
@@ -357,7 +357,7 @@ brulee_tab_icl.recipe <- function(
   tabicl_bridge(
     processed,
     n_estimators,
-    norm_methods,
+    normalization,
     softmax_temperature,
     device
   )
@@ -369,7 +369,7 @@ brulee_tab_icl.recipe <- function(
 tabicl_bridge <- function(
   processed,
   n_estimators,
-  norm_methods,
+  normalization,
   softmax_temperature,
   device,
   call = rlang::caller_env()
@@ -381,9 +381,9 @@ tabicl_bridge <- function(
     )
   }
 
-  norm_methods <- rlang::arg_match(
-    norm_methods,
-    c("none", "power"),
+  normalization <- rlang::arg_match(
+    normalization,
+    c("none", "YeoJohnson"),
     multiple = TRUE,
     call = call
   )
@@ -442,7 +442,7 @@ tabicl_bridge <- function(
     train_x = train_x,
     train_y = train_y,
     n_estimators = as.integer(n_estimators),
-    norm_methods = norm_methods,
+    normalization = normalization,
     softmax_temperature = softmax_temperature,
     device = device,
     blueprint = processed$blueprint
@@ -461,7 +461,7 @@ new_brulee_tab_icl <- function(
   train_x,
   train_y,
   n_estimators,
-  norm_methods,
+  normalization,
   softmax_temperature,
   device,
   blueprint
@@ -475,7 +475,7 @@ new_brulee_tab_icl <- function(
     train_x = train_x,
     train_y = train_y,
     n_estimators = n_estimators,
-    norm_methods = norm_methods,
+    normalization = normalization,
     softmax_temperature = softmax_temperature,
     device = device,
     blueprint = blueprint,

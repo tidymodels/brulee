@@ -70,7 +70,7 @@ predict.brulee_tab_icl <- function(object, new_data, type = NULL, ...) {
       object$n_estimators,
       ncol(object$train_x),
       n_classes,
-      object$norm_methods,
+      object$normalization,
       classification = TRUE
     )
     proba <- tabicl_classifier_proba(
@@ -95,7 +95,7 @@ predict.brulee_tab_icl <- function(object, new_data, type = NULL, ...) {
       object$n_estimators,
       ncol(object$train_x),
       n_classes = 0L,
-      object$norm_methods,
+      object$normalization,
       classification = FALSE
     )
     est <- tabicl_regressor_mean(
