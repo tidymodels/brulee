@@ -45,6 +45,7 @@ Küken
 labelled
 LBFGS
 learnable
+lexicographically
 libtorch
 Lifecycle
 Loshchilov
@@ -77,6 +78,7 @@ ResNets
 RLN
 RLNs
 Rubachev
+safetensors
 Sandler
 Schwarzschild
 Segal
@@ -96,6 +98,7 @@ th
 tibble
 tidymodels
 tidyselect
+tokenized
 Varoquaux
 Xiao
 Xu

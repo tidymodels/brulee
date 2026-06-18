@@ -84,23 +84,31 @@ is self-identifying:
 
 `brulee_tab_icl()` takes no path argument: it looks up the cached checkpoint for
 the task and errors if none is present. The cache is populated by the downloader
-(`tabicl_download()`), which pulls these files from a URL into the cache; the URL
-is not yet decided, so for now the cache is populated offline (see "Populating
-the cache" below). Everything else in this folder produces and validates those
+(`tab_icl_download_weights()`), which fetches the files as individual assets from
+a release of the `tidymodels/tabicl-weights` GitHub repo (tag `<version>-<date>`)
+into the cache. The large safetensors are release assets rather than committed
+files, so the source-archive tarball does not contain them; the downloader pulls
+each asset directly. Everything else in this folder produces and validates those
 two files. There is one such pair per task: a classifier pair and a regressor
 pair.
 
-### Populating the cache before the download URL exists
+### Populating the cache from local artifacts
 
-`tabicl_download()` accepts any URL curl can reach, including a local
-`file://` location. Since `dev/tabicl/artifacts/` already has the same
-`<version>/<date>/<TaskLabel>/` layout as the cache, you can populate the cache
-from it:
+`dev/tabicl/artifacts/` already has the same `<version>/<date>/<TaskLabel>/`
+layout as the cache, so you can populate the cache by copying the two files brulee
+reads per task into `~/.cache/TabICL/` (or wherever `brulee.tabicl_cache_dir`
+points):
 
 ```r
-art <- normalizePath("dev/tabicl/artifacts")
-brulee:::tabicl_download("classification", base_url = paste0("file://", art))
-brulee:::tabicl_download("regression", base_url = paste0("file://", art))
+art <- "dev/tabicl/artifacts"
+cache <- getOption("brulee.tabicl_cache_dir",
+                   file.path(Sys.getenv("HOME"), ".cache", "TabICL"))
+for (rel in list.files(art, recursive = TRUE,
+                       pattern = "\\.(config\\.json|model\\.safetensors)$")) {
+  dest <- file.path(cache, rel)
+  dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
+  file.copy(file.path(art, rel), dest, overwrite = TRUE)
+}
 ```
 
 ## 4. Two storage locations (and what is tracked in git)
