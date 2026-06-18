@@ -1,10 +1,8 @@
 # User-facing fit for the TabICL tabular foundation model.
 #
 # TabICL is an in-context learner: there is no training. `brulee_tab_icl()`
-# validates and stores the (encoded) training data and a reference to the
-# pretrained checkpoint; the model runs at predict time, conditioning on the
-# stored training rows. Classification uses the classifier checkpoint, regression
-# the regressor checkpoint (selected by the outcome type).
+# validates and stores the (encoded) training data; the model runs at predict
+# time, conditioning on the stored training rows.
 #
 # Until weight hosting is finalized, `path` must point at a converted checkpoint
 # directory (config.json + model.safetensors); see dev/tabicl/convert_ckpt.py.
@@ -107,7 +105,7 @@ tabicl_subsample_indices <- function(
     n_classes <- length(lvls)
     if (limit < n_classes) {
       cli::cli_abort(
-        "{.arg training_set_limit} ({limit}) is smaller than the number of \\
+        "{.arg training_set_limit} ({limit}) is smaller than the number of
          outcome classes ({n_classes}); cannot keep at least one row per class.",
         call = call
       )
@@ -182,20 +180,15 @@ tabicl_make_members <- function(
 
 #' Fit a TabICL tabular foundation model
 #'
-#' `brulee_tab_icl()` prepares the pretrained TabICL (Tabular In-Context
+#' `brulee_tab_icl()` prepares the pre-trained TabICL (Tabular In-Context
 #' Learning) foundation model from Qu _et al_ (2025) for prediction. TabICL is a
 #' transformer that makes predictions on tabular data by _in-context learning_:
-#' it is not trained on your data. Instead, the released pretrained weights are
+#' it is not trained on your data. Instead, the released pre-trained weights are
 #' loaded and the model conditions on your training rows at prediction time,
 #' much like a few-shot language model conditions on its prompt. Both
 #' classification and regression are supported.
 #'
-#' @param x A data frame or matrix of predictors, a formula, or a recipe (see
-#'   Details).
-#' @param y When `x` is a data frame or matrix, a vector of outcomes: a factor
-#'   for classification or a numeric vector for regression.
-#' @param data A data frame for the formula and recipe methods.
-#' @param formula A formula specifying the outcome and predictors.
+#' @inheritParams bruleee_mlp
 #' @param n_estimators An integer for the number of ensemble members (default
 #'   `8`). Each member preprocesses, permutes features, and (for classification)
 #'   shuffles class labels differently; their predictions are averaged. Use `1`
@@ -222,9 +215,9 @@ tabicl_make_members <- function(
 #' ## In-context learning
 #'
 #' Unlike the other \pkg{brulee} models, `brulee_tab_icl()` does not train any
-#' parameters. The pretrained network is fixed; "fitting" simply validates and
+#' parameters. The pre-trained network is fixed; "fitting" simply validates and
 #' stores the (encoded) training predictors and outcomes together with a
-#' reference to the checkpoint. At [predict()] time the model is given the
+#' reference to the checkpoint. At [predict()] time, the model is given the
 #' training rows as labelled context alongside the new rows and produces
 #' predictions in a single forward pass. Because the training data are stored on
 #' the fitted object, larger training sets make the object larger and prediction
@@ -279,10 +272,9 @@ tabicl_make_members <- function(
 #'    \eqn{\lambda} for each column is fit on the standardized training data
 #'    via maximum likelihood, then the transformed values are re-standardized
 #'    so the downstream stages see the same mean/scale as the `"none"` path.
-#'    The transform handles negative values (unlike Box-Cox) and is helpful
-#'    when individual columns are heavily skewed or heavy-tailed. The
-#'    `normalization` argument is a vector because the default ensemble
-#'    intentionally mixes `"none"` and `"YeoJohnson"` across members to
+#'    The transform is helpful when individual columns are heavily skewed or
+#'    heavy-tailed. The `normalization` argument is a vector because the default
+#'    ensemble intentionally mixes `"none"` and `"YeoJohnson"` across members to
 #'    boost predictive diversity.
 #' 3. **Outlier clipping** — a two-stage z-score clipper trims extreme
 #'    values. This always runs.
@@ -330,14 +322,11 @@ tabicl_make_members <- function(
 #' libtorch MPS kernels crash on parts of the model, so requesting `"mps"` issues
 #' a warning and falls back to CPU.
 #'
-#' ## Pretrained weights
+#' ## Pre-trained weights
 #'
-#' The released TabICL checkpoints are distributed as a Python `.ckpt`. They must
-#' first be converted to the two files brulee reads
-#' (`<task>.config.json` and `<task>.model.safetensors`) and cached under
-#' `~/.cache/TabICL/<version>/<date>/<Classification|Regression>/`. `brulee_tab_icl()`
-#' loads the cached checkpoint for the task automatically and errors if none is
-#' found.
+#' The estimated parameters from the pre-trained Python model are used. On
+#' first use, the values are downloaded and cached locally and are more than
+#' 200MB.
 #'
 #' @references
 #'
@@ -363,7 +352,7 @@ tabicl_make_members <- function(
 #' @examples
 #' \dontrun{
 #' # Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
-#' # "Pretrained weights" section and dev/tabicl/).
+#' # "Pre-trained weights" section and dev/tabicl/).
 #'
 #' if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
 #'   data(penguins, package = "modeldata")
