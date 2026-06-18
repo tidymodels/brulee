@@ -39,10 +39,10 @@ tabicl_row_interaction <- nn_module(
     )
 
     self$cls_tokens <- nn_parameter(torch_empty(num_cls, embed_dim))
-    self$out_ln <- if (norm_first) {
-      tabicl_layer_norm(embed_dim, bias = !bias_free_ln)
+    if (norm_first) {
+      self$out_ln <- tabicl_layer_norm(embed_dim, bias = !bias_free_ln)
     } else {
-      nn_identity()
+      self$out_ln <- nn_identity()
     }
   },
   # Run the encoder blocks then aggregate via the CLS tokens. The first

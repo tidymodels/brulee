@@ -697,7 +697,11 @@ print.brulee_chronos <- function(x, ...) {
     error = function(e) "<not available; model has not been reloaded>"
   )
 
-  short_sha <- if (is.null(x$revision)) "unknown" else substr(x$revision, 1, 8)
+  if (is.null(x$revision)) {
+    short_sha <- "unknown"
+  } else {
+    short_sha <- substr(x$revision, 1, 8)
+  }
   mod_lst <- c(
     " " = "Source: {x$model_id} @ {short_sha}",
     " " = "Model dim: {x$config$d_model}",

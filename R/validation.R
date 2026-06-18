@@ -362,12 +362,12 @@ get_safe_device <- function(device) {
     return("cpu")
   }
 
-  available <- if (device == "cuda") {
-    torch::cuda_is_available()
+  if (device == "cuda") {
+    available <- torch::cuda_is_available()
   } else if (device == "mps") {
-    torch::backends_mps_is_available()
+    available <- torch::backends_mps_is_available()
   } else {
-    FALSE
+    available <- FALSE
   }
 
   if (!available) {

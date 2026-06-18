@@ -149,8 +149,16 @@ check_range <- function(
   }
 
   if (low_fail || high_fail) {
-    lbr <- if (incl[[1]]) "[" else "("
-    rbr <- if (incl[[2]]) "]" else ")"
+    if (incl[[1]]) {
+      lbr <- "["
+    } else {
+      lbr <- "("
+    }
+    if (incl[[2]]) {
+      rbr <- "]"
+    } else {
+      rbr <- ")"
+    }
     cli::cli_abort(
       "{.arg {arg}} must be in the range {lbr}{x_min}, {x_max}{rbr}.",
       call = call

@@ -902,7 +902,11 @@ auto_int_fit_imp <- function(
 
   n <- length(y)
   p_cat <- length(pred_lvls)
-  p_cont <- if (is.null(x_cont)) 0L else ncol(x_cont)
+  if (is.null(x_cont)) {
+    p_cont <- 0L
+  } else {
+    p_cont <- ncol(x_cont)
+  }
   p <- p_cat + p_cont
   all_features <- c(cat_names, cont_names)
 
@@ -931,11 +935,27 @@ auto_int_fit_imp <- function(
 
   if (validation > 0) {
     in_val <- sample(seq_len(n), floor(n * validation))
-    x_cat_val <- if (!is.null(x_cat)) x_cat[in_val, , drop = FALSE] else NULL
-    x_cont_val <- if (!is.null(x_cont)) x_cont[in_val, , drop = FALSE] else NULL
+    if (!is.null(x_cat)) {
+      x_cat_val <- x_cat[in_val, , drop = FALSE]
+    } else {
+      x_cat_val <- NULL
+    }
+    if (!is.null(x_cont)) {
+      x_cont_val <- x_cont[in_val, , drop = FALSE]
+    } else {
+      x_cont_val <- NULL
+    }
     y_val <- y[in_val]
-    x_cat <- if (!is.null(x_cat)) x_cat[-in_val, , drop = FALSE] else NULL
-    x_cont <- if (!is.null(x_cont)) x_cont[-in_val, , drop = FALSE] else NULL
+    if (!is.null(x_cat)) {
+      x_cat <- x_cat[-in_val, , drop = FALSE]
+    } else {
+      x_cat <- NULL
+    }
+    if (!is.null(x_cont)) {
+      x_cont <- x_cont[-in_val, , drop = FALSE]
+    } else {
+      x_cont <- NULL
+    }
     y <- y[-in_val]
   } else {
     x_cat_val <- NULL
@@ -1009,12 +1029,20 @@ auto_int_fit_imp <- function(
     # the explicit `device =` arg these tensors would land on the CPU and
     # later trigger device-mismatch errors when fed to the MPS/CUDA model.
     make_auto_int_tensors <- function(xc, xn, yv) {
-      t_cat <- if (!is.null(xc)) {
-        torch::torch_tensor(xc, dtype = torch::torch_long(), device = device)
+      if (!is.null(xc)) {
+        t_cat <- torch::torch_tensor(
+          xc,
+          dtype = torch::torch_long(),
+          device = device
+        )
       } else {
-        NULL
+        t_cat <- NULL
       }
-      t_cont <- if (!is.null(xn)) float_32(xn, device = device) else NULL
+      if (!is.null(xn)) {
+        t_cont <- float_32(xn, device = device)
+      } else {
+        t_cont <- NULL
+      }
       if (is.factor(yv)) {
         t_y <- torch::torch_tensor(
           as.numeric(yv),

@@ -218,10 +218,10 @@ load_tabicl_weights <- function(model, tensors, verbose = FALSE) {
 # self-identifying: "classification.config.json" / "classification.model.safetensors"
 # (and the regression equivalents).
 tabicl_checkpoint_files <- function(task) {
-  prefix <- if (identical(task, "classification")) {
-    "classification"
+  if (identical(task, "classification")) {
+    prefix <- "classification"
   } else {
-    "regression"
+    prefix <- "regression"
   }
   list(
     config = paste0(prefix, ".config.json"),

@@ -262,10 +262,10 @@ predict.brulee_chronos <- function(
     future_cov_cols <- setdiff(names(future_df), drop_in_future)
 
     future_list <- lapply(ctx$item_ids, function(id) {
-      sub <- if (id_synthetic) {
-        future_df
+      if (id_synthetic) {
+        sub <- future_df
       } else {
-        future_df[future_df[[id_column]] == id, , drop = FALSE]
+        sub <- future_df[future_df[[id_column]] == id, , drop = FALSE]
       }
       if (timestamp_synthetic) {
         sub

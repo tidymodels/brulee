@@ -58,13 +58,7 @@ brulee_tab_icl(x, ...)
 )
 }
 \arguments{
-\item{x}{A data frame or matrix of predictors, a formula, or a recipe (see
-Details).}
-
 \item{...}{Not currently used.}
-
-\item{y}{When \code{x} is a data frame or matrix, a vector of outcomes: a factor
-for classification or a numeric vector for regression.}
 
 \item{n_estimators}{An integer for the number of ensemble members (default
 \code{8}). Each member preprocesses, permutes features, and (for classification)
@@ -89,10 +83,6 @@ re-sent through the network on every call to \code{predict()}.}
 
 \item{device}{A character string for the compute device: \code{"cpu"} (the
 default) or \code{"cuda"}. See the \strong{Device support} section.}
-
-\item{formula}{A formula specifying the outcome and predictors.}
-
-\item{data}{A data frame for the formula and recipe methods.}
 }
 \value{
 A \code{brulee_tab_icl} object with elements:
@@ -109,10 +99,10 @@ A \code{brulee_tab_icl} object with elements:
 }
 }
 \description{
-\code{brulee_tab_icl()} prepares the pretrained TabICL (Tabular In-Context
+\code{brulee_tab_icl()} prepares the pre-trained TabICL (Tabular In-Context
 Learning) foundation model from Qu \emph{et al} (2025) for prediction. TabICL is a
 transformer that makes predictions on tabular data by \emph{in-context learning}:
-it is not trained on your data. Instead, the released pretrained weights are
+it is not trained on your data. Instead, the released pre-trained weights are
 loaded and the model conditions on your training rows at prediction time,
 much like a few-shot language model conditions on its prompt. Both
 classification and regression are supported.
@@ -121,9 +111,9 @@ classification and regression are supported.
 \subsection{In-context learning}{
 
 Unlike the other \pkg{brulee} models, \code{brulee_tab_icl()} does not train any
-parameters. The pretrained network is fixed; "fitting" simply validates and
+parameters. The pre-trained network is fixed; "fitting" simply validates and
 stores the (encoded) training predictors and outcomes together with a
-reference to the checkpoint. At \code{\link[=predict]{predict()}} time the model is given the
+reference to the checkpoint. At \code{\link[=predict]{predict()}} time, the model is given the
 training rows as labelled context alongside the new rows and produces
 predictions in a single forward pass. Because the training data are stored on
 the fitted object, larger training sets make the object larger and prediction
@@ -182,10 +172,9 @@ between standardization and outlier clipping. The Yeo-Johnson
 \eqn{\lambda} for each column is fit on the standardized training data
 via maximum likelihood, then the transformed values are re-standardized
 so the downstream stages see the same mean/scale as the \code{"none"} path.
-The transform handles negative values (unlike Box-Cox) and is helpful
-when individual columns are heavily skewed or heavy-tailed. The
-\code{normalization} argument is a vector because the default ensemble
-intentionally mixes \code{"none"} and \code{"YeoJohnson"} across members to
+The transform is helpful when individual columns are heavily skewed or
+heavy-tailed. The \code{normalization} argument is a vector because the default
+ensemble intentionally mixes \code{"none"} and \code{"YeoJohnson"} across members to
 boost predictive diversity.
 \item \strong{Outlier clipping} — a two-stage z-score clipper trims extreme
 values. This always runs.
@@ -239,20 +228,17 @@ libtorch MPS kernels crash on parts of the model, so requesting \code{"mps"} iss
 a warning and falls back to CPU.
 }
 
-\subsection{Pretrained weights}{
+\subsection{Pre-trained weights}{
 
-The released TabICL checkpoints are distributed as a Python \code{.ckpt}. They must
-first be converted to the two files brulee reads
-(\verb{<task>.config.json} and \verb{<task>.model.safetensors}) and cached under
-\verb{~/.cache/TabICL/<version>/<date>/<Classification|Regression>/}. \code{brulee_tab_icl()}
-loads the cached checkpoint for the task automatically and errors if none is
-found.
+The estimated parameters from the pre-trained Python model are used. On
+first use, the values are downloaded and cached locally and are more than
+200MB.
 }
 }
 \examples{
 \dontrun{
 # Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
-# "Pretrained weights" section and dev/tabicl/).
+# "Pre-trained weights" section and dev/tabicl/).
 
 if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
   data(penguins, package = "modeldata")

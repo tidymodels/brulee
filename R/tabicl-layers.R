@@ -13,10 +13,10 @@ tabicl_layer_norm <- nn_module(
   initialize = function(dim, eps = 1e-5, bias = TRUE) {
     self$eps <- eps
     self$weight <- nn_parameter(torch_ones(dim))
-    self$bias <- if (bias) {
-      nn_parameter(torch_zeros(dim))
+    if (bias) {
+      self$bias <- nn_parameter(torch_zeros(dim))
     } else {
-      NULL
+      self$bias <- NULL
     }
   },
   forward = function(x) {
@@ -68,7 +68,11 @@ tabicl_mha_block <- nn_module(
     self$linear2 <- nn_linear(dim_feedforward, d_model)
     self$norm1 <- tabicl_layer_norm(d_model, bias = !bias_free_ln)
     self$norm2 <- tabicl_layer_norm(d_model, bias = !bias_free_ln)
-    self$act <- if (identical(activation, "gelu")) nnf_gelu else nnf_relu
+    if (identical(activation, "gelu")) {
+      self$act <- nnf_gelu
+    } else {
+      self$act <- nnf_relu
+    }
   },
   ff_block = function(x) {
     self$linear2(self$act(self$linear1(x)))
@@ -215,10 +219,10 @@ tabicl_isab <- nn_module(
     d_model <- sizes[length(sizes)]
     batch_shape <- utils::head(sizes, -2)
     ind <- self$ind_vectors$expand(c(batch_shape, self$num_inds, d_model))
-    ctx <- if (is.null(train_size)) {
-      src
+    if (is.null(train_size)) {
+      ctx <- src
     } else {
-      src$narrow(dim = -2, start = 1, length = train_size)
+      ctx <- src$narrow(dim = -2, start = 1, length = train_size)
     }
     hidden <- self$multihead_attn1(ind, ctx, ctx)
     self$multihead_attn2(src, hidden, hidden)
@@ -310,10 +314,10 @@ tabicl_encoder <- nn_module(
         )
       }
     ))
-    self$rope <- if (use_rope) {
-      tabicl_rope(dim = d_model %/% nhead, theta = rope_base)
+    if (use_rope) {
+      self$rope <- tabicl_rope(dim = d_model %/% nhead, theta = rope_base)
     } else {
-      NULL
+      self$rope <- NULL
     }
   },
   forward = function(src, train_size = NULL) {

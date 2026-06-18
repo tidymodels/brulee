@@ -48,7 +48,11 @@ tabicl_standard_scaler_transform <- function(
 tabicl_outlier_remover_fit <- function(x, threshold = 4.0) {
   n <- nrow(x)
   means <- colMeans(x, na.rm = TRUE)
-  stds <- if (n > 1) tabicl_col_sample_sd(x) else tabicl_col_pop_sd(x)
+  if (n > 1) {
+    stds <- tabicl_col_sample_sd(x)
+  } else {
+    stds <- tabicl_col_pop_sd(x)
+  }
   stds <- pmax(stds, 1e-6)
 
   lower <- means - threshold * stds
@@ -60,10 +64,10 @@ tabicl_outlier_remover_fit <- function(x, threshold = 4.0) {
   x_clean[outlier] <- NA
 
   means <- colMeans(x_clean, na.rm = TRUE)
-  stds <- if (n > 1) {
-    tabicl_col_sample_sd(x_clean)
+  if (n > 1) {
+    stds <- tabicl_col_sample_sd(x_clean)
   } else {
-    tabicl_col_pop_sd(x_clean)
+    stds <- tabicl_col_pop_sd(x_clean)
   }
   stds <- pmax(stds, 1e-6)
 

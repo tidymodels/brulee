@@ -46,7 +46,11 @@ stub_chronos_loaders <- function(also_mock_predict_core = FALSE) {
       past_covariates = NULL,
       future_covariates = NULL
     ) {
-      n_series <- if (is.list(context)) length(context) else 1L
+      if (is.list(context)) {
+        n_series <- length(context)
+      } else {
+        n_series <- 1L
+      }
       n_q <- length(object$config$quantiles)
       preds <- array(0, dim = c(n_series, n_q, prediction_length))
       for (s in seq_len(n_series)) {

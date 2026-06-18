@@ -13,10 +13,10 @@ tabicl_model <- nn_module(
     embed_dim <- config$embed_dim
     ff <- config$ff_factor * embed_dim
     icl_dim <- embed_dim * config$row_num_cls # CLS tokens are concatenated
-    out_dim <- if (config$max_classes == 0) {
-      config$num_quantiles
+    if (config$max_classes == 0) {
+      out_dim <- config$num_quantiles
     } else {
-      config$max_classes
+      out_dim <- config$max_classes
     }
     self$max_classes <- config$max_classes
 

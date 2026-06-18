@@ -155,7 +155,11 @@ tabicl_make_members <- function(
   classification
 ) {
   feat_id <- seq_len(n_features)
-  class_id <- if (classification) seq_len(n_classes) - 1L else NULL
+  if (classification) {
+    class_id <- seq_len(n_classes) - 1L
+  } else {
+    class_id <- NULL
+  }
 
   if (n_estimators == 1L) {
     return(list(tabicl_member("none", feat_id, class_id)))
@@ -164,7 +168,11 @@ tabicl_make_members <- function(
   norms <- rep(normalization, length.out = n_estimators)
   members <- vector("list", n_estimators)
   for (k in seq_len(n_estimators)) {
-    feat <- if (k == 1L) feat_id else sample(feat_id)
+    if (k == 1L) {
+      feat <- feat_id
+    } else {
+      feat <- sample(feat_id)
+    }
     cls <- class_id
     if (classification && k > 1L) {
       shift <- (k - 1L) %% n_classes
@@ -530,7 +538,11 @@ tabicl_bridge <- function(
   }
 
   # Locate the cached checkpoint for the task (errors if none is cached).
-  task <- if (classification) "classification" else "regression"
+  if (classification) {
+    task <- "classification"
+  } else {
+    task <- "regression"
+  }
   files <- tabicl_checkpoint_files(task)
   path <- tabicl_cache_lookup(task, call = call)
   config <- tabicl_parse_config(file.path(path, files$config))

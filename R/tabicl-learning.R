@@ -43,10 +43,10 @@ tabicl_icl_learning <- nn_module(
       self$ln <- tabicl_layer_norm(d_model, bias = !bias_free_ln)
     }
 
-    self$y_encoder <- if (max_classes > 0) {
-      tabicl_onehot_linear(max_classes, d_model)
+    if (max_classes > 0) {
+      self$y_encoder <- tabicl_onehot_linear(max_classes, d_model)
     } else {
-      nn_linear(1, d_model)
+      self$y_encoder <- nn_linear(1, d_model)
     }
 
     self$decoder <- nn_sequential(
@@ -60,10 +60,12 @@ tabicl_icl_learning <- nn_module(
   # (B, T, out_dim) over all rows.
   icl_predictions = function(r, y_train) {
     train_size <- y_train$size(-1)
-    ry_train <- if (self$max_classes > 0) {
-      self$y_encoder(y_train$to(dtype = torch_float()))
+    if (self$max_classes > 0) {
+      ry_train <- self$y_encoder(y_train$to(dtype = torch_float()))
     } else {
-      self$y_encoder(y_train$to(dtype = torch_float())$unsqueeze(-1))
+      ry_train <- self$y_encoder(
+        y_train$to(dtype = torch_float())$unsqueeze(-1)
+      )
     }
 
     t_total <- r$size(2)

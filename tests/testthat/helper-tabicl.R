@@ -215,7 +215,11 @@ tabicl_copy_icl_learning <- function(icl, f, prefix = "icl.") {
 # names brulee reads (classification.* / regression.*), derived from the config.
 tabicl_write_model_dir <- function(f, meta) {
   dir <- withr::local_tempdir(.local_envir = parent.frame())
-  task <- if (meta$config$max_classes > 0) "classification" else "regression"
+  if (meta$config$max_classes > 0) {
+    task <- "classification"
+  } else {
+    task <- "regression"
+  }
   files <- brulee:::tabicl_checkpoint_files(task)
   weight_keys <- grep(
     "^(col_embedder|row_interactor|icl_predictor)\\.",
@@ -240,8 +244,16 @@ tabicl_write_model_dir <- function(f, meta) {
 # task-prefixed files brulee reads.
 tabicl_local_cache <- function(f, meta) {
   root <- withr::local_tempdir(.local_envir = parent.frame())
-  task <- if (meta$config$max_classes > 0) "classification" else "regression"
-  label <- if (task == "classification") "Classification" else "Regression"
+  if (meta$config$max_classes > 0) {
+    task <- "classification"
+  } else {
+    task <- "regression"
+  }
+  if (task == "classification") {
+    label <- "Classification"
+  } else {
+    label <- "Regression"
+  }
   files <- brulee:::tabicl_checkpoint_files(task)
   dir <- file.path(root, "v0", "2020-01-01", label)
   dir.create(dir, recursive = TRUE)

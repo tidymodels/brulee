@@ -95,10 +95,10 @@ tabicl_mha <- nn_module(
     self$in_proj_weight <- nn_parameter(torch_empty(3 * embed_dim, embed_dim))
     self$in_proj_bias <- nn_parameter(torch_zeros(3 * embed_dim))
     self$out_proj <- nn_linear(embed_dim, embed_dim)
-    self$ssmax_layer <- if (identical(ssmax, "none")) {
-      NULL
+    if (identical(ssmax, "none")) {
+      self$ssmax_layer <- NULL
     } else {
-      tabicl_qassmax(num_heads, self$head_dim)
+      self$ssmax_layer <- tabicl_qassmax(num_heads, self$head_dim)
     }
   },
   forward = function(

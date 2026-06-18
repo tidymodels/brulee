@@ -48,10 +48,10 @@ tabicl_col_embedding <- nn_module(
     )
 
     if (target_aware) {
-      self$y_encoder <- if (max_classes > 0) {
-        tabicl_onehot_linear(max_classes, embed_dim)
+      if (max_classes > 0) {
+        self$y_encoder <- tabicl_onehot_linear(max_classes, embed_dim)
       } else {
-        nn_linear(1, embed_dim)
+        self$y_encoder <- nn_linear(1, embed_dim)
       }
     }
   },
@@ -83,10 +83,12 @@ tabicl_col_embedding <- nn_module(
     src <- self$in_linear(features) # (..., T, E)
 
     if (self$target_aware) {
-      y_emb <- if (self$max_classes > 0) {
-        self$y_encoder(y_train$to(dtype = torch_float()))
+      if (self$max_classes > 0) {
+        y_emb <- self$y_encoder(y_train$to(dtype = torch_float()))
       } else {
-        self$y_encoder(y_train$to(dtype = torch_float())$unsqueeze(-1))
+        y_emb <- self$y_encoder(
+          y_train$to(dtype = torch_float())$unsqueeze(-1)
+        )
       }
       t_total <- src$size(-2)
       train_part <- src$narrow(dim = -2, start = 1, length = train_size) + y_emb
@@ -102,7 +104,11 @@ tabicl_col_embedding <- nn_module(
       }
     }
 
-    tf_train_size <- if (embed_with_test) NULL else train_size
+    if (embed_with_test) {
+      tf_train_size <- NULL
+    } else {
+      tf_train_size <- train_size
+    }
     self$tf_col(src, train_size = tf_train_size)
   },
   forward = function(x, y_train, embed_with_test = FALSE) {
@@ -127,10 +133,11 @@ tabicl_col_embedding <- nn_module(
     )
     features <- xg$transpose(2, 3) # (B, H + C, T, group_size)
 
-    y_expanded <- if (self$target_aware) {
-      y_train$unsqueeze(2)$expand(c(-1, features$size(2), -1)) # (B, H + C, train_size)
+    if (self$target_aware) {
+      # (B, H + C, train_size)
+      y_expanded <- y_train$unsqueeze(2)$expand(c(-1, features$size(2), -1))
     } else {
-      NULL
+      y_expanded <- NULL
     }
 
     embeddings <- self$compute_embeddings(
