@@ -320,10 +320,8 @@ optional hidden layers to the output dimension.
 There is a \code{summary()} methods that can provide details of the architecture
 for a specific model fit.
 
-Differences in this implementation and the orignal paper:
-\itemize{
-\item Pretraining isn't supported.
-}
+Differences in this implementation and the original paper: pretraining isn't
+supported.
 }
 
 \subsection{Attention Types}{

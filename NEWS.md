@@ -1,4 +1,4 @@
-# brulee 0.7.0
+# brulee 1.0.0
 
 New models for tabular data:
 
@@ -6,6 +6,7 @@ New models for tabular data:
   * ResNet (`brulee_resnet()`) can fit a multilayer neural network with skip (i.e. residual) connections and batch normalization. 
   * AutoInt (`brulee_auto_int()`) uses residual connections and columnwise attention mechanisms to create embeddings that encourage in-context learning of features. 
   * Saint (`brulee_saint()`) uses column and/or row attention mechanisms. 
+  * Chronos2 (`brulee_chronos()`) is a foundational model for forecasting. 
 
 * All modeling functions now support GPU acceleration via the `device` parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or `device = "mps"` (Apple Silicon). When `device = NULL` (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn't support float64 dtype required by brulee. See`?training_efficiency` for some related notes. 
 
@@ -13,7 +14,7 @@ New models for tabular data:
 
 * Float tensors were changed from 64-bit floats to 32-bit. This is to enable GPU usage on MPS devices. 
 
-* Parameters are initialized on CPU devices and then converted to the chosen device. In some cases, the RGN initialization code is independent of the seed. 
+* Parameters are initialized on CPU devices and then converted to the chosen device. In some cases, the RNG initialization code is independent of the seed. 
 
 * For classification, the softmax was moved out of every model's forward pass so the loss can use `torch::nnf_cross_entropy()` (which applies the log-sum-exp trick internally) instead of `nll_loss(log(softmax(x)))`. This avoids `log(0)` underflow that produced `NaN` losses and "numerical overflow" early stopping on overspecified `brulee_saint()` / `brulee_auto_int()` fits. Affects `brulee_mlp()`, `brulee_logistic_reg()`, `brulee_multinomial_reg()`, `brulee_resnet()`, `brulee_auto_int()`, and `brulee_saint()`. New fits carry `output_type = "logits"` so the predict path applies softmax; serialized fits from earlier versions of brulee continue to predict correctly.
 
