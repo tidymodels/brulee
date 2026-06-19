@@ -26,7 +26,7 @@ brulee_saint(
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -41,6 +41,7 @@ brulee_saint(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 
@@ -56,7 +57,7 @@ brulee_saint(
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -71,6 +72,7 @@ brulee_saint(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 
@@ -86,7 +88,7 @@ brulee_saint(
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -101,6 +103,7 @@ brulee_saint(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 
@@ -116,7 +119,7 @@ brulee_saint(
   dropout_attn = 0.1,
   dropout_hidden = 0.1,
   dropout_last = 0,
-  row_attention_on_predict = FALSE,
+  row_attention_on_predict = TRUE,
   hidden_units = 5,
   hidden_activations = "relu",
   penalty = 0.001,
@@ -131,6 +134,7 @@ brulee_saint(
   stop_iter = 5,
   verbose = FALSE,
   device = NULL,
+  use_target_token = TRUE,
   ...
 )
 ```
@@ -221,18 +225,18 @@ brulee_saint(
 - row_attention_on_predict:
 
   A logical value. Should row (inter-sample) attention be applied during
-  prediction? Default is `FALSE`. When `FALSE`, row attention is only
-  used during training and predictions use column attention only — this
-  ensures that predictions for a given row are independent of what other
-  rows are in the prediction set. This is only relevant when
-  `attention_type` is `"row"` or `"both"`.
+  prediction? Default is `TRUE`, matching the training-time behavior.
+  When `FALSE`, row attention is bypassed at predict time so that
+  predictions for a given row do not depend on what other rows are in
+  the prediction set; column attention is used on its own. This is only
+  relevant when `attention_type` is `"row"` or `"both"`.
 
 - hidden_units:
 
   An integer vector for the number of units in optional hidden layers
   between the transformer backbone and the output head. When `NULL` (the
-  default), no hidden layers are added and the flattened transformer
-  output is projected directly to the output.
+  default), no hidden layers are added and the pooled transformer output
+  is projected directly to the output.
 
 - hidden_activations:
 
@@ -317,6 +321,17 @@ brulee_saint(
   available, otherwise CPU. See
   [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
 
+- use_target_token:
+
+  A logical value. When `TRUE` (the default), a learnable target token
+  (`[CLS]` in the SAINT paper) is prepended to each sample's feature
+  sequence and only its final-layer embedding is fed to the head. This
+  matches the architecture described in the SAINT paper (Section 3 and
+  Figure 1); see the **Target Token Pooling** section in **Details**.
+  When `FALSE`, the head instead consumes the concatenation of every
+  feature token, which matches the SAINT reference implementation at
+  <https://github.com/somepago/saint>.
+
 - formula:
 
   A formula specifying the outcome term(s) on the left-hand side, and
@@ -362,7 +377,7 @@ The SAINT architecture has three stages:
     per-feature embedding tables. Continuous features are passed through
     per-feature MLPs (1 -\> 100 -\> `num_embedding`). These initial
     embeddings are per-feature; there is a distinct embedding MLP for
-    each predictor.
+    each predictor. Also, see the "Target Token Pooling" section below.
 
 2.  **Transformer backbone**: A stack of `num_attn_blocks` transformer
     layers. Each layer contains multi-head self-attention followed by a
@@ -371,11 +386,16 @@ The SAINT architecture has three stages:
     attention (across features) and row attention (across samples within
     the batch).
 
-3.  **Output head**: Flattens the transformer output and projects
+3.  **Output head**: Pools the transformer output (either the target
+    token's embedding or the flattened concatenation of all feature
+    embeddings, controlled by `use_target_token`) and projects it
     through optional hidden layers to the output dimension.
 
 There is a [`summary()`](https://rdrr.io/r/base/summary.html) methods
 that can provide details of the architecture for a specific model fit.
+
+Differences in this implementation and the original paper: pretraining
+isn't supported.
 
 ### Attention Types
 
@@ -390,15 +410,52 @@ that can provide details of the architecture for a specific model fit.
 - **Both** (`"both"`): Alternates between column and row attention in
   each transformer block. This is the full SAINT model.
 
+### Target Token Pooling
+
+Borrowing from BERT, SAINT prepends a learnable target token (the paper
+calls it `[CLS]`) to each sample's feature sequence before the
+transformer. With embeddings `E(x_i^{(1)}), ..., E(x_i^{(n)})` for the
+`n` predictors of sample `i`, the input sequence becomes
+
+`[target, E(x_i^{(1)}), E(x_i^{(2)}), ..., E(x_i^{(n)})]`
+
+giving `n + 1` tokens of dimension `num_embedding`. The target token has
+no input value; it is a free parameter of the model that is trained
+alongside the rest of the network. Column attention lets every feature
+token attend to the target and vice versa, so the target slot
+accumulates a contextual summary of the sample. When `attention_type` is
+`"row"` or `"both"`, inter-sample attention sees the full `n + 1` token
+sequence per sample, so the target slot also exchanges information
+across samples in the batch.
+
+After the transformer backbone, the head reads *only* the final-layer
+embedding of the target token (the first position) and feeds it through
+the optional `hidden_units` MLP and the output layer. This is what the
+paper describes in Figure 1: "We take the contextual embeddings from
+SAINT and pass only the embedding correspond to the CLS token through an
+MLP to obtain the final prediction."
+
+With `use_target_token = FALSE`, no target token is added and the head
+instead consumes the concatenation of all `n` feature tokens. That
+option is provided because the SAINT reference Python implementation
+(<https://github.com/somepago/saint>) departs from the paper and uses
+flatten-pooling; it is kept available for compatibility with that code
+path and for users who want the original brulee behavior.
+
 ### Row Attention at Prediction Time
 
 Row attention computations adjust the internal embeddings based on the
 rows that are available at any given time. During training, the other
 rows in the batch are used to compute attention. After training, when
 [`predict()`](https://rdrr.io/r/stats/predict.html) is called, the
-default behavior is to bypass row attention. This is because the
-predictions would depend on the other data available at the time. If
-this is what you want, set `row_attention_on_predict` to `TRUE`.
+default behavior is to keep row attention on, mirroring the
+training-time computation. Because row attention is computed across the
+samples present in a given call, predictions for a row depend on what
+other rows are passed alongside it. To get batch-independent predictions
+(where the prediction for a given row is the same regardless of what
+other rows are in the input), set `row_attention_on_predict` to `FALSE`;
+row attention is then bypassed at predict time and column attention is
+used on its own.
 
 ### Learning Rates
 
@@ -480,37 +537,20 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
   rsq(outcome, .pred)
 
 }
-#> epoch: 00, learn rate: 0.01, Loss (scaled): 0.559
-#> epoch: 01, learn rate: 0.01, Loss (scaled): 0.299
-#> epoch: 02, learn rate: 0.01, Loss (scaled): 0.304
-#> epoch: 03, learn rate: 0.01, Loss (scaled): 0.461
-#> epoch: 04, learn rate: 0.01, Loss (scaled): 0.424
-#> epoch: 05, learn rate: 0.01, Loss (scaled): 0.29
-#> epoch: 06, learn rate: 0.01, Loss (scaled): 0.349
-#> epoch: 07, learn rate: 0.01, Loss (scaled): 0.298
-#> epoch: 08, learn rate: 0.01, Loss (scaled): 0.401
-#> epoch: 09, learn rate: 0.01, Loss (scaled): 0.348
-#> epoch: 10, learn rate: 0.01, Loss (scaled): 0.268
-#> epoch: 11, learn rate: 0.01, Loss (scaled): 0.267
-#> epoch: 12, learn rate: 0.01, Loss (scaled): 0.341
-#> epoch: 13, learn rate: 0.01, Loss (scaled): 0.23
-#> epoch: 14, learn rate: 0.01, Loss (scaled): 0.401
-#> epoch: 15, learn rate: 0.01, Loss (scaled): 0.288
-#> epoch: 16, learn rate: 0.01, Loss (scaled): 0.198
-#> epoch: 17, learn rate: 0.01, Loss (scaled): 0.638
-#> epoch: 18, learn rate: 0.01, Loss (scaled): 0.398
-#> epoch: 19, learn rate: 0.01, Loss (scaled): 0.167
-#> epoch: 20, learn rate: 0.01, Loss (scaled): 0.165
-#> epoch: 21, learn rate: 0.01, Loss (scaled): 0.31
-#> epoch: 22, learn rate: 0.01, Loss (scaled): 0.25
-#> epoch: 23, learn rate: 0.01, Loss (scaled): 0.397
-#> epoch: 24, learn rate: 0.01, Loss (scaled): 0.747
-#> epoch: 25, learn rate: 0.01, Loss (scaled): 0.233
+#> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.311
+#> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.295
+#> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.288
+#> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.289
+#> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.298
+#> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.315
+#> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.289
+#> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.305
 #> SAINT architecture
 #> inputs: 8 (0 categorical, 8 numeric) | output dim: 1
-#> attention: both | embedding dim: 3
+#> attention: both | embedding dim: 3 | target token: TRUE
 #> 
 #> Embedding layer
+#>   Target token (1 x 3)                         3 params
 #>   8 x MLP(1 -> 100 -> 3)                   4,024 params
 #> 
 #> Transformer backbone (4 blocks, column + row attention)
@@ -521,10 +561,10 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #>       LayerNorm(3)                                 6 params
 #>       FeedForward(3, GEGLU)                      135 params
 #>     Row attention:
-#>       LayerNorm(24)                               48 params
-#>       Attention(dim=24, heads=5)              30,744 params
-#>       LayerNorm(24)                               48 params
-#>       FeedForward(24, GEGLU)                   7,128 params
+#>       LayerNorm(27)                               54 params
+#>       Attention(dim=27, heads=5)              34,587 params
+#>       LayerNorm(27)                               54 params
+#>       FeedForward(27, GEGLU)                   8,991 params
 #>   Block 2:
 #>     Column attention:
 #>       LayerNorm(3)                                 6 params
@@ -532,10 +572,10 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #>       LayerNorm(3)                                 6 params
 #>       FeedForward(3, GEGLU)                      135 params
 #>     Row attention:
-#>       LayerNorm(24)                               48 params
-#>       Attention(dim=24, heads=5)              30,744 params
-#>       LayerNorm(24)                               48 params
-#>       FeedForward(24, GEGLU)                   7,128 params
+#>       LayerNorm(27)                               54 params
+#>       Attention(dim=27, heads=5)              34,587 params
+#>       LayerNorm(27)                               54 params
+#>       FeedForward(27, GEGLU)                   8,991 params
 #>   Block 3:
 #>     Column attention:
 #>       LayerNorm(3)                                 6 params
@@ -543,10 +583,10 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #>       LayerNorm(3)                                 6 params
 #>       FeedForward(3, GEGLU)                      135 params
 #>     Row attention:
-#>       LayerNorm(24)                               48 params
-#>       Attention(dim=24, heads=5)              30,744 params
-#>       LayerNorm(24)                               48 params
-#>       FeedForward(24, GEGLU)                   7,128 params
+#>       LayerNorm(27)                               54 params
+#>       Attention(dim=27, heads=5)              34,587 params
+#>       LayerNorm(27)                               54 params
+#>       FeedForward(27, GEGLU)                   8,991 params
 #>   Block 4:
 #>     Column attention:
 #>       LayerNorm(3)                                 6 params
@@ -554,22 +594,22 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #>       LayerNorm(3)                                 6 params
 #>       FeedForward(3, GEGLU)                      135 params
 #>     Row attention:
-#>       LayerNorm(24)                               48 params
-#>       Attention(dim=24, heads=5)              30,744 params
-#>       LayerNorm(24)                               48 params
-#>       FeedForward(24, GEGLU)                   7,128 params
+#>       LayerNorm(27)                               54 params
+#>       Attention(dim=27, heads=5)              34,587 params
+#>       LayerNorm(27)                               54 params
+#>       FeedForward(27, GEGLU)                   8,991 params
 #> 
 #> Hidden layers
-#>   Linear(24 -> 5)                            125 params
+#>   Linear(3 -> 5)                              20 params
 #>   ReLU                                         0 params
 #> 
 #> Output head
 #>   Linear(5 -> 1)                               6 params
 #> 
-#> Total parameters: 160,467
+#> Total parameters: 183,237
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rsq     standard       0.540
+#> 1 rsq     standard     0.00145
 # }
 ```

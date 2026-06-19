@@ -2,6 +2,10 @@
 
 ## brulee (development version)
 
+## brulee 1.0.0
+
+CRAN release: 2026-06-17
+
 New models for tabular data:
 
 - Regularization Learning Networks
@@ -23,6 +27,10 @@ New models for tabular data:
   ([`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md))
   uses column and/or row attention mechanisms.
 
+- Chronos2
+  ([`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md))
+  is a foundational model for forecasting.
+
 - All modeling functions now support GPU acceleration via the `device`
   parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or
   `device = "mps"` (Apple Silicon). When `device = NULL` (default), the
@@ -31,6 +39,37 @@ New models for tabular data:
   dtype required by brulee.
   See[`?training_efficiency`](https://brulee.tidymodels.org/dev/reference/training_efficiency.md)
   for some related notes.
+
+### Breaking Changes
+
+- Float tensors were changed from 64-bit floats to 32-bit. This is to
+  enable GPU usage on MPS devices.
+
+- Parameters are initialized on CPU devices and then converted to the
+  chosen device. In some cases, the RNG initialization code is
+  independent of the seed.
+
+- For classification, the softmax was moved out of every model’s forward
+  pass so the loss can use
+  [`torch::nnf_cross_entropy()`](https://torch.mlverse.org/docs/reference/nnf_cross_entropy.html)
+  (which applies the log-sum-exp trick internally) instead of
+  `nll_loss(log(softmax(x)))`. This avoids `log(0)` underflow that
+  produced `NaN` losses and “numerical overflow” early stopping on
+  overspecified
+  [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
+  /
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md)
+  fits. Affects
+  [`brulee_mlp()`](https://brulee.tidymodels.org/dev/reference/brulee_mlp.md),
+  [`brulee_logistic_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_logistic_reg.md),
+  [`brulee_multinomial_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_multinomial_reg.md),
+  [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md),
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md),
+  and
+  [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md).
+  New fits carry `output_type = "logits"` so the predict path applies
+  softmax; serialized fits from earlier versions of brulee continue to
+  predict correctly.
 
 ## brulee 0.6.0
 

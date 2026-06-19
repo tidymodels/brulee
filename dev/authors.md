@@ -16,13 +16,13 @@ Source:
 [`DESCRIPTION`](https://github.com/tidymodels/brulee/blob/main/DESCRIPTION)
 
 Kuhn M, Falbel D (2026). *brulee: High-Level Modeling Functions with
-'torch'*. R package version 0.6.0.9001,
+'torch'*. R package version 1.0.0.9000,
 <https://github.com/tidymodels/brulee>.
 
     @Manual{,
       title = {brulee: High-Level Modeling Functions with 'torch'},
       author = {Max Kuhn and Daniel Falbel},
       year = {2026},
-      note = {R package version 0.6.0.9001},
+      note = {R package version 1.0.0.9000},
       url = {https://github.com/tidymodels/brulee},
     }

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.6.0.9001</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,13 +33,23 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="brulee-development-version">brulee (development version)<a class="anchor" aria-label="anchor" href="#brulee-development-version"></a></h2>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="brulee-100">brulee 1.0.0<a class="anchor" aria-label="anchor" href="#brulee-100"></a></h2><p class="text-muted">CRAN release: 2026-06-17</p>
 <p>New models for tabular data:</p>
 <ul><li><p>Regularization Learning Networks (<code><a href="../reference/brulee_rln.html">brulee_rln()</a></code>) use a conventional MLP architecture but each weight learns its own adaptive regularization coefficient.</p></li>
 <li><p>ResNet (<code><a href="../reference/brulee_resnet.html">brulee_resnet()</a></code>) can fit a multilayer neural network with skip (i.e. residual) connections and batch normalization.</p></li>
 <li><p>AutoInt (<code><a href="../reference/brulee_auto_int.html">brulee_auto_int()</a></code>) uses residual connections and columnwise attention mechanisms to create embeddings that encourage in-context learning of features.</p></li>
 <li><p>Saint (<code><a href="../reference/brulee_saint.html">brulee_saint()</a></code>) uses column and/or row attention mechanisms.</p></li>
+<li><p>Chronos2 (<code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code>) is a foundational model for forecasting.</p></li>
 <li><p>All modeling functions now support GPU acceleration via the <code>device</code> parameter. Users can specify <code>device = "cpu"</code>, <code>device = "cuda"</code>, or <code>device = "mps"</code> (Apple Silicon). When <code>device = NULL</code> (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn’t support float64 dtype required by brulee. See<code><a href="../reference/training_efficiency.html">?training_efficiency</a></code> for some related notes.</p></li>
+</ul><div class="section level3">
+<h3 id="breaking-changes-1-0-0">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-0"></a></h3>
+<ul><li><p>Float tensors were changed from 64-bit floats to 32-bit. This is to enable GPU usage on MPS devices.</p></li>
+<li><p>Parameters are initialized on CPU devices and then converted to the chosen device. In some cases, the RNG initialization code is independent of the seed.</p></li>
+<li><p>For classification, the softmax was moved out of every model’s forward pass so the loss can use <code><a href="https://torch.mlverse.org/docs/reference/nnf_cross_entropy.html" class="external-link">torch::nnf_cross_entropy()</a></code> (which applies the log-sum-exp trick internally) instead of <code>nll_loss(log(softmax(x)))</code>. This avoids <code>log(0)</code> underflow that produced <code>NaN</code> losses and “numerical overflow” early stopping on overspecified <code><a href="../reference/brulee_saint.html">brulee_saint()</a></code> / <code><a href="../reference/brulee_auto_int.html">brulee_auto_int()</a></code> fits. Affects <code><a href="../reference/brulee_mlp.html">brulee_mlp()</a></code>, <code><a href="../reference/brulee_logistic_reg.html">brulee_logistic_reg()</a></code>, <code><a href="../reference/brulee_multinomial_reg.html">brulee_multinomial_reg()</a></code>, <code><a href="../reference/brulee_resnet.html">brulee_resnet()</a></code>, <code><a href="../reference/brulee_auto_int.html">brulee_auto_int()</a></code>, and <code><a href="../reference/brulee_saint.html">brulee_saint()</a></code>. New fits carry <code>output_type = "logits"</code> so the predict path applies softmax; serialized fits from earlier versions of brulee continue to predict correctly.</p></li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="brulee-060">brulee 0.6.0<a class="anchor" aria-label="anchor" href="#brulee-060"></a></h2><p class="text-muted">CRAN release: 2025-09-02</p>
 <ul><li><p>Transition from the magrittr pipe to the base R pipe.</p></li>

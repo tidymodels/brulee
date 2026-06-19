@@ -575,12 +575,11 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  }
 #> Multilayer perceptron architecture
-#> inputs: 2 | output dim: 2 | components: 4
+#> inputs: 2 | output dim: 2 | components: 3
 #> 
 #>   Linear(2 -> 2)                        6 params
 #>   ELU                                   0 params
 #>   Linear(2 -> 2)                        6 params
-#>   Softmax                               0 params
 #> 
 #> Total parameters: 12
 

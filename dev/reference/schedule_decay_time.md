@@ -112,5 +112,4 @@ if (rlang::is_installed("purrr")) {
   facet_wrap(~ type)
 
 }
-
 ```
