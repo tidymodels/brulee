@@ -81,7 +81,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
 #>    <dbl>
 #>  1  5.19
 #>  2  5.30
-#>  3  5.29
+#>  3  5.30
 #>  4  5.23
 #>  5  5.26
 #>  6  5.24

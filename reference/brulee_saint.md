@@ -394,9 +394,8 @@ The SAINT architecture has three stages:
 There is a [`summary()`](https://rdrr.io/r/base/summary.html) methods
 that can provide details of the architecture for a specific model fit.
 
-Differences in this implementation and the orignal paper:
-
-- Pretraining isn't supported.
+Differences in this implementation and the original paper: pretraining
+isn't supported.
 
 ### Attention Types
 

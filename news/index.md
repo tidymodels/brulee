@@ -1,6 +1,8 @@
 # Changelog
 
-## brulee 0.7.0
+## brulee 1.0.0
+
+CRAN release: 2026-06-17
 
 New models for tabular data:
 
@@ -23,6 +25,10 @@ New models for tabular data:
   ([`brulee_saint()`](https://brulee.tidymodels.org/reference/brulee_saint.md))
   uses column and/or row attention mechanisms.
 
+- Chronos2
+  ([`brulee_chronos()`](https://brulee.tidymodels.org/reference/brulee_chronos.md))
+  is a foundational model for forecasting.
+
 - All modeling functions now support GPU acceleration via the `device`
   parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or
   `device = "mps"` (Apple Silicon). When `device = NULL` (default), the
@@ -38,7 +44,7 @@ New models for tabular data:
   enable GPU usage on MPS devices.
 
 - Parameters are initialized on CPU devices and then converted to the
-  chosen device. In some cases, the RGN initialization code is
+  chosen device. In some cases, the RNG initialization code is
   independent of the seed.
 
 - For classification, the softmax was moved out of every model’s forward

@@ -506,6 +506,6 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.953
+#> 1 roc_auc binary         0.951
 # }
 ```

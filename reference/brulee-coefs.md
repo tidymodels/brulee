@@ -73,6 +73,6 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
  coef(fit, epoch = 1)
 }
 #> (Intercept)   Longitude    Latitude 
-#>  5.22475100 -0.05370786  0.05004641 
+#>  5.22475100 -0.05370786  0.05004638 
 # }
 ```
