@@ -128,6 +128,8 @@ tabicl_power_transformer_fit <- function(x) {
     function(j) tabicl_yeo_johnson(x[, j], lambdas[j]),
     numeric(nrow(x))
   )
+  # vapply drops to a vector when nrow(x) == 1; keep it a matrix.
+  dim(transformed) <- c(nrow(x), ncol(x))
   list(
     lambdas = lambdas,
     mean = colMeans(transformed),
@@ -141,6 +143,8 @@ tabicl_power_transformer_transform <- function(params, x) {
     function(j) tabicl_yeo_johnson(x[, j], params$lambdas[j]),
     numeric(nrow(x))
   )
+  # vapply drops to a vector when nrow(x) == 1; keep it a matrix.
+  dim(transformed) <- c(nrow(x), ncol(x))
   sweep(sweep(transformed, 2, params$mean), 2, params$scale, "/")
 }
 

@@ -60,6 +60,23 @@ test_that("tabicl preprocessing pipeline (Yeo-Johnson) matches sklearn", {
   expect_lt(max(abs(out - f$out)), 1e-5)
 })
 
+test_that("Yeo-Johnson transform keeps a matrix for a single row", {
+  skip_on_cran()
+  set.seed(396187)
+  x_fit <- matrix(rnorm(40), ncol = 4)
+  pp <- brulee:::tabicl_preprocess_fit(
+    x_fit,
+    normalization_method = "YeoJohnson"
+  )
+
+  one_row <- brulee:::tabicl_preprocess_transform(pp, x_fit[1, , drop = FALSE])
+  expect_true(is.matrix(one_row))
+  expect_equal(dim(one_row), c(1L, ncol(x_fit)))
+
+  multi <- brulee:::tabicl_preprocess_transform(pp, x_fit[1:2, , drop = FALSE])
+  expect_equal(one_row[1, ], multi[1, ])
+})
+
 test_that("unsupported normalization methods error", {
   skip_on_cran()
   x <- matrix(rnorm(40), ncol = 4)
