@@ -67,7 +67,7 @@ predict.brulee_tab_icl <- function(object, new_data, type = NULL, ...) {
   if (object$task == "classification") {
     n_classes <- length(object$levels)
     members <- tabicl_make_members(
-      object$n_estimators,
+      object$num_estimators,
       ncol(object$train_x),
       n_classes,
       object$normalization,
@@ -92,7 +92,7 @@ predict.brulee_tab_icl <- function(object, new_data, type = NULL, ...) {
     )
   } else {
     members <- tabicl_make_members(
-      object$n_estimators,
+      object$num_estimators,
       ncol(object$train_x),
       n_classes = 0L,
       object$normalization,

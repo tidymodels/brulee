@@ -142,13 +142,13 @@ tabicl_subsample_indices <- function(
 # ------------------------------------------------------------------------------
 # Ensemble member configuration
 
-# Build the ensemble member configs. n_estimators = 1 yields the single
+# Build the ensemble member configs. num_estimators = 1 yields the single
 # deterministic "none" member with identity shuffles (matching the reference
 # exactly). For more members, feature permutations are drawn with R's RNG (a
 # faithful reimplementation of the reference's diversity, not bit-identical),
 # and class labels use deterministic circular shifts.
 tabicl_make_members <- function(
-  n_estimators,
+  num_estimators,
   n_features,
   n_classes,
   normalization,
@@ -161,13 +161,13 @@ tabicl_make_members <- function(
     class_id <- NULL
   }
 
-  if (n_estimators == 1L) {
+  if (num_estimators == 1L) {
     return(list(tabicl_member("none", feat_id, class_id)))
   }
 
-  norms <- rep(normalization, length.out = n_estimators)
-  members <- vector("list", n_estimators)
-  for (k in seq_len(n_estimators)) {
+  norms <- rep(normalization, length.out = num_estimators)
+  members <- vector("list", num_estimators)
+  for (k in seq_len(num_estimators)) {
     if (k == 1L) {
       feat <- feat_id
     } else {
@@ -197,7 +197,7 @@ tabicl_make_members <- function(
 #' classification and regression are supported.
 #'
 #' @inheritParams brulee_mlp
-#' @param n_estimators An integer for the number of ensemble members (default
+#' @param num_estimators An integer for the number of ensemble members (default
 #'   `8`). Each member preprocesses, permutes features, and (for classification)
 #'   shuffles class labels differently; their predictions are averaged. Use `1`
 #'   for a single, fully deterministic member.
@@ -313,11 +313,11 @@ tabicl_make_members <- function(
 #'
 #' ## Ensembling
 #'
-#' With `n_estimators > 1`, several views of the data are created by permuting
+#' With `num_estimators > 1`, several views of the data are created by permuting
 #' features and (for classification) shuffling class labels, each optionally with
 #' a different normalization. Class logits are averaged across members and
 #' converted to probabilities with a temperature softmax; regression means are
-#' averaged. `n_estimators = 1` uses a single deterministic member (no shuffles,
+#' averaged. `num_estimators = 1` uses a single deterministic member (no shuffles,
 #' `"none"` normalization). Note that with more than one member the feature
 #' permutations are drawn with R's random number generator, so results are a
 #' faithful reproduction of the reference ensemble but not bit-for-bit identical
@@ -353,7 +353,7 @@ tabicl_make_members <- function(
 #'  * `levels`: the outcome factor levels (classification only).
 #'  * `encoders`: the fitted per-column predictor encoders.
 #'  * `train_x`, `train_y`: the encoded training context.
-#'  * `n_estimators`, `normalization`, `softmax_temperature`: ensemble settings.
+#'  * `num_estimators`, `normalization`, `softmax_temperature`: ensemble settings.
 #'  * `device`: the resolved compute device.
 #'  * `blueprint`: the `hardhat` blueprint.
 #'
@@ -399,7 +399,7 @@ brulee_tab_icl.default <- function(x, ...) {
 brulee_tab_icl.data.frame <- function(
   x,
   y,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -409,7 +409,7 @@ brulee_tab_icl.data.frame <- function(
   processed <- hardhat::mold(x, y)
   tabicl_bridge(
     processed,
-    n_estimators,
+    num_estimators,
     normalization,
     softmax_temperature,
     training_set_limit,
@@ -422,7 +422,7 @@ brulee_tab_icl.data.frame <- function(
 brulee_tab_icl.matrix <- function(
   x,
   y,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -432,7 +432,7 @@ brulee_tab_icl.matrix <- function(
   processed <- hardhat::mold(x, y)
   tabicl_bridge(
     processed,
-    n_estimators,
+    num_estimators,
     normalization,
     softmax_temperature,
     training_set_limit,
@@ -445,7 +445,7 @@ brulee_tab_icl.matrix <- function(
 brulee_tab_icl.formula <- function(
   formula,
   data,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -459,7 +459,7 @@ brulee_tab_icl.formula <- function(
   )
   tabicl_bridge(
     processed,
-    n_estimators,
+    num_estimators,
     normalization,
     softmax_temperature,
     training_set_limit,
@@ -472,7 +472,7 @@ brulee_tab_icl.formula <- function(
 brulee_tab_icl.recipe <- function(
   x,
   data,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -482,7 +482,7 @@ brulee_tab_icl.recipe <- function(
   processed <- hardhat::mold(x, data)
   tabicl_bridge(
     processed,
-    n_estimators,
+    num_estimators,
     normalization,
     softmax_temperature,
     training_set_limit,
@@ -495,7 +495,7 @@ brulee_tab_icl.recipe <- function(
 
 tabicl_bridge <- function(
   processed,
-  n_estimators,
+  num_estimators,
   normalization,
   softmax_temperature,
   training_set_limit,
@@ -590,7 +590,7 @@ tabicl_bridge <- function(
     encoders = encoders,
     train_x = train_x,
     train_y = train_y,
-    n_estimators = as.integer(n_estimators),
+    num_estimators = as.integer(num_estimators),
     normalization = normalization,
     softmax_temperature = softmax_temperature,
     device = device,
@@ -609,7 +609,7 @@ new_brulee_tab_icl <- function(
   encoders,
   train_x,
   train_y,
-  n_estimators,
+  num_estimators,
   normalization,
   softmax_temperature,
   device,
@@ -623,7 +623,7 @@ new_brulee_tab_icl <- function(
     encoders = encoders,
     train_x = train_x,
     train_y = train_y,
-    n_estimators = n_estimators,
+    num_estimators = num_estimators,
     normalization = normalization,
     softmax_temperature = softmax_temperature,
     device = device,
@@ -637,7 +637,7 @@ print.brulee_tab_icl <- function(x, ...) {
   cli::cli_text("TabICL {x$task} model")
   cli::cli_text(
     "{nrow(x$train_x)} training rows, {ncol(x$train_x)} predictors,
-     {x$n_estimators} ensemble member{?s}"
+     {x$num_estimators} ensemble member{?s}"
   )
   if (x$task == "classification") {
     cli::cli_text("{length(x$levels)} class{?es}: {.val {x$levels}}")

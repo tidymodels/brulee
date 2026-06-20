@@ -1,7 +1,7 @@
 # Tests for the TabICL prediction engine (R/tabicl-ensemble.R).
 #
 # The single-member, identity-shuffle, "none"-normalization configuration is the
-# deterministic one the sklearn wrappers use at n_estimators = 1. The committed
+# deterministic one the sklearn wrappers use at num_estimators = 1. The committed
 # fixtures (engine_clf / engine_reg) run that exact pipeline through the real
 # preprocessing + a small random model, so the end-to-end engine (preprocess ->
 # model -> softmax / quantile-mean) is validated without the released checkpoint.

@@ -10,7 +10,7 @@
 # NOTE on reproducibility: the sklearn `EnsembleGenerator` chooses member
 # configurations (feature permutations, member ordering) with Python's
 # `random.Random`, whose stream cannot be reproduced in R. The single-member
-# configuration (`n_estimators = 1`: one "none" member, identity shuffles) is
+# configuration (`num_estimators = 1`: one "none" member, identity shuffles) is
 # fully deterministic and matches Python exactly; multi-member ensembles here
 # are a faithful reimplementation of the same algorithm, not bit-identical.
 
@@ -142,7 +142,7 @@ tabicl_regressor_mean <- function(
 }
 
 # Deterministic single "none" member with identity feature / class shuffles --
-# the configuration that matches the sklearn wrappers at n_estimators = 1.
+# the configuration that matches the sklearn wrappers at num_estimators = 1.
 tabicl_single_member <- function(n_features, n_classes = NULL) {
   tabicl_member(
     norm = "none",

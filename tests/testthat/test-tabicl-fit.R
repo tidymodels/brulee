@@ -45,7 +45,7 @@ test_that("brulee_tab_icl classification reproduces the single-member golden", {
   x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
   names(x_test) <- names(x_train)
 
-  fit <- brulee_tab_icl(x_train, y_train, n_estimators = 1L)
+  fit <- brulee_tab_icl(x_train, y_train, num_estimators = 1L)
   expect_s3_class(fit, "brulee_tab_icl")
 
   proba <- predict(fit, x_test, type = "prob")
@@ -75,7 +75,7 @@ test_that("brulee_tab_icl regression reproduces the single-member golden", {
   x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
   names(x_test) <- names(x_train)
 
-  fit <- brulee_tab_icl(x_train, y_train, n_estimators = 1L)
+  fit <- brulee_tab_icl(x_train, y_train, num_estimators = 1L)
   pred <- predict(fit, x_test)
 
   expect_equal(nrow(pred), nrow(x_test))

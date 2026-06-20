@@ -16,7 +16,7 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{data.frame}(
   x,
   y,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -27,7 +27,7 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{matrix}(
   x,
   y,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -38,7 +38,7 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{formula}(
   formula,
   data,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -49,7 +49,7 @@ brulee_tab_icl(x, ...)
 \method{brulee_tab_icl}{recipe}(
   x,
   data,
-  n_estimators = 8L,
+  num_estimators = 8L,
   normalization = c("none", "YeoJohnson"),
   softmax_temperature = 0.9,
   training_set_limit = Inf,
@@ -78,7 +78,7 @@ specified as:
 \item A  \strong{vector}  (numeric or factor).
 }}
 
-\item{n_estimators}{An integer for the number of ensemble members (default
+\item{num_estimators}{An integer for the number of ensemble members (default
 \code{8}). Each member preprocesses, permutes features, and (for classification)
 shuffles class labels differently; their predictions are averaged. Use \code{1}
 for a single, fully deterministic member.}
@@ -119,7 +119,7 @@ A \code{brulee_tab_icl} object with elements:
 \item \code{levels}: the outcome factor levels (classification only).
 \item \code{encoders}: the fitted per-column predictor encoders.
 \item \code{train_x}, \code{train_y}: the encoded training context.
-\item \code{n_estimators}, \code{normalization}, \code{softmax_temperature}: ensemble settings.
+\item \code{num_estimators}, \code{normalization}, \code{softmax_temperature}: ensemble settings.
 \item \code{device}: the resolved compute device.
 \item \code{blueprint}: the \code{hardhat} blueprint.
 }
@@ -235,11 +235,11 @@ mean), but it is not required for the model to run.
 
 \subsection{Ensembling}{
 
-With \code{n_estimators > 1}, several views of the data are created by permuting
+With \code{num_estimators > 1}, several views of the data are created by permuting
 features and (for classification) shuffling class labels, each optionally with
 a different normalization. Class logits are averaged across members and
 converted to probabilities with a temperature softmax; regression means are
-averaged. \code{n_estimators = 1} uses a single deterministic member (no shuffles,
+averaged. \code{num_estimators = 1} uses a single deterministic member (no shuffles,
 \code{"none"} normalization). Note that with more than one member the feature
 permutations are drawn with R's random number generator, so results are a
 faithful reproduction of the reference ensemble but not bit-for-bit identical
