@@ -320,10 +320,8 @@ optional hidden layers to the output dimension.
 There is a \code{summary()} methods that can provide details of the architecture
 for a specific model fit.
 
-Differences in this implementation and the original paper:
-\itemize{
-\item Pretraining isn't supported.
-}
+Differences in this implementation and the original paper: pretraining isn't
+supported.
 }
 
 \subsection{Attention Types}{
@@ -416,7 +414,7 @@ be efficiently tuned. The \code{\link[=predict]{predict()}} method for this mode
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
 pkgs <- c("recipes", "yardstick", "modeldata")
-if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
+if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 
  set.seed(87261)
  tr_data <- modeldata::sim_regression(500, method = "worley_1987")

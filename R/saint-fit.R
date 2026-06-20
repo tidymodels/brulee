@@ -74,9 +74,8 @@
 #' There is a `summary()` methods that can provide details of the architecture
 #' for a specific model fit.
 #'
-#' Differences in this implementation and the original paper:
-#'
-#'  - Pretraining isn't supported.
+#' Differences in this implementation and the original paper: pretraining isn't
+#' supported.
 #'
 #' ## Attention Types
 #'

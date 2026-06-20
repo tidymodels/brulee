@@ -1,4 +1,6 @@
-# brulee 0.7.0
+# brulee (development version)
+
+# brulee 1.0.0
 
 New models for tabular data:
 
@@ -6,6 +8,7 @@ New models for tabular data:
   * ResNet (`brulee_resnet()`) can fit a multilayer neural network with skip (i.e. residual) connections and batch normalization. 
   * AutoInt (`brulee_auto_int()`) uses residual connections and columnwise attention mechanisms to create embeddings that encourage in-context learning of features. 
   * Saint (`brulee_saint()`) uses column and/or row attention mechanisms. 
+  * Chronos2 (`brulee_chronos()`) is a foundational model for forecasting. 
 
 * All modeling functions now support GPU acceleration via the `device` parameter. Users can specify `device = "cpu"`, `device = "cuda"`, or `device = "mps"` (Apple Silicon). When `device = NULL` (default), the package automatically selects CUDA if available, otherwise defaults to CPU. Note: MPS is not auto-selected because it doesn't support float64 dtype required by brulee. See`?training_efficiency` for some related notes. 
 
