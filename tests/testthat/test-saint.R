@@ -668,7 +668,7 @@ test_that("saint autoplot works", {
 # ------------------------------------------------------------------------------
 # Target token (CLS) pooling tests
 
-test_that("saint use_target_token=FALSE fits and predicts (column attention)", {
+test_that("saint target_token=FALSE fits and predicts (column attention)", {
   skip_on_cran()
   skip_if_not_installed("torch")
 
@@ -688,20 +688,20 @@ test_that("saint use_target_token=FALSE fits and predicts (column attention)", {
     data = parabolic,
     epochs = 5,
     attention_type = "column",
-    use_target_token = FALSE,
+    target_token = FALSE,
     verbose = FALSE,
     device = "cpu"
   )
 
   expect_s3_class(fit, "brulee_saint")
-  expect_false(fit$parameters$use_target_token)
+  expect_false(fit$parameters$target_token)
 
   pred <- predict(fit, parabolic)
   expect_equal(nrow(pred), n)
   expect_true(all(is.finite(pred$.pred)))
 })
 
-test_that("saint use_target_token=TRUE (default) works with row+column attention", {
+test_that("saint target_token=TRUE (default) works with row+column attention", {
   skip_on_cran()
   skip_if_not_installed("torch")
 
@@ -729,7 +729,7 @@ test_that("saint use_target_token=TRUE (default) works with row+column attention
   )
 
   expect_s3_class(fit, "brulee_saint")
-  expect_true(fit$parameters$use_target_token)
+  expect_true(fit$parameters$target_token)
 
   pred_prob <- predict(fit, parabolic, type = "prob")
   expect_equal(nrow(pred_prob), n)
@@ -737,7 +737,7 @@ test_that("saint use_target_token=TRUE (default) works with row+column attention
   expect_true(all(abs(row_sums - 1) < 1e-5))
 })
 
-test_that("saint use_target_token argument is validated", {
+test_that("saint target_token argument is validated", {
   skip_on_cran()
   skip_if_not_installed("torch")
 
@@ -752,7 +752,7 @@ test_that("saint use_target_token argument is validated", {
       y ~ .,
       data = single_series,
       epochs = 2,
-      use_target_token = "nope",
+      target_token = "nope",
       verbose = FALSE,
       device = "cpu"
     )

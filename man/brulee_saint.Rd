@@ -41,7 +41,7 @@ brulee_saint(x, ...)
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -73,7 +73,7 @@ brulee_saint(x, ...)
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -105,7 +105,7 @@ brulee_saint(x, ...)
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -137,7 +137,7 @@ brulee_saint(x, ...)
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 }
@@ -270,7 +270,7 @@ value. This can be helpful if training stops early with the message that
 \code{"cpu"} or \code{"cuda"} for GPU). If \code{NULL}, the function will use the GPU if
 available, otherwise CPU. See \link{training_efficiency}.}
 
-\item{use_target_token}{A logical value. When \code{TRUE} (the default), a
+\item{target_token}{A logical value. When \code{TRUE} (the default), a
 learnable target token (\verb{[CLS]} in the SAINT paper) is prepended to
 each sample's feature sequence and only its final-layer embedding is
 fed to the head. This matches the architecture described in the SAINT
@@ -326,7 +326,7 @@ alternates between column attention (across features) and row attention
 (across samples within the batch).
 \item \strong{Output head}: Pools the transformer output (either the target
 token's embedding or the flattened concatenation of all feature
-embeddings, controlled by \code{use_target_token}) and projects it through
+embeddings, controlled by \code{target_token}) and projects it through
 optional hidden layers to the output dimension.
 }
 
@@ -374,7 +374,7 @@ paper describes in Figure 1: "We take the contextual embeddings from
 SAINT and pass only the embedding correspond to the CLS token through an
 MLP to obtain the final prediction."
 
-With \code{use_target_token = FALSE}, no target token is added and the head
+With \code{target_token = FALSE}, no target token is added and the head
 instead consumes the concatenation of all \code{n} feature tokens. That
 option is provided because the SAINT reference Python implementation
 (\url{https://github.com/somepago/saint}) departs from the paper and uses
