@@ -81,7 +81,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -114,7 +114,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -147,7 +147,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -180,7 +180,7 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -361,7 +361,7 @@ value. This can be helpful if training stops early with the message that
 available, otherwise CPU. See <a href="training_efficiency.html">training_efficiency</a>.</p></dd>
 
 
-<dt id="arg-use-target-token">use_target_token<a class="anchor" aria-label="anchor" href="#arg-use-target-token"></a></dt>
+<dt id="arg-target-token">target_token<a class="anchor" aria-label="anchor" href="#arg-target-token"></a></dt>
 <dd><p>A logical value. When <code>TRUE</code> (the default), a
 learnable target token (<code>[CLS]</code> in the SAINT paper) is prepended to
 each sample's feature sequence and only its final-layer embedding is
@@ -415,7 +415,7 @@ alternates between column attention (across features) and row attention
 (across samples within the batch).</p></li>
 <li><p><strong>Output head</strong>: Pools the transformer output (either the target
 token's embedding or the flattened concatenation of all feature
-embeddings, controlled by <code>use_target_token</code>) and projects it through
+embeddings, controlled by <code>target_token</code>) and projects it through
 optional hidden layers to the output dimension.</p></li>
 </ol><p>There is a <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods that can provide details of the architecture
 for a specific model fit.</p>
@@ -458,7 +458,7 @@ the optional <code>hidden_units</code> MLP and the output layer. This is what th
 paper describes in Figure 1: "We take the contextual embeddings from
 SAINT and pass only the embedding correspond to the CLS token through an
 MLP to obtain the final prediction."</p>
-<p>With <code>use_target_token = FALSE</code>, no target token is added and the head
+<p>With <code>target_token = FALSE</code>, no target token is added and the head
 instead consumes the concatenation of all <code>n</code> feature tokens. That
 option is provided because the SAINT reference Python implementation
 (<a href="https://github.com/somepago/saint" class="external-link">https://github.com/somepago/saint</a>) departs from the paper and uses

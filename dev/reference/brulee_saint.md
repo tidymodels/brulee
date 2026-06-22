@@ -43,7 +43,7 @@ brulee_saint(
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -76,7 +76,7 @@ brulee_saint(
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -109,7 +109,7 @@ brulee_saint(
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -142,7 +142,7 @@ brulee_saint(
   grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 ```
@@ -336,7 +336,7 @@ brulee_saint(
   available, otherwise CPU. See
   [training_efficiency](https://brulee.tidymodels.org/dev/reference/training_efficiency.md).
 
-- use_target_token:
+- target_token:
 
   A logical value. When `TRUE` (the default), a learnable target token
   (`[CLS]` in the SAINT paper) is prepended to each sample's feature
@@ -403,8 +403,8 @@ The SAINT architecture has three stages:
 
 3.  **Output head**: Pools the transformer output (either the target
     token's embedding or the flattened concatenation of all feature
-    embeddings, controlled by `use_target_token`) and projects it
-    through optional hidden layers to the output dimension.
+    embeddings, controlled by `target_token`) and projects it through
+    optional hidden layers to the output dimension.
 
 There is a [`summary()`](https://rdrr.io/r/base/summary.html) methods
 that can provide details of the architecture for a specific model fit.
@@ -450,7 +450,7 @@ paper describes in Figure 1: "We take the contextual embeddings from
 SAINT and pass only the embedding correspond to the CLS token through an
 MLP to obtain the final prediction."
 
-With `use_target_token = FALSE`, no target token is added and the head
+With `target_token = FALSE`, no target token is added and the head
 instead consumes the concatenation of all `n` feature tokens. That
 option is provided because the SAINT reference Python implementation
 (<https://github.com/somepago/saint>) departs from the paper and uses

@@ -2,6 +2,10 @@
 
 ## brulee (development version)
 
+- The
+  [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
+  argument `use_target_token` was renamed to `target_token`.
+
 - [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
   and
   [`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md)
