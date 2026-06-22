@@ -414,6 +414,69 @@ test_that("autoint attention parameter validation errors", {
   )
 })
 
+test_that("autoint gradient clipping argument validation", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(386)
+  n <- 50
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  df$y <- df$x1 + rnorm(n, sd = 0.1)
+
+  expect_snapshot(
+    brulee_auto_int(y ~ ., data = df, grad_norm_clip = -1),
+    error = TRUE
+  )
+
+  expect_snapshot(
+    brulee_auto_int(y ~ ., data = df, grad_value_clip = -1),
+    error = TRUE
+  )
+})
+
+test_that("autoint gradient clipping prevents loss overflow", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(386)
+  n <- 200
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  df$class <- factor(ifelse(df$x1 - df$x2 + rnorm(n) > 0, "a", "b"))
+
+  auto_int_args <- list(
+    class ~ .,
+    data = df,
+    num_attn_blocks = 3L,
+    num_attn_heads = 4L,
+    num_embedding = 16L,
+    learn_rate = 0.5,
+    momentum = 0.9,
+    optimizer = "SGD",
+    batch_size = 16L,
+    epochs = 10L,
+    validation = 0,
+    device = "cpu",
+    verbose = FALSE
+  )
+
+  # Without clipping, the aggressive learning rate overflows the loss
+  set.seed(386)
+  torch::torch_manual_seed(386)
+  expect_snapshot_warning(
+    no_clip <- do.call(
+      brulee_auto_int,
+      c(auto_int_args, grad_value_clip = Inf, grad_norm_clip = Inf)
+    )
+  )
+  expect_true(any(is.nan(no_clip$loss)))
+
+  # With the default clipping, training completes without overflow
+  set.seed(386)
+  torch::torch_manual_seed(386)
+  clipped <- do.call(brulee_auto_int, auto_int_args)
+  expect_false(any(is.nan(clipped$loss)))
+})
+
 test_that("autoint default method errors on unsupported types", {
   skip_on_cran()
   skip_if_not_installed("torch")
