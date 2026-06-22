@@ -37,6 +37,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -67,6 +69,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -97,6 +101,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -127,6 +133,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -294,6 +302,13 @@ brulee_auto_int(
 
   A non-negative integer for how many iterations with no improvement
   before stopping.
+
+- grad_norm_clip, grad_value_clip:
+
+  Two numeric values, possibly `Inf`, that prevents the gradient's
+  values or norm(s) from exceeding the specified value. This can be
+  helpful if training stops early with the message that
+  `"Loss is NaN at epoch x Training is stopped."`
 
 - verbose:
 
@@ -483,6 +498,6 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rmse    standard        13.2
+#> 1 rmse    standard        15.2
 # }
 ```

@@ -39,6 +39,8 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -70,6 +72,8 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -101,6 +105,8 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -132,6 +138,8 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -309,6 +317,13 @@ brulee_saint(
 
   A non-negative integer for how many iterations with no improvement
   before stopping.
+
+- grad_norm_clip, grad_value_clip:
+
+  Two numeric values, possibly `Inf`, that prevents the gradient's
+  values or norm(s) from exceeding the specified value. This can be
+  helpful if training stops early with the message that
+  `"Loss is NaN at epoch x Training is stopped."`
 
 - verbose:
 
@@ -538,13 +553,13 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 
 }
 #> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.311
-#> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.295
+#> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.292
 #> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.288
-#> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.289
-#> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.298
+#> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.291
+#> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.301
 #> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.315
-#> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.289
-#> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.305
+#> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.296
+#> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.304
 #> SAINT architecture
 #> inputs: 8 (0 categorical, 8 numeric) | output dim: 1
 #> attention: both | embedding dim: 3 | target token: TRUE
@@ -610,6 +625,6 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rsq     standard     0.00145
+#> 1 rsq     standard       0.160
 # }
 ```

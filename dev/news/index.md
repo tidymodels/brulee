@@ -2,6 +2,17 @@
 
 ## brulee (development version)
 
+- [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
+  and
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md)
+  now support gradient clipping via the `grad_value_clip` and
+  `grad_norm_clip` arguments (both default to `5`), matching
+  [`brulee_mlp()`](https://brulee.tidymodels.org/dev/reference/brulee_mlp.md)
+  and
+  [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md).
+  This prevents the loss from overflowing to `NaN` during training with
+  aggressive learning rates.
+
 ## brulee 1.0.0
 
 CRAN release: 2026-06-17
