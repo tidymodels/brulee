@@ -476,6 +476,67 @@ test_that("saint default method errors on unsupported types", {
   )
 })
 
+test_that("saint gradient clipping argument validation", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(386)
+  n <- 50
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  df$y <- df$x1 + rnorm(n, sd = 0.1)
+
+  expect_snapshot(error = TRUE, {
+    brulee_saint(y ~ ., data = df, grad_norm_clip = -1)
+  })
+  expect_snapshot(error = TRUE, {
+    brulee_saint(y ~ ., data = df, grad_value_clip = -1)
+  })
+})
+
+test_that("saint gradient clipping prevents loss overflow", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(386)
+  n <- 200
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  df$class <- factor(ifelse(df$x1 - df$x2 + rnorm(n) > 0, "a", "b"))
+
+  saint_args <- list(
+    class ~ .,
+    data = df,
+    attention_type = "both",
+    num_attn_blocks = 3L,
+    num_attn_heads = 4L,
+    num_embedding = 16L,
+    learn_rate = 2.0,
+    momentum = 0.9,
+    optimizer = "SGD",
+    batch_size = 16L,
+    epochs = 5L,
+    validation = 0,
+    device = "cpu",
+    verbose = FALSE
+  )
+
+  # Without clipping, the aggressive learning rate overflows the loss
+  set.seed(386)
+  torch::torch_manual_seed(386)
+  expect_snapshot_warning(
+    no_clip <- do.call(
+      brulee_saint,
+      c(saint_args, grad_value_clip = Inf, grad_norm_clip = Inf)
+    )
+  )
+  expect_true(any(is.nan(no_clip$loss)))
+
+  # With the default clipping, training completes without overflow
+  set.seed(386)
+  torch::torch_manual_seed(386)
+  clipped <- do.call(brulee_saint, saint_args)
+  expect_false(any(is.nan(clipped$loss)))
+})
+
 # ------------------------------------------------------------------------------
 # Prediction tests
 

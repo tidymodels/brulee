@@ -2,6 +2,8 @@
 
 * The `brulee_saint()` argument `use_target_token` was renamed to `target_token`.
 
+* `brulee_saint()` and `brulee_auto_int()` now support gradient clipping via the `grad_value_clip` and `grad_norm_clip` arguments (both default to `5`), matching `brulee_mlp()` and `brulee_resnet()`. This prevents the loss from overflowing to `NaN` during training with aggressive learning rates.
+
 # brulee 1.0.0
 
 New models for tabular data:
