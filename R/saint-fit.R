@@ -266,6 +266,8 @@ brulee_saint.data.frame <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -296,6 +298,8 @@ brulee_saint.data.frame <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     use_target_token = use_target_token,
@@ -331,6 +335,8 @@ brulee_saint.matrix <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -361,6 +367,8 @@ brulee_saint.matrix <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     use_target_token = use_target_token,
@@ -396,6 +404,8 @@ brulee_saint.formula <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -430,6 +440,8 @@ brulee_saint.formula <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     use_target_token = use_target_token,
@@ -465,6 +477,8 @@ brulee_saint.recipe <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   use_target_token = TRUE,
@@ -495,6 +509,8 @@ brulee_saint.recipe <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     use_target_token = use_target_token,
@@ -528,6 +544,8 @@ brulee_saint_bridge <- function(
   optimizer,
   batch_size,
   stop_iter,
+  grad_value_clip,
+  grad_norm_clip,
   verbose,
   device,
   use_target_token,
@@ -551,6 +569,8 @@ brulee_saint_bridge <- function(
     dropout_attn = dropout_attn,
     dropout_hidden = dropout_hidden,
     use_target_token = use_target_token,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     call = call
   )
 
@@ -640,6 +660,8 @@ brulee_saint_bridge <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     use_target_token = saint_validated$use_target_token,
@@ -671,6 +693,8 @@ validate_saint_args <- function(
   dropout_attn,
   dropout_hidden,
   use_target_token,
+  grad_value_clip,
+  grad_norm_clip,
   call = rlang::caller_env()
 ) {
   if (is.numeric(num_embedding) & !is.integer(num_embedding)) {
@@ -708,6 +732,23 @@ validate_saint_args <- function(
     cli::cli_abort("{.arg dropout_hidden} must be less than 1.", call = call)
   }
 
+  check_double(
+    grad_value_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    call = call
+  )
+  check_double(
+    grad_norm_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    call = call
+  )
+
   list(
     num_embedding = num_embedding,
     attention_type = attention_type,
@@ -715,7 +756,9 @@ validate_saint_args <- function(
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
     dropout_hidden = dropout_hidden,
-    use_target_token = use_target_token
+    use_target_token = use_target_token,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip
   )
 }
 
@@ -811,6 +854,8 @@ saint_fit_imp <- function(
   momentum = 0.0,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = "cpu",
   use_target_token = TRUE,
@@ -1025,6 +1070,8 @@ saint_fit_imp <- function(
         batch_size = batch_size,
         momentum = momentum,
         stop_iter = stop_iter,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
         sched = rate_schedule,
         use_target_token = use_target_token,
         sched_opt = list(...)
@@ -1100,6 +1147,8 @@ saint_fit_imp <- function(
       epochs = epochs,
       learn_rate = learn_rate,
       stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
       validation = validation,
       class_weights = class_weights,
       loss_label = loss_label,
@@ -1146,6 +1195,8 @@ run_saint_training_loop <- function(
   epochs,
   learn_rate,
   stop_iter,
+  grad_value_clip = Inf,
+  grad_norm_clip = Inf,
   validation,
   class_weights = NULL,
   loss_label = "\tLoss:",
@@ -1190,6 +1241,26 @@ run_saint_training_loop <- function(
           }
 
           loss$backward()
+
+          if (is.finite(grad_value_clip)) {
+            try(
+              torch::nn_utils_clip_grad_value_(
+                model$parameters,
+                grad_value_clip
+              ),
+              silent = TRUE
+            )
+          }
+          if (is.finite(grad_norm_clip)) {
+            try(
+              torch::nn_utils_clip_grad_norm_(
+                model$parameters,
+                grad_norm_clip
+              ),
+              silent = TRUE
+            )
+          }
+
           loss
         }
         optimizer_obj$step(cl)

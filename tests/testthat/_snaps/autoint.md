@@ -72,6 +72,26 @@
       Error in `brulee_auto_int()`:
       ! `activation` should be one of: "celu", "elu", "gelu", "hardshrink", "hardsigmoid", "hardtanh", "leaky_relu", "linear", "log_sigmoid", "relu", "relu6", "rrelu", "selu", "sigmoid", "silu", "softplus", "softshrink", "softsign", "tanh", and "tanhshrink".
 
+# autoint gradient clipping argument validation
+
+    Code
+      brulee_auto_int(y ~ ., data = df, grad_norm_clip = -1)
+    Condition
+      Error in `brulee_auto_int()`:
+      ! `grad_norm_clip` must be in the range (0, Inf].
+
+---
+
+    Code
+      brulee_auto_int(y ~ ., data = df, grad_value_clip = -1)
+    Condition
+      Error in `brulee_auto_int()`:
+      ! `grad_value_clip` must be in the range (0, Inf].
+
+# autoint gradient clipping prevents loss overflow
+
+    Early stopping occurred at epoch 1 due to numerical overflow of the loss function.
+
 # autoint default method errors on unsupported types
 
     Code
