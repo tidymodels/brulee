@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* The `brulee_saint()` argument `use_target_token` was renamed to `target_token`.
+
 # brulee 1.0.0
 
 New models for tabular data:
