@@ -2,13 +2,25 @@
 #'
 #' @param object A `brulee_chronos` object returned by [brulee_chronos()].
 #' @param new_data Optional data frame in the same long format as the data
-#'   used to build `object`. It should contain the target and covariate
-#'   columns named in `object`, plus the id and timestamp columns when
-#'   those were supplied at construction. (If the model was built without
-#'   an id column, every row of `new_data` is treated as part of the same
-#'   single series; similarly, if the model was built without a timestamp
-#'   column, row order is used as the time order.) If `NULL` (the
-#'   default), the context stored in `object` is used.
+#'   used to build `object`. The target (outcome) column is optional and
+#'   controls how `new_data` is used:
+#'   \itemize{
+#'     \item If the outcome column is __absent__, `new_data` supplies the
+#'       future covariate values over the forecast window and `object`'s
+#'       stored series is forecast. This is the form used by tidymodels
+#'       workflows and `fit_resamples()`, where `new_data` carries
+#'       predictors only; it is equivalent to passing those columns as
+#'       `future_df` (so the two cannot be combined).
+#'     \item If the outcome column is __present__, `new_data` is treated as a
+#'       different series with the same schema to forecast instead of the
+#'       stored one.
+#'   }
+#'   Include the covariate columns named in `object`, plus the id and
+#'   timestamp columns when those were supplied at construction. (If the
+#'   model was built without an id column, every row of `new_data` is
+#'   treated as part of the same single series; similarly, if the model was
+#'   built without a timestamp column, row order is used as the time order.)
+#'   If `NULL` (the default), the context stored in `object` is used.
 #' @param future_df Optional data frame with future covariate values. Must
 #'   contain the id and timestamp columns (when present in the original
 #'   model) plus any covariate columns to provide for the future window (a
@@ -134,9 +146,37 @@ predict.brulee_chronos <- function(
   timestamp_synthetic <- isTRUE(object$context$timestamp_synthetic)
   has_stored_covariates <- length(covariate_cols) > 0L
 
+  # Does `new_data` carry the outcome column? When it does not (the
+  # tidymodels contract, where `new_data` is predictors only), we forecast
+  # the stored series and use `new_data` as the future covariate window.
+  # When it does, `new_data` is treated as a different series to forecast.
+  # `target_column` holds the stored outcome name (the real column for
+  # formula / recipe models, ".outcome" for the x_y interface).
+  new_data_has_outcome <- !is.null(new_data) &&
+    target_column %in% names(new_data)
+
   # Resolve context: stored or forged from new_data
-  if (is.null(new_data)) {
+  if (is.null(new_data) || !new_data_has_outcome) {
+    # Forecast the series stored at construction.
     ctx <- object$context
+
+    # Predictors-only `new_data` supplies the future covariate values.
+    if (!is.null(new_data) && has_stored_covariates) {
+      if (!is.null(future_df)) {
+        cli::cli_abort(c(
+          "Cannot use both a predictors-only {.arg new_data} and {.arg future_df}.",
+          "i" = "Both supply future covariate values; pass only one."
+        ))
+      }
+      future_df <- chronos2_new_data_as_future(
+        new_data,
+        object,
+        id_column = id_column,
+        timestamp_column = timestamp_column,
+        id_synthetic = id_synthetic,
+        timestamp_synthetic = timestamp_synthetic
+      )
+    }
   } else {
     if (has_stored_covariates) {
       forged <- hardhat::forge(
@@ -355,6 +395,40 @@ chronos2_pull_column <- function(data, column, arg_label) {
     )
   }
   data[[column]]
+}
+
+# Turn predictors-only `new_data` into a `future_df`-shaped frame: the forged
+# covariate columns plus the id / timestamp columns (pulled from recipe roles
+# when available, otherwise by name from `new_data`). The result is consumed
+# by the future-covariate block in `predict.brulee_chronos()`.
+chronos2_new_data_as_future <- function(
+  new_data,
+  object,
+  id_column,
+  timestamp_column,
+  id_synthetic,
+  timestamp_synthetic
+) {
+  forged <- hardhat::forge(new_data, object$blueprint, outcomes = FALSE)
+  roles <- forged$extras$roles
+  future <- as.data.frame(forged$predictors)
+
+  if (!id_synthetic) {
+    future[[id_column]] <- if (!is.null(roles) && !is.null(roles$id)) {
+      roles$id[[1L]]
+    } else {
+      chronos2_pull_column(new_data, id_column, "id_column")
+    }
+  }
+  if (!timestamp_synthetic) {
+    future[[timestamp_column]] <- if (!is.null(roles) && !is.null(roles$time)) {
+      roles$time[[1L]]
+    } else {
+      chronos2_pull_column(new_data, timestamp_column, "timestamp_column")
+    }
+  }
+
+  future
 }
 
 # ─── Internal prediction engine ──────────────────────────────────────────────

@@ -17,13 +17,25 @@
 \item{object}{A \code{brulee_chronos} object returned by \code{\link[=brulee_chronos]{brulee_chronos()}}.}
 
 \item{new_data}{Optional data frame in the same long format as the data
-used to build \code{object}. It should contain the target and covariate
-columns named in \code{object}, plus the id and timestamp columns when
-those were supplied at construction. (If the model was built without
-an id column, every row of \code{new_data} is treated as part of the same
-single series; similarly, if the model was built without a timestamp
-column, row order is used as the time order.) If \code{NULL} (the
-default), the context stored in \code{object} is used.}
+used to build \code{object}. The target (outcome) column is optional and
+controls how \code{new_data} is used:
+\itemize{
+\item If the outcome column is \strong{absent}, \code{new_data} supplies the
+future covariate values over the forecast window and \code{object}'s
+stored series is forecast. This is the form used by tidymodels
+workflows and \code{fit_resamples()}, where \code{new_data} carries
+predictors only; it is equivalent to passing those columns as
+\code{future_df} (so the two cannot be combined).
+\item If the outcome column is \strong{present}, \code{new_data} is treated as a
+different series with the same schema to forecast instead of the
+stored one.
+}
+Include the covariate columns named in \code{object}, plus the id and
+timestamp columns when those were supplied at construction. (If the
+model was built without an id column, every row of \code{new_data} is
+treated as part of the same single series; similarly, if the model was
+built without a timestamp column, row order is used as the time order.)
+If \code{NULL} (the default), the context stored in \code{object} is used.}
 
 \item{future_df}{Optional data frame with future covariate values. Must
 contain the id and timestamp columns (when present in the original

@@ -268,6 +268,159 @@ test_that("predict with new_data on multi-series recipe model has id column", {
   expect_equal(nrow(out), 8L)
 })
 
+# ------------------------------------------------------------------------------
+# predictors-only new_data (tidymodels contract): no outcome column required
+
+test_that("predict with predictors-only new_data forecasts the stored series", {
+  # The issue #123 reprex: a covariate model must predict from `new_data` that
+  # carries predictors only (no outcome), as tidymodels workflows do.
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake + Austin,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date",
+    prediction_length = 5L
+  )
+
+  future <- data.frame(
+    series_id = rep("L", 5),
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 5),
+    Clark_Lake = rnorm(5),
+    Austin = rnorm(5)
+  )
+
+  out <- predict(mod, new_data = future)
+  expect_s3_class(out, "tbl_df")
+  expect_named(out, c(".pred", ".pred_quantile"))
+  expect_equal(nrow(out), 5L)
+})
+
+test_that("predict with predictors-only new_data works through a recipe", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("recipes")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  rec <- recipes::recipe(ridership ~ ., data = Chi) |>
+    recipes::update_role(series_id, new_role = "id") |>
+    recipes::update_role(date, new_role = "time")
+  mod <- brulee_chronos(rec, data = Chi, prediction_length = 4L)
+
+  future <- data.frame(
+    series_id = rep("L", 4),
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 4),
+    Clark_Lake = rnorm(4),
+    Austin = rnorm(4)
+  )
+
+  out <- predict(mod, new_data = future)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 4L)
+})
+
+test_that("predict with predictors-only new_data on a multi-series model", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  multi <- rbind(
+    transform(Chi, series_id = "A"),
+    transform(Chi, series_id = "B")
+  )
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = multi,
+    id_column = "series_id",
+    timestamp_column = "date",
+    prediction_length = 3L
+  )
+
+  future <- rbind(
+    data.frame(
+      series_id = "A",
+      date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
+      Clark_Lake = rnorm(3),
+      Austin = rnorm(3)
+    ),
+    data.frame(
+      series_id = "B",
+      date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
+      Clark_Lake = rnorm(3),
+      Austin = rnorm(3)
+    )
+  )
+
+  out <- predict(mod, new_data = future)
+  expect_named(out, c("series_id", ".pred", ".pred_quantile"))
+  expect_setequal(out$series_id, c("A", "B"))
+  expect_equal(nrow(out), 6L)
+})
+
+test_that("predict with predictors-only new_data on a no-covariate model uses stored context", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ 1,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date",
+    prediction_length = 5L
+  )
+
+  # No outcome column, no covariates: falls back to the stored series.
+  new_df <- data.frame(
+    series_id = rep("L", 5),
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 5)
+  )
+
+  out <- predict(mod, new_data = new_df)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 5L)
+})
+
+test_that("predict errors when predictors-only new_data and future_df are both supplied", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake + Austin,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date",
+    prediction_length = 5L
+  )
+
+  future <- data.frame(
+    series_id = rep("L", 5),
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 5),
+    Clark_Lake = rnorm(5),
+    Austin = rnorm(5)
+  )
+
+  expect_snapshot(error = TRUE, {
+    predict(mod, new_data = future, future_df = future, prediction_length = 5L)
+  })
+})
+
+# ------------------------------------------------------------------------------
+
 test_that("predict errors when new_data has non-numeric covariates (no-forge path)", {
   skip_on_cran()
   skip_if_not_installed("hardhat")

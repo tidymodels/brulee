@@ -22,6 +22,15 @@
       Error in `chronos2_pull_column()`:
       ! Column "date" (from `timestamp_column`) not found in `new_data`.
 
+# predict errors when predictors-only new_data and future_df are both supplied
+
+    Code
+      predict(mod, new_data = future, future_df = future, prediction_length = 5L)
+    Condition
+      Error in `predict()`:
+      ! Cannot use both a predictors-only `new_data` and `future_df`.
+      i Both supply future covariate values; pass only one.
+
 # future_df missing the id column errors
 
     Code

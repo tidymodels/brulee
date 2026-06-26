@@ -290,14 +290,22 @@ order as its time order. Pre-sort each series before calling
 \subsection{What happens at \code{predict()} time}{
 
 By default, \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}} forecasts from the context data that
-was supplied at construction. The use of \code{new_data} should be determined by
-how the \code{brulee_chronos()} call passed the data. For example, if no
-covariates were originally given to the model, there is no need to pass in
-values when calling \code{predict()} and so on. Pass \code{future_df} to supply known
-future values of any covariate (e.g., holiday flags, planned promotions).
-To forecast a \strong{different} series with the same schema, pass it as
-\code{new_data}. It will be processed through the same blueprint as the original
-context.
+was supplied at construction, so \code{new_data} is optional. How you use
+\code{new_data} depends on whether it includes the outcome column:
+\itemize{
+\item \strong{Predictors only} (no outcome column): \code{new_data} is treated as the
+known future values of the covariates over the forecast window, and the
+model forecasts the series stored at construction. This is the form used
+by tidymodels workflows and \code{fit_resamples()}, where \code{new_data} carries
+predictors only. It is equivalent to passing those columns as \code{future_df}.
+\item \strong{Outcome included}: \code{new_data} is treated as a \strong{different} series with
+the same schema to forecast instead of the stored one. It is processed
+through the same blueprint as the original context.
+}
+
+If no covariates were given to the model, there is no need to pass
+\code{new_data} at all. Pass \code{future_df} to supply known future values of any
+covariate (e.g., holiday flags, planned promotions).
 }
 }
 \examples{

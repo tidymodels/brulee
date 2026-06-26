@@ -146,14 +146,21 @@
 #' ## What happens at `predict()` time
 #'
 #' By default, [predict.brulee_chronos()] forecasts from the context data that
-#' was supplied at construction. The use of `new_data` should be determined by
-#' how the `brulee_chronos()` call passed the data. For example, if no
-#' covariates were originally given to the model, there is no need to pass in
-#' values when calling `predict()` and so on. Pass `future_df` to supply known
-#' future values of any covariate (e.g., holiday flags, planned promotions).
-#' To forecast a __different__ series with the same schema, pass it as
-#' `new_data`. It will be processed through the same blueprint as the original
-#' context.
+#' was supplied at construction, so `new_data` is optional. How you use
+#' `new_data` depends on whether it includes the outcome column:
+#'
+#'  * __Predictors only__ (no outcome column): `new_data` is treated as the
+#'    known future values of the covariates over the forecast window, and the
+#'    model forecasts the series stored at construction. This is the form used
+#'    by tidymodels workflows and `fit_resamples()`, where `new_data` carries
+#'    predictors only. It is equivalent to passing those columns as `future_df`.
+#'  * __Outcome included__: `new_data` is treated as a __different__ series with
+#'    the same schema to forecast instead of the stored one. It is processed
+#'    through the same blueprint as the original context.
+#'
+#' If no covariates were given to the model, there is no need to pass
+#' `new_data` at all. Pass `future_df` to supply known future values of any
+#' covariate (e.g., holiday flags, planned promotions).
 #'
 #' @param x Depending on the context:
 #'

@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* `predict.brulee_chronos()` no longer requires the outcome column in `new_data`. When `new_data` carries predictors only (the tidymodels contract), it is treated as the future covariate window and the stored series is forecast, so chronos models work inside tidymodels workflows and `fit_resamples()` (#123).
+
 * The `brulee_saint()` argument `use_target_token` was renamed to `target_token`.
 
 * `brulee_saint()` and `brulee_auto_int()` now support gradient clipping via the `grad_value_clip` and `grad_norm_clip` arguments (both default to `5`), matching `brulee_mlp()` and `brulee_resnet()`. This prevents the loss from overflowing to `NaN` during training with aggressive learning rates.
