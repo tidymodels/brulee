@@ -1,36 +1,41 @@
 #' Predict from a `brulee_chronos` model
 #'
 #' @param object A `brulee_chronos` object returned by [brulee_chronos()].
-#' @param new_data Optional data frame in the same long format as the data
-#'   used to build `object`. The target (outcome) column is optional and
-#'   controls how `new_data` is used:
-#'   \itemize{
-#'     \item If the outcome column is __absent__, `new_data` supplies the
-#'       future covariate values over the forecast window and `object`'s
-#'       stored series is forecast. This is the form used by tidymodels
-#'       workflows and `fit_resamples()`, where `new_data` carries
-#'       predictors only; it is equivalent to passing those columns as
-#'       `future_df` (so the two cannot be combined).
-#'     \item If the outcome column is __present__, `new_data` is treated as a
-#'       different series with the same schema to forecast instead of the
-#'       stored one.
-#'   }
-#'   Include the covariate columns named in `object`, plus the id and
-#'   timestamp columns when those were supplied at construction. (If the
-#'   model was built without an id column, every row of `new_data` is
-#'   treated as part of the same single series; similarly, if the model was
-#'   built without a timestamp column, row order is used as the time order.)
-#'   If `NULL` (the default), the context stored in `object` is used.
-#' @param future_df Optional data frame with future covariate values. Must
-#'   contain the id and timestamp columns (when present in the original
-#'   model) plus any covariate columns to provide for the future window (a
-#'   subset of the past covariates). Each series must have exactly
-#'   `prediction_length` rows.
+#' @param new_data Optional data frame of values in the same long format as
+#'   the data used to build `object`. If `NULL` (the default), the series
+#'   stored in `object` is forecast. Whether `new_data` includes the outcome
+#'   column changes how it is used; see Details.
+#' @param future_df Optional data frame of known future covariate values; see
+#'   Details.
 #' @param prediction_length Number of future time steps to forecast. Defaults
 #'   to the value stored in `object`.
 #' @param quantile_levels Numeric vector of quantile levels. Defaults to the
 #'   value stored in `object`.
 #' @param ... Not used.
+#'
+#' @details
+#' By default (`new_data = NULL`), the model forecasts the series stored at
+#' construction. When `new_data` is supplied, how it is used depends on
+#' whether it includes the outcome column:
+#'
+#'  * __Predictors only__ (no outcome column): `new_data` supplies the known
+#'    future covariate values over the forecast window, and the stored series
+#'    is forecast. This is the form used by tidymodels workflows and
+#'    `fit_resamples()`. It is equivalent to passing those columns as
+#'    `future_df`, so the two cannot be combined.
+#'  * __Outcome included__: `new_data` is treated as a different series with
+#'    the same schema to forecast instead of the stored one.
+#'
+#' In either case, include the covariate columns named in `object`, plus the
+#' id and timestamp columns when those were supplied at construction. If the
+#' model was built without an id column, every row is treated as part of one
+#' single series; without a timestamp column, row order is used as the time
+#' order.
+#'
+#' `future_df` must contain the id and timestamp columns (when present in the
+#' original model) plus any covariate columns to supply for the future window
+#' (a subset of the past covariates), with exactly `prediction_length` rows
+#' per series.
 #'
 #' @returns A [tibble][tibble::tibble] with one row per future time step
 #'   per series, in the same order as the rows of `new_data` (or the stored

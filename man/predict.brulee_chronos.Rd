@@ -16,32 +16,13 @@
 \arguments{
 \item{object}{A \code{brulee_chronos} object returned by \code{\link[=brulee_chronos]{brulee_chronos()}}.}
 
-\item{new_data}{Optional data frame in the same long format as the data
-used to build \code{object}. The target (outcome) column is optional and
-controls how \code{new_data} is used:
-\itemize{
-\item If the outcome column is \strong{absent}, \code{new_data} supplies the
-future covariate values over the forecast window and \code{object}'s
-stored series is forecast. This is the form used by tidymodels
-workflows and \code{fit_resamples()}, where \code{new_data} carries
-predictors only; it is equivalent to passing those columns as
-\code{future_df} (so the two cannot be combined).
-\item If the outcome column is \strong{present}, \code{new_data} is treated as a
-different series with the same schema to forecast instead of the
-stored one.
-}
-Include the covariate columns named in \code{object}, plus the id and
-timestamp columns when those were supplied at construction. (If the
-model was built without an id column, every row of \code{new_data} is
-treated as part of the same single series; similarly, if the model was
-built without a timestamp column, row order is used as the time order.)
-If \code{NULL} (the default), the context stored in \code{object} is used.}
+\item{new_data}{Optional data frame of values in the same long format as
+the data used to build \code{object}. If \code{NULL} (the default), the series
+stored in \code{object} is forecast. Whether \code{new_data} includes the outcome
+column changes how it is used; see Details.}
 
-\item{future_df}{Optional data frame with future covariate values. Must
-contain the id and timestamp columns (when present in the original
-model) plus any covariate columns to provide for the future window (a
-subset of the past covariates). Each series must have exactly
-\code{prediction_length} rows.}
+\item{future_df}{Optional data frame of known future covariate values; see
+Details.}
 
 \item{prediction_length}{Number of future time steps to forecast. Defaults
 to the value stored in \code{object}.}
@@ -65,6 +46,31 @@ all requested quantile levels into a single column.}
 }
 \description{
 Predict from a \code{brulee_chronos} model
+}
+\details{
+By default (\code{new_data = NULL}), the model forecasts the series stored at
+construction. When \code{new_data} is supplied, how it is used depends on
+whether it includes the outcome column:
+\itemize{
+\item \strong{Predictors only} (no outcome column): \code{new_data} supplies the known
+future covariate values over the forecast window, and the stored series
+is forecast. This is the form used by tidymodels workflows and
+\code{fit_resamples()}. It is equivalent to passing those columns as
+\code{future_df}, so the two cannot be combined.
+\item \strong{Outcome included}: \code{new_data} is treated as a different series with
+the same schema to forecast instead of the stored one.
+}
+
+In either case, include the covariate columns named in \code{object}, plus the
+id and timestamp columns when those were supplied at construction. If the
+model was built without an id column, every row is treated as part of one
+single series; without a timestamp column, row order is used as the time
+order.
+
+\code{future_df} must contain the id and timestamp columns (when present in the
+original model) plus any covariate columns to supply for the future window
+(a subset of the past covariates), with exactly \code{prediction_length} rows
+per series.
 }
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
