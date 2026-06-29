@@ -1,9 +1,9 @@
 # predict.brulee_chronos() tests.
 #
-# These cover: prediction_length / quantile_levels overrides, new_data
-# round-trips (formula, recipe, x_y), future_df validation, extra columns,
-# and the low-level prediction engine (chronos2_predict_core,
-# chronos2_build_inputs, chronos2_run_with_covariates) with real torch ops.
+# These cover: prediction_length / quantile_levels overrides, the new_data
+# future window (validation, truncation, extra columns), and the low-level
+# prediction engine (chronos2_predict_core, chronos2_build_inputs,
+# chronos2_run_with_covariates) with real torch ops.
 
 # ------------------------------------------------------------------------------
 # prediction_length / quantile_levels overrides
@@ -76,199 +76,9 @@ test_that("predict uses stored context when new_data is NULL", {
 })
 
 # ------------------------------------------------------------------------------
-# new_data round-trips
+# new_data: the future window to forecast for
 
-test_that("predict with new_data forges covariates from a formula model", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("recipes")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-
-  mod <- brulee_chronos(
-    ridership ~ Clark_Lake + Austin,
-    data = Chi,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  out <- predict(mod, new_data = Chi, prediction_length = 3L)
-  expect_s3_class(out, "tbl_df")
-  expect_named(out, c(".pred", ".pred_quantile"))
-  expect_equal(nrow(out), 3L)
-})
-
-test_that("predict with new_data forges through a recipe blueprint", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("recipes")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-
-  rec <- recipes::recipe(ridership ~ ., data = Chi) |>
-    recipes::update_role(series_id, new_role = "id") |>
-    recipes::update_role(date, new_role = "time")
-  mod <- brulee_chronos(rec, data = Chi)
-
-  out <- predict(mod, new_data = Chi, prediction_length = 4L)
-  expect_s3_class(out, "tbl_df")
-  expect_equal(nrow(out), 4L)
-})
-
-test_that("predict with new_data on a multi-series model returns id column", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-  multi_series <- rbind(
-    transform(Chi[, c("series_id", "date", "ridership")], series_id = "A"),
-    transform(Chi[, c("series_id", "date", "ridership")], series_id = "B")
-  )
-
-  mod <- brulee_chronos(
-    ridership ~ .,
-    data = multi_series,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  out <- predict(mod, new_data = multi_series, prediction_length = 3L)
-  expect_named(out, c("series_id", ".pred", ".pred_quantile"))
-  expect_setequal(out$series_id, c("A", "B"))
-})
-
-test_that("predict with new_data missing the id column errors", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-
-  mod <- brulee_chronos(
-    ridership ~ .,
-    data = Chi[, c("series_id", "date", "ridership")],
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  bad <- Chi[, c("date", "ridership")]
-  expect_snapshot(error = TRUE, {
-    predict(mod, new_data = bad, prediction_length = 3L)
-  })
-})
-
-test_that("predict with new_data containing a non-numeric target errors", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-  chi <- Chi[, c("series_id", "date", "ridership")]
-
-  mod <- brulee_chronos(
-    ridership ~ .,
-    data = chi,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  bad <- chi
-  bad$ridership <- as.character(bad$ridership)
-  expect_snapshot(error = TRUE, {
-    predict(mod, new_data = bad, prediction_length = 3L)
-  })
-})
-
-test_that("predict with new_data on no-covariate model pulls target by name", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-  chi <- Chi[, c("series_id", "date", "ridership")]
-
-  mod <- brulee_chronos(
-    ridership ~ .,
-    data = chi,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  out <- predict(mod, new_data = chi, prediction_length = 5L)
-  expect_s3_class(out, "tbl_df")
-  expect_equal(nrow(out), 5L)
-  expect_named(out, c(".pred", ".pred_quantile"))
-})
-
-test_that("predict with new_data missing the timestamp column errors", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("recipes")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-  chi <- Chi[, c("series_id", "date", "ridership")]
-
-  mod <- brulee_chronos(
-    ridership ~ .,
-    data = chi,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  bad <- chi[, c("series_id", "ridership")]
-  expect_snapshot(error = TRUE, {
-    predict(mod, new_data = bad, prediction_length = 3L)
-  })
-})
-
-test_that("predict with new_data on no-covariate x_y model works", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("recipes")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-
-  mod <- brulee_chronos(
-    x = Chi[, character(0), drop = FALSE],
-    y = Chi$ridership
-  )
-
-  new_df <- data.frame(.outcome = Chi$ridership[1:50])
-  out <- predict(mod, new_data = new_df, prediction_length = 3L)
-  expect_s3_class(out, "tbl_df")
-  expect_equal(nrow(out), 3L)
-  expect_named(out, c(".pred", ".pred_quantile"))
-})
-
-test_that("predict with new_data on multi-series recipe model has id column", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("recipes")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-  multi <- rbind(
-    transform(Chi, series_id = "A"),
-    transform(Chi, series_id = "B")
-  )
-
-  rec <- recipes::recipe(ridership ~ ., data = multi) |>
-    recipes::update_role(series_id, new_role = "id") |>
-    recipes::update_role(date, new_role = "time")
-  mod <- brulee_chronos(rec, data = multi)
-
-  out <- predict(mod, new_data = multi, prediction_length = 4L)
-  expect_named(out, c("series_id", ".pred", ".pred_quantile"))
-  expect_setequal(out$series_id, c("A", "B"))
-  expect_equal(nrow(out), 8L)
-})
-
-test_that("predict errors when new_data has non-numeric covariates (no-forge path)", {
+test_that("predict with valid new_data runs", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -282,45 +92,19 @@ test_that("predict errors when new_data has non-numeric covariates (no-forge pat
     timestamp_column = "date"
   )
 
-  bad <- Chi
-  bad$Clark_Lake <- as.character(bad$Clark_Lake)
-
-  expect_error(
-    predict(mod, new_data = bad, prediction_length = 3L),
-    "numeric|convert"
-  )
-})
-
-# ------------------------------------------------------------------------------
-# future_df validation
-
-test_that("predict with valid future_df runs", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-
-  mod <- brulee_chronos(
-    ridership ~ Clark_Lake + Austin,
-    data = Chi,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep("L", 5),
     date = seq(max(Chi$date) + 1, by = "day", length.out = 5),
     Clark_Lake = rnorm(5),
     Austin = rnorm(5)
   )
 
-  out <- predict(mod, future_df = future_df, prediction_length = 5L)
+  out <- predict(mod, new_data = new_df, prediction_length = 5L)
   expect_s3_class(out, "tbl_df")
   expect_equal(nrow(out), 5L)
 })
 
-test_that("future_df missing the id column errors", {
+test_that("new_data missing the id column errors", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -334,17 +118,17 @@ test_that("future_df missing the id column errors", {
     timestamp_column = "date"
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
     Clark_Lake = rnorm(3)
   )
 
   expect_snapshot(error = TRUE, {
-    predict(mod, future_df = future_df, prediction_length = 3L)
+    predict(mod, new_data = new_df, prediction_length = 3L)
   })
 })
 
-test_that("future_df missing the timestamp column errors", {
+test_that("new_data missing the timestamp column errors", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -358,17 +142,17 @@ test_that("future_df missing the timestamp column errors", {
     timestamp_column = "date"
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep("L", 3),
     Clark_Lake = rnorm(3)
   )
 
   expect_snapshot(error = TRUE, {
-    predict(mod, future_df = future_df, prediction_length = 3L)
+    predict(mod, new_data = new_df, prediction_length = 3L)
   })
 })
 
-test_that("future_df with an unknown covariate column silently ignores it", {
+test_that("new_data with an unknown covariate column is silently ignored", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -382,18 +166,18 @@ test_that("future_df with an unknown covariate column silently ignores it", {
     timestamp_column = "date"
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep("L", 3),
     date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
     something_else = rnorm(3)
   )
 
-  out <- predict(mod, future_df = future_df, prediction_length = 3L)
+  out <- predict(mod, new_data = new_df, prediction_length = 3L)
   expect_s3_class(out, "tbl_df")
   expect_equal(nrow(out), 3L)
 })
 
-test_that("future_df works when model has synthesized id and timestamp", {
+test_that("new_data works when model has synthesized id and timestamp", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -405,17 +189,17 @@ test_that("future_df works when model has synthesized id and timestamp", {
     data = Chi[, c("ridership", "Clark_Lake", "Austin")]
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     Clark_Lake = rnorm(5),
     Austin = rnorm(5)
   )
 
-  out <- predict(mod, future_df = future_df, prediction_length = 5L)
+  out <- predict(mod, new_data = new_df, prediction_length = 5L)
   expect_s3_class(out, "tbl_df")
   expect_equal(nrow(out), 5L)
 })
 
-test_that("future_df with subset of covariates provides only those to model", {
+test_that("new_data with a subset of covariates provides only those to model", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -429,18 +213,18 @@ test_that("future_df with subset of covariates provides only those to model", {
     timestamp_column = "date"
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep("L", 4),
     date = seq(max(Chi$date) + 1, by = "day", length.out = 4),
     Clark_Lake = rnorm(4)
   )
 
-  out <- predict(mod, future_df = future_df, prediction_length = 4L)
+  out <- predict(mod, new_data = new_df, prediction_length = 4L)
   expect_s3_class(out, "tbl_df")
   expect_equal(nrow(out), 4L)
 })
 
-test_that("future_df is split by series and sorted by timestamp", {
+test_that("new_data is split by series and sorted by timestamp", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -459,19 +243,19 @@ test_that("future_df is split by series and sorted by timestamp", {
   )
 
   future_dates <- seq(max(Chi$date) + 1, by = "day", length.out = 3)
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep(c("B", "A"), each = 3),
     date = rep(future_dates, 2),
     Clark_Lake = rnorm(6)
   )
 
-  out <- predict(mod, future_df = future_df, prediction_length = 3L)
+  out <- predict(mod, new_data = new_df, prediction_length = 3L)
   expect_named(out, c("series_id", ".pred", ".pred_quantile"))
   expect_setequal(out$series_id, c("A", "B"))
   expect_equal(nrow(out), 6L)
 })
 
-test_that("future_df with wrong row count per series errors", {
+test_that("new_data shorter than prediction_length truncates the forecast", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -485,21 +269,18 @@ test_that("future_df with wrong row count per series errors", {
     timestamp_column = "date"
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep("L", 3),
     date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
     Clark_Lake = rnorm(3)
   )
 
-  expect_snapshot(error = TRUE, {
-    predict(mod, future_df = future_df, prediction_length = 5L)
-  })
+  out <- predict(mod, new_data = new_df, prediction_length = 5L)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 3L)
 })
 
-# ------------------------------------------------------------------------------
-# extra columns in new_data and future_df are silently ignored
-
-test_that("new_data with extra columns works (formula model with covariates)", {
+test_that("new_data longer than prediction_length errors", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -507,22 +288,58 @@ test_that("new_data with extra columns works (formula model with covariates)", {
   Chi <- chicago_subset()
 
   mod <- brulee_chronos(
-    ridership ~ Clark_Lake + Austin,
+    ridership ~ Clark_Lake,
     data = Chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
 
-  extra <- Chi
-  extra$extra_col <- rnorm(nrow(extra))
-  extra$another_one <- "hello"
+  new_df <- data.frame(
+    series_id = rep("L", 5),
+    date = seq(max(Chi$date) + 1, by = "day", length.out = 5),
+    Clark_Lake = rnorm(5)
+  )
 
-  out <- predict(mod, new_data = extra, prediction_length = 3L)
-  expect_s3_class(out, "tbl_df")
-  expect_equal(nrow(out), 3L)
+  expect_snapshot(error = TRUE, {
+    predict(mod, new_data = new_df, prediction_length = 3L)
+  })
 })
 
-test_that("new_data with extra columns works (no-covariate model)", {
+test_that("new_data truncates each series to its own row count", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  multi <- rbind(
+    transform(Chi, series_id = "A"),
+    transform(Chi, series_id = "B")
+  )
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = multi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  future_dates <- seq(max(Chi$date) + 1, by = "day", length.out = 4)
+  new_df <- data.frame(
+    series_id = c(rep("A", 2), rep("B", 4)),
+    date = c(future_dates[1:2], future_dates[1:4]),
+    Clark_Lake = rnorm(6)
+  )
+
+  out <- predict(mod, new_data = new_df, prediction_length = 5L)
+  expect_equal(nrow(out), 6L)
+  expect_equal(sum(out$series_id == "A"), 2L)
+  expect_equal(sum(out$series_id == "B"), 4L)
+})
+
+# ------------------------------------------------------------------------------
+# type argument
+
+test_that("type = 'all' (default) returns both prediction columns", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -537,16 +354,99 @@ test_that("new_data with extra columns works (no-covariate model)", {
     timestamp_column = "date"
   )
 
-  extra <- chi
-  extra$extra_col <- rnorm(nrow(extra))
-  extra$another_one <- "hello"
-
-  out <- predict(mod, new_data = extra, prediction_length = 3L)
-  expect_s3_class(out, "tbl_df")
-  expect_equal(nrow(out), 3L)
+  out <- predict(mod, prediction_length = 4L)
+  expect_named(out, c(".pred", ".pred_quantile"))
+  expect_equal(nrow(out), 4L)
 })
 
-test_that("future_df with extra columns silently ignores them", {
+test_that("type = 'numeric' returns only .pred", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  out <- predict(mod, type = "numeric", prediction_length = 4L)
+  expect_named(out, ".pred")
+  expect_type(out$.pred, "double")
+  expect_equal(nrow(out), 4L)
+})
+
+test_that("type = 'quantile' returns only .pred_quantile", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  out <- predict(mod, type = "quantile", prediction_length = 4L)
+  expect_named(out, ".pred_quantile")
+  expect_equal(nrow(out), 4L)
+})
+
+test_that("type keeps the id column for multi-series models", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  multi <- rbind(
+    transform(Chi[, c("series_id", "date", "ridership")], series_id = "A"),
+    transform(Chi[, c("series_id", "date", "ridership")], series_id = "B")
+  )
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = multi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  out <- predict(mod, type = "numeric", prediction_length = 3L)
+  expect_named(out, c("series_id", ".pred"))
+  expect_setequal(out$series_id, c("A", "B"))
+})
+
+test_that("an unknown type errors", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
+
+  mod <- brulee_chronos(
+    ridership ~ .,
+    data = chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  expect_snapshot(error = TRUE, {
+    predict(mod, type = "bogus", prediction_length = 3L)
+  })
+})
+
+# ------------------------------------------------------------------------------
+# extra columns in new_data are silently ignored
+
+test_that("new_data with extra columns is silently ignored (covariate model)", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
@@ -560,7 +460,7 @@ test_that("future_df with extra columns silently ignores them", {
     timestamp_column = "date"
   )
 
-  future_df <- data.frame(
+  new_df <- data.frame(
     series_id = rep("L", 5),
     date = seq(max(Chi$date) + 1, by = "day", length.out = 5),
     Clark_Lake = rnorm(5),
@@ -569,82 +469,36 @@ test_that("future_df with extra columns silently ignores them", {
     unrelated = letters[1:5]
   )
 
-  out <- predict(mod, future_df = future_df, prediction_length = 5L)
+  out <- predict(mod, new_data = new_df, prediction_length = 5L)
   expect_s3_class(out, "tbl_df")
   expect_equal(nrow(out), 5L)
 })
 
-test_that("new_data still errors when a required column is missing", {
+test_that("new_data with extra columns is silently ignored (no-covariate model)", {
   skip_on_cran()
   skip_if_not_installed("hardhat")
   skip_if_not_installed("modeldata")
   stub_chronos_loaders(also_mock_predict_core = TRUE)
   Chi <- chicago_subset()
+  chi <- Chi[, c("series_id", "date", "ridership")]
 
   mod <- brulee_chronos(
-    ridership ~ Clark_Lake + Austin,
-    data = Chi,
+    ridership ~ .,
+    data = chi,
     id_column = "series_id",
     timestamp_column = "date"
   )
 
-  bad <- Chi[, c("series_id", "date", "ridership", "Clark_Lake")]
-  expect_snapshot(
-    error = TRUE,
-    predict(mod, new_data = bad, prediction_length = 3L)
-  )
-})
-
-test_that("future_df still errors when the id column is missing", {
-  skip_on_cran()
-  skip_if_not_installed("hardhat")
-  skip_if_not_installed("modeldata")
-  stub_chronos_loaders(also_mock_predict_core = TRUE)
-  Chi <- chicago_subset()
-
-  mod <- brulee_chronos(
-    ridership ~ Clark_Lake,
-    data = Chi,
-    id_column = "series_id",
-    timestamp_column = "date"
-  )
-
-  future_df <- data.frame(
+  new_df <- data.frame(
+    series_id = rep("L", 3),
     date = seq(max(Chi$date) + 1, by = "day", length.out = 3),
-    Clark_Lake = rnorm(3),
-    extra_col = rnorm(3)
+    extra_col = rnorm(3),
+    unrelated = letters[1:3]
   )
 
-  expect_snapshot(
-    error = TRUE,
-    predict(mod, future_df = future_df, prediction_length = 3L)
-  )
-})
-
-# ------------------------------------------------------------------------------
-# chronos2_pull_column helper
-
-test_that("chronos2_pull_column errors when the column is missing", {
-  skip_on_cran()
-  skip_if_not(torch::torch_is_installed())
-  expect_snapshot(error = TRUE, {
-    brulee:::chronos2_pull_column(
-      data.frame(a = 1:3),
-      "missing_col",
-      "id_column"
-    )
-  })
-})
-
-test_that("chronos2_pull_column returns the column value when present", {
-  skip_on_cran()
-  skip_if_not(torch::torch_is_installed())
-  res <- brulee:::chronos2_pull_column(
-    data.frame(a = 1:3, b = letters[1:3]),
-    "b",
-    "x"
-  )
-  expect_equal(res, letters[1:3])
+  out <- predict(mod, new_data = new_df, prediction_length = 3L)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(nrow(out), 3L)
 })
 
 # ------------------------------------------------------------------------------
