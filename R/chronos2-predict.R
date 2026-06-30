@@ -177,23 +177,25 @@ predict.brulee_chronos <- function(
     )
     future_cov_cols <- setdiff(names(new_data), drop_in_future)
 
-    future_list <- lapply(ctx$item_ids, function(id) {
-      sub <- if (id_synthetic) {
-        new_data
+    sub_data <- function(id) {
+      if (id_synthetic) {
+        sub <- new_data
       } else {
-        new_data[new_data[[id_column]] == id, , drop = FALSE]
+        sub <- new_data[new_data[[id_column]] == id, , drop = FALSE]
       }
       if (timestamp_synthetic) {
         sub
       } else {
         sub[order(sub[[timestamp_column]]), , drop = FALSE]
       }
-    })
+    }
+
+    future_list <- purrr::map(ctx$item_ids, sub_data)
 
     # The future window sets the per-series forecast horizon. More rows than
     # `prediction_length` has no meaning; fewer is padded internally and
     # truncated from the output below.
-    requested_lengths <- vapply(future_list, nrow, integer(1))
+    requested_lengths <- purrr::map_int(future_list, nrow)
     too_long <- which(requested_lengths > prediction_length)
     if (length(too_long) > 0L) {
       i <- too_long[1L]

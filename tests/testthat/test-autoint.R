@@ -95,6 +95,11 @@ test_that("autoint regression - recipe interface", {
   skip_if_not_installed("torch")
   skip_if_not_installed("recipes")
 
+  # Temp check to remind to see if issues with the gower package have been resolved
+  if (packageVersion("brulee") > "1.0.1.9001") {
+    cli::cli_abort("Recheck RSPM version of gower")
+  }
+
   set.seed(1)
   n <- 80
   df <- data.frame(
