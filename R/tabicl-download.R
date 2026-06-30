@@ -166,7 +166,10 @@ tab_icl_download_weights <- function(
       chronos2_download_file(url, file.path(dest, f), label = f)
     }
   }
-  cli::cli_inform("All {.pkg TabICL} weight files available.", call = NULL)
+  cli::cli_inform(
+    "All {.pkg TabICL} weight files are locally available at {.file {cache_dir}}.",
+    call = NULL
+  )
 
   invisible(dest_root)
 }
