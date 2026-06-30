@@ -289,15 +289,15 @@ order as its time order. Pre-sort each series before calling
 
 \subsection{What happens at \code{predict()} time}{
 
-By default, \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}} forecasts from the context data that
-was supplied at construction. The use of \code{new_data} should be determined by
-how the \code{brulee_chronos()} call passed the data. For example, if no
-covariates were originally given to the model, there is no need to pass in
-values when calling \code{predict()} and so on. Pass \code{future_df} to supply known
-future values of any covariate (e.g., holiday flags, planned promotions).
-To forecast a \strong{different} series with the same schema, pass it as
-\code{new_data}. It will be processed through the same blueprint as the original
-context.
+The model is pretrained and performs no training, so the historical context
+is always the data supplied at construction; \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}}
+forecasts forward from that context. By default it returns the full
+\code{prediction_length} horizon. To forecast a specific future window---and to
+supply known future values of any covariate (e.g., holiday flags, planned
+promotions)---pass that window as \code{new_data}. Its per-series row count sets
+how many future steps are returned (at most \code{prediction_length}). When the
+model has no covariates, \code{new_data} only needs the id and timestamp columns
+that describe the future steps.
 }
 }
 \examples{

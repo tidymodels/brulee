@@ -649,7 +649,7 @@ test_that("data.frame method synthesizes id and timestamp when omitted", {
 })
 
 # ------------------------------------------------------------------------------
-# predict round-trip with new_data on a model that has no id / timestamp
+# predict with new_data on a model that has no id / timestamp
 
 test_that("predict accepts new_data without id/timestamp when model was synthesized", {
   skip_on_cran()
@@ -661,7 +661,8 @@ test_that("predict accepts new_data without id/timestamp when model was synthesi
 
   mod <- brulee_chronos(ridership ~ Clark_Lake, data = chi_simple)
 
-  out <- predict(mod, new_data = chi_simple, prediction_length = 4L)
+  new_df <- data.frame(Clark_Lake = rnorm(4))
+  out <- predict(mod, new_data = new_df, prediction_length = 4L)
   expect_s3_class(out, "tbl_df")
   expect_named(out, c(".pred", ".pred_quantile"))
   expect_equal(nrow(out), 4L)
