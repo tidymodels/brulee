@@ -154,6 +154,17 @@ run_training_loop <- function(
     epoch_chr <- format_epoch_labels(1:epochs)
   }
 
+  # Compute the loss for a batch; shared by the optimizer closure and the
+  # divergence check in the training loop below.
+  compute_loss <- function(batch) {
+    pred <- model(batch$x)
+    if (is.null(class_weights)) {
+      loss_fn(pred, batch$y)
+    } else {
+      loss_fn(pred, batch$y, class_weights)
+    }
+  }
+
   # Main training loop
   for (epoch in 1:epochs) {
     # Update learning rate
@@ -168,50 +179,76 @@ run_training_loop <- function(
       optimizer_obj$param_groups[[i]]$lr <- learn_rate
     }
 
-    # Training loop over batches
-    coro::loop(
-      for (batch in dl) {
-        cl <- function() {
-          optimizer_obj$zero_grad()
-          pred <- model(batch$x)
+    # Training loop over batches. The L-BFGS optimizer's internal convergence
+    # check can throw ("missing value where TRUE/FALSE needed") when the loss
+    # diverges to a non-finite value, since its guard only tests `is.na()` and
+    # not `is.finite()` (this has been observed on the MPS backend). When the
+    # step fails on a non-finite loss, treat it as numerical overflow and stop
+    # early; re-raise anything else. The divergence is signaled with a classed
+    # condition so the status can be returned from `tryCatch()`
+    diverged <- tryCatch(
+      {
+        coro::loop(
+          for (batch in dl) {
+            cl <- function() {
+              optimizer_obj$zero_grad()
+              loss <- compute_loss(batch)
+              loss$backward()
 
-          # Call loss function with or without class_weights
-          if (is.null(class_weights)) {
-            loss <- loss_fn(pred, batch$y)
-          } else {
-            loss <- loss_fn(pred, batch$y, class_weights)
-          }
+              # Gradient clipping (MLP only, by default Inf = no clipping)
+              if (is.finite(grad_value_clip)) {
+                try(
+                  torch::nn_utils_clip_grad_value_(
+                    model$parameters,
+                    grad_value_clip
+                  ),
+                  silent = TRUE
+                )
+              }
+              if (is.finite(grad_norm_clip)) {
+                try(
+                  torch::nn_utils_clip_grad_norm_(
+                    model$parameters,
+                    grad_norm_clip
+                  ),
+                  silent = TRUE
+                )
+              }
 
-          loss$backward()
-
-          # Gradient clipping (MLP only, by default Inf = no clipping)
-          if (is.finite(grad_value_clip)) {
-            try(
-              torch::nn_utils_clip_grad_value_(
-                model$parameters,
-                grad_value_clip
-              ),
-              silent = TRUE
+              loss
+            }
+            rlang::try_fetch(
+              optimizer_obj$step(cl),
+              error = function(cnd) {
+                loss_val <- tryCatch(
+                  as.numeric(compute_loss(batch)$item()),
+                  error = function(e) NA_real_
+                )
+                if (is.finite(loss_val)) {
+                  cli::cli_abort(conditionMessage(cnd), parent = cnd)
+                }
+                cli::cli_abort(
+                  "Loss diverged to a non-finite value.",
+                  class = "brulee_diverged"
+                )
+              }
             )
+            if (!is.null(batch_callback)) {
+              batch_callback()
+            }
           }
-          if (is.finite(grad_norm_clip)) {
-            try(
-              torch::nn_utils_clip_grad_norm_(
-                model$parameters,
-                grad_norm_clip
-              ),
-              silent = TRUE
-            )
-          }
-
-          loss
-        }
-        optimizer_obj$step(cl)
-        if (!is.null(batch_callback)) {
-          batch_callback()
-        }
-      }
+        )
+        FALSE
+      },
+      brulee_diverged = function(cnd) TRUE
     )
+
+    if (diverged) {
+      cli::cli_warn(
+        "Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function."
+      )
+      break()
+    }
 
     # Calculate loss on validation or training set
     if (validation > 0) {

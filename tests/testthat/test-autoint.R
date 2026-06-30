@@ -460,13 +460,16 @@ test_that("autoint gradient clipping prevents loss overflow", {
   )
 
   # Without clipping, the aggressive learning rate overflows the loss
+  # Changed from snapshot beucase GHA and local stop at different epochs with
+  # the same overflow issue
   set.seed(386)
   torch::torch_manual_seed(386)
-  expect_snapshot_warning(
+  expect_warning(
     no_clip <- do.call(
       brulee_auto_int,
       c(auto_int_args, grad_value_clip = Inf, grad_norm_clip = Inf)
-    )
+    ),
+    regexp = "numerical overflow of the loss function"
   )
   expect_true(any(is.nan(no_clip$loss)))
 

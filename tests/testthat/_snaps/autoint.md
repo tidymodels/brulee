@@ -88,10 +88,6 @@
       Error in `brulee_auto_int()`:
       ! `grad_value_clip` must be in the range (0, Inf].
 
-# autoint gradient clipping prevents loss overflow
-
-    Early stopping occurred at epoch 1 due to numerical overflow of the loss function.
-
 # autoint default method errors on unsupported types
 
     Code

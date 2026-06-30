@@ -6,6 +6,8 @@
 
 * There is now a `type` argument to `predict.brulee_chronos()`: `"all"` returns `.pred` and `.pred_quantile` (unchanged default), `"numeric"` returns only `.pred`, `"quantile"` returns only `.pred_quantile`. The id column is still prepended for multi-series models regardless of type.
 
+* Fixed a bug where torch's L-BFGS optimizer'''s internal convergence flag is NA, throwing an unhelpful error. 
+
 ## Breaking Changes
 
 * `predict()` for `brulee_chronos()` models was reworked. The historical context is always the data supplied to `brulee_chronos()` (the model is pretrained and does no training), so the former `new_data` context-override was removed. The argument previously called `future_df` is now `new_data`: it describes the future window to forecast for and may have at most `prediction_length` rows per series (previously exactly `prediction_length`). When fewer rows are supplied, the forecast is truncated to those rows. `predict()` also gained a `type` argument (`"all"`, `"numeric"`, or `"quantile"`) to select which prediction columns are returned.
