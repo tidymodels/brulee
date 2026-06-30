@@ -188,7 +188,10 @@ test_that("linear_reg includes epoch zero and coef() returns the best epoch", {
 
   # `coef()` returns the minimum-loss epoch's parameters, matching `predict()`.
   best <- fit$estimates[[which.min(fit$loss)]]
-  expect_equal(unname(coef(fit)), unname(c(best$fc1.bias, best$fc1.weight[1, ])))
+  expect_equal(
+    unname(coef(fit)),
+    unname(c(best$fc1.bias, best$fc1.weight[1, ]))
+  )
 
   # `epoch = 0` is now valid and returns the initial (pre-training) parameters.
   init <- fit$estimates[[1]]
