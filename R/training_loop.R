@@ -234,6 +234,12 @@ run_training_loop <- function(
     loss_curr <- loss$item()
     loss_vec[epoch] <- loss_curr
 
+    # Save parameters for this epoch before any early-stopping check so the
+    # returned loss curve (including a terminal NaN from numerical overflow)
+    # stays aligned with `param_per_epoch`.
+    param_per_epoch[[epoch]] <-
+      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
     # Check for NaN
     if (is.nan(loss_curr)) {
       cli::cli_warn(
@@ -255,10 +261,6 @@ run_training_loop <- function(
 
     loss_prev <- loss_curr
 
-    # Save parameters for this epoch
-    param_per_epoch[[epoch]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
-
     # Verbose output
     if (verbose) {
       cli::cli_inform(
@@ -277,5 +279,38 @@ run_training_loop <- function(
     param_per_epoch = param_per_epoch,
     loss_vec = loss_vec[1:length(param_per_epoch)],
     best_epoch = best_epoch
+  )
+}
+
+# Record the "iteration zero" state: the loss and parameters of the randomly
+# initialized model, before any training step. All models prepend this to
+# `loss`/`estimates` so that index 1 corresponds to epoch zero and the best
+# epoch's entry is at position `best_epoch + 1`.
+#' @noRd
+initial_epoch_record <- function(
+  model,
+  dl,
+  dl_val,
+  loss_fn,
+  validation,
+  class_weights = NULL
+) {
+  if (validation > 0) {
+    pred <- model(dl_val$dataset$tensors$x)
+    y <- dl_val$dataset$tensors$y
+  } else {
+    pred <- model(dl$dataset$tensors$x)
+    y <- dl$dataset$tensors$y
+  }
+
+  if (is.null(class_weights)) {
+    loss <- loss_fn(pred, y)
+  } else {
+    loss <- loss_fn(pred, y, class_weights)
+  }
+
+  list(
+    loss = loss$item(),
+    params = lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
   )
 }

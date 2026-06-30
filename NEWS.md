@@ -4,6 +4,11 @@
 
 * `brulee_saint()` and `brulee_auto_int()` now support gradient clipping via the `grad_value_clip` and `grad_norm_clip` arguments (both default to `5`), matching `brulee_mlp()` and `brulee_resnet()`. This prevents the loss from overflowing to `NaN` during training with aggressive learning rates.
 
+* All estimated models now include epoch zero (the randomly initialized parameters, before any training) as the first element of `loss` and `estimates`, matching the neural-network models. These vectors are now length `epochs + 1`, `epoch = 0` is a valid argument to `predict()` and `coef()`, and the entry for `best_epoch` is at position `best_epoch + 1`. Predictions and coefficients for a given (positive) epoch are unchanged. Note: objects serialized by earlier versions of these three functions predict off by one epoch under the new indexing, so refit any stored models.
+  * The `print()` methods now report the loss from the best epoch. Previously the displayed loss was taken one epoch too early (it ignored the prepended epoch-zero entry in `loss`).
+
+* `brulee_tab_icl()` makes the open-source foundational model TabICL available. On first use, there is a substantial download (~ 400MB) for the model weights that is cached locally. 
+
 # brulee 1.0.0
 
 New models for tabular data:

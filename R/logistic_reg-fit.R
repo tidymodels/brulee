@@ -62,10 +62,15 @@
 #' A `brulee_logistic_reg` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
-#'                 epoch.
-#'  * `best_epoch`: an integer for the epoch with the smallest loss.
+#'                 epoch. The first element is epoch zero (the randomly
+#'                 initialized parameters before training), so the list has
+#'                 `epochs + 1` elements.
+#'  * `best_epoch`: an integer for the epoch with the smallest loss. Since
+#'                  `estimates` and `loss` include epoch zero, this epoch's
+#'                  values are at position `best_epoch + 1` in those objects.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
-#'            likelihood for classification) at each epoch.
+#'            likelihood for classification) at each epoch, starting with
+#'            epoch zero.
 #'  * `dim`: A list of data dimensions.
 #'  * `parameters`: A list of some tuning parameter values.
 #'  * `blueprint`: The `hardhat` blueprint data.
@@ -564,6 +569,16 @@ logistic_reg_fit_imp <-
 
       ## -------------------------------------------------------------------------
 
+      # Record the randomly initialized model as epoch zero before training
+      init_epoch <- initial_epoch_record(
+        model,
+        dl,
+        dl_val,
+        loss_fn,
+        validation,
+        class_weights = class_weights
+      )
+
       # Run training loop
       training_result <- run_training_loop(
         model = model,
@@ -583,7 +598,8 @@ logistic_reg_fit_imp <-
 
       list(
         model = model,
-        training_result = training_result
+        training_result = training_result,
+        init_epoch = init_epoch
       )
     })
 
@@ -596,8 +612,14 @@ logistic_reg_fit_imp <-
 
     list(
       model_obj = model_to_raw(training_output$model),
-      estimates = training_output$training_result$param_per_epoch,
-      loss = training_output$training_result$loss_vec,
+      estimates = c(
+        list(training_output$init_epoch$params),
+        training_output$training_result$param_per_epoch
+      ),
+      loss = c(
+        training_output$init_epoch$loss,
+        training_output$training_result$loss_vec
+      ),
       best_epoch = training_output$training_result$best_epoch,
       dims = list(
         p = p,

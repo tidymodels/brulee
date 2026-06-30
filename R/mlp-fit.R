@@ -140,10 +140,15 @@
 #' A `brulee_mlp` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
-#'                 epoch.
-#'  * `best_epoch`: an integer for the epoch with the smallest loss.
+#'                 epoch. The first element is epoch zero (the randomly
+#'                 initialized parameters before training), so the list has
+#'                 `epochs + 1` elements.
+#'  * `best_epoch`: an integer for the epoch with the smallest loss. Since
+#'                  `estimates` and `loss` include epoch zero, this epoch's
+#'                  values are at position `best_epoch + 1` in those objects.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
-#'            likelihood for classification) at each epoch.
+#'            likelihood for classification) at each epoch, starting with
+#'            epoch zero.
 #'  * `dim`: A list of data dimensions.
 #'  * `y_stats`: A list of summary statistics for numeric outcomes.
 #'  * `parameters`: A list of some tuning parameter values.

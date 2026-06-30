@@ -297,3 +297,45 @@ test_that('linear activations', {
     )
   expect_s3_class(nn_log_biv, "brulee_mlp")
 })
+
+test_that("mlp gradient clipping prevents loss overflow", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  set.seed(386)
+  n <- 200
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  df$class <- factor(ifelse(df$x1 - df$x2 + rnorm(n) > 0, "a", "b"))
+
+  mlp_args <- list(
+    class ~ .,
+    data = df,
+    hidden_units = 64L,
+    learn_rate = 100,
+    momentum = 0.9,
+    optimizer = "SGD",
+    batch_size = 16L,
+    epochs = 10L,
+    stop_iter = 100L,
+    validation = 0,
+    device = "cpu",
+    verbose = FALSE
+  )
+
+  # Without clipping, the aggressive learning rate overflows the loss
+  set.seed(386)
+  torch::torch_manual_seed(386)
+  expect_snapshot_warning(
+    no_clip <- do.call(
+      brulee_mlp,
+      c(mlp_args, grad_value_clip = Inf, grad_norm_clip = Inf)
+    )
+  )
+  expect_true(any(is.nan(no_clip$loss)))
+
+  # With the default clipping, training completes without overflow
+  set.seed(386)
+  torch::torch_manual_seed(386)
+  clipped <- do.call(brulee_mlp, mlp_args)
+  expect_false(any(is.nan(clipped$loss)))
+})
