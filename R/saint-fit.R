@@ -42,7 +42,7 @@
 #' @param dropout_last A number in `[0, 1)` for the dropout rate applied
 #'   between the last hidden layer and the output head. Only has effect when
 #'   `hidden_units` is not `NULL`. Default is 0 (no dropout).
-#' @param use_target_token A logical value. When `TRUE` (the default), a
+#' @param target_token A logical value. When `TRUE` (the default), a
 #'   learnable target token (`[CLS]` in the SAINT paper) is prepended to
 #'   each sample's feature sequence and only its final-layer embedding is
 #'   fed to the head. This matches the architecture described in the SAINT
@@ -68,7 +68,7 @@
 #'    (across samples within the batch).
 #' 3. **Output head**: Pools the transformer output (either the target
 #'    token's embedding or the flattened concatenation of all feature
-#'    embeddings, controlled by `use_target_token`) and projects it through
+#'    embeddings, controlled by `target_token`) and projects it through
 #'    optional hidden layers to the output dimension.
 #'
 #' There is a `summary()` methods that can provide details of the architecture
@@ -112,7 +112,7 @@
 #' SAINT and pass only the embedding correspond to the CLS token through an
 #' MLP to obtain the final prediction."
 #'
-#' With `use_target_token = FALSE`, no target token is added and the head
+#' With `target_token = FALSE`, no target token is added and the head
 #' instead consumes the concatenation of all `n` feature tokens. That
 #' option is provided because the SAINT reference Python implementation
 #' (<https://github.com/somepago/saint>) departs from the paper and uses
@@ -266,9 +266,11 @@ brulee_saint.data.frame <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -296,9 +298,11 @@ brulee_saint.data.frame <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
-    use_target_token = use_target_token,
+    target_token = target_token,
     ...
   )
 }
@@ -331,9 +335,11 @@ brulee_saint.matrix <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -361,9 +367,11 @@ brulee_saint.matrix <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
-    use_target_token = use_target_token,
+    target_token = target_token,
     ...
   )
 }
@@ -396,9 +404,11 @@ brulee_saint.formula <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(
@@ -430,9 +440,11 @@ brulee_saint.formula <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
-    use_target_token = use_target_token,
+    target_token = target_token,
     ...
   )
 }
@@ -465,9 +477,11 @@ brulee_saint.recipe <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 ) {
   processed <- hardhat::mold(x, data)
@@ -495,9 +509,11 @@ brulee_saint.recipe <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
-    use_target_token = use_target_token,
+    target_token = target_token,
     ...
   )
 }
@@ -528,9 +544,11 @@ brulee_saint_bridge <- function(
   optimizer,
   batch_size,
   stop_iter,
+  grad_value_clip,
+  grad_norm_clip,
   verbose,
   device,
-  use_target_token,
+  target_token,
   ...,
   call = rlang::caller_env()
 ) {
@@ -550,7 +568,9 @@ brulee_saint_bridge <- function(
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
     dropout_hidden = dropout_hidden,
-    use_target_token = use_target_token,
+    target_token = target_token,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     call = call
   )
 
@@ -640,9 +660,11 @@ brulee_saint_bridge <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
-    use_target_token = saint_validated$use_target_token,
+    target_token = saint_validated$target_token,
     ...
   )
 
@@ -670,7 +692,9 @@ validate_saint_args <- function(
   num_attn_blocks,
   dropout_attn,
   dropout_hidden,
-  use_target_token,
+  target_token,
+  grad_value_clip,
+  grad_norm_clip,
   call = rlang::caller_env()
 ) {
   if (is.numeric(num_embedding) && !is.integer(num_embedding)) {
@@ -696,7 +720,7 @@ validate_saint_args <- function(
     )
   }
 
-  check_bool(use_target_token, call = call)
+  check_bool(target_token, call = call)
 
   check_double(dropout_attn, single = TRUE, 0, call = call)
   if (dropout_attn >= 1) {
@@ -708,6 +732,23 @@ validate_saint_args <- function(
     cli::cli_abort("{.arg dropout_hidden} must be less than 1.", call = call)
   }
 
+  check_double(
+    grad_value_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    call = call
+  )
+  check_double(
+    grad_norm_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    call = call
+  )
+
   list(
     num_embedding = num_embedding,
     attention_type = attention_type,
@@ -715,7 +756,9 @@ validate_saint_args <- function(
     num_attn_blocks = num_attn_blocks,
     dropout_attn = dropout_attn,
     dropout_hidden = dropout_hidden,
-    use_target_token = use_target_token
+    target_token = target_token,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip
   )
 }
 
@@ -811,9 +854,11 @@ saint_fit_imp <- function(
   momentum = 0.0,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = "cpu",
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 ) {
   start_seed <- sample.int(10^5, 1)
@@ -934,7 +979,7 @@ saint_fit_imp <- function(
     hidden_units = hidden_units,
     hidden_activations = hidden_activations,
     y_dim = y_dim,
-    use_target_token = use_target_token
+    target_token = target_token
   )
   model$to(device = device)
 
@@ -1053,8 +1098,10 @@ saint_fit_imp <- function(
         batch_size = batch_size,
         momentum = momentum,
         stop_iter = stop_iter,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
         sched = rate_schedule,
-        use_target_token = use_target_token,
+        target_token = target_token,
         sched_opt = list(...)
       )
     )
@@ -1128,6 +1175,8 @@ saint_fit_imp <- function(
       epochs = epochs,
       learn_rate = learn_rate,
       stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
       validation = validation,
       class_weights = class_weights,
       loss_label = loss_label,
@@ -1174,6 +1223,8 @@ run_saint_training_loop <- function(
   epochs,
   learn_rate,
   stop_iter,
+  grad_value_clip = Inf,
+  grad_norm_clip = Inf,
   validation,
   class_weights = NULL,
   loss_label = "\tLoss:",
@@ -1218,6 +1269,26 @@ run_saint_training_loop <- function(
           }
 
           loss$backward()
+
+          if (is.finite(grad_value_clip)) {
+            try(
+              torch::nn_utils_clip_grad_value_(
+                model$parameters,
+                grad_value_clip
+              ),
+              silent = TRUE
+            )
+          }
+          if (is.finite(grad_norm_clip)) {
+            try(
+              torch::nn_utils_clip_grad_norm_(
+                model$parameters,
+                grad_norm_clip
+              ),
+              silent = TRUE
+            )
+          }
+
           loss
         }
         optimizer_obj$step(cl)
@@ -1486,12 +1557,12 @@ saint_embedding_module <- torch::nn_module(
     pred_lvls,
     n_continuous,
     num_embedding,
-    use_target_token = FALSE
+    target_token = FALSE
   ) {
     self$n_cat <- length(pred_lvls)
     self$n_cont <- n_continuous
     self$num_embedding <- num_embedding
-    self$use_target_token <- isTRUE(use_target_token)
+    self$target_token <- isTRUE(target_token)
 
     if (self$n_cat > 0) {
       self$cat_embeddings <- torch::nn_module_list(lapply(
@@ -1518,8 +1589,8 @@ saint_embedding_module <- torch::nn_module(
       ))
     }
 
-    if (self$use_target_token) {
-      self$target_token <- torch::nn_parameter(
+    if (self$target_token) {
+      self$target_token_weight <- torch::nn_parameter(
         torch::torch_randn(1L, 1L, num_embedding)
       )
     }
@@ -1545,9 +1616,9 @@ saint_embedding_module <- torch::nn_module(
 
     feats <- torch::torch_cat(parts, dim = 2L)
 
-    if (self$use_target_token) {
+    if (self$target_token) {
       batch <- feats$shape[1]
-      tgt <- self$target_token$expand(c(batch, 1L, self$num_embedding))
+      tgt <- self$target_token_weight$expand(c(batch, 1L, self$num_embedding))
       feats <- torch::torch_cat(list(tgt, feats), dim = 2L)
     }
 
@@ -1570,19 +1641,19 @@ saint_module <- torch::nn_module(
     hidden_units,
     hidden_activations,
     y_dim,
-    use_target_token = FALSE
+    target_token = FALSE
   ) {
     num_features <- length(pred_lvls) + n_continuous
     self$num_features <- num_features
     self$num_embedding <- num_embedding
-    self$use_target_token <- isTRUE(use_target_token)
-    seq_len <- num_features + as.integer(self$use_target_token)
+    self$target_token <- isTRUE(target_token)
+    seq_len <- num_features + as.integer(self$target_token)
 
     self$embedding <- saint_embedding_module(
       pred_lvls = pred_lvls,
       n_continuous = n_continuous,
       num_embedding = num_embedding,
-      use_target_token = self$use_target_token
+      target_token = self$target_token
     )
 
     if (attention_type == "column") {
@@ -1645,7 +1716,7 @@ saint_module <- torch::nn_module(
     embeds <- self$embedding(x_cat, x_cont)
     h <- self$backbone(embeds)
 
-    if (self$use_target_token) {
+    if (self$target_token) {
       h_pooled <- h[, 1L, ]
     } else {
       h_pooled <- h$reshape(c(h$shape[1], -1L))

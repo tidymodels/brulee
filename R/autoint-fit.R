@@ -217,6 +217,8 @@ brulee_auto_int.data.frame <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -246,6 +248,8 @@ brulee_auto_int.data.frame <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     ...
@@ -280,6 +284,8 @@ brulee_auto_int.matrix <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -309,6 +315,8 @@ brulee_auto_int.matrix <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     ...
@@ -343,6 +351,8 @@ brulee_auto_int.formula <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -376,6 +386,8 @@ brulee_auto_int.formula <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     ...
@@ -410,6 +422,8 @@ brulee_auto_int.recipe <- function(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -439,6 +453,8 @@ brulee_auto_int.recipe <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     ...
@@ -471,6 +487,8 @@ brulee_auto_int_bridge <- function(
   optimizer,
   batch_size,
   stop_iter,
+  grad_value_clip,
+  grad_norm_clip,
   verbose,
   device,
   ...,
@@ -494,6 +512,8 @@ brulee_auto_int_bridge <- function(
     activation = activation,
     dropout_attn = dropout_attn,
     dropout_embedding = dropout_embedding,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     call = call
   )
 
@@ -580,6 +600,8 @@ brulee_auto_int_bridge <- function(
     batch_size = batch_size,
     class_weights = class_weights,
     stop_iter = stop_iter,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip,
     verbose = verbose,
     device = device,
     ...
@@ -687,6 +709,8 @@ validate_auto_int_args <- function(
   activation,
   dropout_attn,
   dropout_embedding,
+  grad_value_clip,
+  grad_norm_clip,
   call = rlang::caller_env()
 ) {
   if (is.numeric(num_embedding) && !is.integer(num_embedding)) {
@@ -728,6 +752,23 @@ validate_auto_int_args <- function(
     )
   }
 
+  check_double(
+    grad_value_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    call = call
+  )
+  check_double(
+    grad_norm_clip,
+    single = TRUE,
+    0,
+    Inf,
+    incl = c(FALSE, TRUE),
+    call = call
+  )
+
   list(
     num_embedding = num_embedding,
     num_attn_feat = num_attn_feat,
@@ -735,7 +776,9 @@ validate_auto_int_args <- function(
     num_attn_blocks = num_attn_blocks,
     activation = activation,
     dropout_attn = dropout_attn,
-    dropout_embedding = dropout_embedding
+    dropout_embedding = dropout_embedding,
+    grad_value_clip = grad_value_clip,
+    grad_norm_clip = grad_norm_clip
   )
 }
 
@@ -891,6 +934,8 @@ auto_int_fit_imp <- function(
   dropout = 0,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = "cpu",
   ...
@@ -1139,6 +1184,8 @@ auto_int_fit_imp <- function(
         batch_size = batch_size,
         momentum = momentum,
         stop_iter = stop_iter,
+        grad_value_clip = grad_value_clip,
+        grad_norm_clip = grad_norm_clip,
         sched = rate_schedule,
         sched_opt = list(...)
       )
@@ -1214,6 +1261,8 @@ auto_int_fit_imp <- function(
       epochs = epochs,
       learn_rate = learn_rate,
       stop_iter = stop_iter,
+      grad_value_clip = grad_value_clip,
+      grad_norm_clip = grad_norm_clip,
       validation = validation,
       class_weights = class_weights,
       loss_label = loss_label,
@@ -1278,6 +1327,8 @@ run_auto_int_training_loop <- function(
   epochs,
   learn_rate,
   stop_iter,
+  grad_value_clip = Inf,
+  grad_norm_clip = Inf,
   validation,
   class_weights = NULL,
   loss_label = "\tLoss:",
@@ -1288,7 +1339,7 @@ run_auto_int_training_loop <- function(
   loss_prev <- 10^38
   loss_min <- loss_prev
   poor_epoch <- 0
-  best_epoch <- 1
+  best_epoch <- 1L
   loss_vec <- rep(NA_real_, epochs)
   param_per_epoch <- list()
 
@@ -1321,6 +1372,26 @@ run_auto_int_training_loop <- function(
           }
 
           loss$backward()
+
+          if (is.finite(grad_value_clip)) {
+            try(
+              torch::nn_utils_clip_grad_value_(
+                model$parameters,
+                grad_value_clip
+              ),
+              silent = TRUE
+            )
+          }
+          if (is.finite(grad_norm_clip)) {
+            try(
+              torch::nn_utils_clip_grad_norm_(
+                model$parameters,
+                grad_norm_clip
+              ),
+              silent = TRUE
+            )
+          }
+
           loss
         }
         optimizer_obj$step(cl)

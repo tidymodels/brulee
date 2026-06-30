@@ -37,6 +37,8 @@ brulee_auto_int(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -66,6 +68,8 @@ brulee_auto_int(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -95,6 +99,8 @@ brulee_auto_int(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -124,6 +130,8 @@ brulee_auto_int(x, ...)
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -236,6 +244,11 @@ and all other classes receive a weight of one.
 
 \item{stop_iter}{A non-negative integer for how many iterations with no
 improvement before stopping.}
+
+\item{grad_norm_clip, grad_value_clip}{Two numeric values, possibly \code{Inf},
+that prevents the gradient's values or norm(s) from exceeding the specified
+value. This can be helpful if training stops early with the message that
+\code{"Loss is NaN at epoch x Training is stopped."}}
 
 \item{verbose}{A logical that prints out the iteration history.}
 
