@@ -9,7 +9,7 @@ Predict from a `brulee_chronos` model
 predict(
   object,
   new_data = NULL,
-  future_df = NULL,
+  type = "all",
   prediction_length = NULL,
   quantile_levels = NULL,
   ...
@@ -25,22 +25,26 @@ predict(
 
 - new_data:
 
-  Optional data frame in the same long format as the data used to build
-  `object`. It should contain the target and covariate columns named in
-  `object`, plus the id and timestamp columns when those were supplied
-  at construction. (If the model was built without an id column, every
-  row of `new_data` is treated as part of the same single series;
-  similarly, if the model was built without a timestamp column, row
-  order is used as the time order.) If `NULL` (the default), the context
-  stored in `object` is used.
+  Optional data frame describing the future window to forecast for. It
+  should contain the id and timestamp columns (when those were supplied
+  at construction) plus any known future covariate values (a subset of
+  the past covariates). The number of rows per series is the number of
+  future time steps to return and may be at most `prediction_length`;
+  supplying more is an error. When a series has fewer rows than
+  `prediction_length`, the missing future covariates are treated as
+  unknown and the forecast is truncated to the rows provided. If `NULL`
+  (the default), the full `prediction_length` horizon is forecast from
+  the context stored in `object`. The model is pretrained, so the
+  historical context is always the data passed to
+  [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md)
+  and is never overridden here.
 
-- future_df:
+- type:
 
-  Optional data frame with future covariate values. Must contain the id
-  and timestamp columns (when present in the original model) plus any
-  covariate columns to provide for the future window (a subset of the
-  past covariates). Each series must have exactly `prediction_length`
-  rows.
+  A single string for the type of prediction to return. The default
+  `"all"` returns both the point forecast (`.pred`) and the quantile
+  forecast (`.pred_quantile`). Use `"numeric"` for only `.pred` or
+  `"quantile"` for only `.pred_quantile`.
 
 - prediction_length:
 
@@ -59,8 +63,9 @@ predict(
 ## Value
 
 A [tibble](https://tibble.tidyverse.org/reference/tibble.html) with one
-row per future time step per series, in the same order as the rows of
-`new_data` (or the stored context). Columns:
+row per forecast time step per series (up to `nrow(new_data)` rows per
+series, or `prediction_length` rows when `new_data` is `NULL`). Columns
+depend on `type`:
 
 - `<id_column>`:
 
@@ -69,13 +74,15 @@ row per future time step per series, in the same order as the rows of
 
 - `.pred`:
 
-  Point forecast, i.e. the median of `.pred_quantile`.
+  Point forecast, i.e. the median of `.pred_quantile`. Returned when
+  `type` is `"all"` or `"numeric"`.
 
 - `.pred_quantile`:
 
   A
   [`hardhat::quantile_pred()`](https://hardhat.tidymodels.org/reference/quantile_pred.html)
   vector packing all requested quantile levels into a single column.
+  Returned when `type` is `"all"` or `"quantile"`.
 
 ## Examples
 
@@ -105,7 +112,7 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
    timestamp_column = c(date),
    prediction_length = 14)
 
- pred_1 <- predict(mod_1, test_data)
+ pred_1 <- predict(mod_1, new_data = test_data)
  pred_1
 
  pred_1 |>
@@ -126,7 +133,7 @@ mod_2 <-
    timestamp_column = c(date),
    prediction_length = 14)
 
- pred_2 <- predict(mod_2, future_df = test_data)
+ pred_2 <- predict(mod_2, new_data = test_data)
 
  pred_2 |>
   bind_cols(test_data) |>
@@ -145,7 +152,7 @@ mod_2 <-
 
  mod_3 <- brulee_chronos(rec, data = prior_data, prediction_length = 14)
 
- pred_3 <- predict(mod_3, future_df = test_data)
+ pred_3 <- predict(mod_3, new_data = test_data)
 
  pred_3 |>
   bind_cols(test_data) |>

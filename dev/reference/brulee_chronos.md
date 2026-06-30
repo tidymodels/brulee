@@ -327,17 +327,16 @@ order as its time order. Pre-sort each series before calling
 
 ### What happens at [`predict()`](https://rdrr.io/r/stats/predict.html) time
 
-By default,
+The model is pretrained and performs no training, so the historical
+context is always the data supplied at construction;
 [`predict.brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/predict.brulee_chronos.md)
-forecasts from the context data that was supplied at construction. The
-use of `new_data` should be determined by how the `brulee_chronos()`
-call passed the data. For example, if no covariates were originally
-given to the model, there is no need to pass in values when calling
-[`predict()`](https://rdrr.io/r/stats/predict.html) and so on. Pass
-`future_df` to supply known future values of any covariate (e.g.,
-holiday flags, planned promotions). To forecast a **different** series
-with the same schema, pass it as `new_data`. It will be processed
-through the same blueprint as the original context.
+forecasts forward from that context. By default it returns the full
+`prediction_length` horizon. To forecast a specific future window—and to
+supply known future values of any covariate (e.g., holiday flags,
+planned promotions)—pass that window as `new_data`. Its per-series row
+count sets how many future steps are returned (at most
+`prediction_length`). When the model has no covariates, `new_data` only
+needs the id and timestamp columns that describe the future steps.
 
 ## References
 

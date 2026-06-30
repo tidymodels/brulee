@@ -42,7 +42,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  new_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  future_df <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"all"</span>,</span>
 <span>  prediction_length <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quantile_levels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -58,22 +58,25 @@
 
 
 <dt id="arg-new-data">new_data<a class="anchor" aria-label="anchor" href="#arg-new-data"></a></dt>
-<dd><p>Optional data frame in the same long format as the data
-used to build <code>object</code>. It should contain the target and covariate
-columns named in <code>object</code>, plus the id and timestamp columns when
-those were supplied at construction. (If the model was built without
-an id column, every row of <code>new_data</code> is treated as part of the same
-single series; similarly, if the model was built without a timestamp
-column, row order is used as the time order.) If <code>NULL</code> (the
-default), the context stored in <code>object</code> is used.</p></dd>
+<dd><p>Optional data frame describing the future window to
+forecast for. It should contain the id and timestamp columns (when those
+were supplied at construction) plus any known future covariate values (a
+subset of the past covariates). The number of rows per series is the
+number of future time steps to return and may be at most
+<code>prediction_length</code>; supplying more is an error. When a series has fewer
+rows than <code>prediction_length</code>, the missing future covariates are treated
+as unknown and the forecast is truncated to the rows provided. If <code>NULL</code>
+(the default), the full <code>prediction_length</code> horizon is forecast from the
+context stored in <code>object</code>. The model is pretrained, so the historical
+context is always the data passed to <code><a href="brulee_chronos.html">brulee_chronos()</a></code> and is never
+overridden here.</p></dd>
 
 
-<dt id="arg-future-df">future_df<a class="anchor" aria-label="anchor" href="#arg-future-df"></a></dt>
-<dd><p>Optional data frame with future covariate values. Must
-contain the id and timestamp columns (when present in the original
-model) plus any covariate columns to provide for the future window (a
-subset of the past covariates). Each series must have exactly
-<code>prediction_length</code> rows.</p></dd>
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>A single string for the type of prediction to return. The
+default <code>"all"</code> returns both the point forecast (<code>.pred</code>) and the quantile
+forecast (<code>.pred_quantile</code>). Use <code>"numeric"</code> for only <code>.pred</code> or
+<code>"quantile"</code> for only <code>.pred_quantile</code>.</p></dd>
 
 
 <dt id="arg-prediction-length">prediction_length<a class="anchor" aria-label="anchor" href="#arg-prediction-length"></a></dt>
@@ -92,18 +95,21 @@ value stored in <code>object</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a> with one row per future time step
-per series, in the same order as the rows of <code>new_data</code> (or the stored
-context). Columns:</p><dl><dt><code>&lt;id_column&gt;</code></dt>
+    <p>A <a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a> with one row per forecast time step
+per series (up to <code>nrow(new_data)</code> rows per series, or
+<code>prediction_length</code> rows when <code>new_data</code> is <code>NULL</code>). Columns depend on
+<code>type</code>:</p><dl><dt><code>&lt;id_column&gt;</code></dt>
 <dd><p>The time series identifier. Omitted when the
 context contains a single series.</p></dd>
 
 <dt><code>.pred</code></dt>
-<dd><p>Point forecast, i.e. the median of <code>.pred_quantile</code>.</p></dd>
+<dd><p>Point forecast, i.e. the median of <code>.pred_quantile</code>.
+Returned when <code>type</code> is <code>"all"</code> or <code>"numeric"</code>.</p></dd>
 
 <dt><code>.pred_quantile</code></dt>
 <dd><p>A <code><a href="https://hardhat.tidymodels.org/reference/quantile_pred.html" class="external-link">hardhat::quantile_pred()</a></code> vector packing
-all requested quantile levels into a single column.</p></dd>
+all requested quantile levels into a single column. Returned when
+<code>type</code> is <code>"all"</code> or <code>"quantile"</code>.</p></dd>
 
 
 </dl></div>
@@ -135,7 +141,7 @@ all requested quantile levels into a single column.</p></dd>
 <span class="r-in"><span>   timestamp_column <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>   prediction_length <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span> <span class="va">pred_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mod_1</span>, <span class="va">test_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">pred_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mod_1</span>, new_data <span class="op">=</span> <span class="va">test_data</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">pred_1</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">pred_1</span> <span class="op">|&gt;</span></span></span>
@@ -156,7 +162,7 @@ all requested quantile levels into a single column.</p></dd>
 <span class="r-in"><span>   timestamp_column <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>   prediction_length <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span> <span class="va">pred_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mod_2</span>, future_df <span class="op">=</span> <span class="va">test_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">pred_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mod_2</span>, new_data <span class="op">=</span> <span class="va">test_data</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">pred_2</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html" class="external-link">bind_cols</a></span><span class="op">(</span><span class="va">test_data</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
@@ -175,7 +181,7 @@ all requested quantile levels into a single column.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">mod_3</span> <span class="op">&lt;-</span> <span class="fu"><a href="brulee_chronos.html">brulee_chronos</a></span><span class="op">(</span><span class="va">rec</span>, data <span class="op">=</span> <span class="va">prior_data</span>, prediction_length <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span> <span class="va">pred_3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mod_3</span>, future_df <span class="op">=</span> <span class="va">test_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">pred_3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">mod_3</span>, new_data <span class="op">=</span> <span class="va">test_data</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">pred_3</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html" class="external-link">bind_cols</a></span><span class="op">(</span><span class="va">test_data</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
