@@ -1678,7 +1678,7 @@ saint_module <- torch::nn_module(
       )
     }
 
-    if (self$use_target_token) {
+    if (self$target_token) {
       head_input_dim <- num_embedding
     } else {
       head_input_dim <- seq_len * num_embedding
