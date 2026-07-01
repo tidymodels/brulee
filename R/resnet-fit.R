@@ -867,7 +867,7 @@ resnet_fit_imp <-
 
       param_per_epoch <- vector(mode = "list", length = epochs + 1)
       param_per_epoch[[1]] <-
-        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+        purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
       res$model_obj <- model_to_raw(model)
       res$estimates <- param_per_epoch[[1]]

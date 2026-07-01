@@ -20,7 +20,7 @@ tabicl_col_embedding <- nn_module(
     target_aware = TRUE,
     max_classes = 10,
     reserve_cls_tokens = 4,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE,
     ssmax = "none"
@@ -65,7 +65,7 @@ tabicl_col_embedding <- nn_module(
       dtype = torch_long(),
       device = x$device
     )
-    groups <- lapply(seq_len(self$feature_group_size), function(i) {
+    groups <- purrr::map(seq_len(self$feature_group_size), \(i) {
       shift <- 2^(i - 1)
       perm <- ((idxs + shift) %% h) + 1L # +1: index_select is 1-based
       x$index_select(dim = 3, index = perm$to(dtype = torch_long()))

@@ -119,7 +119,7 @@ predict_brulee_resnet_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation
-  estimates <- lapply(estimates, float_32, device = device)
+  estimates <- purrr::map(estimates, float_32, device = device)
 
   # stuff back into the model
   module$load_state_dict(estimates)

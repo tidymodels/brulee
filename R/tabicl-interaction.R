@@ -17,7 +17,7 @@ tabicl_row_interaction <- nn_module(
     dim_feedforward,
     num_cls = 4,
     rope_base = 100000,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE
   ) {

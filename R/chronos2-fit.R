@@ -582,7 +582,7 @@ brulee_chronos_bridge <- function(
     )
   }
 
-  non_numeric <- vapply(predictors, function(col) !is.numeric(col), logical(1))
+  non_numeric <- purrr::map_lgl(predictors, \(col) !is.numeric(col))
   if (any(non_numeric)) {
     bad <- names(predictors)[non_numeric]
     cli::cli_abort(c(

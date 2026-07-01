@@ -1161,7 +1161,7 @@ saint_fit_imp <- function(
 
     param_per_epoch <- vector(mode = "list", length = epochs + 1)
     param_per_epoch[[1]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     res$model_obj <- model_to_raw(model)
     res$estimates <- param_per_epoch[[1]]
@@ -1327,7 +1327,7 @@ run_saint_training_loop <- function(
     # returned loss curve (including a terminal NaN from numerical overflow)
     # stays aligned with `param_per_epoch`.
     param_per_epoch[[epoch]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     if (is.nan(loss_curr)) {
       cli::cli_warn(

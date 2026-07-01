@@ -643,7 +643,7 @@ rln_fit_imp <- function(
 
     param_per_epoch <- vector(mode = "list", length = epochs + 1)
     param_per_epoch[[1]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     # No grad_value_clip/grad_norm_clip: the per-weight regularization in
     # on_batch_end keeps weights bounded, making gradient clipping unnecessary

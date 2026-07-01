@@ -323,7 +323,7 @@ arch_param_count <- function(m) {
   if (length(params) == 0) {
     return(0L)
   }
-  sum(vapply(params, function(p) p$numel(), integer(1)))
+  sum(purrr::map_int(params, \(p) p$numel()))
 }
 
 arch_fmt_module <- function(m) {

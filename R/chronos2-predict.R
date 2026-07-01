@@ -542,7 +542,7 @@ chronos2_run_with_covariates <- function(
 
   if (length(predictions) == 1 && predictions[[1]]$size(1) == 1) {
     predictions <- predictions[[1]]
-  } else if (all(vapply(predictions, function(p) p$size(1), integer(1)) == 1)) {
+  } else if (all(purrr::map_int(predictions, \(p) p$size(1)) == 1)) {
     predictions <- torch::torch_cat(predictions, dim = 1)
   }
 

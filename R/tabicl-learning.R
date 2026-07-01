@@ -19,7 +19,7 @@ tabicl_icl_learning <- nn_module(
     num_blocks,
     nhead,
     dim_feedforward,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE,
     ssmax = "none"

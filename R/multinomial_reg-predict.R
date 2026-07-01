@@ -110,7 +110,7 @@ predict_brulee_multinomial_reg_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation on correct device
-  estimates <- lapply(estimates, float_32, device = device)
+  estimates <- purrr::map(estimates, float_32, device = device)
   # stuff back into the model
   module$load_state_dict(estimates)
   # put the model in evaluation mode

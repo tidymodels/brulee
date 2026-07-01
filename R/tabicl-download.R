@@ -69,13 +69,12 @@ tabicl_find_checkpoint <- function(task, cache_dir = tabicl_cache_dir()) {
   candidates <- Sys.glob(
     file.path(cache_dir, "*", "*", tabicl_task_label(task))
   )
-  has_both <- vapply(
+  has_both <- purrr::map_lgl(
     candidates,
-    function(d) {
+    \(d) {
       file.exists(file.path(d, files$config)) &&
         file.exists(file.path(d, files$weights))
-    },
-    logical(1)
+    }
   )
   candidates <- candidates[has_both]
 
@@ -152,9 +151,7 @@ tab_icl_download_weights <- function(
   task <- rlang::arg_match(task, multiple = TRUE, error_call = call)
 
   # The safetensors assets are large; lift download.file()'s default timeout.
-  old_timeout <- getOption("timeout")
-  options(timeout = max(600L, old_timeout))
-  on.exit(options(timeout = old_timeout), add = TRUE)
+  withr::local_options(timeout = max(600L, getOption("timeout")))
 
   dest_root <- file.path(cache_dir, version, date)
   for (tk in task) {
@@ -181,9 +178,8 @@ tab_icl_weights_available <- function(
   cache_dir = tabicl_cache_dir()
 ) {
   task <- rlang::arg_match(task, multiple = TRUE)
-  all(vapply(
+  all(purrr::map_lgl(
     task,
-    function(tk) !is.null(tabicl_find_checkpoint(tk, cache_dir = cache_dir)),
-    logical(1)
+    \(tk) !is.null(tabicl_find_checkpoint(tk, cache_dir = cache_dir))
   ))
 }

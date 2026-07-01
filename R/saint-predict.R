@@ -133,7 +133,7 @@ predict_brulee_saint_raw <- function(model, predictors, epoch) {
   module <- revive_model(model$model_obj, device)
 
   estimates <- model$estimates[[epoch + 1]]
-  estimates <- lapply(estimates, float_32, device = device)
+  estimates <- purrr::map(estimates, float_32, device = device)
   module$load_state_dict(estimates)
   module$eval()
 

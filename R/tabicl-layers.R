@@ -57,7 +57,7 @@ tabicl_mha_block <- nn_module(
     d_model,
     nhead,
     dim_feedforward,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE,
     ssmax = "none"
@@ -68,11 +68,7 @@ tabicl_mha_block <- nn_module(
     self$linear2 <- nn_linear(dim_feedforward, d_model)
     self$norm1 <- tabicl_layer_norm(d_model, bias = !bias_free_ln)
     self$norm2 <- tabicl_layer_norm(d_model, bias = !bias_free_ln)
-    if (identical(activation, "gelu")) {
-      self$act <- nnf_gelu
-    } else {
-      self$act <- nnf_relu
-    }
+    self$act <- activation
   },
   ff_block = function(x) {
     self$linear2(self$act(self$linear1(x)))
@@ -186,7 +182,7 @@ tabicl_isab <- nn_module(
     nhead,
     dim_feedforward,
     num_inds,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE,
     ssmax = "none",
@@ -252,26 +248,24 @@ tabicl_set_transformer <- nn_module(
     nhead,
     dim_feedforward,
     num_inds,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE,
     ssmax = "none"
   ) {
-    self$blocks <- nn_module_list(lapply(
-      seq_len(num_blocks),
-      function(i) {
-        tabicl_isab(
-          d_model = d_model,
-          nhead = nhead,
-          dim_feedforward = dim_feedforward,
-          num_inds = num_inds,
-          activation = activation,
-          norm_first = norm_first,
-          bias_free_ln = bias_free_ln,
-          ssmax = ssmax
-        )
-      }
-    ))
+    self$blocks <- purrr::map(seq_len(num_blocks), \(i) {
+      tabicl_isab(
+        d_model = d_model,
+        nhead = nhead,
+        dim_feedforward = dim_feedforward,
+        num_inds = num_inds,
+        activation = activation,
+        norm_first = norm_first,
+        bias_free_ln = bias_free_ln,
+        ssmax = ssmax
+      )
+    }) |>
+      nn_module_list()
   },
   forward = function(src, train_size = NULL) {
     out <- src
@@ -293,27 +287,25 @@ tabicl_encoder <- nn_module(
     d_model,
     nhead,
     dim_feedforward,
-    activation = "gelu",
+    activation = nnf_gelu,
     norm_first = TRUE,
     bias_free_ln = FALSE,
     ssmax = "none",
     use_rope = FALSE,
     rope_base = 100000
   ) {
-    self$blocks <- nn_module_list(lapply(
-      seq_len(num_blocks),
-      function(i) {
-        tabicl_mha_block(
-          d_model = d_model,
-          nhead = nhead,
-          dim_feedforward = dim_feedforward,
-          activation = activation,
-          norm_first = norm_first,
-          bias_free_ln = bias_free_ln,
-          ssmax = ssmax
-        )
-      }
-    ))
+    self$blocks <- purrr::map(seq_len(num_blocks), \(i) {
+      tabicl_mha_block(
+        d_model = d_model,
+        nhead = nhead,
+        dim_feedforward = dim_feedforward,
+        activation = activation,
+        norm_first = norm_first,
+        bias_free_ln = bias_free_ln,
+        ssmax = ssmax
+      )
+    }) |>
+      nn_module_list()
     if (use_rope) {
       self$rope <- tabicl_rope(dim = d_model %/% nhead, theta = rope_base)
     } else {

@@ -631,20 +631,11 @@ brulee_auto_int_bridge <- function(
 # Predictor splitting
 
 split_predictors_auto_int <- function(predictors, call = rlang::caller_env()) {
-  cat_idx <- vapply(
+  cat_idx <- purrr::map_lgl(
     predictors,
-    function(col) {
-      is.factor(col) || is.character(col)
-    },
-    logical(1)
+    \(col) is.factor(col) || is.character(col)
   )
-  cont_idx <- vapply(
-    predictors,
-    function(col) {
-      is.numeric(col)
-    },
-    logical(1)
-  )
+  cont_idx <- purrr::map_lgl(predictors, \(col) is.numeric(col))
 
   cat_names <- names(predictors)[cat_idx]
   cont_names <- names(predictors)[cont_idx]
@@ -667,13 +658,7 @@ split_predictors_auto_int <- function(predictors, call = rlang::caller_env()) {
         predictors[[nm]] <- as.factor(predictors[[nm]])
       }
     }
-    pred_lvls <- vapply(
-      cat_names,
-      function(nm) {
-        nlevels(predictors[[nm]])
-      },
-      integer(1)
-    )
+    pred_lvls <- purrr::map_int(cat_names, \(nm) nlevels(predictors[[nm]]))
     names(pred_lvls) <- cat_names
     x_cat <- do.call(
       cbind,
@@ -1247,7 +1232,7 @@ auto_int_fit_imp <- function(
 
     param_per_epoch <- vector(mode = "list", length = epochs + 1)
     param_per_epoch[[1]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     res$model_obj <- model_to_raw(model)
     res$estimates <- param_per_epoch[[1]]
@@ -1429,7 +1414,7 @@ run_auto_int_training_loop <- function(
     # returned loss curve (including a terminal NaN from numerical overflow)
     # stays aligned with `param_per_epoch`.
     param_per_epoch[[epoch]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     if (is.nan(loss_curr)) {
       cli::cli_warn(

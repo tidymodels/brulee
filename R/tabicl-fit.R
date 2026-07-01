@@ -47,7 +47,7 @@ tabicl_resolve_device <- function(device = NULL, call = rlang::caller_env()) {
 # Learn per-column encoders: ordinal (sorted categories, unknown/missing -> -1)
 # for factor/character columns, mean imputation for numeric columns.
 tabicl_encode_fit <- function(predictors) {
-  encoders <- lapply(names(predictors), function(nm) {
+  encoders <- purrr::map(names(predictors), \(nm) {
     col <- predictors[[nm]]
     if (is.factor(col) || is.character(col)) {
       list(type = "ordinal", levels = sort(unique(as.character(col))))
@@ -61,7 +61,7 @@ tabicl_encode_fit <- function(predictors) {
 
 # Apply learned encoders, returning a numeric matrix.
 tabicl_encode_transform <- function(encoders, predictors) {
-  cols <- lapply(names(encoders), function(nm) {
+  cols <- purrr::map(names(encoders), \(nm) {
     enc <- encoders[[nm]]
     col <- predictors[[nm]]
     if (enc$type == "ordinal") {
@@ -129,7 +129,7 @@ tabicl_subsample_indices <- function(
         drift <- drift + 1L
       }
     }
-    idx <- unlist(lapply(seq_len(n_classes), function(j) {
+    idx <- unlist(purrr::map(seq_len(n_classes), \(j) {
       pool <- which(as.integer(outcome) == j)
       sample(pool, size = min(alloc[j], length(pool)))
     }))
@@ -166,8 +166,7 @@ tabicl_make_members <- function(
   }
 
   norms <- rep(normalization, length.out = num_estimators)
-  members <- vector("list", num_estimators)
-  for (k in seq_len(num_estimators)) {
+  purrr::map(seq_len(num_estimators), \(k) {
     if (k == 1L) {
       feat <- feat_id
     } else {
@@ -178,9 +177,8 @@ tabicl_make_members <- function(
       shift <- (k - 1L) %% n_classes
       cls <- ((class_id + shift) %% n_classes)
     }
-    members[[k]] <- tabicl_member(norms[k], feat, cls)
-  }
-  members
+    tabicl_member(norms[k], feat, cls)
+  })
 }
 
 # ------------------------------------------------------------------------------
