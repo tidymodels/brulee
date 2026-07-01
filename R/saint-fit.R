@@ -190,7 +190,7 @@
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
 #' pkgs <- c("recipes", "yardstick", "modeldata")
-#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+#' if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 #'
 #'  set.seed(87261)
 #'  tr_data <- modeldata::sim_regression(500, method = "worley_1987")
@@ -595,13 +595,13 @@ brulee_saint_bridge <- function(
   )
   check_bool(row_attention_on_predict, call = call)
 
-  if (!is.null(batch_size) & optimizer != "LBFGS") {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+  if (!is.null(batch_size) && optimizer != "LBFGS") {
+    if (is.numeric(batch_size) && !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, call = call)
   }
-  if (is.null(batch_size) & optimizer != "LBFGS") {
+  if (is.null(batch_size) && optimizer != "LBFGS") {
     batch_size <- 256L
   }
 
@@ -702,17 +702,17 @@ validate_saint_args <- function(
   grad_norm_clip,
   call = rlang::caller_env()
 ) {
-  if (is.numeric(num_embedding) & !is.integer(num_embedding)) {
+  if (is.numeric(num_embedding) && !is.integer(num_embedding)) {
     num_embedding <- as.integer(num_embedding)
   }
   check_integer(num_embedding, single = TRUE, 1, call = call)
 
-  if (is.numeric(num_attn_heads) & !is.integer(num_attn_heads)) {
+  if (is.numeric(num_attn_heads) && !is.integer(num_attn_heads)) {
     num_attn_heads <- as.integer(num_attn_heads)
   }
   check_integer(num_attn_heads, single = TRUE, 1, call = call)
 
-  if (is.numeric(num_attn_blocks) & !is.integer(num_attn_blocks)) {
+  if (is.numeric(num_attn_blocks) && !is.integer(num_attn_blocks)) {
     num_attn_blocks <- as.integer(num_attn_blocks)
   }
   check_integer(num_attn_blocks, single = TRUE, 1, call = call)
@@ -810,7 +810,7 @@ new_brulee_saint <- function(
     )
   }
 
-  num_items <- purrr::map_int(estimates, length)
+  num_items <- lengths(estimates)
   estimates <- estimates[num_items > 0]
 
   hardhat::new_model(
@@ -873,7 +873,11 @@ saint_fit_imp <- function(
 
   n <- length(y)
   p_cat <- length(pred_lvls)
-  p_cont <- if (is.null(x_cont)) 0L else ncol(x_cont)
+  if (is.null(x_cont)) {
+    p_cont <- 0L
+  } else {
+    p_cont <- ncol(x_cont)
+  }
   p <- p_cat + p_cont
   all_features <- c(cat_names, cont_names)
 
@@ -901,11 +905,27 @@ saint_fit_imp <- function(
 
   if (validation > 0) {
     in_val <- sample(seq_len(n), floor(n * validation))
-    x_cat_val <- if (!is.null(x_cat)) x_cat[in_val, , drop = FALSE] else NULL
-    x_cont_val <- if (!is.null(x_cont)) x_cont[in_val, , drop = FALSE] else NULL
+    if (!is.null(x_cat)) {
+      x_cat_val <- x_cat[in_val, , drop = FALSE]
+    } else {
+      x_cat_val <- NULL
+    }
+    if (!is.null(x_cont)) {
+      x_cont_val <- x_cont[in_val, , drop = FALSE]
+    } else {
+      x_cont_val <- NULL
+    }
     y_val <- y[in_val]
-    x_cat <- if (!is.null(x_cat)) x_cat[-in_val, , drop = FALSE] else NULL
-    x_cont <- if (!is.null(x_cont)) x_cont[-in_val, , drop = FALSE] else NULL
+    if (!is.null(x_cat)) {
+      x_cat <- x_cat[-in_val, , drop = FALSE]
+    } else {
+      x_cat <- NULL
+    }
+    if (!is.null(x_cont)) {
+      x_cont <- x_cont[-in_val, , drop = FALSE]
+    } else {
+      x_cont <- NULL
+    }
     y <- y[-in_val]
   } else {
     x_cat_val <- NULL
@@ -976,12 +996,20 @@ saint_fit_imp <- function(
     # the explicit `device =` arg these tensors would land on the CPU and
     # later trigger device-mismatch errors when fed to the MPS/CUDA model.
     make_saint_tensors <- function(xc, xn, yv) {
-      t_cat <- if (!is.null(xc)) {
-        torch::torch_tensor(xc, dtype = torch::torch_long(), device = device)
+      if (!is.null(xc)) {
+        t_cat <- torch::torch_tensor(
+          xc,
+          dtype = torch::torch_long(),
+          device = device
+        )
       } else {
-        NULL
+        t_cat <- NULL
       }
-      t_cont <- if (!is.null(xn)) float_32(xn, device = device) else NULL
+      if (!is.null(xn)) {
+        t_cont <- float_32(xn, device = device)
+      } else {
+        t_cont <- NULL
+      }
       if (is.factor(yv)) {
         t_y <- torch::torch_tensor(
           as.numeric(yv),
@@ -1133,7 +1161,7 @@ saint_fit_imp <- function(
 
     param_per_epoch <- vector(mode = "list", length = epochs + 1)
     param_per_epoch[[1]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     res$model_obj <- model_to_raw(model)
     res$estimates <- param_per_epoch[[1]]
@@ -1299,7 +1327,7 @@ run_saint_training_loop <- function(
     # returned loss curve (including a terminal NaN from numerical overflow)
     # stays aligned with `param_per_epoch`.
     param_per_epoch[[epoch]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     if (is.nan(loss_curr)) {
       cli::cli_warn(
@@ -1331,7 +1359,7 @@ run_saint_training_loop <- function(
 
   list(
     param_per_epoch = param_per_epoch,
-    loss_vec = loss_vec[1:length(param_per_epoch)],
+    loss_vec = loss_vec[seq_along(param_per_epoch)],
     best_epoch = best_epoch
   )
 }
@@ -1658,10 +1686,10 @@ saint_module <- torch::nn_module(
       )
     }
 
-    head_input_dim <- if (self$target_token) {
-      num_embedding
+    if (self$target_token) {
+      head_input_dim <- num_embedding
     } else {
-      seq_len * num_embedding
+      head_input_dim <- seq_len * num_embedding
     }
 
     if (!is.null(hidden_units)) {
@@ -1715,10 +1743,6 @@ saint_module <- torch::nn_module(
 )
 
 ## -----------------------------------------------------------------------------
-
-get_num_saint_coef <- function(x) {
-  length(unlist(x$estimates[[1]]))
-}
 
 #' @export
 print.brulee_saint <- function(x, ...) {

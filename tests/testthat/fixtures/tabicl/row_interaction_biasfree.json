@@ -1,0 +1,10 @@
+{
+  "embed_dim": 32,
+  "num_blocks": 3,
+  "nhead": 4,
+  "num_cls": 2,
+  "dim_feedforward": 64,
+  "rope_base": 100000,
+  "bias_free_ln": true,
+  "seed": 1329923014
+}

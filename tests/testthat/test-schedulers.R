@@ -77,7 +77,7 @@ test_that("scheduling functions", {
   # ------------------------------------------------------------------------------
 
   expect_equal(set_learn_rate(.x, 1, type = "none"), 1)
-  expect_equal(set_learn_rate(.x, 0.01, type = "none", potato = 1), .01)
+  expect_equal(set_learn_rate(.x, 0.01, type = "none", potato = 1), 0.01)
 
   expect_equal(
     map_dbl(x, schedule_decay_time, initial = 1 / 3, decay = 7 / 8),

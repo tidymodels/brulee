@@ -236,7 +236,7 @@
 #' pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
 #'
 #' \dontrun{
-#' if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+#' if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 #'  library(dplyr)
 #'  library(ggplot2)
 #'
@@ -582,7 +582,7 @@ brulee_chronos_bridge <- function(
     )
   }
 
-  non_numeric <- vapply(predictors, function(col) !is.numeric(col), logical(1))
+  non_numeric <- purrr::map_lgl(predictors, \(col) !is.numeric(col))
   if (any(non_numeric)) {
     bad <- names(predictors)[non_numeric]
     cli::cli_abort(c(
@@ -603,10 +603,10 @@ brulee_chronos_bridge <- function(
       "{.arg timestamp} has length {length(timestamp)} but {.arg y} has length {n}."
     )
   }
-  if (any(is.na(item_id))) {
+  if (anyNA(item_id)) {
     cli::cli_abort("{.arg item_id} must not contain {.code NA}.")
   }
-  if (any(is.na(timestamp))) {
+  if (anyNA(timestamp)) {
     cli::cli_abort("{.arg timestamp} must not contain {.code NA}.")
   }
 
@@ -689,7 +689,7 @@ print.brulee_chronos <- function(x, ...) {
   )
 
   n_series <- length(x$context$item_ids)
-  history_lengths <- vapply(x$context$series_target, length, integer(1))
+  history_lengths <- lengths(x$context$series_target)
   n_covars <- length(x$context$covariate_cols)
 
   device_label <- tryCatch(
@@ -697,7 +697,11 @@ print.brulee_chronos <- function(x, ...) {
     error = function(e) "<not available; model has not been reloaded>"
   )
 
-  short_sha <- if (is.null(x$revision)) "unknown" else substr(x$revision, 1, 8)
+  if (is.null(x$revision)) {
+    short_sha <- "unknown"
+  } else {
+    short_sha <- substr(x$revision, 1, 8)
+  }
   mod_lst <- c(
     " " = "Source: {x$model_id} @ {short_sha}",
     " " = "Model dim: {x$config$d_model}",

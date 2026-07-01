@@ -15,7 +15,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
+#' if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
 #'   data(ames, package = "modeldata")
 #'   ames$Sale_Price <- log10(ames$Sale_Price)
 #'
@@ -38,10 +38,10 @@ summary.brulee_resnet <- function(object, ...) {
   residual_at <- as.integer(module$residual_at)
   num_layers <- as.integer(module$num_layers)
 
-  block_starts <- if (length(residual_at) > 0) {
-    c(1L, residual_at[seq_len(length(residual_at) - 1L)] + 1L)
+  if (length(residual_at) > 0) {
+    block_starts <- c(1L, residual_at[seq_len(length(residual_at) - 1L)] + 1L)
   } else {
-    integer(0)
+    block_starts <- integer(0)
   }
   block_ends <- residual_at
 
@@ -66,10 +66,16 @@ summary.brulee_resnet <- function(object, ...) {
       grp <- which(block_starts == i)
       start_idx <- block_starts[grp]
       end_idx <- block_ends[grp]
-      header <- if (start_idx == end_idx) {
-        paste0("Residual group ", grp, " (block ", start_idx, ", + skip)")
+      if (start_idx == end_idx) {
+        header <- paste0(
+          "Residual group ",
+          grp,
+          " (block ",
+          start_idx,
+          ", + skip)"
+        )
       } else {
-        paste0(
+        header <- paste0(
           "Residual group ",
           grp,
           " (blocks ",

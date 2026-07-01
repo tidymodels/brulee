@@ -39,7 +39,7 @@ layers are shown at the block boundaries where they apply.
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
 \donttest{
-if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
+if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
   data(ames, package = "modeldata")
   ames$Sale_Price <- log10(ames$Sale_Price)
 

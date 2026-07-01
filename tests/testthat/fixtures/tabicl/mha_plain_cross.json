@@ -1,0 +1,9 @@
+{
+  "embed_dim": 64,
+  "num_heads": 8,
+  "use_rope": false,
+  "ssmax": "none",
+  "q_len": 9,
+  "kv_len": 5,
+  "seed": 1329923014
+}

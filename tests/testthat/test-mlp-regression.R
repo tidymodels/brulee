@@ -35,7 +35,7 @@ test_that('basic regression mlp LBFGS', {
           reg_tr_x_mat,
           reg_tr_y,
           mixture = 0,
-          learn_rate = .1,
+          learn_rate = 0.1,
           device = "cpu"
         )
     }
@@ -49,7 +49,7 @@ test_that('basic regression mlp LBFGS', {
       mlp_reg_df_lbfgs_fit <- brulee_mlp(
         reg_tr_x_df,
         reg_tr_y,
-        validation = .2,
+        validation = 0.2,
         device = "cpu"
       )
     }
@@ -73,9 +73,8 @@ test_that('basic regression mlp LBFGS', {
     }
   )
 
-  expect_no_error(
-    reg_pred_lbfgs <-
-      predict(mlp_reg_rec_lbfgs_fit, reg_te) |>
+  reg_pred_lbfgs <- expect_no_error(
+    predict(mlp_reg_rec_lbfgs_fit, reg_te) |>
       bind_cols(reg_te) |>
       select(-starts_with("predictor"))
   )
@@ -458,7 +457,7 @@ test_that('two-layer networks', {
           reg_tr_x_mat,
           reg_tr_y,
           mixture = 0,
-          learn_rate = .1,
+          learn_rate = 0.1,
           hidden_units = 5,
           hidden_units_2 = 10,
           activation = "relu",
@@ -477,7 +476,7 @@ test_that('two-layer networks', {
           reg_tr_x_mat,
           reg_tr_y,
           mixture = 0,
-          learn_rate = .1,
+          learn_rate = 0.1,
           hidden_units = c(5, 10),
           activation = c("relu", "elu"),
           device = "cpu"
@@ -496,7 +495,7 @@ test_that('two-layer networks', {
         brulee_mlp_two_layer(
           reg_tr_x_df,
           reg_tr_y,
-          validation = .2,
+          validation = 0.2,
           hidden_units = 5,
           hidden_units_2 = 10,
           activation = "celu",

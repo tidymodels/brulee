@@ -15,13 +15,13 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "modeldata"))) {
 #'
 #'  data(ames, package = "modeldata")
 #'  ames$Sale_Price <- log10(ames$Sale_Price)
 #'
 #'  set.seed(1)
-#'  in_train <- sample(1:nrow(ames), 2000)
+#'  in_train <- sample(seq_len(nrow(ames)), 2000)
 #'  ames_train <- ames[ in_train,]
 #'  ames_test  <- ames[-in_train,]
 #'
@@ -93,7 +93,7 @@ predict_brulee_rln_raw <- function(model, predictors, epoch) {
   device <- get_safe_device(model$device)
   module <- revive_model(model$model_obj, device)
   estimates <- model$estimates[[epoch + 1]]
-  estimates <- lapply(estimates, float_32, device = device)
+  estimates <- purrr::map(estimates, float_32, device = device)
   module$load_state_dict(estimates)
   module$eval()
   predictions <- module(float_32(predictors, device))

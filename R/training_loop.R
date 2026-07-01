@@ -275,7 +275,7 @@ run_training_loop <- function(
     # returned loss curve (including a terminal NaN from numerical overflow)
     # stays aligned with `param_per_epoch`.
     param_per_epoch[[epoch]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+      purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
     # Check for NaN
     if (is.nan(loss_curr)) {
@@ -314,7 +314,7 @@ run_training_loop <- function(
   # Return results
   list(
     param_per_epoch = param_per_epoch,
-    loss_vec = loss_vec[1:length(param_per_epoch)],
+    loss_vec = loss_vec[seq_along(param_per_epoch)],
     best_epoch = best_epoch
   )
 }
@@ -348,6 +348,6 @@ initial_epoch_record <- function(
 
   list(
     loss = loss$item(),
-    params = lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+    params = purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
   )
 }

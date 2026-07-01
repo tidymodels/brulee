@@ -266,7 +266,7 @@ test_that("multinomial_reg trains on MPS", {
   mnl_tr <- modeldata::sim_multinomial(
     500,
     ~ -0.5 + 0.6 * A,
-    ~ .1 * B,
+    ~ 0.1 * B,
     ~ -0.6 * A + 0.50 * B
   )
 

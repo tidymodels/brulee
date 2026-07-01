@@ -15,7 +15,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
 #'   library(recipes)
 #'   library(yardstick)
@@ -25,7 +25,7 @@
 #'   penguins <- penguins |> na.omit()
 #'
 #'   set.seed(122)
-#'   in_train <- sample(1:nrow(penguins), 200)
+#'   in_train <- sample(seq_len(nrow(penguins)), 200)
 #'   penguins_train <- penguins[ in_train,]
 #'   penguins_test  <- penguins[-in_train,]
 #'
@@ -110,7 +110,7 @@ predict_brulee_multinomial_reg_raw <- function(model, predictors, epoch) {
   # get current model parameters
   estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation on correct device
-  estimates <- lapply(estimates, float_32, device = device)
+  estimates <- purrr::map(estimates, float_32, device = device)
   # stuff back into the model
   module$load_state_dict(estimates)
   # put the model in evaluation mode

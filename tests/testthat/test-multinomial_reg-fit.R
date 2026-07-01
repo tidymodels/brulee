@@ -13,17 +13,17 @@ test_that("basic multinomial regression LBFGS", {
     modeldata::sim_multinomial(
       1000,
       ~ -0.5 + 0.6 * A,
-      ~ .1 * B,
+      ~ 0.1 * B,
       ~ -0.6 * A + 0.50 * B
     )
   mnl_te <-
     modeldata::sim_multinomial(
       200,
       ~ -0.5 + 0.6 * A,
-      ~ .1 * B,
+      ~ 0.1 * B,
       ~ -0.6 * A + 0.50 * B
     )
-  num_class <- length(levels(mnl_tr$class))
+  num_class <- nlevels(mnl_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -43,9 +43,8 @@ test_that("basic multinomial regression LBFGS", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_lbfgs <-
-      predict(mnl_fit_lbfgs, mnl_te) |>
+  mnl_pred_lbfgs <- expect_no_error(
+    predict(mnl_fit_lbfgs, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )
@@ -96,17 +95,17 @@ test_that("basic multinomial regression SGD", {
     modeldata::sim_multinomial(
       1000,
       ~ -0.5 + 0.6 * A,
-      ~ .1 * B,
+      ~ 0.1 * B,
       ~ -0.6 * A + 0.50 * B
     )
   mnl_te <-
     modeldata::sim_multinomial(
       200,
       ~ -0.5 + 0.6 * A,
-      ~ .1 * B,
+      ~ 0.1 * B,
       ~ -0.6 * A + 0.50 * B
     )
-  num_class <- length(levels(mnl_tr$class))
+  num_class <- nlevels(mnl_tr$class)
 
   # ------------------------------------------------------------------------------
 
@@ -120,7 +119,7 @@ test_that("basic multinomial regression SGD", {
           mnl_tr,
           epochs = 200,
           penalty = 0,
-          dropout = .1,
+          dropout = 0.1,
           optimize = "SGD",
           batch_size = 64L,
           momentum = 0.5,
@@ -130,9 +129,8 @@ test_that("basic multinomial regression SGD", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_sgd <-
-      predict(mnl_fit_sgd, mnl_te) |>
+  mnl_pred_sgd <- expect_no_error(
+    predict(mnl_fit_sgd, mnl_te) |>
       bind_cols(predict(mnl_fit_sgd, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )
@@ -163,18 +161,18 @@ test_that("multinomial regression class weights", {
     modeldata::sim_multinomial(
       1000,
       ~ -0.5 + 0.6 * A,
-      ~ .1 * B,
+      ~ 0.1 * B,
       ~ -0.6 * A + 0.50 * B
     )
   mnl_te <-
     modeldata::sim_multinomial(
       200,
       ~ -0.5 + 0.6 * A,
-      ~ .1 * B,
+      ~ 0.1 * B,
       ~ -0.6 * A + 0.50 * B
     )
 
-  num_class <- length(levels(mnl_tr$class))
+  num_class <- nlevels(mnl_tr$class)
   cls_xtab <- table(mnl_tr$class)
   min_class <- names(sort(cls_xtab))[1]
   cls_wts <- rep(1, num_class)
@@ -201,9 +199,8 @@ test_that("multinomial regression class weights", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_lbfgs_wts <-
-      predict(mnl_fit_lbfgs_wts, mnl_te) |>
+  mnl_pred_lbfgs_wts <- expect_no_error(
+    predict(mnl_fit_lbfgs_wts, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_wts, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )
@@ -227,9 +224,8 @@ test_that("multinomial regression class weights", {
     }
   )
 
-  expect_no_error(
-    mnl_pred_lbfgs_unwt <-
-      predict(mnl_fit_lbfgs_unwt, mnl_te) |>
+  mnl_pred_lbfgs_unwt <- expect_no_error(
+    predict(mnl_fit_lbfgs_unwt, mnl_te) |>
       bind_cols(predict(mnl_fit_lbfgs_unwt, mnl_te, type = "prob")) |>
       bind_cols(mnl_te)
   )

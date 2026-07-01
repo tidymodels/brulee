@@ -25,7 +25,7 @@ check_number_decimal_vec <- function(
     cli::cli_abort("{.arg {arg}} should be a double vector.", call = call)
   }
 
-  if (!allow_na && any(is.na(x))) {
+  if (!allow_na && anyNA(x)) {
     cli::cli_abort(
       "{.arg {arg}} should not contain missing values.",
       call = call
@@ -39,7 +39,7 @@ check_number_decimal_vec <- function(
 
 check_missing_data <- function(x, y, fn = "some function", verbose = FALSE) {
   compl_data <- complete.cases(x, y)
-  if (any(!compl_data)) {
+  if (!all(compl_data)) {
     x <- x[compl_data, , drop = FALSE]
     y <- y[compl_data]
     if (verbose) {
@@ -62,7 +62,7 @@ check_data_att <- function(x, y, call = rlang::caller_env()) {
   if (length(nms) != ncol(x)) {
     cli::cli_abort("Every column of {.arg x} should have a name.", call = call)
   }
-  if (!is.vector(y) & !is.factor(y)) {
+  if (!is.vector(y) && !is.factor(y)) {
     cli::cli_abort("{.arg y} should be a vector.", call = call)
   }
   invisible(NULL)
@@ -149,8 +149,16 @@ check_range <- function(
   }
 
   if (low_fail || high_fail) {
-    lbr <- if (incl[[1]]) "[" else "("
-    rbr <- if (incl[[2]]) "]" else ")"
+    if (incl[[1]]) {
+      lbr <- "["
+    } else {
+      lbr <- "("
+    }
+    if (incl[[2]]) {
+      rbr <- "]"
+    } else {
+      rbr <- ")"
+    }
     cli::cli_abort(
       "{.arg {arg}} must be in the range {lbr}{x_min}, {x_max}{rbr}.",
       call = call

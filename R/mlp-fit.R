@@ -156,7 +156,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 #'
 #'  ## -----------------------------------------------------------------------------
 #'  # regression examples (increase # epochs to get better results)
@@ -166,7 +166,7 @@
 #'  ames$Sale_Price <- log10(ames$Sale_Price)
 #'
 #'  set.seed(122)
-#'  in_train <- sample(1:nrow(ames), 2000)
+#'  in_train <- sample(seq_len(nrow(ames)), 2000)
 #'  ames_train <- ames[ in_train,]
 #'  ames_test  <- ames[-in_train,]
 #'
@@ -208,7 +208,7 @@
 #'    bind_cols(ames_test) |>
 #'    ggplot(aes(x = .pred, y = Sale_Price)) +
 #'    geom_abline(col = "green") +
-#'    geom_point(alpha = .3) +
+#'    geom_point(alpha = 0.3) +
 #'    lims(x = c(4, 6), y = c(4, 6)) +
 #'    coord_fixed(ratio = 1)
 #'
@@ -236,7 +236,7 @@
 #'  data("parabolic", package = "modeldata")
 #'
 #'  set.seed(1)
-#'  in_train <- sample(1:nrow(parabolic), 300)
+#'  in_train <- sample(seq_len(nrow(parabolic)), 300)
 #'  parabolic_tr <- parabolic[ in_train,]
 #'  parabolic_te <- parabolic[-in_train,]
 #'
@@ -543,13 +543,13 @@ brulee_mlp_bridge <- function(
   activation <- mlp_validated$activation
 
   # Handle batch_size special logic for MLP (optimizer-dependent)
-  if (!is.null(batch_size) & optimizer != "LBFGS") {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+  if (!is.null(batch_size) && optimizer != "LBFGS") {
+    if (is.numeric(batch_size) && !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, call = call)
   }
-  if (is.null(batch_size) & optimizer != "LBFGS") {
+  if (is.null(batch_size) && optimizer != "LBFGS") {
     batch_size <- 32L
     if (batch_size >= nrow(processed)) {
       batch_size <- max(2, ceiling(nrow(processed) / 10))
@@ -672,7 +672,7 @@ new_brulee_mlp <- function(
   }
 
   # Save the estimates that have values
-  num_items <- purrr::map_int(estimates, length)
+  num_items <- lengths(estimates)
   estimates <- estimates[num_items > 0]
 
   hardhat::new_model(
@@ -899,7 +899,7 @@ mlp_fit_imp <-
 
       param_per_epoch <- vector(mode = "list", length = epochs + 1)
       param_per_epoch[[1]] <-
-        lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+        purrr::map(model$state_dict(), \(x) torch::as_array(x$cpu()))
 
       res$model_obj <- model_to_raw(model)
       res$estimates <- param_per_epoch[[1]]
@@ -1007,33 +1007,6 @@ mlp_module <-
 
 ## -----------------------------------------------------------------------------
 
-get_num_mlp_coef <- function(x) {
-  length(unlist(x$estimates[[1]]))
-}
-
-get_units <- function(x) {
-  if (length(x$dims$h) > 1) {
-    res <- paste0("c(", paste(x$dims$h, collapse = ","), ") hidden units,")
-  } else {
-    res <- paste(format(x$dims$h, big.mark = ","), "hidden units,")
-  }
-  res
-}
-
-get_acts <- function(x) {
-  if (length(x$dims$h) > 1) {
-    res <- paste0(
-      "c(",
-      paste(x$parameters$activation, collapse = ","),
-      ") activation,"
-    )
-  } else {
-    res <- paste(x$parameters$activation, "activation,")
-  }
-  res
-}
-
-
 #' @export
 print.brulee_mlp <- function(x, ...) {
   cat(cli::style_bold("Multilayer perceptron"), "\n\n", sep = "")
@@ -1090,7 +1063,7 @@ check_mixture <- function(mix, opt, call = rlang::caller_env()) {
     return(mix)
   }
   # ADAMw requires pure L2 penalty (mixture = 0)
-  if (opt == "ADAMw" & !identical(mix, 0.0)) {
+  if (opt == "ADAMw" && !identical(mix, 0.0)) {
     cli::cli_warn(
       "For the {opt} optimizer, the penalty needs to be a pure L2 penalty (i.e.,
    {.code mixture} is 0.0). The value is changed from {signif(mix, 2)} to 0.0.",

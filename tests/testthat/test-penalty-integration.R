@@ -7,7 +7,7 @@ test_that("penalty affects model parameters during training", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 200)
+  in_train <- sample(seq_len(nrow(parabolic)), 200)
   parabolic_tr <- parabolic[in_train, ]
 
   # Train with no penalty
@@ -71,7 +71,7 @@ test_that("L1 penalty encourages sparsity more than L2", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 200)
+  in_train <- sample(seq_len(nrow(parabolic)), 200)
   parabolic_tr <- parabolic[in_train, ]
 
   penalty_val <- 1
@@ -135,7 +135,7 @@ test_that("penalty consistency across epochs", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 200)
+  in_train <- sample(seq_len(nrow(parabolic)), 200)
   parabolic_tr <- parabolic[in_train, ]
 
   set.seed(123)
@@ -158,7 +158,7 @@ test_that("penalty consistency across epochs", {
   # Loss should generally decrease or stabilize (not increase erratically)
   # Check that the loss trajectory is reasonable
   expect_true(length(fit$loss) > 1)
-  expect_true(all(!is.na(fit$loss)))
+  expect_true(!anyNA(fit$loss))
   expect_true(all(is.finite(fit$loss)))
 
   # Final loss should be less than initial loss (model is learning)
@@ -172,7 +172,7 @@ test_that("extreme penalty values behave reasonably", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 150)
+  in_train <- sample(seq_len(nrow(parabolic)), 150)
   parabolic_tr <- parabolic[in_train, ]
 
   # Very small penalty should behave similar to no penalty
@@ -245,7 +245,7 @@ test_that("penalty works correctly with validation split", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 300)
+  in_train <- sample(seq_len(nrow(parabolic)), 300)
   parabolic_tr <- parabolic[in_train, ]
 
   # With validation split
@@ -302,7 +302,7 @@ test_that("penalty works with different batch sizes", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 200)
+  in_train <- sample(seq_len(nrow(parabolic)), 200)
   parabolic_tr <- parabolic[in_train, ]
 
   batch_sizes <- c(32, 64, 128)
@@ -357,7 +357,7 @@ test_that("penalty parameter is stored correctly in model object", {
 
   data("parabolic", package = "modeldata")
   set.seed(1)
-  in_train <- sample(1:nrow(parabolic), 150)
+  in_train <- sample(seq_len(nrow(parabolic)), 150)
   parabolic_tr <- parabolic[in_train, ]
 
   penalty_val <- 0.456

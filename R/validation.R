@@ -25,7 +25,7 @@ validate_common_args <- function(
   call = rlang::caller_env()
 ) {
   # Coerce epochs to integer if needed
-  if (is.numeric(epochs) & !is.integer(epochs)) {
+  if (is.numeric(epochs) && !is.integer(epochs)) {
     epochs <- as.integer(epochs)
   }
 
@@ -33,7 +33,7 @@ validate_common_args <- function(
 
   # Validate and coerce batch_size if provided
   if (!is.null(batch_size)) {
-    if (is.numeric(batch_size) & !is.integer(batch_size)) {
+    if (is.numeric(batch_size) && !is.integer(batch_size)) {
       batch_size <- as.integer(batch_size)
     }
     check_integer(batch_size, single = TRUE, 1, call = call)
@@ -105,7 +105,7 @@ validate_mlp_args <- function(
   call = rlang::caller_env()
 ) {
   # Coerce hidden_units to integer if needed
-  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+  if (is.numeric(hidden_units) && !is.integer(hidden_units)) {
     hidden_units <- as.integer(hidden_units)
   }
 
@@ -188,12 +188,12 @@ validate_resnet_args <- function(
   call = rlang::caller_env()
 ) {
   # Coerce hidden_units to integer if needed
-  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+  if (is.numeric(hidden_units) && !is.integer(hidden_units)) {
     hidden_units <- as.integer(hidden_units)
   }
 
   # Coerce bottleneck_units to integer if needed
-  if (is.numeric(bottleneck_units) & !is.integer(bottleneck_units)) {
+  if (is.numeric(bottleneck_units) && !is.integer(bottleneck_units)) {
     bottleneck_units <- as.integer(bottleneck_units)
   }
 
@@ -251,7 +251,7 @@ validate_resnet_args <- function(
     }
 
     # Check for duplicates
-    if (any(duplicated(residual_at))) {
+    if (anyDuplicated(residual_at) > 0) {
       cli::cli_warn(
         "{.arg residual_at} contains duplicate values. Removing duplicates.",
         call = call
@@ -362,12 +362,12 @@ get_safe_device <- function(device) {
     return("cpu")
   }
 
-  available <- if (device == "cuda") {
-    torch::cuda_is_available()
+  if (device == "cuda") {
+    available <- torch::cuda_is_available()
   } else if (device == "mps") {
-    torch::backends_mps_is_available()
+    available <- torch::backends_mps_is_available()
   } else {
-    FALSE
+    available <- FALSE
   }
 
   if (!available) {
@@ -400,7 +400,7 @@ validate_rln_args <- function(
   activation,
   call = rlang::caller_env()
 ) {
-  if (is.numeric(hidden_units) & !is.integer(hidden_units)) {
+  if (is.numeric(hidden_units) && !is.integer(hidden_units)) {
     hidden_units <- as.integer(hidden_units)
   }
   check_integer(hidden_units, single = TRUE, 1, call = call)

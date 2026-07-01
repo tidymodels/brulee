@@ -1,0 +1,13 @@
+{
+  "embed_dim": 32,
+  "num_blocks": 2,
+  "nhead": 4,
+  "num_inds": 8,
+  "dim_feedforward": 64,
+  "feature_group_size": 3,
+  "reserve_cls_tokens": 2,
+  "max_classes": 10,
+  "bias_free_ln": false,
+  "train_size": 4,
+  "seed": 1329923014
+}

@@ -23,7 +23,7 @@
 #'
 #' @examplesIf !brulee:::is_cran_check()
 #' \donttest{
-#' if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
+#' if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "modeldata"))) {
 #'   set.seed(87261)
 #'   tr_data <- modeldata::sim_classification(500)
 #'   te_data <- modeldata::sim_classification(50)
@@ -139,7 +139,7 @@ predict_brulee_auto_int_raw <- function(model, predictors, epoch) {
 
   # Load parameters for the requested epoch
   estimates <- model$estimates[[epoch + 1]]
-  estimates <- lapply(estimates, float_32, device = device)
+  estimates <- purrr::map(estimates, float_32, device = device)
   module$load_state_dict(estimates)
   module$eval()
 

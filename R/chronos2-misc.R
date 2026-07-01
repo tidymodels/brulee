@@ -28,7 +28,7 @@ torch_nansum <- function(x, dim = -1L, keepdim = FALSE) {
 }
 
 left_pad_and_stack <- function(tensors) {
-  max_len <- max(vapply(tensors, function(t) t$size(1), integer(1)))
+  max_len <- max(purrr::map_int(tensors, \(t) t$size(1)))
   padded <- lapply(tensors, function(t) {
     len <- t$size(1)
     if (len < max_len) {
@@ -42,7 +42,7 @@ left_pad_and_stack <- function(tensors) {
 }
 
 left_pad_and_cat_2D <- function(tensor_list) {
-  max_len <- max(vapply(tensor_list, function(t) t$size(-1), integer(1)))
+  max_len <- max(purrr::map_int(tensor_list, \(t) t$size(-1)))
   padded <- lapply(tensor_list, function(t) {
     n_rows <- t$size(1)
     len <- t$size(-1)
