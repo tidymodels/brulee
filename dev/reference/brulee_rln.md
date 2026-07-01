@@ -241,11 +241,16 @@ A `brulee_rln` object with elements:
 
 - `model_obj`: a serialized raw vector for the torch module.
 
-- `estimates`: a list of model parameter matrices per epoch.
+- `estimates`: a list of model parameter matrices per epoch. The first
+  element is epoch zero (the randomly initialized parameters before
+  training), so the list has `epochs + 1` elements.
 
-- `best_epoch`: an integer for the epoch with the smallest loss.
+- `best_epoch`: an integer for the epoch with the smallest loss. Since
+  `estimates` and `loss` include epoch zero, this epoch's values are at
+  position `best_epoch + 1` in those objects.
 
-- `loss`: a numeric vector of loss values (scaled MSE) at each epoch.
+- `loss`: a numeric vector of loss values (scaled MSE) at each epoch,
+  starting with epoch zero.
 
 - `dims`: a list of data dimensions.
 

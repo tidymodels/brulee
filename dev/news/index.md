@@ -2,6 +2,10 @@
 
 ## brulee (development version)
 
+- `brulee_tab_icl()` makes the open-source foundational model TabICL
+  available. On first use, there is a substantial download (~ 400MB) for
+  the model weights that is cached locally.
+
 - The
   [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
   argument `use_target_token` was renamed to `target_token`.
@@ -43,6 +47,22 @@
   [`predict()`](https://rdrr.io/r/stats/predict.html) also gained a
   `type` argument (`"all"`, `"numeric"`, or `"quantile"`) to select
   which prediction columns are returned.
+
+- All estimated models now include epoch zero (the randomly initialized
+  parameters, before any training) as the first element of `loss` and
+  `estimates`, matching the neural-network models. These vectors are now
+  length `epochs + 1`, `epoch = 0` is a valid argument to
+  [`predict()`](https://rdrr.io/r/stats/predict.html) and
+  [`coef()`](https://rdrr.io/r/stats/coef.html), and the entry for
+  `best_epoch` is at position `best_epoch + 1`. Predictions and
+  coefficients for a given (positive) epoch are unchanged. Note: objects
+  serialized by earlier versions of these three functions predict off by
+  one epoch under the new indexing, so refit any stored models.
+
+  - The [`print()`](https://rdrr.io/r/base/print.html) methods now
+    report the loss from the best epoch. Previously the displayed loss
+    was taken one epoch too early (it ignored the prepended epoch-zero
+    entry in `loss`).
 
 ## brulee 1.0.0
 

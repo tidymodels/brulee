@@ -230,10 +230,15 @@ and the predictor term(s) on the right-hand side.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>brulee_multinomial_reg</code> object with elements:</p><ul><li><p><code>models_obj</code>: a serialized raw vector for the torch module.</p></li>
 <li><p><code>estimates</code>: a list of matrices with the model parameter estimates per
-epoch.</p></li>
-<li><p><code>best_epoch</code>: an integer for the epoch with the smallest loss.</p></li>
+epoch. The first element is epoch zero (the randomly
+initialized parameters before training), so the list has
+<code>epochs + 1</code> elements.</p></li>
+<li><p><code>best_epoch</code>: an integer for the epoch with the smallest loss. Since
+<code>estimates</code> and <code>loss</code> include epoch zero, this epoch's
+values are at position <code>best_epoch + 1</code> in those objects.</p></li>
 <li><p><code>loss</code>: A vector of loss values (MSE for regression, negative log-
-likelihood for classification) at each epoch.</p></li>
+likelihood for classification) at each epoch, starting with
+epoch zero.</p></li>
 <li><p><code>dim</code>: A list of data dimensions.</p></li>
 <li><p><code>parameters</code>: A list of some tuning parameter values.</p></li>
 <li><p><code>blueprint</code>: The <code>hardhat</code> blueprint data.</p></li>
