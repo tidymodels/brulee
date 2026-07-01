@@ -50,7 +50,7 @@ to be the same as the number of rows in `new_data`.
 
 ``` r
 # \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "modeldata"))) {
   set.seed(87261)
   tr_data <- modeldata::sim_classification(500)
   te_data <- modeldata::sim_classification(50)

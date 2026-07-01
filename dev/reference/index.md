@@ -51,6 +51,9 @@
 - [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
   : Fit SAINT models for tabular data
 
+- [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  : Fit a TabICL tabular foundation model
+
 - [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
   : Convert data to torch format
 
@@ -99,6 +102,11 @@
 
   Predict from a `brulee_saint`
 
+- [`predict(`*`<brulee_tab_icl>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_tab_icl.md)
+  :
+
+  Predict from a `brulee_tab_icl`
+
 - [`schedule_decay_time()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_decay_expo()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_step()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
@@ -112,6 +120,10 @@
   [`summary(`*`<brulee_auto_int>`*`)`](https://brulee.tidymodels.org/dev/reference/summary.brulee.md)
   [`summary(`*`<brulee_saint>`*`)`](https://brulee.tidymodels.org/dev/reference/summary.brulee.md)
   : Summarize the architecture of a brulee model
+
+- [`tab_icl_download_weights()`](https://brulee.tidymodels.org/dev/reference/tab_icl_download_weights.md)
+  [`tab_icl_weights_available()`](https://brulee.tidymodels.org/dev/reference/tab_icl_download_weights.md)
+  : Download and cache pretrained TabICL weights
 
 - [`training_efficiency`](https://brulee.tidymodels.org/dev/reference/training_efficiency.md)
   : Training Efficiency

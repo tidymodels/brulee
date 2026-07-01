@@ -2,13 +2,10 @@
 
 ## brulee (development version)
 
-- `brulee_tab_icl()` makes the open-source foundational model TabICL
-  available. On first use, there is a substantial download (~ 400MB) for
-  the model weights that is cached locally.
-
-- The
-  [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
-  argument `use_target_token` was renamed to `target_token`.
+- [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  makes the open-source foundational model TabICL available. On first
+  use, there is a substantial download (~ 400MB) for the model weights
+  that is cached locally.
 
 - [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
   and
@@ -28,10 +25,14 @@
   `.pred_quantile`. The id column is still prepended for multi-series
   models regardless of type.
 
-- Fixed a bug where torch’s L-BFGS optimizer’’’s internal convergence
-  flag is NA, throwing an unhelpful error.
+- Fixed a bug where torch’s L-BFGS optimizer’s internal convergence flag
+  is NA, throwing an unhelpful error.
 
 ### Breaking Changes
+
+- The
+  [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md)
+  argument `use_target_token` was renamed to `target_token`.
 
 - [`predict()`](https://rdrr.io/r/stats/predict.html) for
   [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md)

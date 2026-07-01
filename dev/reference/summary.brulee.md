@@ -46,7 +46,7 @@ architecture.
 
 ``` r
 # \donttest{
-if (torch::torch_is_installed() & rlang::is_installed("modeldata")) {
+if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
   data(ames, package = "modeldata")
   ames$Sale_Price <- log10(ames$Sale_Price)
 

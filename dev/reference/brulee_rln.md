@@ -339,13 +339,13 @@ processing systems* (pp. 1379-1389).
 
 ``` r
 # \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
  data(ames, package = "modeldata")
  ames$Sale_Price <- log10(ames$Sale_Price)
 
  set.seed(122)
- in_train <- sample(1:nrow(ames), 2000)
+ in_train <- sample(seq_len(nrow(ames)), 2000)
  ames_train <- ames[ in_train,]
  ames_test  <- ames[-in_train,]
 

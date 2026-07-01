@@ -424,7 +424,7 @@ of the IEEE conference on computer vision and pattern recognition* (pp.
 
 ``` r
 # \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
  ## -----------------------------------------------------------------------------
  # regression examples (increase # epochs to get better results)
@@ -434,7 +434,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  ames$Sale_Price <- log10(ames$Sale_Price)
 
  set.seed(122)
- in_train <- sample(1:nrow(ames), 2000)
+ in_train <- sample(seq_len(nrow(ames)), 2000)
  ames_train <- ames[ in_train,]
  ames_test  <- ames[-in_train,]
 
@@ -469,7 +469,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  data("parabolic", package = "modeldata")
 
  set.seed(1)
- in_train <- sample(1:nrow(parabolic), 300)
+ in_train <- sample(seq_len(nrow(parabolic)), 300)
  parabolic_tr <- parabolic[ in_train,]
  parabolic_te <- parabolic[-in_train,]
 

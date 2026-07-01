@@ -90,7 +90,7 @@ depend on `type`:
 pkgs <- c("recipes", "lubridate", "modeldata", "ggplot2")
 
 if (FALSE) { # \dontrun{
-if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
  library(dplyr)
  library(ggplot2)
 

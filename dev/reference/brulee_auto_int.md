@@ -479,7 +479,7 @@ International Conference on Information and Knowledge Management
 ``` r
 # \donttest{
 pkgs <- c("recipes", "yardstick", "modeldata")
-if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 
   set.seed(87261)
   tr_data <- modeldata::sim_regression(500)
