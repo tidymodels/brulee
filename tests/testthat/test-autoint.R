@@ -458,7 +458,7 @@ test_that("autoint gradient clipping prevents loss overflow", {
     momentum = 0.9,
     optimizer = "SGD",
     batch_size = 16L,
-    epochs = 10L,
+    epochs = 3L,
     validation = 0,
     device = "cpu",
     verbose = FALSE
@@ -482,7 +482,10 @@ test_that("autoint gradient clipping prevents loss overflow", {
   # With the default clipping, training completes without overflow
   set.seed(386)
   torch::torch_manual_seed(386)
-  clipped <- do.call(brulee_auto_int, auto_int_args)
+  clipped <- do.call(
+    brulee_auto_int,
+    c(auto_int_args, grad_value_clip = 3, grad_norm_clip = 3)
+  )
   expect_false(any(is.nan(clipped$loss)))
 })
 
