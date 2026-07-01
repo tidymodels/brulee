@@ -100,7 +100,7 @@ predict_brulee_linear_reg_raw <- function(model, predictors, epoch) {
   # convert from raw format
   module <- revive_model(model$model_obj, device)
   # get current model parameters
-  estimates <- model$estimates[[epoch]]
+  estimates <- model$estimates[[epoch + 1]]
   # convert to torch representation on correct device
   estimates <- lapply(estimates, float_32, device = device)
   # stuff back into the model

@@ -609,3 +609,42 @@ test_that("summary.brulee_mlp shows output dim for multinomial fits", {
   expect_true(any(grepl("output dim: 3", out)))
   expect_false(any(grepl("Softmax", out)))
 })
+
+test_that("coef() returns the best (minimum-loss) epoch's parameters", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+
+  # Neural-network models prepend the initial parameters to `estimates`, so the
+  # iteration number is offset by one from the list index. `coef()` must apply
+  # the same offset as `predict()` so it returns the best epoch's parameters and
+  # not the one before it.
+  set.seed(1)
+  n <- 150
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  df$y <- df$x1 - 2 * df$x2 + rnorm(n)
+
+  # A small learning rate gives a strictly decreasing loss, so the minimum is a
+  # single unique iteration (no plateau to mask an off-by-one).
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit <- brulee_mlp(
+    y ~ .,
+    data = df,
+    hidden_units = 5L,
+    learn_rate = 0.005,
+    epochs = 8L,
+    stop_iter = 100L,
+    validation = 0,
+    verbose = FALSE,
+    device = "cpu"
+  )
+
+  expect_true(all(diff(fit$loss) < 0))
+
+  # `estimates[[i]]` is the model that produced `loss[i]`, so the default
+  # coefficients must come from the minimum-loss epoch.
+  expect_equal(coef(fit), fit$estimates[[which.min(fit$loss)]])
+
+  # `coef(epoch =)` must select the same parameters `predict(epoch =)` uses.
+  expect_equal(coef(fit, epoch = 3), fit$estimates[[3 + 1]])
+})

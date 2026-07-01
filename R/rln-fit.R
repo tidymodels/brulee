@@ -86,9 +86,14 @@
 #'
 #' A `brulee_rln` object with elements:
 #'  * `model_obj`: a serialized raw vector for the torch module.
-#'  * `estimates`: a list of model parameter matrices per epoch.
-#'  * `best_epoch`: an integer for the epoch with the smallest loss.
-#'  * `loss`: a numeric vector of loss values (scaled MSE) at each epoch.
+#'  * `estimates`: a list of model parameter matrices per epoch. The first
+#'                 element is epoch zero (the randomly initialized parameters
+#'                 before training), so the list has `epochs + 1` elements.
+#'  * `best_epoch`: an integer for the epoch with the smallest loss. Since
+#'                  `estimates` and `loss` include epoch zero, this epoch's
+#'                  values are at position `best_epoch + 1` in those objects.
+#'  * `loss`: a numeric vector of loss values (scaled MSE) at each epoch,
+#'            starting with epoch zero.
 #'  * `dims`: a list of data dimensions.
 #'  * `y_stats`: a list of mean and standard deviation for the outcome.
 #'  * `parameters`: a list of tuning parameter values.
@@ -853,7 +858,9 @@ print.brulee_rln <- function(x, ...) {
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
-    loss_val <- signif(x$loss[it], 3)
+    # `loss` includes epoch zero at position 1, so the best epoch's loss is at
+    # `it + 1` (matching the predict()/coef() indexing).
+    loss_val <- signif(x$loss[it + 1], 3)
     epoch_str <- cli::pluralize("{it} epoch{?s}")
     if (x$parameters$validation > 0) {
       res_list <- c(

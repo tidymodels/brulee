@@ -136,10 +136,15 @@
 #' A `brulee_auto_int` object with elements:
 #'  * `models_obj`: a serialized raw vector for the torch module.
 #'  * `estimates`: a list of matrices with the model parameter estimates per
-#'                 epoch.
-#'  * `best_epoch`: an integer for the epoch with the smallest loss.
+#'                 epoch. The first element is epoch zero (the randomly
+#'                 initialized parameters before training), so the list has
+#'                 `epochs + 1` elements.
+#'  * `best_epoch`: an integer for the epoch with the smallest loss. Since
+#'                  `estimates` and `loss` include epoch zero, this epoch's
+#'                  values are at position `best_epoch + 1` in those objects.
 #'  * `loss`: A vector of loss values (MSE for regression, negative log-
-#'            likelihood for classification) at each epoch.
+#'            likelihood for classification) at each epoch, starting with
+#'            epoch zero.
 #'  * `dim`: A list of data dimensions and feature metadata.
 #'  * `top_interactions`: A tibble containing the top 10 two-way feature
 #'                        interactions.
@@ -1420,6 +1425,12 @@ run_auto_int_training_loop <- function(
     loss_curr <- loss$item()
     loss_vec[epoch] <- loss_curr
 
+    # Save parameters for this epoch before any early-stopping check so the
+    # returned loss curve (including a terminal NaN from numerical overflow)
+    # stays aligned with `param_per_epoch`.
+    param_per_epoch[[epoch]] <-
+      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
+
     if (is.nan(loss_curr)) {
       cli::cli_warn(
         "Early stopping occurred at epoch {epoch} due to numerical overflow of the loss function."
@@ -1436,9 +1447,6 @@ run_auto_int_training_loop <- function(
     }
 
     loss_prev <- loss_curr
-
-    param_per_epoch[[epoch]] <-
-      lapply(model$state_dict(), function(x) torch::as_array(x$cpu()))
 
     if (verbose) {
       cli::cli_inform(
@@ -1760,7 +1768,9 @@ print.brulee_auto_int <- function(x, ...) {
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
-    loss_val <- signif(x$loss[it], 3)
+    # `loss` includes epoch zero at position 1, so the best epoch's loss is at
+    # `it + 1` (matching the predict()/coef() indexing).
+    loss_val <- signif(x$loss[it + 1], 3)
     epoch_str <- cli::pluralize("{it} epoch{?s}")
 
     if (x$parameters$validation > 0) {

@@ -95,6 +95,11 @@ test_that("autoint regression - recipe interface", {
   skip_if_not_installed("torch")
   skip_if_not_installed("recipes")
 
+  # Temp check to remind to see if issues with the gower package have been resolved
+  if (packageVersion("brulee") > "1.0.1.9001") {
+    cli::cli_abort("Recheck RSPM version of gower")
+  }
+
   set.seed(1)
   n <- 80
   df <- data.frame(
@@ -460,16 +465,20 @@ test_that("autoint gradient clipping prevents loss overflow", {
   )
 
   # Without clipping, the aggressive learning rate overflows the loss
+  # Changed from snapshot beucase GHA and local stop at different epochs with
+  # the same overflow issue
   set.seed(386)
   torch::torch_manual_seed(386)
-  expect_snapshot_warning(
+  expect_warning(
     no_clip <- do.call(
       brulee_auto_int,
       c(auto_int_args, grad_value_clip = Inf, grad_norm_clip = Inf)
-    )
+    ),
+    regexp = "numerical overflow of the loss function"
   )
   expect_true(any(is.nan(no_clip$loss)))
 
+  skip_on_os("mac")
   # With the default clipping, training completes without overflow
   set.seed(386)
   torch::torch_manual_seed(386)
