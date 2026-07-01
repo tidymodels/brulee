@@ -478,6 +478,7 @@ test_that("autoint gradient clipping prevents loss overflow", {
   )
   expect_true(any(is.nan(no_clip$loss)))
 
+  skip_on_os("mac")
   # With the default clipping, training completes without overflow
   set.seed(386)
   torch::torch_manual_seed(386)

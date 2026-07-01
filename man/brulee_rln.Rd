@@ -190,9 +190,14 @@ and the predictor term(s) on the right-hand side.}
 A \code{brulee_rln} object with elements:
 \itemize{
 \item \code{model_obj}: a serialized raw vector for the torch module.
-\item \code{estimates}: a list of model parameter matrices per epoch.
-\item \code{best_epoch}: an integer for the epoch with the smallest loss.
-\item \code{loss}: a numeric vector of loss values (scaled MSE) at each epoch.
+\item \code{estimates}: a list of model parameter matrices per epoch. The first
+element is epoch zero (the randomly initialized parameters
+before training), so the list has \code{epochs + 1} elements.
+\item \code{best_epoch}: an integer for the epoch with the smallest loss. Since
+\code{estimates} and \code{loss} include epoch zero, this epoch's
+values are at position \code{best_epoch + 1} in those objects.
+\item \code{loss}: a numeric vector of loss values (scaled MSE) at each epoch,
+starting with epoch zero.
 \item \code{dims}: a list of data dimensions.
 \item \code{y_stats}: a list of mean and standard deviation for the outcome.
 \item \code{parameters}: a list of tuning parameter values.

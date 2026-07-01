@@ -123,7 +123,9 @@ brulee_print <- function(x, ...) {
 
   if (!is.null(x$loss)) {
     it <- x$best_epoch
-    loss_val <- signif(x$loss[it], 3)
+    # `loss` includes epoch zero at position 1, so the best epoch's loss is at
+    # `it + 1` (matching the predict()/coef() indexing).
+    loss_val <- signif(x$loss[it + 1], 3)
     epoch_str <- cli::pluralize("{it} epoch{?s}")
 
     if (x$parameters$validation > 0) {

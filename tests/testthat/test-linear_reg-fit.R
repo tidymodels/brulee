@@ -159,3 +159,76 @@ test_that("basic Linear regression sgd", {
 
   expect_true(lin_brier_sgd$.estimate < shuffled$.estimate)
 })
+
+test_that("linear_reg includes epoch zero and coef() returns the best epoch", {
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
+  set.seed(1)
+  n <- 150
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  df$y <- df$x1 - 2 * df$x2 + rnorm(n)
+
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit <- brulee_linear_reg(
+    y ~ .,
+    data = df,
+    epochs = 10L,
+    learn_rate = 0.05,
+    stop_iter = 100L,
+    verbose = FALSE,
+    device = "cpu"
+  )
+
+  # `loss` and `estimates` include epoch zero (the initial parameters), so they
+  # have one more element than the number of training epochs.
+  expect_length(fit$loss, 10L + 1L)
+  expect_length(fit$estimates, 10L + 1L)
+
+  # `coef()` returns the minimum-loss epoch's parameters, matching `predict()`.
+  best <- fit$estimates[[which.min(fit$loss)]]
+  expect_equal(
+    unname(coef(fit)),
+    unname(c(best$fc1.bias, best$fc1.weight[1, ]))
+  )
+
+  # `epoch = 0` is now valid and returns the initial (pre-training) parameters.
+  init <- fit$estimates[[1]]
+  expect_equal(
+    unname(coef(fit, epoch = 0)),
+    unname(c(init$fc1.bias, init$fc1.weight[1, ]))
+  )
+})
+
+test_that("print() reports the best epoch's loss (epoch-zero offset)", {
+  skip_on_cran()
+  skip_if_not(torch::torch_is_installed())
+
+  set.seed(1)
+  n <- 150
+  df <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
+  df$y <- df$x1 - 2 * df$x2 + rnorm(n)
+
+  # Strictly decreasing loss, so the best epoch's loss differs from the one
+  # before it; this catches the off-by-one in the printed value.
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit <- brulee_linear_reg(
+    y ~ .,
+    data = df,
+    epochs = 8L,
+    learn_rate = 0.005,
+    stop_iter = 100L,
+    validation = 0,
+    verbose = FALSE,
+    device = "cpu"
+  )
+
+  out <- capture.output(capture.output(print(fit), type = "message"))
+  loss_line <- grep("loss after", out, value = TRUE)
+  expect_length(loss_line, 1L)
+
+  best_loss <- signif(fit$loss[fit$best_epoch + 1L], 3)
+  expect_match(loss_line, paste0(": ", best_loss), fixed = TRUE)
+})

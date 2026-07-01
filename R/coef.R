@@ -4,7 +4,10 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
     cli::cli_abort("{.arg epoch} should be a single integer.", call = call)
   }
 
-  max_epochs <- length(object$estimates)
+  # All models prepend the initial pre-training parameters as the first element
+  # of `estimates` (epoch zero), so an iteration number is one less than its
+  # position in the list. This offset mirrors the predict() methods.
+  max_epochs <- length(object$estimates) - 1L
 
   if (is.null(epoch)) {
     epoch <- object$best_epoch
@@ -17,7 +20,7 @@ brulee_coefs <- function(object, epoch = NULL, ...) {
       epoch <- max_epochs
     }
   }
-  object$estimates[[epoch]]
+  object$estimates[[epoch + 1L]]
 }
 
 
