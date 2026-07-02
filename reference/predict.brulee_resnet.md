@@ -50,7 +50,7 @@ to be the same as the number of rows in `new_data`.
 
 ``` r
 # \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "modeldata"))) {
  # regression example:
 
  data(ames, package = "modeldata")
@@ -58,7 +58,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "modeldata"))
  ames$Sale_Price <- log10(ames$Sale_Price)
 
  set.seed(1)
- in_train <- sample(1:nrow(ames), 2000)
+ in_train <- sample(seq_len(nrow(ames)), 2000)
  ames_train <- ames[ in_train,]
  ames_test  <- ames[-in_train,]
 

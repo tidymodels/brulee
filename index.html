@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,13 +64,15 @@
 <li><a href="https://brulee.tidymodels.org/reference/brulee_linear_reg.html">linear regression</a></li>
 <li><a href="https://brulee.tidymodels.org/reference/brulee_logistic_reg.html">logistic regression</a></li>
 <li><a href="https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html">multinomial regression</a></li>
-<li>residual networks (ResNet)</li>
-<li>regularization learning networks (RLN)</li>
-<li>AutoInt</li>
-<li>Self-Attention and Inter-sample Attention Transformer (Saint)</li>
-<li>Chronos2 foundational model for forecasting</li>
+<li><a href="https://brulee.tidymodels.org/reference/brulee_resnet.html">residual networks (ResNet)</a></li>
+<li><a href="https://brulee.tidymodels.org/reference/brulee_rln.html">regularization learning networks (RLN)</a></li>
+<li><a href="https://brulee.tidymodels.org/reference/brulee_auto_int.html">AutoInt</a></li>
+<li><a href="https://brulee.tidymodels.org/reference/brulee_saint.html">Self-Attention and Inter-sample Attention Transformer (Saint)</a></li>
+<li>
+<a href="https://brulee.tidymodels.org/reference/brulee_chronos.html">Chronos2</a> foundational model for forecasting</li>
+<li>Transformer-based foundation model TabICL</li>
 </ul>
-<p>Chronos2 is the only model that uses a pretrained model, requiring a one-time download of about 500MB.</p>
+<p>Chronos2 and TabICL are pretrained models, requiring a one-time download of about 500MB and 400MB, respectively.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -94,16 +96,24 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">bivariate</span>, package <span class="op">=</span> <span class="st">"modeldata"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span></span>
 <span><span class="va">nn_log_biv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brulee_mlp.html">brulee_mlp</a></span><span class="op">(</span><span class="va">Class</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">B</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">bivariate_train</span>, </span>
-<span>                         epochs <span class="op">=</span> <span class="fl">150</span>, hidden_units <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span>                         hidden_units <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># We use the tidymodels semantics to always return a tibble when predicting</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">nn_log_biv</span>, <span class="va">bivariate_test</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html" class="external-link">bind_cols</a></span><span class="op">(</span><span class="va">bivariate_test</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://yardstick.tidymodels.org/reference/roc_auc.html" class="external-link">roc_auc</a></span><span class="op">(</span><span class="va">Class</span>, <span class="va">.pred_One</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span><span class="co">#&gt;   .metric .estimator .estimate</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 roc_auc binary         0.840</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">nn_log_biv</span>, <span class="va">bivariate_test</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span> </span>
+<span><span class="co">#&gt; # A tibble: 710 × 2</span></span>
+<span><span class="co">#&gt;    .pred_One .pred_Two</span></span>
+<span><span class="co">#&gt;        &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1     0.675     0.325</span></span>
+<span><span class="co">#&gt;  2     0.673     0.327</span></span>
+<span><span class="co">#&gt;  3     0.679     0.321</span></span>
+<span><span class="co">#&gt;  4     0.688     0.312</span></span>
+<span><span class="co">#&gt;  5     0.685     0.315</span></span>
+<span><span class="co">#&gt;  6     0.679     0.321</span></span>
+<span><span class="co">#&gt;  7     0.674     0.326</span></span>
+<span><span class="co">#&gt;  8     0.681     0.319</span></span>
+<span><span class="co">#&gt;  9     0.697     0.303</span></span>
+<span><span class="co">#&gt; 10     0.675     0.325</span></span>
+<span><span class="co">#&gt; # ℹ 700 more rows</span></span></code></pre></div>
 <p>A recipe can also be used if the data require some sort of preprocessing (e.g., indicator variables, transformations, or standardization):</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/tidymodels/recipes" class="external-link">recipes</a></span><span class="op">)</span></span>
@@ -124,7 +134,7 @@
 <span><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span><span class="co">#&gt;   .metric .estimator .estimate</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 roc_auc binary         0.862</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 roc_auc binary         0.867</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="code-of-conduct">Code of Conduct<a class="anchor" aria-label="anchor" href="#code-of-conduct"></a>

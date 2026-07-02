@@ -37,6 +37,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -67,6 +69,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -97,6 +101,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -127,6 +133,8 @@ brulee_auto_int(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
   ...
@@ -295,6 +303,13 @@ brulee_auto_int(
   A non-negative integer for how many iterations with no improvement
   before stopping.
 
+- grad_norm_clip, grad_value_clip:
+
+  Two numeric values, possibly `Inf`, that prevents the gradient's
+  values or norm(s) from exceeding the specified value. This can be
+  helpful if training stops early with the message that
+  `"Loss is NaN at epoch x Training is stopped."`
+
 - verbose:
 
   A logical that prints out the iteration history.
@@ -324,12 +339,16 @@ A `brulee_auto_int` object with elements:
 - `models_obj`: a serialized raw vector for the torch module.
 
 - `estimates`: a list of matrices with the model parameter estimates per
-  epoch.
+  epoch. The first element is epoch zero (the randomly initialized
+  parameters before training), so the list has `epochs + 1` elements.
 
-- `best_epoch`: an integer for the epoch with the smallest loss.
+- `best_epoch`: an integer for the epoch with the smallest loss. Since
+  `estimates` and `loss` include epoch zero, this epoch's values are at
+  position `best_epoch + 1` in those objects.
 
 - `loss`: A vector of loss values (MSE for regression, negative log-
-  likelihood for classification) at each epoch.
+  likelihood for classification) at each epoch, starting with epoch
+  zero.
 
 - `dim`: A list of data dimensions and feature metadata.
 
@@ -460,7 +479,7 @@ International Conference on Information and Knowledge Management
 ``` r
 # \donttest{
 pkgs <- c("recipes", "yardstick", "modeldata")
-if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 
   set.seed(87261)
   tr_data <- modeldata::sim_regression(500)
@@ -483,6 +502,6 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rmse    standard        13.2
+#> 1 rmse    standard        15.2
 # }
 ```

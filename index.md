@@ -11,14 +11,19 @@ use the `torch` package infrastructure, such as:
   regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
 - [multinomial
   regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
-- residual networks (ResNet)
-- regularization learning networks (RLN)
-- AutoInt
-- Self-Attention and Inter-sample Attention Transformer (Saint)
-- Chronos2 foundational model for forecasting
+- [residual networks
+  (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
+- [regularization learning networks
+  (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
+- [AutoInt](https://brulee.tidymodels.org/reference/brulee_auto_int.html)
+- [Self-Attention and Inter-sample Attention Transformer
+  (Saint)](https://brulee.tidymodels.org/reference/brulee_saint.html)
+- [Chronos2](https://brulee.tidymodels.org/reference/brulee_chronos.html)
+  foundational model for forecasting
+- Transformer-based foundation model TabICL
 
-Chronos2 is the only model that uses a pretrained model, requiring a
-one-time download of about 500MB.
+Chronos2 and TabICL are pretrained models, requiring a one-time download
+of about 500MB and 400MB, respectively.
 
 ## Installation
 
@@ -53,16 +58,24 @@ library(yardstick)
 data(bivariate, package = "modeldata")
 set.seed(20)
 nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
-                         epochs = 150, hidden_units = 3)
+                         hidden_units = 3)
 
 # We use the tidymodels semantics to always return a tibble when predicting
-predict(nn_log_biv, bivariate_test, type = "prob") |> 
-  bind_cols(bivariate_test) |> 
-  roc_auc(Class, .pred_One)
-#> # A tibble: 1 × 3
-#>   .metric .estimator .estimate
-#>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.840
+predict(nn_log_biv, bivariate_test, type = "prob") 
+#> # A tibble: 710 × 2
+#>    .pred_One .pred_Two
+#>        <dbl>     <dbl>
+#>  1     0.675     0.325
+#>  2     0.673     0.327
+#>  3     0.679     0.321
+#>  4     0.688     0.312
+#>  5     0.685     0.315
+#>  6     0.679     0.321
+#>  7     0.674     0.326
+#>  8     0.681     0.319
+#>  9     0.697     0.303
+#> 10     0.675     0.325
+#> # ℹ 700 more rows
 ```
 
 A recipe can also be used if the data require some sort of preprocessing
@@ -88,7 +101,7 @@ predict(nn_rec_biv, bivariate_test, type = "prob") |>
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.862
+#> 1 roc_auc binary         0.867
 ```
 
 ## Code of Conduct

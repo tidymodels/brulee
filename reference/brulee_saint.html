@@ -13,7 +13,7 @@ batch (row/inter-sample attention) to learn complex feature interactions."><meta
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,9 +77,11 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_value_clip <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -108,9 +110,11 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_value_clip <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -139,9 +143,11 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_value_clip <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -170,9 +176,11 @@ batch (row/inter-sample attention) to learn complex feature interactions.</p>
 <span>  batch_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  class_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stop_iter <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_value_clip <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  grad_norm_clip <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  target_token <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -336,6 +344,13 @@ and all other classes receive a weight of one.</p></li>
 improvement before stopping.</p></dd>
 
 
+<dt id="arg-grad-norm-clip-grad-value-clip">grad_norm_clip, grad_value_clip<a class="anchor" aria-label="anchor" href="#arg-grad-norm-clip-grad-value-clip"></a></dt>
+<dd><p>Two numeric values, possibly <code>Inf</code>,
+that prevents the gradient's values or norm(s) from exceeding the specified
+value. This can be helpful if training stops early with the message that
+<code>"Loss is NaN at epoch x Training is stopped."</code></p></dd>
+
+
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>A logical that prints out the iteration history.</p></dd>
 
@@ -346,7 +361,7 @@ improvement before stopping.</p></dd>
 available, otherwise CPU. See <a href="training_efficiency.html">training_efficiency</a>.</p></dd>
 
 
-<dt id="arg-use-target-token">use_target_token<a class="anchor" aria-label="anchor" href="#arg-use-target-token"></a></dt>
+<dt id="arg-target-token">target_token<a class="anchor" aria-label="anchor" href="#arg-target-token"></a></dt>
 <dd><p>A logical value. When <code>TRUE</code> (the default), a
 learnable target token (<code>[CLS]</code> in the SAINT paper) is prepended to
 each sample's feature sequence and only its final-layer embedding is
@@ -371,10 +386,15 @@ and the predictor term(s) on the right-hand side.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>brulee_saint</code> object with elements:</p><ul><li><p><code>models_obj</code>: a serialized raw vector for the torch module.</p></li>
 <li><p><code>estimates</code>: a list of matrices with the model parameter estimates per
-epoch.</p></li>
-<li><p><code>best_epoch</code>: an integer for the epoch with the smallest loss.</p></li>
+epoch. The first element is epoch zero (the randomly
+initialized parameters before training), so the list has
+<code>epochs + 1</code> elements.</p></li>
+<li><p><code>best_epoch</code>: an integer for the epoch with the smallest loss. Since
+<code>estimates</code> and <code>loss</code> include epoch zero, this epoch's
+values are at position <code>best_epoch + 1</code> in those objects.</p></li>
 <li><p><code>loss</code>: A vector of loss values (MSE for regression, negative log-
-likelihood for classification) at each epoch.</p></li>
+likelihood for classification) at each epoch, starting with
+epoch zero.</p></li>
 <li><p><code>dim</code>: A list of data dimensions and feature metadata.</p></li>
 <li><p><code>y_stats</code>: A list of summary statistics for numeric outcomes.</p></li>
 <li><p><code>parameters</code>: A list of some tuning parameter values.</p></li>
@@ -400,7 +420,7 @@ alternates between column attention (across features) and row attention
 (across samples within the batch).</p></li>
 <li><p><strong>Output head</strong>: Pools the transformer output (either the target
 token's embedding or the flattened concatenation of all feature
-embeddings, controlled by <code>use_target_token</code>) and projects it through
+embeddings, controlled by <code>target_token</code>) and projects it through
 optional hidden layers to the output dimension.</p></li>
 </ol><p>There is a <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods that can provide details of the architecture
 for a specific model fit.</p>
@@ -443,7 +463,7 @@ the optional <code>hidden_units</code> MLP and the output layer. This is what th
 paper describes in Figure 1: "We take the contextual embeddings from
 SAINT and pass only the embedding correspond to the CLS token through an
 MLP to obtain the final prediction."</p>
-<p>With <code>use_target_token = FALSE</code>, no target token is added and the head
+<p>With <code>target_token = FALSE</code>, no target token is added and the head
 instead consumes the concatenation of all <code>n</code> feature tokens. That
 option is provided because the SAINT reference Python implementation
 (<a href="https://github.com/somepago/saint" class="external-link">https://github.com/somepago/saint</a>) departs from the paper and uses
@@ -512,7 +532,7 @@ arXiv:2106.01342.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">pkgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"recipes"</span>, <span class="st">"yardstick"</span>, <span class="st">"modeldata"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="va">pkgs</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="va">pkgs</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">87261</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">tr_data</span> <span class="op">&lt;-</span> <span class="fu">modeldata</span><span class="fu">::</span><span class="fu"><a href="https://modeldata.tidymodels.org/reference/sim_classification.html" class="external-link">sim_regression</a></span><span class="op">(</span><span class="fl">500</span>, method <span class="op">=</span> <span class="st">"worley_1987"</span><span class="op">)</span></span></span>
@@ -549,13 +569,13 @@ arXiv:2106.01342.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.311</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.295</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.292</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.288</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.289</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.298</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.291</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.301</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.315</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.289</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.305</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.296</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.304</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">SAINT architecture</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> inputs: 8 (0 categorical, 8 numeric) | output dim: 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attention: both | embedding dim: 3 | target token: TRUE</span>
@@ -621,7 +641,7 @@ arXiv:2106.01342.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .metric .estimator .estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> rsq     standard     0.001<span style="text-decoration: underline;">45</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> rsq     standard       0.160</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

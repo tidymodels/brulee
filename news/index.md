@@ -1,5 +1,70 @@
 # Changelog
 
+## brulee 1.1.0
+
+- [`brulee_tab_icl()`](https://brulee.tidymodels.org/reference/brulee_tab_icl.md)
+  makes the open-source foundational model TabICL available. On first
+  use, there is a substantial download (~ 400MB) for the model weights
+  that is cached locally.
+
+- [`brulee_saint()`](https://brulee.tidymodels.org/reference/brulee_saint.md)
+  and
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/reference/brulee_auto_int.md)
+  now support gradient clipping via the `grad_value_clip` and
+  `grad_norm_clip` arguments (both default to `5`), matching
+  [`brulee_mlp()`](https://brulee.tidymodels.org/reference/brulee_mlp.md)
+  and
+  [`brulee_resnet()`](https://brulee.tidymodels.org/reference/brulee_resnet.md).
+  This prevents the loss from overflowing to `NaN` during training with
+  aggressive learning rates.
+
+- There is now a `type` argument to
+  [`predict.brulee_chronos()`](https://brulee.tidymodels.org/reference/predict.brulee_chronos.md):
+  `"all"` returns `.pred` and `.pred_quantile` (unchanged default),
+  `"numeric"` returns only `.pred`, `"quantile"` returns only
+  `.pred_quantile`. The id column is still prepended for multi-series
+  models regardless of type.
+
+- Fixed a bug where torch’s L-BFGS optimizers internal convergence flag
+  is NA, throwing an unhelpful error.
+
+### Breaking Changes
+
+- The
+  [`brulee_saint()`](https://brulee.tidymodels.org/reference/brulee_saint.md)
+  argument `use_target_token` was renamed to `target_token`.
+
+- [`predict()`](https://rdrr.io/r/stats/predict.html) for
+  [`brulee_chronos()`](https://brulee.tidymodels.org/reference/brulee_chronos.md)
+  models was reworked. The historical context is always the data
+  supplied to
+  [`brulee_chronos()`](https://brulee.tidymodels.org/reference/brulee_chronos.md)
+  (the model is pretrained and does no training), so the former
+  `new_data` context-override was removed. The argument previously
+  called `future_df` is now `new_data`: it describes the future window
+  to forecast for and may have at most `prediction_length` rows per
+  series (previously exactly `prediction_length`). When fewer rows are
+  supplied, the forecast is truncated to those rows.
+  [`predict()`](https://rdrr.io/r/stats/predict.html) also gained a
+  `type` argument (`"all"`, `"numeric"`, or `"quantile"`) to select
+  which prediction columns are returned.
+
+- All estimated models now include epoch zero (the randomly initialized
+  parameters, before any training) as the first element of `loss` and
+  `estimates`, matching the neural-network models. These vectors are now
+  length `epochs + 1`, `epoch = 0` is a valid argument to
+  [`predict()`](https://rdrr.io/r/stats/predict.html) and
+  [`coef()`](https://rdrr.io/r/stats/coef.html), and the entry for
+  `best_epoch` is at position `best_epoch + 1`. Predictions and
+  coefficients for a given (positive) epoch are unchanged. Note: objects
+  serialized by earlier versions of these three functions predict off by
+  one epoch under the new indexing, so refit any stored models.
+
+  - The [`print()`](https://rdrr.io/r/base/print.html) methods now
+    report the loss from the best epoch. Previously the displayed loss
+    was taken one epoch too early (it ignored the prepended epoch-zero
+    entry in `loss`).
+
 ## brulee 1.0.0
 
 CRAN release: 2026-06-17

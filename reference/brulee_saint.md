@@ -39,9 +39,11 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -70,9 +72,11 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -101,9 +105,11 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 
@@ -132,9 +138,11 @@ brulee_saint(
   batch_size = NULL,
   class_weights = NULL,
   stop_iter = 5,
+  grad_value_clip = 5,
+  grad_norm_clip = 5,
   verbose = FALSE,
   device = NULL,
-  use_target_token = TRUE,
+  target_token = TRUE,
   ...
 )
 ```
@@ -310,6 +318,13 @@ brulee_saint(
   A non-negative integer for how many iterations with no improvement
   before stopping.
 
+- grad_norm_clip, grad_value_clip:
+
+  Two numeric values, possibly `Inf`, that prevents the gradient's
+  values or norm(s) from exceeding the specified value. This can be
+  helpful if training stops early with the message that
+  `"Loss is NaN at epoch x Training is stopped."`
+
 - verbose:
 
   A logical that prints out the iteration history.
@@ -321,7 +336,7 @@ brulee_saint(
   available, otherwise CPU. See
   [training_efficiency](https://brulee.tidymodels.org/reference/training_efficiency.md).
 
-- use_target_token:
+- target_token:
 
   A logical value. When `TRUE` (the default), a learnable target token
   (`[CLS]` in the SAINT paper) is prepended to each sample's feature
@@ -350,12 +365,16 @@ A `brulee_saint` object with elements:
 - `models_obj`: a serialized raw vector for the torch module.
 
 - `estimates`: a list of matrices with the model parameter estimates per
-  epoch.
+  epoch. The first element is epoch zero (the randomly initialized
+  parameters before training), so the list has `epochs + 1` elements.
 
-- `best_epoch`: an integer for the epoch with the smallest loss.
+- `best_epoch`: an integer for the epoch with the smallest loss. Since
+  `estimates` and `loss` include epoch zero, this epoch's values are at
+  position `best_epoch + 1` in those objects.
 
 - `loss`: A vector of loss values (MSE for regression, negative log-
-  likelihood for classification) at each epoch.
+  likelihood for classification) at each epoch, starting with epoch
+  zero.
 
 - `dim`: A list of data dimensions and feature metadata.
 
@@ -388,8 +407,8 @@ The SAINT architecture has three stages:
 
 3.  **Output head**: Pools the transformer output (either the target
     token's embedding or the flattened concatenation of all feature
-    embeddings, controlled by `use_target_token`) and projects it
-    through optional hidden layers to the output dimension.
+    embeddings, controlled by `target_token`) and projects it through
+    optional hidden layers to the output dimension.
 
 There is a [`summary()`](https://rdrr.io/r/base/summary.html) methods
 that can provide details of the architecture for a specific model fit.
@@ -435,7 +454,7 @@ paper describes in Figure 1: "We take the contextual embeddings from
 SAINT and pass only the embedding correspond to the CLS token through an
 MLP to obtain the final prediction."
 
-With `use_target_token = FALSE`, no target token is added and the head
+With `target_token = FALSE`, no target token is added and the head
 instead consumes the concatenation of all `n` feature tokens. That
 option is provided because the SAINT reference Python implementation
 (<https://github.com/somepago/saint>) departs from the paper and uses
@@ -501,7 +520,7 @@ arXiv:2106.01342.
 ``` r
 # \donttest{
 pkgs <- c("recipes", "yardstick", "modeldata")
-if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
+if (torch::torch_is_installed() && rlang::is_installed(pkgs)) {
 
  set.seed(87261)
  tr_data <- modeldata::sim_regression(500, method = "worley_1987")
@@ -538,13 +557,13 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 
 }
 #> epoch: 00, learn rate: 0.01000, Loss (scaled): 0.311
-#> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.295
+#> epoch: 01, learn rate: 0.01000, Loss (scaled): 0.292
 #> epoch: 02, learn rate: 0.01000, Loss (scaled): 0.288
-#> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.289
-#> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.298
+#> epoch: 03, learn rate: 0.01000, Loss (scaled): 0.291
+#> epoch: 04, learn rate: 0.01000, Loss (scaled): 0.301
 #> epoch: 05, learn rate: 0.01000, Loss (scaled): 0.315
-#> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.289
-#> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.305
+#> epoch: 06, learn rate: 0.01000, Loss (scaled): 0.296
+#> epoch: 07, learn rate: 0.01000, Loss (scaled): 0.304
 #> SAINT architecture
 #> inputs: 8 (0 categorical, 8 numeric) | output dim: 1
 #> attention: both | embedding dim: 3 | target token: TRUE
@@ -610,6 +629,6 @@ if (torch::torch_is_installed() & rlang::is_installed(pkgs)) {
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 rsq     standard     0.00145
+#> 1 rsq     standard       0.160
 # }
 ```

@@ -15,7 +15,7 @@ pretrained weights.'><meta property="og:image" content="https://brulee.tidymodel
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -356,15 +356,15 @@ order as its time order. Pre-sort each series before calling
 <h3 id="what-happens-at-predict-time">What happens at <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> time<a class="anchor" aria-label="anchor" href="#what-happens-at-predict-time"></a></h3>
 
 
-<p>By default, <code><a href="predict.brulee_chronos.html">predict.brulee_chronos()</a></code> forecasts from the context data that
-was supplied at construction. The use of <code>new_data</code> should be determined by
-how the <code>brulee_chronos()</code> call passed the data. For example, if no
-covariates were originally given to the model, there is no need to pass in
-values when calling <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> and so on. Pass <code>future_df</code> to supply known
-future values of any covariate (e.g., holiday flags, planned promotions).
-To forecast a <strong>different</strong> series with the same schema, pass it as
-<code>new_data</code>. It will be processed through the same blueprint as the original
-context.</p>
+<p>The model is pretrained and performs no training, so the historical context
+is always the data supplied at construction; <code><a href="predict.brulee_chronos.html">predict.brulee_chronos()</a></code>
+forecasts forward from that context. By default it returns the full
+<code>prediction_length</code> horizon. To forecast a specific future window—and to
+supply known future values of any covariate (e.g., holiday flags, planned
+promotions)—pass that window as <code>new_data</code>. Its per-series row count sets
+how many future steps are returned (at most <code>prediction_length</code>). When the
+model has no covariates, <code>new_data</code> only needs the id and timestamp columns
+that describe the future steps.</p>
 </div>
 
     </div>
@@ -383,7 +383,7 @@ series forecasting.", https://doi.org/10.21203/rs.3.rs-9096522/v1</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pkgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"recipes"</span>, <span class="st">"lubridate"</span>, <span class="st">"modeldata"</span>, <span class="st">"ggplot2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="va">pkgs</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="va">pkgs</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span> <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>

@@ -9,7 +9,7 @@ learns its own adaptive regularization coefficient."><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -262,9 +262,14 @@ and the predictor term(s) on the right-hand side.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>brulee_rln</code> object with elements:</p><ul><li><p><code>model_obj</code>: a serialized raw vector for the torch module.</p></li>
-<li><p><code>estimates</code>: a list of model parameter matrices per epoch.</p></li>
-<li><p><code>best_epoch</code>: an integer for the epoch with the smallest loss.</p></li>
-<li><p><code>loss</code>: a numeric vector of loss values (scaled MSE) at each epoch.</p></li>
+<li><p><code>estimates</code>: a list of model parameter matrices per epoch. The first
+element is epoch zero (the randomly initialized parameters
+before training), so the list has <code>epochs + 1</code> elements.</p></li>
+<li><p><code>best_epoch</code>: an integer for the epoch with the smallest loss. Since
+<code>estimates</code> and <code>loss</code> include epoch zero, this epoch's
+values are at position <code>best_epoch + 1</code> in those objects.</p></li>
+<li><p><code>loss</code>: a numeric vector of loss values (scaled MSE) at each epoch,
+starting with epoch zero.</p></li>
 <li><p><code>dims</code>: a list of data dimensions.</p></li>
 <li><p><code>y_stats</code>: a list of mean and standard deviation for the outcome.</p></li>
 <li><p><code>parameters</code>: a list of tuning parameter values.</p></li>
@@ -346,13 +351,13 @@ systems</em> (pp. 1379-1389).</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"recipes"</span>, <span class="st">"yardstick"</span>, <span class="st">"modeldata"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"recipes"</span>, <span class="st">"yardstick"</span>, <span class="st">"modeldata"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">ames</span>, package <span class="op">=</span> <span class="st">"modeldata"</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">ames</span><span class="op">$</span><span class="va">Sale_Price</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log10</a></span><span class="op">(</span><span class="va">ames</span><span class="op">$</span><span class="va">Sale_Price</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">122</span><span class="op">)</span></span></span>
-<span class="r-in"><span> <span class="va">in_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ames</span><span class="op">)</span>, <span class="fl">2000</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">in_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ames</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2000</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">ames_train</span> <span class="op">&lt;-</span> <span class="va">ames</span><span class="op">[</span> <span class="va">in_train</span>,<span class="op">]</span></span></span>
 <span class="r-in"><span> <span class="va">ames_test</span>  <span class="op">&lt;-</span> <span class="va">ames</span><span class="op">[</span><span class="op">-</span><span class="va">in_train</span>,<span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>

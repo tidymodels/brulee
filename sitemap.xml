@@ -19,6 +19,7 @@
 <url><loc>https://brulee.tidymodels.org/reference/brulee_resnet.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/brulee_rln.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/brulee_saint.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/reference/brulee_tab_icl.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/index.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/matrix_to_dataset.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/predict.brulee_auto_int.html</loc></url>
@@ -30,9 +31,11 @@
 <url><loc>https://brulee.tidymodels.org/reference/predict.brulee_resnet.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/predict.brulee_rln.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/predict.brulee_saint.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/reference/predict.brulee_tab_icl.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/reexports.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/schedule_decay_time.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/summary.brulee.html</loc></url>
+<url><loc>https://brulee.tidymodels.org/reference/tab_icl_download_weights.html</loc></url>
 <url><loc>https://brulee.tidymodels.org/reference/training_efficiency.html</loc></url>
 </urlset>
 

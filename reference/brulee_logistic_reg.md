@@ -210,12 +210,16 @@ A `brulee_logistic_reg` object with elements:
 - `models_obj`: a serialized raw vector for the torch module.
 
 - `estimates`: a list of matrices with the model parameter estimates per
-  epoch.
+  epoch. The first element is epoch zero (the randomly initialized
+  parameters before training), so the list has `epochs + 1` elements.
 
-- `best_epoch`: an integer for the epoch with the smallest loss.
+- `best_epoch`: an integer for the epoch with the smallest loss. Since
+  `estimates` and `loss` include epoch zero, this epoch's values are at
+  position `best_epoch + 1` in those objects.
 
 - `loss`: A vector of loss values (MSE for regression, negative log-
-  likelihood for classification) at each epoch.
+  likelihood for classification) at each epoch, starting with epoch
+  zero.
 
 - `dim`: A list of data dimensions.
 
@@ -261,7 +265,7 @@ method used in those packages.
 
 ``` r
 # \donttest{
-if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
+if (torch::torch_is_installed() && rlang::is_installed(c("recipes", "yardstick", "modeldata"))) {
 
  library(recipes)
  library(yardstick)
@@ -274,7 +278,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
  cells$case <- NULL
 
  set.seed(122)
- in_train <- sample(1:nrow(cells), 1000)
+ in_train <- sample(seq_len(nrow(cells)), 1000)
  cells_train <- cells[ in_train,]
  cells_test  <- cells[-in_train,]
 
@@ -296,7 +300,7 @@ if (torch::torch_is_installed() & rlang::is_installed(c("recipes", "yardstick", 
 
  set.seed(2)
  fit <- brulee_logistic_reg(cells_rec, data = cells_train,
-                             penalty = .01, epochs = 5)
+                             penalty = 0.01, epochs = 5)
  fit
 
  autoplot(fit)
