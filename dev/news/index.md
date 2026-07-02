@@ -2,6 +2,10 @@
 
 ## brulee (development version)
 
+## brulee 1.1.0
+
+CRAN release: 2026-07-02
+
 - [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
   makes the open-source foundational model TabICL available. On first
   use, there is a substantial download (~ 400MB) for the model weights
@@ -25,7 +29,7 @@
   `.pred_quantile`. The id column is still prepended for multi-series
   models regardless of type.
 
-- Fixed a bug where torch’s L-BFGS optimizer’s internal convergence flag
+- Fixed a bug where torch’s L-BFGS optimizers internal convergence flag
   is NA, throwing an unhelpful error.
 
 ### Breaking Changes
