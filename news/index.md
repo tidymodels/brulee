@@ -2,6 +2,8 @@
 
 ## brulee 1.1.0
 
+CRAN release: 2026-07-02
+
 - [`brulee_tab_icl()`](https://brulee.tidymodels.org/reference/brulee_tab_icl.md)
   makes the open-source foundational model TabICL available. On first
   use, there is a substantial download (~ 400MB) for the model weights

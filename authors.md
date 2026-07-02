@@ -13,7 +13,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/tidymodels/brulee/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/tidymodels/brulee/blob/v1.1.0/DESCRIPTION)
 
 Kuhn M, Falbel D (2026). *brulee: High-Level Modeling Functions with
 'torch'*. R package version 1.1.0,
