@@ -1,58 +1,53 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
 
 # brulee <a href="https://brulee.tidymodels.org/"><img src="man/figures/logo.png" align="right" height="139" alt="a dish of creme brulee on a striped background" /></a>
 
 <!-- badges: start -->
-
 [![R-CMD-check](https://github.com/tidymodels/brulee/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tidymodels/brulee/actions/workflows/R-CMD-check.yaml)
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![Codecov test
-coverage](https://codecov.io/gh/tidymodels/brulee/graph/badge.svg)](https://app.codecov.io/gh/tidymodels/brulee)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+[![Codecov test coverage](https://codecov.io/gh/tidymodels/brulee/graph/badge.svg)](https://app.codecov.io/gh/tidymodels/brulee)
 <!-- badges: end -->
 
-The R `brulee` package contains several basic modeling functions that
-use the `torch` package infrastructure, such as:
+The R `brulee` package contains several basic modeling functions that use the `torch` package infrastructure, such as:
 
-- [neural
-  networks](https://brulee.tidymodels.org/reference/brulee_mlp.html)
-- [linear
-  regression](https://brulee.tidymodels.org/reference/brulee_linear_reg.html)
-- [logistic
-  regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
-- [multinomial
-  regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
-- residual networks (ResNet)
-- regularization learning networks (RLN)
-- AutoInt
-- Self-Attention and Inter-sample Attention Transformer (Saint)
-- Chronos2 foundational model for forecasting
+* [neural networks](https://brulee.tidymodels.org/reference/brulee_mlp.html)
+* [linear regression](https://brulee.tidymodels.org/reference/brulee_linear_reg.html)
+* [logistic regression](https://brulee.tidymodels.org/reference/brulee_logistic_reg.html)
+* [multinomial regression](https://brulee.tidymodels.org/reference/brulee_multinomial_reg.html)
+* [residual networks (ResNet)](https://brulee.tidymodels.org/reference/brulee_resnet.html)
+* [regularization learning networks (RLN)](https://brulee.tidymodels.org/reference/brulee_rln.html)
+* [AutoInt](https://brulee.tidymodels.org/reference/brulee_auto_int.html)
+* [Self-Attention and Inter-sample Attention Transformer (Saint)](https://brulee.tidymodels.org/reference/brulee_saint.html)
+* [Chronos2](https://brulee.tidymodels.org/reference/brulee_chronos.html) foundational model for forecasting
+* Transformer-based foundation model TabICL
 
-Chronos2 is the only model that uses a pretrained model, requiring a
-one-time download of about 500MB.
+Chronos2 and TabICL are pretrained models, requiring a one-time download of about 500MB and 400MB, respectively. 
 
 ## Installation
 
-You can install the released version of brulee from
-[CRAN](https://CRAN.R-project.org) with:
+You can install the released version of brulee from [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
 install.packages("brulee")
 ```
 
-And the development version from
-[GitHub](https://github.com/tidymodels/brulee) with:
+And the development version from [GitHub](https://github.com/tidymodels/brulee) with:
 
 ``` r
 # install.packages("pak")
 pak::pak("tidymodels/brulee")
 ```
-
 ## Example
 
-`brulee` has formula, x/y, and recipe user interfaces for each function.
-For example:
+`brulee` has formula, x/y, and recipe user interfaces for each function. For example:
+
+
 
 ``` r
 library(brulee)
@@ -62,20 +57,28 @@ library(yardstick)
 data(bivariate, package = "modeldata")
 set.seed(20)
 nn_log_biv <- brulee_mlp(Class ~ log(A) + log(B), data = bivariate_train, 
-                         epochs = 150, hidden_units = 3)
+                         hidden_units = 3)
 
 # We use the tidymodels semantics to always return a tibble when predicting
-predict(nn_log_biv, bivariate_test, type = "prob") |> 
-  bind_cols(bivariate_test) |> 
-  roc_auc(Class, .pred_One)
-#> # A tibble: 1 × 3
-#>   .metric .estimator .estimate
-#>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.840
+predict(nn_log_biv, bivariate_test, type = "prob") 
+#> # A tibble: 710 × 2
+#>    .pred_One .pred_Two
+#>        <dbl>     <dbl>
+#>  1     0.675     0.325
+#>  2     0.673     0.327
+#>  3     0.679     0.321
+#>  4     0.688     0.312
+#>  5     0.685     0.315
+#>  6     0.679     0.321
+#>  7     0.674     0.326
+#>  8     0.681     0.319
+#>  9     0.697     0.303
+#> 10     0.675     0.325
+#> # ℹ 700 more rows
 ```
 
-A recipe can also be used if the data require some sort of preprocessing
-(e.g., indicator variables, transformations, or standardization):
+A recipe can also be used if the data require some sort of preprocessing (e.g., indicator variables, transformations, or standardization): 
+
 
 ``` r
 library(recipes)
@@ -96,12 +99,10 @@ predict(nn_rec_biv, bivariate_test, type = "prob") |>
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.862
+#> 1 roc_auc binary         0.867
 ```
 
 ## Code of Conduct
+  
+Please note that the brulee project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
 
-Please note that the brulee project is released with a [Contributor Code
-of
-Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html).
-By contributing to this project, you agree to abide by its terms.
