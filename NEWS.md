@@ -1,3 +1,5 @@
+# brulee (development version)
+
 # brulee 1.1.0
 
 * `brulee_tab_icl()` makes the open-source foundational model TabICL available. On first use, there is a substantial download (~ 400MB) for the model weights that is cached locally. 
