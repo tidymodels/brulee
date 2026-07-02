@@ -1,4 +1,4 @@
-# brulee (development version)
+# brulee 1.1.0
 
 * `brulee_tab_icl()` makes the open-source foundational model TabICL available. On first use, there is a substantial download (~ 400MB) for the model weights that is cached locally. 
 
@@ -6,7 +6,7 @@
 
 * There is now a `type` argument to `predict.brulee_chronos()`: `"all"` returns `.pred` and `.pred_quantile` (unchanged default), `"numeric"` returns only `.pred`, `"quantile"` returns only `.pred_quantile`. The id column is still prepended for multi-series models regardless of type.
 
-* Fixed a bug where torch's L-BFGS optimizer's internal convergence flag is NA, throwing an unhelpful error. 
+* Fixed a bug where torch's L-BFGS optimizers internal convergence flag is NA, throwing an unhelpful error. 
 
 ## Breaking Changes
 
