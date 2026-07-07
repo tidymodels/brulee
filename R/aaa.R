@@ -31,52 +31,6 @@ utils::globalVariables(
 # nocov start
 .onAttach <- function(libname, pkgname) {
   s3_register("ggplot2::autoplot", "brulee_mlp")
-  tabicl_attach_weights()
-  invisible()
-}
-
-# brulee_tab_icl() needs pretrained TabICL weights that are not shipped with the
-# package. On attach, populate the cache if it is empty: offer to download in
-# interactive sessions, download outright otherwise. Set
-# `options(brulee.tabicl_autodownload = FALSE)` to opt out. A failed download
-# never blocks attaching the package.
-tabicl_attach_weights <- function() {
-  if (
-    tab_icl_weights_available() ||
-      !isTRUE(getOption("brulee.tabicl_autodownload", TRUE))
-  ) {
-    return(invisible())
-  }
-
-  if (interactive()) {
-    packageStartupMessage(cli::format_message(c(
-      "brulee needs pretrained TabICL weights for {.fn brulee_tab_icl}, which
-       are not cached yet.",
-      "i" = "They will be downloaded from {.val {tabicl_default_repo()}} into
-             {.path {tabicl_cache_dir()}}."
-    )))
-    answer <- utils::menu(
-      c("Yes", "No"),
-      title = "Download the TabICL weights now?"
-    )
-    if (!identical(answer, 1L)) {
-      packageStartupMessage(cli::format_message(c(
-        "i" = "Skipping download. Run {.fn tab_icl_download_weights} later to
-               enable {.fn brulee_tab_icl}."
-      )))
-      return(invisible())
-    }
-  }
-
-  tryCatch(
-    tab_icl_download_weights(),
-    error = function(e) {
-      packageStartupMessage(cli::format_message(c(
-        "!" = "Could not download TabICL weights: {conditionMessage(e)}",
-        "i" = "Run {.fn tab_icl_download_weights} to retry."
-      )))
-    }
-  )
   invisible()
 }
 
