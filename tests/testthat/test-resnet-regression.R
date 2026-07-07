@@ -463,3 +463,38 @@ test_that("resnet block structure follows Gorishniy et al. 2021", {
   expect_true(inherits(block$linear2, "nn_linear"))
   expect_true(inherits(block$dropout2, "nn_dropout"))
 })
+
+test_that("resnet with size-1 trailing batch does not produce NA predictions (#122)", {
+  skip_on_cran()
+  skip_if_not_installed("recipes")
+  skip_if_not_installed("torch")
+
+  # 33 rows with batch_size 32 leaves a trailing batch of a single row, which
+  # used to corrupt batch-norm's running_var with NaN and make every prediction
+  # NA (tidymodels/brulee#122).
+  set.seed(1)
+  n <- 33
+  x <- matrix(rnorm(n * 2), ncol = 2)
+  colnames(x) <- c("x1", "x2")
+  y <- x[, 1] + 2 * x[, 2] + rnorm(n, sd = 0.1)
+
+  set.seed(1)
+  torch::torch_manual_seed(1)
+  fit <- brulee_resnet(
+    x = x,
+    y = y,
+    hidden_units = 4,
+    epochs = 5,
+    batch_size = 32,
+    verbose = FALSE,
+    device = "cpu"
+  )
+
+  pred <- predict(fit, x)
+  expect_false(any(is.na(pred$.pred)))
+
+  running_var <- as.array(
+    fit$estimates[[length(fit$estimates)]][["bn_out.running_var"]]
+  )
+  expect_false(any(is.nan(running_var)))
+})

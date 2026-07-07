@@ -85,7 +85,14 @@ setup_torch_data <- function(
 ) {
   # Create training dataloader
   ds <- matrix_to_dataset(x_train, y_train, device = device)
-  dl <- torch::dataloader(ds, batch_size = batch_size)
+  # A trailing batch of a single row breaks batch-normalization: the batch
+  # variance is computed with a denominator of `n - 1 = 0`, producing `NaN`
+  # values that corrupt the `running_var` buffers and make every subsequent
+  # `eval()`-mode prediction `NaN` (see tidymodels/brulee#122). Drop the last
+  # batch only when it would hold exactly one row so no other data is lost.
+  n_train <- nrow(x_train)
+  drop_last <- n_train %% batch_size == 1 && n_train > batch_size
+  dl <- torch::dataloader(ds, batch_size = batch_size, drop_last = drop_last)
 
   # Create validation dataloader if needed
   dl_val <- NULL
