@@ -51,7 +51,7 @@ tabicl_asset_url <- function(
 tabicl_cache_dir <- function() {
   getOption(
     "brulee.tabicl_cache_dir",
-    default = file.path(Sys.getenv("HOME"), ".cache", "TabICL")
+    default = tools::R_user_dir("brulee", which = "cache")
   )
 }
 
