@@ -1220,7 +1220,7 @@ chronos2_download_file <- function(url, dest, label, max_attempts = 3L) {
 chronos2_download <- function(
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
+  cache_dir = tools::R_user_dir("brulee", which = "cache")
 ) {
   sha <- chronos2_resolve_revision(model_id, revision)
 

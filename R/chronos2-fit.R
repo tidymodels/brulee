@@ -207,7 +207,8 @@
 #' @param device A character string for the computation device: `"cpu"`,
 #'   `"cuda"`, or `"mps"`. Default: `NULL` (auto-detects best available).
 #' @param cache_dir Path to a directory for caching downloaded model files.
-#'   Default: `"~/.cache/chronos-r"`.
+#'   Defaults to a per-user cache directory via
+#'   [tools::R_user_dir()]`("brulee", "cache")`.
 #' @param ... Currently unused.
 #'
 #' @references
@@ -310,7 +311,7 @@ brulee_chronos.data.frame <- function(
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
   ...
 ) {
   processed <- hardhat::mold(x, y)
@@ -359,7 +360,7 @@ brulee_chronos.formula <- function(
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
   ...
 ) {
   id_name <- chronos2_resolve_column(
@@ -454,7 +455,7 @@ brulee_chronos.recipe <- function(
   prediction_length = NULL,
   quantile_levels = (1:9) / 10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
   ...
 ) {
   processed <- hardhat::mold(x, data)
