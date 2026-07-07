@@ -8,13 +8,14 @@
 # release is tagged `<version>-<date>` (for example `v2-2026-02-12`) and carries
 # the four files for both tasks as individual assets (the large safetensors are
 # release assets, not committed to the repo, so the source-archive tarball does
-# not contain them). Following chronos2, the files brulee reads are cached under
-# `~/.cache/TabICL/<version>/<date>/<TaskLabel>/`, mirroring the artifacts layout.
+# not contain them). The files brulee reads are cached under the per-user cache
+# directory from `tools::R_user_dir("brulee", "cache")`, in
+# `<version>/<date>/<TaskLabel>/`, mirroring the artifacts layout.
 #
-# `brulee_tab_icl()` reads from this cache (it does not download automatically);
-# the attach hook in aaa.R is what populates it. `tab_icl_download_weights()`
-# fetches the release assets, and `tab_icl_weights_available()` reports whether
-# the cache is populated.
+# `brulee_tab_icl()` reads from this cache; it never downloads on its own, and
+# neither does attaching the package. The user populates the cache explicitly
+# with `tab_icl_download_weights()`, and `tab_icl_weights_available()` reports
+# whether it is populated.
 
 # The GitHub repo hosting the converted weights, and the released checkpoint
 # version/date the downloader fetches by default.
@@ -94,8 +95,7 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
     cli::cli_abort(
       c(
         "No cached {task} TabICL checkpoint found in {.path {root}}.",
-        "i" = "Download one with {.fn tab_icl_download_weights}, or convert and
-               cache a checkpoint offline (see {.path dev/tabicl})."
+        "i" = "Download them with {.fn tab_icl_download_weights}."
       ),
       call = call
     )
@@ -117,7 +117,8 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
 #'   `<version>-<date>` (for example `"v2"` and `"2026-02-12"`).
 #' @param repo The `owner/name` of the GitHub repository hosting the weights.
 #' @param cache_dir The root of the local weight cache. Defaults to the
-#'   `brulee.tabicl_cache_dir` option or `~/.cache/TabICL`.
+#'   `brulee.tabicl_cache_dir` option, or a per-user cache directory via
+#'   [tools::R_user_dir()]`("brulee", "cache")`.
 #' @param call The calling environment, used for error messages.
 #'
 #' @details
@@ -127,9 +128,10 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
 #' complete is left in place, so re-running resumes rather than re-downloads.
 #'
 #' The cache location can be overridden with the `brulee.tabicl_cache_dir`
-#' option. When brulee is attached and the weights are missing, the package
-#' offers to download them in interactive sessions and downloads them otherwise;
-#' set `options(brulee.tabicl_autodownload = FALSE)` to disable that behavior.
+#' option. Weights are only downloaded when you call
+#' `tab_icl_download_weights()`; neither attaching brulee nor calling
+#' [brulee_tab_icl()] downloads them automatically. If [brulee_tab_icl()] is
+#' run before the weights are cached, it errors and points you here.
 #'
 #' @return
 #' `tab_icl_download_weights()` invisibly returns the populated

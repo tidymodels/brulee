@@ -330,9 +330,10 @@ tabicl_make_members <- function(
 #'
 #' ## Pre-trained weights
 #'
-#' The estimated parameters from the pre-trained Python model are used. On
-#' first use, the values are downloaded and cached locally and are more than
-#' 200MB.
+#' The estimated parameters from the pre-trained Python model are used. These
+#' weights (more than 200MB) are not shipped with the package and must be
+#' downloaded and cached once with [tab_icl_download_weights()] before
+#' [brulee_tab_icl()] can be used.
 #'
 #' @references
 #'
@@ -357,8 +358,8 @@ tabicl_make_members <- function(
 #'
 #' @examples
 #' \dontrun{
-#' # Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
-#' # "Pre-trained weights" section and dev/tabicl/).
+#' # Requires cached TabICL weights; download them first with
+#' # tab_icl_download_weights() (see the "Pre-trained weights" section).
 #'
 #' if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
 #'   data(penguins, package = "modeldata")
