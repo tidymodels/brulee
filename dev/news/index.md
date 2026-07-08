@@ -2,6 +2,13 @@
 
 ## brulee (development version)
 
+- [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md)
+  no longer returns all-`NA` predictions when the training-set size
+  leaves a single-row trailing batch (e.g. `mtcars` with default
+  settings). Such a batch made batch-normalization compute a variance
+  over one sample, corrupting its buffers with `NaN`
+  ([\#122](https://github.com/tidymodels/brulee/issues/122)).
+
 ## brulee 1.1.0
 
 CRAN release: 2026-07-02
