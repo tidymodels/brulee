@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* `brulee_resnet()` no longer returns all-`NA` predictions when the training-set size leaves a single-row trailing batch (e.g. `mtcars` with default settings). Such a batch made batch-normalization compute a variance over one sample, corrupting its buffers with `NaN` (#122).
+
 # brulee 1.1.0
 
 * `brulee_tab_icl()` makes the open-source foundational model TabICL available. On first use, there is a substantial download (~ 400MB) for the model weights that is cached locally. 
