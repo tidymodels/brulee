@@ -114,7 +114,7 @@ test_that("tabicl_cache_lookup errors when uncached and non-interactive", {
 
   expect_error(
     brulee:::tabicl_cache_lookup("regression"),
-    "No cached regression TabICL checkpoint found"
+    "No cached Regression TabICL weights found"
   )
 })
 

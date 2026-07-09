@@ -93,29 +93,15 @@ tabicl_find_checkpoint <- function(task, cache_dir = tabicl_cache_dir()) {
 tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
   path <- tabicl_find_checkpoint(task)
   if (is.null(path)) {
-    root <- tabicl_cache_dir()
-
-    if (!rlang::is_interactive()) {
-      cli::cli_abort(
-        c(
-          "No cached {task} TabICL checkpoint found in {.path {root}}.",
-          "i" = "Download them with {.fn tab_icl_download_weights}."
-        ),
-        call = call
-      )
-    }
-
-    task_label <- paste0(toupper(substring(task, 1, 1)), substring(task, 2))
-    cli::cli_inform(
-      "The {.field {task_label}} weights for {.field TabICL} are not found locally."
+    label <- paste(tabicl_task_label(task), "TabICL")
+    brulee_confirm_download(
+      label = label,
+      size = "200MB",
+      fn = "brulee_tab_icl",
+      root = tabicl_cache_dir(),
+      hint = "Download them with {.fn tab_icl_download_weights}.",
+      call = call
     )
-    choice <- utils::menu(c("Yes", "No"), title = "Download now (~200MB)?")
-    if (choice != 1L) {
-      cli::cli_abort(
-        "Download declined; {.fn brulee_tab_icl} needs the weights to continue.",
-        call = call
-      )
-    }
     tab_icl_download_weights(task = task, call = call)
     path <- tabicl_find_checkpoint(task)
   }
