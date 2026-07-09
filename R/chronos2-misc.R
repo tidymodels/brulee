@@ -1221,6 +1221,7 @@ chronos2_download <- function(
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
   cache_dir = tools::R_user_dir("brulee", which = "cache"),
+  confirm = FALSE,
   call = rlang::caller_env()
 ) {
   sha <- chronos2_resolve_revision(model_id, revision)
@@ -1228,11 +1229,13 @@ chronos2_download <- function(
   model_dir <- file.path(cache_dir, gsub("/", "--", model_id), sha)
   files <- c("config.json", "model.safetensors")
 
-  # brulee never downloads the (~500MB) weights silently. If they are not
-  # already cached, ask for confirmation when interactive, and error otherwise.
+  # This internal helper downloads unconditionally by default: anyone calling
+  # it directly (via `:::`) is already being deliberate. The user-facing gate
+  # (ask when interactive, error otherwise) only applies through
+  # brulee_chronos(), which passes confirm = TRUE.
   cached <- dir.exists(model_dir) &&
     all(file.exists(file.path(model_dir, files)))
-  if (!cached) {
+  if (!cached && confirm) {
     brulee_confirm_download(
       label = model_id,
       size = "500MB",

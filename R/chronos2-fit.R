@@ -621,7 +621,8 @@ brulee_chronos_bridge <- function(
   download_info <- chronos2_download(
     model_id,
     revision = revision,
-    cache_dir = cache_dir
+    cache_dir = cache_dir,
+    confirm = TRUE
   )
   resolved_sha <- download_info$sha
   config <- chronos2_parse_config(

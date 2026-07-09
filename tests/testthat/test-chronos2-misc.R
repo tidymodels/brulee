@@ -450,7 +450,6 @@ test_that("chronos2_download resolves the revision and downloads the files", {
       file.create(dest)
       invisible(dest)
     },
-    brulee_confirm_download = function(...) invisible(TRUE),
     .package = "brulee"
   )
 
@@ -468,7 +467,7 @@ test_that("chronos2_download resolves the revision and downloads the files", {
   expect_equal(resolved_with$revision, "main")
 })
 
-test_that("chronos2_download errors when uncached and non-interactive", {
+test_that("chronos2_download errors when confirm = TRUE, uncached, and non-interactive", {
   cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
   on.exit(unlink(cache, recursive = TRUE), add = TRUE)
 
@@ -478,12 +477,32 @@ test_that("chronos2_download errors when uncached and non-interactive", {
   )
 
   expect_error(
-    brulee:::chronos2_download(cache_dir = cache),
+    brulee:::chronos2_download(cache_dir = cache, confirm = TRUE),
     "No cached .* weights found"
   )
 })
 
-test_that("chronos2_download proceeds to download after the user confirms", {
+test_that("chronos2_download downloads unconditionally by default (confirm = FALSE)", {
+  cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
+  on.exit(unlink(cache, recursive = TRUE), add = TRUE)
+
+  testthat::local_mocked_bindings(
+    is_interactive = function() FALSE,
+    .package = "rlang"
+  )
+  testthat::local_mocked_bindings(
+    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+      file.create(dest)
+      invisible(dest)
+    },
+    .package = "brulee"
+  )
+
+  res <- brulee:::chronos2_download(cache_dir = cache)
+  expect_true(dir.exists(res$model_dir))
+})
+
+test_that("chronos2_download with confirm = TRUE proceeds after the user confirms", {
   cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
   on.exit(unlink(cache, recursive = TRUE), add = TRUE)
 
@@ -505,7 +524,9 @@ test_that("chronos2_download proceeds to download after the user confirms", {
     .package = "brulee"
   )
 
-  res <- suppressMessages(brulee:::chronos2_download(cache_dir = cache))
+  res <- suppressMessages(
+    brulee:::chronos2_download(cache_dir = cache, confirm = TRUE)
+  )
 
   expect_true(dir.exists(res$model_dir))
   expect_setequal(files_downloaded, c("config.json", "model.safetensors"))
