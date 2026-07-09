@@ -14,7 +14,7 @@ stub_chronos_loaders <- function(also_mock_predict_core = FALSE) {
       model_id,
       revision,
       cache_dir,
-      confirm = TRUE
+      confirm = FALSE
     ) {
       list(
         model_dir = fake_dir,
