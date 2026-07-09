@@ -257,9 +257,10 @@ a warning and falls back to CPU.
 \subsection{Pre-trained weights}{
 
 The estimated parameters from the pre-trained Python model are used. These
-weights (more than 200MB) are not shipped with the package and must be
-downloaded and cached once with \code{\link[=tab_icl_download_weights]{tab_icl_download_weights()}} before
-\code{\link[=brulee_tab_icl]{brulee_tab_icl()}} can be used.
+weights (more than 200MB) are not shipped with the package and are cached
+once with \code{\link[=tab_icl_download_weights]{tab_icl_download_weights()}}. If they are not cached when
+\code{\link[=brulee_tab_icl]{brulee_tab_icl()}} runs, it prompts to download them in an interactive
+session and errors (pointing you to \code{\link[=tab_icl_download_weights]{tab_icl_download_weights()}}) otherwise.
 }
 }
 \examples{

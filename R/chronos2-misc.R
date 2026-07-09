@@ -1217,17 +1217,58 @@ chronos2_download_file <- function(url, dest, label, max_attempts = 3L) {
   ))
 }
 
+# Gate the weight download. Chronos weights are large and are not shipped with
+# the package; rather than pulling them silently, prompt the user in an
+# interactive session and error (pointing them at an interactive run) otherwise.
+chronos2_confirm_download <- function(
+  model_id,
+  cache_dir,
+  call = rlang::caller_env()
+) {
+  if (!rlang::is_interactive()) {
+    cli::cli_abort(
+      c(
+        "No cached {.val {model_id}} Chronos weights found in {.path {cache_dir}}.",
+        "i" = "Run {.fn brulee_chronos} in an interactive session to download them."
+      ),
+      call = call
+    )
+  }
+
+  cli::cli_inform(
+    "The weights for {.field {model_id}} are not found locally."
+  )
+  choice <- utils::menu(c("Yes", "No"), title = "Download now (~500MB)?")
+  if (choice != 1L) {
+    cli::cli_abort(
+      "Download declined; {.fn brulee_chronos} needs the weights to continue.",
+      call = call
+    )
+  }
+
+  invisible(TRUE)
+}
+
 chronos2_download <- function(
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
-  cache_dir = tools::R_user_dir("brulee", which = "cache")
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
+  call = rlang::caller_env()
 ) {
   sha <- chronos2_resolve_revision(model_id, revision)
 
   model_dir <- file.path(cache_dir, gsub("/", "--", model_id), sha)
-  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
-
   files <- c("config.json", "model.safetensors")
+
+  # brulee never downloads the (~500MB) weights silently. If they are not
+  # already cached, ask for confirmation when interactive, and error otherwise.
+  cached <- dir.exists(model_dir) &&
+    all(file.exists(file.path(model_dir, files)))
+  if (!cached) {
+    chronos2_confirm_download(model_id, cache_dir, call = call)
+  }
+
+  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
 
   # `download.file()` defaults to a 60-second timeout, which is too tight
   # for the ~478MB safetensors file. Lift it for the duration of the call.

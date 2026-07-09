@@ -53,10 +53,9 @@ safetensors weight file) as individual assets. They are downloaded into
 complete is left in place, so re-running resumes rather than re-downloads.
 
 The cache location can be overridden with the \code{brulee.tabicl_cache_dir}
-option. Weights are only downloaded when you call
-\code{tab_icl_download_weights()}; neither attaching brulee nor calling
-\code{\link[=brulee_tab_icl]{brulee_tab_icl()}} downloads them automatically. If \code{\link[=brulee_tab_icl]{brulee_tab_icl()}} is
-run before the weights are cached, it errors and points you here.
+option. Attaching brulee never downloads the weights. If \code{\link[=brulee_tab_icl]{brulee_tab_icl()}}
+is run before they are cached, it prompts to download them (via this
+function) in an interactive session and errors, pointing you here, otherwise.
 }
 \examples{
 \dontshow{if (FALSE) withAutoprint(\{ # examplesIf}

@@ -86,19 +86,38 @@ tabicl_find_checkpoint <- function(task, cache_dir = tabicl_cache_dir()) {
   candidates[order(basename(dirname(candidates)))][length(candidates)]
 }
 
-# Like tabicl_find_checkpoint() but errors when nothing is cached; used at fit
-# time where a missing checkpoint is fatal.
+# Like tabicl_find_checkpoint() but resolves a missing checkpoint; used at fit
+# time where a missing checkpoint is fatal. When nothing is cached, prompt to
+# download in an interactive session (mirroring brulee_chronos()) and error
+# otherwise.
 tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
   path <- tabicl_find_checkpoint(task)
   if (is.null(path)) {
     root <- tabicl_cache_dir()
-    cli::cli_abort(
-      c(
-        "No cached {task} TabICL checkpoint found in {.path {root}}.",
-        "i" = "Download them with {.fn tab_icl_download_weights}."
-      ),
-      call = call
+
+    if (!rlang::is_interactive()) {
+      cli::cli_abort(
+        c(
+          "No cached {task} TabICL checkpoint found in {.path {root}}.",
+          "i" = "Download them with {.fn tab_icl_download_weights}."
+        ),
+        call = call
+      )
+    }
+
+    task_label <- paste0(toupper(substring(task, 1, 1)), substring(task, 2))
+    cli::cli_inform(
+      "The {.field {task_label}} weights for {.field TabICL} are not found locally."
     )
+    choice <- utils::menu(c("Yes", "No"), title = "Download now (~200MB)?")
+    if (choice != 1L) {
+      cli::cli_abort(
+        "Download declined; {.fn brulee_tab_icl} needs the weights to continue.",
+        call = call
+      )
+    }
+    tab_icl_download_weights(task = task, call = call)
+    path <- tabicl_find_checkpoint(task)
   }
   path
 }
@@ -128,10 +147,9 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
 #' complete is left in place, so re-running resumes rather than re-downloads.
 #'
 #' The cache location can be overridden with the `brulee.tabicl_cache_dir`
-#' option. Weights are only downloaded when you call
-#' `tab_icl_download_weights()`; neither attaching brulee nor calling
-#' [brulee_tab_icl()] downloads them automatically. If [brulee_tab_icl()] is
-#' run before the weights are cached, it errors and points you here.
+#' option. Attaching brulee never downloads the weights. If [brulee_tab_icl()]
+#' is run before they are cached, it prompts to download them (via this
+#' function) in an interactive session and errors, pointing you here, otherwise.
 #'
 #' @return
 #' `tab_icl_download_weights()` invisibly returns the populated

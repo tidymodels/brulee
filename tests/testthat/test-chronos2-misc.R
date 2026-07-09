@@ -450,6 +450,9 @@ test_that("chronos2_download resolves the revision and downloads the files", {
       file.create(dest)
       invisible(dest)
     },
+    chronos2_confirm_download = function(model_id, cache_dir, call = NULL) {
+      invisible(TRUE)
+    },
     .package = "brulee"
   )
 
@@ -465,6 +468,56 @@ test_that("chronos2_download resolves the revision and downloads the files", {
   expect_setequal(files_downloaded, c("config.json", "model.safetensors"))
   expect_equal(resolved_with$model_id, "amazon/chronos-2")
   expect_equal(resolved_with$revision, "main")
+})
+
+test_that("chronos2_download errors when uncached and non-interactive", {
+  cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
+  on.exit(unlink(cache, recursive = TRUE), add = TRUE)
+
+  testthat::local_mocked_bindings(
+    is_interactive = function() FALSE,
+    .package = "rlang"
+  )
+
+  expect_error(
+    brulee:::chronos2_download(cache_dir = cache),
+    "No cached .* Chronos weights found"
+  )
+})
+
+test_that("chronos2_confirm_download aborts when the user declines", {
+  testthat::local_mocked_bindings(
+    is_interactive = function() TRUE,
+    .package = "rlang"
+  )
+  testthat::local_mocked_bindings(
+    menu = function(choices, ...) 2L,
+    .package = "utils"
+  )
+
+  expect_error(
+    suppressMessages(
+      brulee:::chronos2_confirm_download("amazon/chronos-2", tempdir())
+    ),
+    "Download declined"
+  )
+})
+
+test_that("chronos2_confirm_download returns TRUE when the user accepts", {
+  testthat::local_mocked_bindings(
+    is_interactive = function() TRUE,
+    .package = "rlang"
+  )
+  testthat::local_mocked_bindings(
+    menu = function(choices, ...) 1L,
+    .package = "utils"
+  )
+
+  expect_true(
+    suppressMessages(
+      brulee:::chronos2_confirm_download("amazon/chronos-2", tempdir())
+    )
+  )
 })
 
 # ------------------------------------------------------------------------------

@@ -15,9 +15,11 @@
 #'
 #' ## Model Weight File Download
 #'
-#' Keep in mind that, on the first usage of the fitting function, the package
-#' will attempt to download the model weights file. This file can require about
-#' 500MB and is locally cached.
+#' The model weights (about 500MB) are not shipped with the package and are
+#' downloaded and cached on first use. brulee never downloads them silently: in
+#' an interactive session `brulee_chronos()` prompts before downloading, and in
+#' a non-interactive session it errors if the weights are not already cached.
+#' Once cached, later fits reuse the local copy.
 #'
 #' ## Interface Overview
 #'
