@@ -10,7 +10,12 @@ stub_chronos_loaders <- function(also_mock_predict_core = FALSE) {
   dir.create(fake_dir, recursive = TRUE, showWarnings = FALSE)
 
   bindings <- list(
-    chronos2_download = function(model_id, revision, cache_dir) {
+    chronos2_download = function(
+      model_id,
+      revision,
+      cache_dir,
+      confirm = FALSE
+    ) {
       list(
         model_dir = fake_dir,
         sha = if (grepl("^[0-9a-f]{40}$", revision)) {

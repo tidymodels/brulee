@@ -1220,14 +1220,33 @@ chronos2_download_file <- function(url, dest, label, max_attempts = 3L) {
 chronos2_download <- function(
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r")
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
+  confirm = FALSE,
+  call = rlang::caller_env()
 ) {
   sha <- chronos2_resolve_revision(model_id, revision)
 
   model_dir <- file.path(cache_dir, gsub("/", "--", model_id), sha)
-  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
-
   files <- c("config.json", "model.safetensors")
+
+  # This internal helper downloads unconditionally by default: anyone calling
+  # it directly (via `:::`) is already being deliberate. The user-facing gate
+  # (ask when interactive, error otherwise) only applies through
+  # brulee_chronos(), which passes confirm = TRUE.
+  cached <- dir.exists(model_dir) &&
+    all(file.exists(file.path(model_dir, files)))
+  if (!cached && confirm) {
+    brulee_confirm_download(
+      label = model_id,
+      size = "500MB",
+      fn = "brulee_chronos",
+      root = cache_dir,
+      hint = "Run {.fn brulee_chronos} in an interactive session to download them.",
+      call = call
+    )
+  }
+
+  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
 
   # `download.file()` defaults to a 60-second timeout, which is too tight
   # for the ~478MB safetensors file. Lift it for the duration of the call.

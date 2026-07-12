@@ -8,13 +8,14 @@
 # release is tagged `<version>-<date>` (for example `v2-2026-02-12`) and carries
 # the four files for both tasks as individual assets (the large safetensors are
 # release assets, not committed to the repo, so the source-archive tarball does
-# not contain them). Following chronos2, the files brulee reads are cached under
-# `~/.cache/TabICL/<version>/<date>/<TaskLabel>/`, mirroring the artifacts layout.
+# not contain them). The files brulee reads are cached under the per-user cache
+# directory from `tools::R_user_dir("brulee", "cache")`, in
+# `<version>/<date>/<TaskLabel>/`, mirroring the artifacts layout.
 #
-# `brulee_tab_icl()` reads from this cache (it does not download automatically);
-# the attach hook in aaa.R is what populates it. `tab_icl_download_weights()`
-# fetches the release assets, and `tab_icl_weights_available()` reports whether
-# the cache is populated.
+# `brulee_tab_icl()` reads from this cache; it never downloads on its own, and
+# neither does attaching the package. The user populates the cache explicitly
+# with `tab_icl_download_weights()`, and `tab_icl_weights_available()` reports
+# whether it is populated.
 
 # The GitHub repo hosting the converted weights, and the released checkpoint
 # version/date the downloader fetches by default.
@@ -51,7 +52,7 @@ tabicl_asset_url <- function(
 tabicl_cache_dir <- function() {
   getOption(
     "brulee.tabicl_cache_dir",
-    default = file.path(Sys.getenv("HOME"), ".cache", "TabICL")
+    default = tools::R_user_dir("brulee", which = "cache")
   )
 }
 
@@ -85,20 +86,24 @@ tabicl_find_checkpoint <- function(task, cache_dir = tabicl_cache_dir()) {
   candidates[order(basename(dirname(candidates)))][length(candidates)]
 }
 
-# Like tabicl_find_checkpoint() but errors when nothing is cached; used at fit
-# time where a missing checkpoint is fatal.
+# Like tabicl_find_checkpoint() but resolves a missing checkpoint; used at fit
+# time where a missing checkpoint is fatal. When nothing is cached, prompt to
+# download in an interactive session (mirroring brulee_chronos()) and error
+# otherwise.
 tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
   path <- tabicl_find_checkpoint(task)
   if (is.null(path)) {
-    root <- tabicl_cache_dir()
-    cli::cli_abort(
-      c(
-        "No cached {task} TabICL checkpoint found in {.path {root}}.",
-        "i" = "Download one with {.fn tab_icl_download_weights}, or convert and
-               cache a checkpoint offline (see {.path dev/tabicl})."
-      ),
+    label <- paste(tabicl_task_label(task), "TabICL")
+    brulee_confirm_download(
+      label = label,
+      size = "200MB",
+      fn = "brulee_tab_icl",
+      root = tabicl_cache_dir(),
+      hint = "Download them with {.fn tab_icl_download_weights}.",
       call = call
     )
+    tab_icl_download_weights(task = task, call = call)
+    path <- tabicl_find_checkpoint(task)
   }
   path
 }
@@ -117,7 +122,8 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
 #'   `<version>-<date>` (for example `"v2"` and `"2026-02-12"`).
 #' @param repo The `owner/name` of the GitHub repository hosting the weights.
 #' @param cache_dir The root of the local weight cache. Defaults to the
-#'   `brulee.tabicl_cache_dir` option or `~/.cache/TabICL`.
+#'   `brulee.tabicl_cache_dir` option, or a per-user cache directory via
+#'   [tools::R_user_dir()]`("brulee", "cache")`.
 #' @param call The calling environment, used for error messages.
 #'
 #' @details
@@ -127,9 +133,9 @@ tabicl_cache_lookup <- function(task, call = rlang::caller_env()) {
 #' complete is left in place, so re-running resumes rather than re-downloads.
 #'
 #' The cache location can be overridden with the `brulee.tabicl_cache_dir`
-#' option. When brulee is attached and the weights are missing, the package
-#' offers to download them in interactive sessions and downloads them otherwise;
-#' set `options(brulee.tabicl_autodownload = FALSE)` to disable that behavior.
+#' option. Attaching brulee never downloads the weights. If [brulee_tab_icl()]
+#' is run before they are cached, it prompts to download them (via this
+#' function) in an interactive session and errors, pointing you here, otherwise.
 #'
 #' @return
 #' `tab_icl_download_weights()` invisibly returns the populated

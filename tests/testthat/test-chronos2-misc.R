@@ -467,6 +467,71 @@ test_that("chronos2_download resolves the revision and downloads the files", {
   expect_equal(resolved_with$revision, "main")
 })
 
+test_that("chronos2_download errors when confirm = TRUE, uncached, and non-interactive", {
+  cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
+  on.exit(unlink(cache, recursive = TRUE), add = TRUE)
+
+  testthat::local_mocked_bindings(
+    is_interactive = function() FALSE,
+    .package = "rlang"
+  )
+
+  expect_error(
+    brulee:::chronos2_download(cache_dir = cache, confirm = TRUE),
+    "No cached .* weights found"
+  )
+})
+
+test_that("chronos2_download downloads unconditionally by default (confirm = FALSE)", {
+  cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
+  on.exit(unlink(cache, recursive = TRUE), add = TRUE)
+
+  testthat::local_mocked_bindings(
+    is_interactive = function() FALSE,
+    .package = "rlang"
+  )
+  testthat::local_mocked_bindings(
+    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+      file.create(dest)
+      invisible(dest)
+    },
+    .package = "brulee"
+  )
+
+  res <- brulee:::chronos2_download(cache_dir = cache)
+  expect_true(dir.exists(res$model_dir))
+})
+
+test_that("chronos2_download with confirm = TRUE proceeds after the user confirms", {
+  cache <- file.path(tempdir(), paste0("chr-cache-", as.integer(Sys.time())))
+  on.exit(unlink(cache, recursive = TRUE), add = TRUE)
+
+  files_downloaded <- character()
+  testthat::local_mocked_bindings(
+    is_interactive = function() TRUE,
+    .package = "rlang"
+  )
+  testthat::local_mocked_bindings(
+    menu = function(choices, ...) 1L,
+    .package = "utils"
+  )
+  testthat::local_mocked_bindings(
+    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+      files_downloaded <<- c(files_downloaded, basename(dest))
+      file.create(dest)
+      invisible(dest)
+    },
+    .package = "brulee"
+  )
+
+  res <- suppressMessages(
+    brulee:::chronos2_download(cache_dir = cache, confirm = TRUE)
+  )
+
+  expect_true(dir.exists(res$model_dir))
+  expect_setequal(files_downloaded, c("config.json", "model.safetensors"))
+})
+
 # ------------------------------------------------------------------------------
 # chronos2_parse_config
 

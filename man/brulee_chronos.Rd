@@ -24,7 +24,7 @@ brulee_chronos(x, ...)
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
   ...
 )
 
@@ -38,7 +38,7 @@ brulee_chronos(x, ...)
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
   ...
 )
 
@@ -50,7 +50,7 @@ brulee_chronos(x, ...)
   prediction_length = NULL,
   quantile_levels = (1:9)/10,
   device = NULL,
-  cache_dir = file.path(Sys.getenv("HOME"), ".cache", "chronos-r"),
+  cache_dir = tools::R_user_dir("brulee", which = "cache"),
   ...
 )
 }
@@ -114,7 +114,8 @@ predictions. Must be a subset of the model's trained quantiles. Default:
 \code{"cuda"}, or \code{"mps"}. Default: \code{NULL} (auto-detects best available).}
 
 \item{cache_dir}{Path to a directory for caching downloaded model files.
-Default: \code{"~/.cache/chronos-r"}.}
+Defaults to a per-user cache directory via
+\code{\link[tools:R_user_dir]{tools::R_user_dir()}}\verb{("brulee", "cache")}.}
 
 \item{formula}{A formula of the form \code{target ~ cov1 + cov2}. Use
 \code{target ~ .} when there are no covariates. The id and timestamp
@@ -155,9 +156,11 @@ However, it may be computationally slow when used with a CPU (and no GPU).
 
 \subsection{Model Weight File Download}{
 
-Keep in mind that, on the first usage of the fitting function, the package
-will attempt to download the model weights file. This file can require about
-500MB and is locally cached.
+The model weights (about 500MB) are not shipped with the package and are
+downloaded and cached on first use. brulee never downloads them silently: in
+an interactive session \code{brulee_chronos()} prompts before downloading, and in
+a non-interactive session it errors if the weights are not already cached.
+Once cached, later fits reuse the local copy.
 }
 
 \subsection{Interface Overview}{

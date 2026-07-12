@@ -6,6 +6,52 @@ format_epoch_labels <- function(x) {
 }
 
 # ------------------------------------------------------------------------------
+# Shared weight-download confirmation gate (TabICL, Chronos)
+
+# brulee never downloads large pretrained weights silently. When they are
+# missing, prompt for confirmation in an interactive session and error
+# otherwise. `label` names what's missing (e.g. "amazon/chronos-2" or
+# "Classification weights for TabICL"), highlighted in both messages; `size` is
+# a human string like "500MB"; `fn` is the calling user-facing function,
+# referenced when the prompt is declined; `root` is the cache directory that
+# was checked, reported only in the non-interactive error (not the prompt);
+# `hint` is the non-interactive error's "i" bullet, since the two callers point
+# users at different next steps (an explicit downloader for TabICL, simply
+# re-running interactively for Chronos).
+brulee_confirm_download <- function(
+  label,
+  size,
+  fn,
+  root,
+  hint,
+  call = rlang::caller_env()
+) {
+  if (!rlang::is_interactive()) {
+    cli::cli_abort(
+      c(
+        "No cached {.field {label}} weights found in {.path {root}}.",
+        "i" = hint
+      ),
+      call = call
+    )
+  }
+
+  cli::cli_inform("The weights for {.field {label}} are not found locally.")
+  choice <- utils::menu(
+    c("Yes", "No"),
+    title = paste0("Download now (~", size, ")?")
+  )
+  if (choice != 1L) {
+    cli::cli_abort(
+      "Download declined; {.fn {fn}} needs the weights to continue.",
+      call = call
+    )
+  }
+
+  invisible(TRUE)
+}
+
+# ------------------------------------------------------------------------------
 # used in print methods
 
 brulee_print <- function(x, ...) {

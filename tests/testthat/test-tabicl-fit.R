@@ -146,7 +146,7 @@ test_that("brulee_tab_icl errors when no checkpoint is cached", {
   y_train <- factor(sample(c("a", "b"), 10, replace = TRUE))
   expect_error(
     brulee_tab_icl(x_train, y_train),
-    "No cached classification"
+    "No cached Classification"
   )
 })
 
@@ -164,6 +164,6 @@ test_that("brulee_tab_icl errors when the task's checkpoint is not cached", {
   # error names the (temporary) cache path, so match the stable part.
   expect_error(
     brulee_tab_icl(x_train, y_num),
-    "No cached regression"
+    "No cached Regression"
   )
 })

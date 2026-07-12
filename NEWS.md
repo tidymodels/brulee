@@ -1,5 +1,9 @@
 # brulee (development version)
 
+* Pretrained model weights (for `brulee_tab_icl()` and `brulee_chronos()`) are no longer downloaded automatically when the package is attached. When the weights are missing, both `brulee_tab_icl()` and `brulee_chronos()` now prompt to download them in an interactive session and error otherwise. TabICL weights can also be downloaded explicitly with `tab_icl_download_weights()` (#130).
+
+* Downloaded model weights are now cached in the per-user cache directory returned by `tools::R_user_dir("brulee", "cache")`, which respects platform conventions, rather than under `~/.cache` (#130).
+
 * `brulee_resnet()` no longer returns all-`NA` predictions when the training-set size leaves a single-row trailing batch (e.g. `mtcars` with default settings). Such a batch made batch-normalization compute a variance over one sample, corrupting its buffers with `NaN` (#122).
 
 # brulee 1.1.0

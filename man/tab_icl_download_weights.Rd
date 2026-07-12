@@ -29,7 +29,8 @@ tab_icl_weights_available(
 \item{repo}{The \code{owner/name} of the GitHub repository hosting the weights.}
 
 \item{cache_dir}{The root of the local weight cache. Defaults to the
-\code{brulee.tabicl_cache_dir} option or \verb{~/.cache/TabICL}.}
+\code{brulee.tabicl_cache_dir} option, or a per-user cache directory via
+\code{\link[tools:R_user_dir]{tools::R_user_dir()}}\verb{("brulee", "cache")}.}
 
 \item{call}{The calling environment, used for error messages.}
 }
@@ -52,9 +53,9 @@ safetensors weight file) as individual assets. They are downloaded into
 complete is left in place, so re-running resumes rather than re-downloads.
 
 The cache location can be overridden with the \code{brulee.tabicl_cache_dir}
-option. When brulee is attached and the weights are missing, the package
-offers to download them in interactive sessions and downloads them otherwise;
-set \code{options(brulee.tabicl_autodownload = FALSE)} to disable that behavior.
+option. Attaching brulee never downloads the weights. If \code{\link[=brulee_tab_icl]{brulee_tab_icl()}}
+is run before they are cached, it prompts to download them (via this
+function) in an interactive session and errors, pointing you here, otherwise.
 }
 \examples{
 \dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
