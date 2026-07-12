@@ -309,9 +309,11 @@ a warning and falls back to CPU.</p>
 <h3 id="pre-trained-weights">Pre-trained weights<a class="anchor" aria-label="anchor" href="#pre-trained-weights"></a></h3>
 
 
-<p>The estimated parameters from the pre-trained Python model are used. On
-first use, the values are downloaded and cached locally and are more than
-200MB.</p>
+<p>The estimated parameters from the pre-trained Python model are used. These
+weights (more than 200MB) are not shipped with the package and are cached
+once with <code><a href="tab_icl_download_weights.html">tab_icl_download_weights()</a></code>. If they are not cached when
+<code>brulee_tab_icl()</code> runs, it prompts to download them in an interactive
+session and errors (pointing you to <code><a href="tab_icl_download_weights.html">tab_icl_download_weights()</a></code>) otherwise.</p>
 </div>
 
     </div>
@@ -329,8 +331,8 @@ arXiv:2502.05564.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the</span></span></span>
-<span class="r-in"><span><span class="co"># "Pre-trained weights" section and dev/tabicl/).</span></span></span>
+<span class="r-in"><span><span class="co"># Requires cached TabICL weights; download them first with</span></span></span>
+<span class="r-in"><span><span class="co"># tab_icl_download_weights() (see the "Pre-trained weights" section).</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">torch</span><span class="fu">::</span><span class="fu"><a href="https://torch.mlverse.org/docs/reference/torch_is_installed.html" class="external-link">torch_is_installed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">is_installed</a></span><span class="op">(</span><span class="st">"modeldata"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">penguins</span>, package <span class="op">=</span> <span class="st">"modeldata"</span><span class="op">)</span></span></span>

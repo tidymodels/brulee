@@ -2,6 +2,25 @@
 
 ## brulee (development version)
 
+- Pretrained model weights (for
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md))
+  are no longer downloaded automatically when the package is attached.
+  When the weights are missing, both
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md)
+  now prompt to download them in an interactive session and error
+  otherwise. TabICL weights can also be downloaded explicitly with
+  [`tab_icl_download_weights()`](https://brulee.tidymodels.org/dev/reference/tab_icl_download_weights.md)
+  ([\#130](https://github.com/tidymodels/brulee/issues/130)).
+
+- Downloaded model weights are now cached in the per-user cache
+  directory returned by `tools::R_user_dir("brulee", "cache")`, which
+  respects platform conventions, rather than under `~/.cache`
+  ([\#130](https://github.com/tidymodels/brulee/issues/130)).
+
 - [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md)
   no longer returns all-`NA` predictions when the training-set size
   leaves a single-row trailing batch (e.g. `mtcars` with default

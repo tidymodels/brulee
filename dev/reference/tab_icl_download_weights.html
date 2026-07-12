@@ -85,7 +85,8 @@ weights.</p>
 
 <dt id="arg-cache-dir">cache_dir<a class="anchor" aria-label="anchor" href="#arg-cache-dir"></a></dt>
 <dd><p>The root of the local weight cache. Defaults to the
-<code>brulee.tabicl_cache_dir</code> option or <code>~/.cache/TabICL</code>.</p></dd>
+<code>brulee.tabicl_cache_dir</code> option, or a per-user cache directory via
+<code><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">tools::R_user_dir()</a></code><code>("brulee", "cache")</code>.</p></dd>
 
 
 <dt id="arg-call">call<a class="anchor" aria-label="anchor" href="#arg-call"></a></dt>
@@ -105,9 +106,9 @@ safetensors weight file) as individual assets. They are downloaded into
 <code>&lt;cache_dir&gt;/&lt;version&gt;/&lt;date&gt;/&lt;TaskLabel&gt;/</code>. A file already present and
 complete is left in place, so re-running resumes rather than re-downloads.</p>
 <p>The cache location can be overridden with the <code>brulee.tabicl_cache_dir</code>
-option. When brulee is attached and the weights are missing, the package
-offers to download them in interactive sessions and downloads them otherwise;
-set <code>options(brulee.tabicl_autodownload = FALSE)</code> to disable that behavior.</p>
+option. Attaching brulee never downloads the weights. If <code><a href="brulee_tab_icl.html">brulee_tab_icl()</a></code>
+is run before they are cached, it prompts to download them (via this
+function) in an interactive session and errors, pointing you here, otherwise.</p>
     </div>
 
     <div class="section level2">
