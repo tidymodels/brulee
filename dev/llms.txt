@@ -101,7 +101,7 @@ predict(nn_rec_biv, bivariate_test, type = "prob") |>
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.867
+#> 1 roc_auc binary         0.866
 ```
 
 ## Code of Conduct

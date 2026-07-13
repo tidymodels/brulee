@@ -2,6 +2,10 @@
 
 ## brulee (development version)
 
+## brulee 1.1.1
+
+CRAN release: 2026-07-13
+
 - Pretrained model weights (for
   [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
   and
