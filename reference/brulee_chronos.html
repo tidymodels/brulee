@@ -15,7 +15,7 @@ pretrained weights.'><meta property="og:image" content="https://brulee.tidymodel
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@ pretrained weights.'><meta property="og:image" content="https://brulee.tidymodel
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Chronos-2 pretrained forecasting model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/tidymodels/brulee/blob/v1.1.0/R/chronos2-fit.R" class="external-link"><code>R/chronos2-fit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/tidymodels/brulee/blob/main/R/chronos2-fit.R" class="external-link"><code>R/chronos2-fit.R</code></a></small>
       <div class="d-none name"><code>brulee_chronos.Rd</code></div>
     </div>
 
@@ -68,7 +68,7 @@ pretrained weights.</p>
 <span>  prediction_length <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quantile_levels <span class="op">=</span> <span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">9</span><span class="op">)</span><span class="op">/</span><span class="fl">10</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cache_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"HOME"</span><span class="op">)</span>, <span class="st">".cache"</span>, <span class="st">"chronos-r"</span><span class="op">)</span>,</span>
+<span>  cache_dir <span class="op">=</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">R_user_dir</a></span><span class="op">(</span><span class="st">"brulee"</span>, which <span class="op">=</span> <span class="st">"cache"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -83,7 +83,7 @@ pretrained weights.</p>
 <span>  prediction_length <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quantile_levels <span class="op">=</span> <span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">9</span><span class="op">)</span><span class="op">/</span><span class="fl">10</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cache_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"HOME"</span><span class="op">)</span>, <span class="st">".cache"</span>, <span class="st">"chronos-r"</span><span class="op">)</span>,</span>
+<span>  cache_dir <span class="op">=</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">R_user_dir</a></span><span class="op">(</span><span class="st">"brulee"</span>, which <span class="op">=</span> <span class="st">"cache"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -96,7 +96,7 @@ pretrained weights.</p>
 <span>  prediction_length <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quantile_levels <span class="op">=</span> <span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">9</span><span class="op">)</span><span class="op">/</span><span class="fl">10</span>,</span>
 <span>  device <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cache_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"HOME"</span><span class="op">)</span>, <span class="st">".cache"</span>, <span class="st">"chronos-r"</span><span class="op">)</span>,</span>
+<span>  cache_dir <span class="op">=</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">R_user_dir</a></span><span class="op">(</span><span class="st">"brulee"</span>, which <span class="op">=</span> <span class="st">"cache"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -185,7 +185,8 @@ predictions. Must be a subset of the model's trained quantiles. Default:
 
 <dt id="arg-cache-dir">cache_dir<a class="anchor" aria-label="anchor" href="#arg-cache-dir"></a></dt>
 <dd><p>Path to a directory for caching downloaded model files.
-Default: <code>"~/.cache/chronos-r"</code>.</p></dd>
+Defaults to a per-user cache directory via
+<code><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">tools::R_user_dir()</a></code><code>("brulee", "cache")</code>.</p></dd>
 
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
@@ -228,9 +229,11 @@ However, it may be computationally slow when used with a CPU (and no GPU).</p>
 <h3 id="model-weight-file-download">Model Weight File Download<a class="anchor" aria-label="anchor" href="#model-weight-file-download"></a></h3>
 
 
-<p>Keep in mind that, on the first usage of the fitting function, the package
-will attempt to download the model weights file. This file can require about
-500MB and is locally cached.</p>
+<p>The model weights (about 500MB) are not shipped with the package and are
+downloaded and cached on first use. brulee never downloads them silently: in
+an interactive session <code>brulee_chronos()</code> prompts before downloading, and in
+a non-interactive session it errors if the weights are not already cached.
+Once cached, later fits reuse the local copy.</p>
 </div>
 
 <div class="section">
@@ -438,7 +441,7 @@ series forecasting.", https://doi.org/10.21203/rs.3.rs-9096522/v1</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
   </div></footer></body></html>

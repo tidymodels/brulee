@@ -44,7 +44,8 @@ tab_icl_weights_available(
 - cache_dir:
 
   The root of the local weight cache. Defaults to the
-  `brulee.tabicl_cache_dir` option or `~/.cache/TabICL`.
+  `brulee.tabicl_cache_dir` option, or a per-user cache directory via
+  [`tools::R_user_dir()`](https://rdrr.io/r/tools/userdir.html)`("brulee", "cache")`.
 
 - call:
 
@@ -65,10 +66,11 @@ and complete is left in place, so re-running resumes rather than
 re-downloads.
 
 The cache location can be overridden with the `brulee.tabicl_cache_dir`
-option. When brulee is attached and the weights are missing, the package
-offers to download them in interactive sessions and downloads them
-otherwise; set `options(brulee.tabicl_autodownload = FALSE)` to disable
-that behavior.
+option. Attaching brulee never downloads the weights. If
+[`brulee_tab_icl()`](https://brulee.tidymodels.org/reference/brulee_tab_icl.md)
+is run before they are cached, it prompts to download them (via this
+function) in an interactive session and errors, pointing you here,
+otherwise.
 
 ## Examples
 

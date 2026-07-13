@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,9 +28,15 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/tidymodels/brulee/blob/v1.1.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/tidymodels/brulee/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.1" id="brulee-111">brulee 1.1.1<a class="anchor" aria-label="anchor" href="#brulee-111"></a></h2><p class="text-muted">CRAN release: 2026-07-13</p>
+<ul><li><p>Pretrained model weights (for <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> and <code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code>) are no longer downloaded automatically when the package is attached. When the weights are missing, both <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> and <code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code> now prompt to download them in an interactive session and error otherwise. TabICL weights can also be downloaded explicitly with <code><a href="../reference/tab_icl_download_weights.html">tab_icl_download_weights()</a></code> (<a href="https://github.com/tidymodels/brulee/issues/130" class="external-link">#130</a>).</p></li>
+<li><p>Downloaded model weights are now cached in the per-user cache directory returned by <code>tools::R_user_dir("brulee", "cache")</code>, which respects platform conventions, rather than under <code>~/.cache</code> (<a href="https://github.com/tidymodels/brulee/issues/130" class="external-link">#130</a>).</p></li>
+<li><p><code><a href="../reference/brulee_resnet.html">brulee_resnet()</a></code> no longer returns all-<code>NA</code> predictions when the training-set size leaves a single-row trailing batch (e.g. <code>mtcars</code> with default settings). Such a batch made batch-normalization compute a variance over one sample, corrupting its buffers with <code>NaN</code> (<a href="https://github.com/tidymodels/brulee/issues/122" class="external-link">#122</a>).</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="brulee-110">brulee 1.1.0<a class="anchor" aria-label="anchor" href="#brulee-110"></a></h2><p class="text-muted">CRAN release: 2026-07-02</p>
 <ul><li><p><code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> makes the open-source foundational model TabICL available. On first use, there is a substantial download (~ 400MB) for the model weights that is cached locally.</p></li>
@@ -118,7 +124,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
   </div></footer></body></html>

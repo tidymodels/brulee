@@ -289,9 +289,14 @@ requesting `"mps"` issues a warning and falls back to CPU.
 
 ### Pre-trained weights
 
-The estimated parameters from the pre-trained Python model are used. On
-first use, the values are downloaded and cached locally and are more
-than 200MB.
+The estimated parameters from the pre-trained Python model are used.
+These weights (more than 200MB) are not shipped with the package and are
+cached once with
+[`tab_icl_download_weights()`](https://brulee.tidymodels.org/reference/tab_icl_download_weights.md).
+If they are not cached when `brulee_tab_icl()` runs, it prompts to
+download them in an interactive session and errors (pointing you to
+[`tab_icl_download_weights()`](https://brulee.tidymodels.org/reference/tab_icl_download_weights.md))
+otherwise.
 
 ## References
 
@@ -307,8 +312,8 @@ preprint arXiv:2502.05564.
 
 ``` r
 if (FALSE) { # \dontrun{
-# Requires converted TabICL weights cached under ~/.cache/TabICL/ (see the
-# "Pre-trained weights" section and dev/tabicl/).
+# Requires cached TabICL weights; download them first with
+# tab_icl_download_weights() (see the "Pre-trained weights" section).
 
 if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
   data(penguins, package = "modeldata")
