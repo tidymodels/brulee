@@ -96,7 +96,7 @@ test_that("autoint regression - recipe interface", {
   skip_if_not_installed("recipes")
 
   # Temp check to remind to see if issues with the gower package have been resolved
-  if (packageVersion("brulee") > "1.1.0.9001") {
+  if (packageVersion("brulee") > "1.1.1.9001") {
     cli::cli_abort("Recheck RSPM version of gower")
   }
 

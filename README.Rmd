@@ -32,9 +32,9 @@ The R `brulee` package contains several basic modeling functions that use the `t
 * [AutoInt](https://brulee.tidymodels.org/reference/brulee_auto_int.html)
 * [Self-Attention and Inter-sample Attention Transformer (Saint)](https://brulee.tidymodels.org/reference/brulee_saint.html)
 * [Chronos2](https://brulee.tidymodels.org/reference/brulee_chronos.html) foundational model for forecasting
-* Transformer-based foundation model TabICL
+* Transformer-based foundation model [TabICL](https://brulee.tidymodels.org/reference/brulee_tab_icl.html)
 
-Chronos2 and TabICL are pretrained models, requiring a one-time download of about 500MB and 400MB, respectively. 
+Chronos2 and TabICL are pretrained models, requiring a one-time download of about 500MB and 225MB, respectively. 
 
 ## Installation
 
