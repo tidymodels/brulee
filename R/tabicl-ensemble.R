@@ -5,7 +5,8 @@
 #
 # For classification, member logits are averaged (after undoing the class
 # shuffle) and a temperature softmax is applied. For regression, the model's
-# quantiles become a per-member mean which is inverse-scaled and averaged.
+# quantiles become a per-member distribution that the requested statistics are
+# read off; see `tabicl_regressor_stats()` for how members are combined.
 #
 # NOTE on reproducibility: the sklearn `EnsembleGenerator` chooses member
 # configurations (feature permutations, member ordering) with Python's
@@ -97,16 +98,48 @@ tabicl_classifier_proba <- function(
   proba / rowSums(proba)
 }
 
-# Mean regression prediction for test rows, averaging inverse-scaled per-member
-# means. `y_train` are the raw numeric targets.
-tabicl_regressor_mean <- function(
+# Regression statistics for test rows. The regression head emits a fixed grid of
+# quantiles per row; each ensemble member's grid becomes a distribution
+# (`tabicl_quantile_dist()`) that the requested statistics are read off. The
+# ensemble runs once regardless of how many statistics are asked for.
+#
+# Members are combined on the outcome's scale, with a rule per statistic:
+#   * "mean"      arithmetic mean of the member means (as in the reference).
+#   * "quantiles" arithmetic mean of the member quantile curves, level by level
+#                 (Vincentization, as in the reference). A sum of non-decreasing
+#                 sequences is non-decreasing, so the pooled curve stays
+#                 monotone and needs no second crossing repair.
+#   * "variance"  geometric mean of the member variances: a variance is a
+#                 positive scale parameter, so members are pooled
+#                 multiplicatively. Accumulated in log space.
+#
+# `y_train` are the raw numeric targets. Inverse-scaling is affine for locations
+# (`* y_scale + y_mean`) but multiplicative for a variance (`* y_scale^2`); see
+# the note in `predict.brulee_tab_icl()` on the deviation from the reference.
+tabicl_regressor_stats <- function(
   loaded,
   x_train,
   y_train,
   x_test,
   members,
-  device = "cpu"
+  output_type = "mean",
+  alphas = NULL,
+  device = "cpu",
+  call = rlang::caller_env()
 ) {
+  output_type <- rlang::arg_match(
+    output_type,
+    c("mean", "variance", "quantiles"),
+    multiple = TRUE,
+    call = call
+  )
+  if ("quantiles" %in% output_type && length(alphas) == 0L) {
+    cli::cli_abort(
+      "{.arg alphas} is required when {.val quantiles} is requested.",
+      call = call
+    )
+  }
+
   model <- loaded$model
 
   # Target StandardScaler (ddof = 0), as in the sklearn regressor.
@@ -124,7 +157,11 @@ tabicl_regressor_mean <- function(
   pp_cache <- new.env()
   pp_cache$store <- list()
 
-  mean_sum <- numeric(nrow(xte))
+  n_test <- nrow(xte)
+  mean_sum <- numeric(n_test)
+  log_var_sum <- numeric(n_test)
+  quantile_sum <- matrix(0, nrow = n_test, ncol = length(alphas))
+
   for (member in members) {
     x_t <- tabicl_member_input(member, pp_cache, xtr, xte, device)
     y_t <- torch::torch_tensor(
@@ -133,12 +170,72 @@ tabicl_regressor_mean <- function(
     )$to(device = device)
 
     quantiles <- torch::with_no_grad(model(x_t, y_t))
+    # Always built, even for the mean: `tabicl_qdist_mean()` reduces the sorted
+    # quantiles, and skipping the sort would change the summation order.
     dist <- tabicl_quantile_dist(quantiles)
-    member_mean <- as.numeric(tabicl_qdist_mean(dist)$squeeze(1)$cpu())
-    mean_sum <- mean_sum + (member_mean * y_scale + y_mean) # inverse-scale
+
+    if ("mean" %in% output_type) {
+      member_mean <- as.numeric(tabicl_qdist_mean(dist)$squeeze(1)$cpu())
+      mean_sum <- mean_sum + (member_mean * y_scale + y_mean) # inverse-scale
+    }
+    if ("quantiles" %in% output_type) {
+      member_q <- tabicl_qdist_quantiles(dist, alphas)
+      member_q <- as.matrix(member_q$squeeze(1)$cpu())
+      quantile_sum <- quantile_sum + (member_q * y_scale + y_mean)
+    }
+    if ("variance" %in% output_type) {
+      # `tabicl_qdist_variance()` is the unbiased (ddof = 1) variance, matching
+      # the Python `Tensor.var()` default. That is a different convention from
+      # the ddof = 0 target scaler above; both are faithful ports.
+      member_var <- as.numeric(tabicl_qdist_variance(dist)$squeeze(1)$cpu())
+      # `pmax()` only guards a float32 round-trip yielding a tiny negative
+      # value. `log(0) = -Inf` is intentional: it collapses a degenerate
+      # zero-variance member to a pooled variance of zero, which is what a
+      # geometric mean should do.
+      log_var_sum <- log_var_sum + log(pmax(member_var, 0))
+    }
   }
 
-  mean_sum / length(members)
+  n_members <- length(members)
+  res <- list()
+  if ("mean" %in% output_type) {
+    res$mean <- mean_sum / n_members
+  }
+  if ("quantiles" %in% output_type) {
+    res$quantiles <- quantile_sum / n_members
+  }
+  if ("variance" %in% output_type) {
+    # Geometric mean across members. The inverse scaling is applied once, here:
+    # it commutes with a geometric mean, so placement is immaterial, and this
+    # keeps the loop accumulator in the model's standardized units. A variance
+    # is in *squared* outcome units, so only `y_scale^2` applies and the
+    # location shift drops out. The reference implementation instead pushes the
+    # variance through the full location-scale inverse; brulee differs here
+    # deliberately -- see `?predict.brulee_tab_icl`.
+    res$variance <- exp(log_var_sum / n_members) * y_scale^2
+  }
+  res
+}
+
+# Mean regression prediction for test rows, averaging inverse-scaled per-member
+# means. `y_train` are the raw numeric targets.
+tabicl_regressor_mean <- function(
+  loaded,
+  x_train,
+  y_train,
+  x_test,
+  members,
+  device = "cpu"
+) {
+  tabicl_regressor_stats(
+    loaded,
+    x_train,
+    y_train,
+    x_test,
+    members,
+    output_type = "mean",
+    device = device
+  )$mean
 }
 
 # Deterministic single "none" member with identity feature / class shuffles --

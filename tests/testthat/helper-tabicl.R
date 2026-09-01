@@ -275,6 +275,44 @@ tabicl_local_cache <- function(f, meta) {
   invisible(root)
 }
 
+# Rebuild one ensemble member's quantile distribution directly, so the engine's
+# pooled output can be compared against the per-member readouts that
+# test-tabicl-quantile.R parity-tests against the Python reference. Returns the
+# distribution plus the target-scaler constants needed to map it back to the
+# outcome's scale.
+tabicl_reference_dist <- function(loaded, x_train, y_train, x_test) {
+  keep <- brulee:::tabicl_unique_filter(x_train)
+  pp <- new.env()
+  pp$store <- list()
+  member <- brulee:::tabicl_single_member(sum(keep))
+  x_t <- brulee:::tabicl_member_input(
+    member,
+    pp,
+    x_train[, keep, drop = FALSE],
+    x_test[, keep, drop = FALSE],
+    "cpu"
+  )
+  y_mean <- mean(y_train)
+  y_scale <- sqrt(mean((y_train - y_mean)^2))
+  y_t <- torch::torch_tensor(
+    matrix((y_train - y_mean) / y_scale, nrow = 1),
+    dtype = torch::torch_float()
+  )
+  dist <- brulee:::tabicl_quantile_dist(
+    torch::with_no_grad(loaded$model(x_t, y_t))
+  )
+  list(dist = dist, y_mean = y_mean, y_scale = y_scale)
+}
+
+# Convert an engine_reg fixture into the data frames the user-facing API takes.
+tabicl_reg_data <- function(f) {
+  x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
+  y_train <- as.numeric(as.array(f$y_train))
+  x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
+  names(x_test) <- names(x_train)
+  list(x_train = x_train, y_train = y_train, x_test = x_test)
+}
+
 # Copy a full tabicl_model from a full-model fixture (top-level module prefixes).
 tabicl_copy_model <- function(model, f) {
   tabicl_copy_col_embedding(model$col_embedder, f, prefix = "col_embedder.")

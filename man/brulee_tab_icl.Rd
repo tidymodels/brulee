@@ -238,8 +238,10 @@ mean), but it is not required for the model to run.
 With \code{num_estimators > 1}, several views of the data are created by permuting
 features and (for classification) shuffling class labels, each optionally with
 a different normalization. Class logits are averaged across members and
-converted to probabilities with a temperature softmax; regression means are
-averaged. \code{num_estimators = 1} uses a single deterministic member (no shuffles,
+converted to probabilities with a temperature softmax. For regression, each
+member contributes a full predictive distribution and the combination rule
+depends on which statistic is requested; see \code{\link[=predict.brulee_tab_icl]{predict.brulee_tab_icl()}}.
+\code{num_estimators = 1} uses a single deterministic member (no shuffles,
 \code{"none"} normalization). Note that with more than one member the feature
 permutations are drawn with R's random number generator, so results are a
 faithful reproduction of the reference ensemble but not bit-for-bit identical
