@@ -1,3 +1,28 @@
+# Row indices of `new_data`, grouped by `ctx$item_ids` and, within each series,
+# sorted by timestamp. This is the order in which `predict.brulee_chronos()`
+# emits rows, which is *not* the row order of `new_data`. `augment()` needs the
+# same index to undo that permutation, so both call this.
+chronos2_future_rows <- function(ctx, new_data) {
+  id_synthetic <- isTRUE(ctx$id_synthetic)
+  timestamp_synthetic <- isTRUE(ctx$timestamp_synthetic)
+
+  purrr::map(ctx$item_ids, function(id) {
+    if (id_synthetic) {
+      rows <- seq_len(nrow(new_data))
+    } else {
+      # `which()` rather than `==` so that an NA id does not become a phantom
+      # row in every series.
+      rows <- which(new_data[[ctx$id_column]] == id)
+    }
+    if (!timestamp_synthetic) {
+      rows <- rows[order(new_data[[ctx$timestamp_column]][rows])]
+    }
+    rows
+  })
+}
+
+## -----------------------------------------------------------------------------
+
 #' Predict from a `brulee_chronos` model
 #'
 #' @param object A `brulee_chronos` object returned by [brulee_chronos()].
@@ -177,20 +202,10 @@ predict.brulee_chronos <- function(
     )
     future_cov_cols <- setdiff(names(new_data), drop_in_future)
 
-    sub_data <- function(id) {
-      if (id_synthetic) {
-        sub <- new_data
-      } else {
-        sub <- new_data[new_data[[id_column]] == id, , drop = FALSE]
-      }
-      if (timestamp_synthetic) {
-        sub
-      } else {
-        sub[order(sub[[timestamp_column]]), , drop = FALSE]
-      }
-    }
-
-    future_list <- purrr::map(ctx$item_ids, sub_data)
+    future_list <- purrr::map(
+      chronos2_future_rows(ctx, new_data),
+      function(rows) new_data[rows, , drop = FALSE]
+    )
 
     # The future window sets the per-series forecast horizon. More rows than
     # `prediction_length` has no meaning; fewer is padded internally and

@@ -5,6 +5,7 @@
 \alias{reexports}
 \alias{autoplot}
 \alias{tunable}
+\alias{augment}
 \alias{coef}
 \title{Objects exported from other packages}
 \keyword{internal}
@@ -13,7 +14,7 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{generics}{\code{\link[generics:tunable]{tunable()}}}
+  \item{generics}{\code{\link[generics:augment]{augment()}}, \code{\link[generics:tunable]{tunable()}}}
 
   \item{ggplot2}{\code{\link[ggplot2:autoplot]{autoplot()}}}
 

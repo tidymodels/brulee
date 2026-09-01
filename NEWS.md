@@ -1,5 +1,7 @@
 # brulee (development version)
 
+* Added `augment()` methods for all brulee model fits. These add every prediction that the model's mode supports to `new_data`: regression results have `.pred` (plus `.resid` when the outcome column is in `new_data`), and classification results have `.pred_class` along with one `.pred_{level}` column per class. For `brulee_chronos()` models, the forecast columns are aligned to the rows of `new_data` rather than to the internal per-series prediction order.
+
 # brulee 1.1.1
 
 * Pretrained model weights (for `brulee_tab_icl()` and `brulee_chronos()`) are no longer downloaded automatically when the package is attached. When the weights are missing, both `brulee_tab_icl()` and `brulee_chronos()` now prompt to download them in an interactive session and error otherwise. TabICL weights can also be downloaded explicitly with `tab_icl_download_weights()` (#130).
