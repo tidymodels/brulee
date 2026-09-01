@@ -254,6 +254,48 @@ check_class_weights <- function(wts, lvls, xtab, call = rlang::caller_env()) {
   wts
 }
 
+# Quantile levels must be strictly inside (0, 1). `hardhat::quantile_pred()`
+# permits 0 and 1 but the TabICL tail model evaluates `log(clamp(alpha, tol))`
+# there, which returns a finite but meaningless extreme rather than an infinity.
+# Sortedness and uniqueness are left to `hardhat::quantile_pred()`.
+check_quantile_levels <- function(
+  x,
+  arg = rlang::caller_arg(x),
+  call = rlang::caller_env()
+) {
+  if (!is.numeric(x) || length(x) < 1L) {
+    cli::cli_abort(
+      "{.arg {arg}} must be a non-empty numeric vector.",
+      call = call
+    )
+  }
+  if (anyNA(x)) {
+    cli::cli_abort(
+      "{.arg {arg}} cannot contain missing values.",
+      call = call
+    )
+  }
+  if (any(!is.finite(x) | x <= 0 | x >= 1)) {
+    cli::cli_abort(
+      "{.arg {arg}} must be in the open interval (0, 1).",
+      call = call
+    )
+  }
+  # Uniqueness and sortedness are re-checked by `hardhat::quantile_pred()`, but
+  # only after the ensemble has run and reported against its own call. Checking
+  # here fails fast and attributes the error to the caller.
+  if (anyDuplicated(x)) {
+    cli::cli_abort("{.arg {arg}} must be unique.", call = call)
+  }
+  if (is.unsorted(x)) {
+    cli::cli_abort(
+      "{.arg {arg}} must be sorted in increasing order.",
+      call = call
+    )
+  }
+  invisible(x)
+}
+
 check_character_matrix <- function(x, call = rlang::caller_env()) {
   if (is.character(x)) {
     cli::cli_abort(

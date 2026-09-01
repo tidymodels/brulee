@@ -183,7 +183,15 @@ valid_predict_types <- function() {
   c("numeric", "prob", "class")
 }
 
-check_type <- function(model, type, call = rlang::caller_env()) {
+# `numeric_types` is the set of types a numeric outcome may ask for. Models with
+# a distributional head (e.g. `brulee_tab_icl()`) widen it; everything else uses
+# the default and is unaffected.
+check_type <- function(
+  model,
+  type,
+  numeric_types = "numeric",
+  call = rlang::caller_env()
+) {
   outcome_ptype <- model$blueprint$ptypes$outcomes[[1]]
 
   if (is.null(type)) {
@@ -199,7 +207,11 @@ check_type <- function(model, type, call = rlang::caller_env()) {
     }
   }
 
-  type <- rlang::arg_match(type, valid_predict_types(), call = call)
+  type <- rlang::arg_match(
+    type,
+    union(valid_predict_types(), numeric_types),
+    error_call = call
+  )
 
   if (is.factor(outcome_ptype)) {
     if (!type %in% c("prob", "class")) {
@@ -209,7 +221,7 @@ check_type <- function(model, type, call = rlang::caller_env()) {
       )
     }
   } else if (is.numeric(outcome_ptype)) {
-    if (type != "numeric") {
+    if (!type %in% numeric_types) {
       cli::cli_abort(
         "Outcome is numeric and the prediction type is {.val {type}}.",
         call = call

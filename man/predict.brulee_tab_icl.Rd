@@ -4,7 +4,7 @@
 \alias{predict.brulee_tab_icl}
 \title{Predict from a \code{brulee_tab_icl}}
 \usage{
-\method{predict}{brulee_tab_icl}(object, new_data, type = NULL, ...)
+\method{predict}{brulee_tab_icl}(object, new_data, type = NULL, quantile_levels = (1:9)/10, ...)
 }
 \arguments{
 \item{object}{A \code{brulee_tab_icl} object from \code{\link[=brulee_tab_icl]{brulee_tab_icl()}}.}
@@ -16,18 +16,27 @@ options are:
 \itemize{
 \item \code{"class"} for hard class predictions (classification).
 \item \code{"prob"} for class probabilities (classification).
-\item \code{"numeric"} for numeric predictions (regression).
+\item \code{"numeric"} for the mean of the predictive distribution (regression).
+\item \code{"quantile"} for quantiles of the predictive distribution (regression).
+\item \code{"variance"} for its variance (regression).
 }
 
 If \code{NULL} (the default), the natural type for the outcome is used:
 \code{"class"} for a factor outcome and \code{"numeric"} for a numeric one.}
 
+\item{quantile_levels}{A numeric vector of quantile levels, each in the open
+interval \verb{(0, 1)}, sorted and unique. Only used when \code{type = "quantile"}.
+Defaults to \code{(1:9) / 10}.}
+
 \item{...}{Not used, but required for extensibility.}
 }
 \value{
 A tibble of predictions. The number of rows is guaranteed to match
-\code{new_data}. For \code{type = "prob"} there is one column per outcome class; for
-\code{"class"} and \code{"numeric"} there is a single prediction column.
+\code{new_data}. For \code{type = "prob"} there is one column per outcome class;
+otherwise there is a single prediction column: \code{.pred_class} for \code{"class"},
+\code{.pred} for \code{"numeric"}, \code{.pred_variance} for \code{"variance"}, and
+\code{.pred_quantile} for \code{"quantile"} (a \code{\link[hardhat:quantile_pred]{hardhat::quantile_pred()}} vector
+packing all requested levels into one column).
 }
 \description{
 Predict from a \code{brulee_tab_icl}
@@ -39,20 +48,96 @@ training rows captured at fit time. The same preprocessing and ensembling used
 for \code{object} are applied to \code{new_data}; see \code{\link[=brulee_tab_icl]{brulee_tab_icl()}} for details.
 For classification, \code{"prob"} returns one column per class (named
 \verb{.pred_<level>}) and \code{"class"} returns the highest-probability class.
+\subsection{Ensembling and aggregation}{
+
+The regression checkpoint is a quantile regression head: it emits a fixed
+grid of quantile values for every row, which are monotonized and turned into
+a continuous distribution (piecewise-linear between the knots, exponential
+tails outside them). Every returned statistic is a readout from that
+distribution, so \code{quantile_levels} does not change what the model computes,
+only which values are read off afterwards. Any level in the open interval
+\verb{(0, 1)} is available, including levels far enough into the tails to be
+extrapolated.
+
+With \code{num_estimators > 1}, each ensemble member yields its own distribution
+and the members are combined on the outcome's scale. The combination rule
+depends on the statistic:
+\itemize{
+\item \code{.pred} is the arithmetic mean across members of each member's
+distribution mean.
+\item \code{.pred_quantile} averages the members' quantile curves level by level
+(Vincentization). Averaging monotone curves preserves monotonicity, so the
+pooled result is still a valid quantile function.
+\item \code{.pred_variance} is the geometric mean across members. A variance is a
+positive scale parameter, so members are pooled multiplicatively.
+}
+
+Two consequences are worth stating plainly. First, \code{.pred} is the mean of the
+predictive distribution, so it is not the same as the 0.5 entry of
+\code{.pred_quantile}; this differs from \code{\link[=predict.brulee_chronos]{predict.brulee_chronos()}}, where \code{.pred}
+is defined to be the median. Second, \code{.pred_variance} pools each member's own
+variance and so does not include the spread between members' central
+estimates; it will not equal the variance implied by \code{.pred_quantile}.
+
+\code{.pred_variance} is on the squared scale of the outcome. The target is
+standardized internally and the variance is scaled back by the square of the
+target's standard deviation. Note that the reference Python implementation
+instead applies the full location-scale inverse to the variance; brulee's
+values differ from it deliberately.
+}
 }
 \examples{
 \dontrun{
-if (torch::torch_is_installed() && rlang::is_installed("modeldata")) {
-  data(penguins, package = "modeldata")
-  penguins <- na.omit(penguins)
+if (rlang::is_installed(c("MASS", "ggplot2")) &
+    tab_icl_weights_available() &
+     interactive()) {
+  library(ggplot2)
 
-  fit <- brulee_tab_icl(
-    species ~ .,
-    data = penguins,
-    path = "path/to/tabicl-classifier"
-  )
-  predict(fit, penguins)
-  predict(fit, penguins, type = "prob")
+  motorcycles <- MASS::mcycle
+  in_tr <- seq(1, nrow(motorcycles), by = 2)
+  mcycle_tr <- motorcycles[in_tr, ]
+  mcycle_te <- motorcycles[-in_tr, ]
+
+  mcycle_grid <-
+   dplyr::tibble(
+     times = seq(min(motorcycles$times), max(motorcycles$times), length.out = 200)
+   )
+  mcycle_grid$.row <- seq_len(nrow(mcycle_grid))
+
+  fit <- brulee_tab_icl(accel ~ times, data = mcycle_tr)
+
+  # ------------------------------------------------------------------------------
+  # Predict mean acceleration
+
+  mean_pred <- predict(fit, mcycle_grid) |> dplyr::bind_cols(mcycle_grid)
+
+  mean_p <-
+   mean_pred |>
+   ggplot(aes(times)) +
+   geom_point(data = mcycle_te, aes(y = accel), alpha = 1 / 2) +
+   geom_line(aes(y = .pred))
+
+  #------------------------------------------------------------------------------Predict 5 \%, 50\%
+  # Predict 5\%, 50\%, and 90\% quantiles of acceleration
+
+  q_pred <-
+   predict(fit,
+           mcycle_grid,
+           type = "quantile",
+           quantile_levels = c(0.1, 0.5, 0.9))
+  q_pred$.row <- seq_len(nrow(q_pred))
+
+  q_pred_longer <-
+   q_pred$.pred_quantile |>
+   dplyr::as_tibble() |>
+   dplyr::full_join(mcycle_grid, by = ".row") |>
+   dplyr::mutate(level = format(.quantile_levels))
+
+  mean_p +
+   geom_line(
+     data = q_pred_longer,
+     aes(y = .pred_quantile, col = level, group = level)
+   )
 }
 }
 }
