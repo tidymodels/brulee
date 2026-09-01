@@ -2,6 +2,30 @@
 
 ## brulee (development version)
 
+- [`predict()`](https://rdrr.io/r/stats/predict.html) for regression
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  models gained two new `type` values. `"quantile"` returns a
+  `.pred_quantile` column (a
+  [`hardhat::quantile_pred()`](https://hardhat.tidymodels.org/reference/quantile_pred.html)
+  vector) at the levels given by the new predict-time `quantile_levels`
+  argument, which defaults to `(1:9) / 10`. `"variance"` returns the
+  variance of the predictive distribution in a `.pred_variance` column.
+  The TabICL regression head was already a quantile regression head
+  internally, so this exposes a distribution the model was always
+  computing; `type = "numeric"` is unchanged and remains the default.
+  Unlike
+  [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md),
+  the levels are not fixed when the model is created and any value in
+  the open interval (0, 1) can be requested. See
+  [`?predict.brulee_tab_icl`](https://brulee.tidymodels.org/dev/reference/predict.brulee_tab_icl.md)
+  for how ensemble members are pooled for each type.
+
+- The error thrown when
+  [`predict()`](https://rdrr.io/r/stats/predict.html) is given an
+  unsupported `type` is now attributed to
+  [`predict()`](https://rdrr.io/r/stats/predict.html) rather than to
+  brulee’s internal helper.
+
 ## brulee 1.1.1
 
 CRAN release: 2026-07-13
