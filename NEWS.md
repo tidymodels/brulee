@@ -1,9 +1,13 @@
 # brulee (development version)
 
-* Added `augment()` methods for all brulee model fits. These add every prediction that the model's mode supports to `new_data`: regression results have `.pred` (plus `.resid` when the outcome column is in `new_data`), and classification results have `.pred_class` along with one `.pred_{level}` column per class. For `brulee_chronos()` models, the forecast columns are aligned to the rows of `new_data` rather than to the internal per-series prediction order.
-
 * `predict()` for regression `brulee_tab_icl()` models gained two new `type` values. `"quantile"` returns a `.pred_quantile` column (a `hardhat::quantile_pred()` vector) at the levels given by the new predict-time `quantile_levels` argument, which defaults to `(1:9) / 10`. `"variance"` returns the variance of the predictive distribution in a `.pred_variance` column. The TabICL regression head was already a quantile regression head internally, so this exposes a distribution the model was always computing; `type = "numeric"` is unchanged and remains the default. Unlike `brulee_chronos()`, the levels are not fixed when the model is created and any value in the open interval (0, 1) can be requested. See `?predict.brulee_tab_icl` for how ensemble members are pooled for each type.
 
+* Added `augment()` methods for all brulee model fits. 
+	* For regression models, `.pred` and `.resid` are added. For the latter, it is computed when the outcome is present in the data. See the exceptions below for foundational models. 
+	* For classification, the hard class predictions and class probability estimates are added. 
+	* For `brulee_chronos()` models, the forecast columns are aligned to the rows of `new_data` rather than to the internal per-series prediction order.
+	* For `brulee_tab_icl()` regression models, quantile regression estimates and the prediction variance can be obtained by setting the `quantile_levels` argument to a non-null value. `.resid` is then measured against the median of the predictive distribution. 
+	
 * The error thrown when `predict()` is given an unsupported `type` is now attributed to `predict()` rather than to brulee's internal helper.
 
 # brulee 1.1.1

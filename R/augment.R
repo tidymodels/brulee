@@ -37,26 +37,39 @@ brulee_outcome_column <- function(new_data, y_nm) {
   }
 }
 
+# The outcome column of `new_data` to measure residuals against, or NULL when
+# it is not there.
+brulee_resid_outcome <- function(x, new_data, call = rlang::caller_env()) {
+  y <- brulee_outcome_column(new_data, brulee_outcome_name(x))
+  if (!is.null(y) && !is.numeric(y)) {
+    cli::cli_abort(
+      "Column {.field {brulee_outcome_name(x)}} of {.arg new_data} should be
+       numeric to compute residuals, not {.obj_type_friendly {y}}.",
+      call = call
+    )
+  }
+  y
+}
+
+# Residuals are taken against `.pred`, so this runs before the predictions are
+# bound to `new_data`: a `.pred` column already in `new_data` would be renamed
+# by `bind_cols()` and could otherwise be picked up by mistake.
+brulee_add_resid <- function(res, x, new_data, call = rlang::caller_env()) {
+  y <- brulee_resid_outcome(x, new_data, call = call)
+  if (is.null(y)) {
+    return(res)
+  }
+  res$.resid <- y - res$.pred
+  res
+}
+
 # used for augment methods
 brulee_augment <- function(x, new_data, ...) {
   call <- rlang::current_env()
 
   if (brulee_mode(x, call = call) == "regression") {
     res <- predict(x, new_data, type = "numeric", ...)
-
-    y <- brulee_outcome_column(new_data, brulee_outcome_name(x))
-    if (!is.null(y)) {
-      if (!is.numeric(y)) {
-        cli::cli_abort(
-          "Column {.field {brulee_outcome_name(x)}} of {.arg new_data} should
-           be numeric to compute residuals, not {.obj_type_friendly {y}}.",
-          call = call
-        )
-      }
-      # Computed before binding so that a `.pred` column already in `new_data`
-      # (which `bind_cols()` would rename) cannot be picked up by mistake.
-      res$.resid <- y - res$.pred
-    }
+    res <- brulee_add_resid(res, x, new_data, call = call)
   } else {
     res <- dplyr::bind_cols(
       predict(x, new_data, type = "class", ...),
@@ -79,6 +92,11 @@ brulee_augment <- function(x, new_data, ...) {
 #' @param x A model fit from \pkg{brulee}.
 #' @param new_data A data frame or matrix of predictors. The outcome column may
 #' also be present.
+#' @param quantile_levels A numeric vector of quantile levels, each in the open
+#' interval `(0, 1)`, sorted and unique. Only used by [brulee_tab_icl()]
+#' regression fits. The default of `NULL` gives an ordinary numeric prediction;
+#' supplying levels additionally returns the predictive distribution. See the
+#' details.
 #' @param ... Options to pass to [predict()], such as `epoch`.
 #'
 #' @details
@@ -100,6 +118,35 @@ brulee_augment <- function(x, new_data, ...) {
 #' In all cases the new columns are added to the front of `new_data`.
 #' `new_data` is validated by [predict()], so the same columns are required as
 #' for prediction.
+#'
+#' ## Distributional predictions for `brulee_tab_icl()` regression fits
+#'
+#' The regression head of a [brulee_tab_icl()] model is a quantile regression
+#' head, so it always has a full predictive distribution available rather than
+#' just a point estimate. By default `augment()` ignores that and returns an
+#' ordinary numeric prediction, exactly like every other regression model:
+#' `.pred` and `.resid`.
+#'
+#' Setting `quantile_levels` asks for the distribution as well. The result then
+#' also has a `.pred_quantile` column (a [hardhat::quantile_pred()] vector at
+#' the requested levels) and a `.pred_variance` column. These are further
+#' readouts of the same distribution as the mean, so they are added *alongside*
+#' `.pred` rather than in place of it.
+#'
+#' Requesting the distribution also changes what `.resid` is measured against.
+#' `.pred` is still the mean, but the residual is taken against the
+#' distribution's **median**: the head can return a skewed distribution, and
+#' for a skewed one the mean is pulled toward the long tail while the median
+#' stays with the bulk of the mass, which makes the median the more
+#' representative point estimate to measure residuals against. So `.resid` is
+#' `outcome - .pred` when `quantile_levels` is `NULL` and `outcome - median`
+#' when it is set. ([brulee_chronos()] defines `.pred` to be the median
+#' already, so its residuals are against the median in either case.)
+#'
+#' The median is read off `.pred_quantile` when `quantile_levels` includes
+#' `0.5`, and is otherwise requested on its own. That extra readout only
+#' happens when `new_data` actually carries the outcome column, so scoring data
+#' without an outcome costs nothing more.
 #'
 #' @return
 #'
@@ -198,9 +245,100 @@ augment.brulee_saint <- brulee_augment
 #' @export
 augment.brulee_auto_int <- brulee_augment
 
+# The median of the predictive distribution, read off `.pred_quantile` when the
+# 0.5 level is already there and otherwise requested on its own. This is only
+# reached when `new_data` carries the outcome column, so the extra readout costs
+# nothing for the usual case of scoring data without an outcome.
+tab_icl_median <- function(res, x, new_data, ...) {
+  if (".pred_quantile" %in% names(res)) {
+    at_median <- which(
+      hardhat::extract_quantile_levels(res$.pred_quantile) == 0.5
+    )
+    if (length(at_median) == 1L) {
+      return(as.matrix(res$.pred_quantile)[, at_median])
+    }
+  }
+  med <- predict(
+    x,
+    new_data,
+    type = "quantile",
+    quantile_levels = 0.5,
+    ...
+  )
+  as.matrix(med$.pred_quantile)[, 1L]
+}
+
 #' @rdname brulee-augment
 #' @export
-augment.brulee_tab_icl <- brulee_augment
+augment.brulee_tab_icl <- function(x, new_data, quantile_levels = NULL, ...) {
+  call <- rlang::current_env()
+
+  # `augment()` picks the prediction types itself, so a `type` in `...` would
+  # otherwise reach `predict()` twice and fail on a duplicated formal.
+  if ("type" %in% rlang::names2(rlang::enquos(...))) {
+    cli::cli_abort(
+      c(
+        "{.arg type} is not an argument of {.fn augment}.",
+        i = "Set {.arg quantile_levels} to add the quantile and variance
+             columns for a regression fit."
+      ),
+      call = call
+    )
+  }
+
+  if (brulee_mode(x, call = call) == "classification") {
+    if (!is.null(quantile_levels)) {
+      cli::cli_abort(
+        "{.arg quantile_levels} is only used for regression fits.",
+        call = call
+      )
+    }
+    res <- dplyr::bind_cols(
+      predict(x, new_data, type = "class", ...),
+      predict(x, new_data, type = "prob", ...)
+    )
+    return(dplyr::bind_cols(res, new_data))
+  }
+
+  # Checked before any prediction runs, so a bad level fails immediately rather
+  # than after the checkpoint has been reloaded and the ensemble has run.
+  if (!is.null(quantile_levels)) {
+    check_quantile_levels(quantile_levels, call = call)
+  }
+
+  res <- predict(x, new_data, type = "numeric", ...)
+
+  if (is.null(quantile_levels)) {
+    # No quantiles asked for, so this behaves like any other regression model.
+    res <- brulee_add_resid(res, x, new_data, call = call)
+    return(dplyr::bind_cols(res, new_data))
+  }
+
+  # The regression head is a quantile regression head, so the quantiles and the
+  # variance are further readouts of the same predictive distribution as the
+  # mean. They are added alongside `.pred` rather than in place of it.
+  res <- dplyr::bind_cols(
+    res,
+    predict(
+      x,
+      new_data,
+      type = "quantile",
+      quantile_levels = quantile_levels,
+      ...
+    ),
+    predict(x, new_data, type = "variance", ...)
+  )
+
+  # With the distribution in hand, `.resid` is measured against its median
+  # rather than against `.pred`, which is the mean. See the details.
+  y <- brulee_resid_outcome(x, new_data, call = call)
+  if (!is.null(y)) {
+    res$.resid <- y - tab_icl_median(res, x, new_data, ...)
+    res <- dplyr::relocate(res, ".resid", .after = ".pred")
+  }
+
+  dplyr::bind_cols(res, new_data)
+}
 
 ## -----------------------------------------------------------------------------
 

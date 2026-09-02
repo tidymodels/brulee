@@ -239,3 +239,118 @@ test_that("augment() works for brulee_tab_icl, which has no `epoch`", {
     predict(fit, x_test, type = "class")$.pred_class
   )
 })
+
+test_that("augment() returns the mean alongside quantiles for tab_icl", {
+  skip_if_no_tabicl_fixtures("engine_reg")
+
+  f <- tabicl_load_fixture("engine_reg")
+  meta <- tabicl_fixture_meta("engine_reg")
+  tabicl_local_cache(f, meta)
+
+  x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
+  y_train <- as.numeric(as.array(f$y_train))
+  x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
+  names(x_test) <- names(x_train)
+
+  fit <- brulee_tab_icl(x_train, y_train, num_estimators = 1L)
+
+  with_y <- x_test
+  with_y$.outcome <- seq_len(nrow(x_test))
+
+  # Without `quantile_levels` this is an ordinary numeric prediction, exactly
+  # like any other regression model: the mean, and residuals against it.
+  aug_plain <- augment(fit, with_y)
+  expect_named(aug_plain[1:2], c(".pred", ".resid"))
+  expect_equal(aug_plain$.pred, predict(fit, x_test)$.pred)
+  expect_equal(aug_plain$.resid, with_y$.outcome - aug_plain$.pred)
+
+  # Setting `quantile_levels` adds both distribution columns alongside `.pred`.
+  levels <- c(0.1, 0.5, 0.9)
+  aug_q <- augment(fit, x_test, quantile_levels = levels)
+
+  expect_equal(
+    names(aug_q)[1:3],
+    c(".pred", ".pred_quantile", ".pred_variance")
+  )
+  expect_equal(nrow(aug_q), nrow(x_test))
+  expect_equal(aug_q$.pred, predict(fit, x_test)$.pred)
+  expect_equal(
+    aug_q$.pred_quantile,
+    predict(
+      fit,
+      x_test,
+      type = "quantile",
+      quantile_levels = levels
+    )$.pred_quantile
+  )
+  expect_equal(
+    aug_q$.pred_variance,
+    predict(fit, x_test, type = "variance")$.pred_variance
+  )
+
+  # With the distribution requested, `.pred` stays the mean but residuals are
+  # measured against the median.
+  med <- as.matrix(
+    predict(
+      fit,
+      x_test,
+      type = "quantile",
+      quantile_levels = 0.5
+    )$.pred_quantile
+  )[, 1]
+
+  # 0.5 is among the requested levels, so the median is reused from
+  # `.pred_quantile` rather than predicted again.
+  aug_reuse <- augment(fit, with_y, quantile_levels = levels)
+  expect_equal(
+    names(aug_reuse)[1:4],
+    c(".pred", ".resid", ".pred_quantile", ".pred_variance")
+  )
+  expect_equal(aug_reuse$.pred, predict(fit, x_test)$.pred)
+  expect_equal(aug_reuse$.resid, with_y$.outcome - med)
+  expect_false(isTRUE(all.equal(
+    aug_reuse$.resid,
+    with_y$.outcome - aug_reuse$.pred
+  )))
+
+  # 0.5 is absent, so the median is requested separately. Same answer.
+  aug_extra <- augment(fit, with_y, quantile_levels = c(0.25, 0.75))
+  expect_equal(aug_extra$.resid, with_y$.outcome - med)
+})
+
+test_that("augment() points `type` users at `quantile_levels` for tab_icl", {
+  skip_if_no_tabicl_fixtures("engine_reg")
+
+  f <- tabicl_load_fixture("engine_reg")
+  meta <- tabicl_fixture_meta("engine_reg")
+  tabicl_local_cache(f, meta)
+
+  x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
+  y_train <- as.numeric(as.array(f$y_train))
+  x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
+  names(x_test) <- names(x_train)
+
+  fit <- brulee_tab_icl(x_train, y_train, num_estimators = 1L)
+
+  # `augment()` chooses the prediction types itself; `type` would otherwise
+  # collide with the one it passes to `predict()`.
+  expect_snapshot(augment(fit, x_test, type = "quantile"), error = TRUE)
+  expect_snapshot(augment(fit, x_test, quantile_levels = 1.5), error = TRUE)
+})
+
+test_that("augment() rejects quantile_levels for a tab_icl classifier", {
+  skip_if_no_tabicl_fixtures("engine_clf")
+
+  f <- tabicl_load_fixture("engine_clf")
+  meta <- tabicl_fixture_meta("engine_clf")
+  tabicl_local_cache(f, meta)
+
+  x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
+  y_train <- factor(as.integer(as.numeric(as.array(f$y_train))))
+  x_test <- as.data.frame(as.matrix(as.array(f$X_test)))
+  names(x_test) <- names(x_train)
+
+  fit <- brulee_tab_icl(x_train, y_train, num_estimators = 1L)
+
+  expect_snapshot(augment(fit, x_test, quantile_levels = 0.5), error = TRUE)
+})

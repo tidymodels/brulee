@@ -30,7 +30,7 @@
 
 \method{augment}{brulee_auto_int}(x, new_data, ...)
 
-\method{augment}{brulee_tab_icl}(x, new_data, ...)
+\method{augment}{brulee_tab_icl}(x, new_data, quantile_levels = NULL, ...)
 
 \method{augment}{brulee_chronos}(x, new_data = NULL, ...)
 }
@@ -41,6 +41,12 @@
 also be present.}
 
 \item{...}{Options to pass to \code{\link[=predict]{predict()}}, such as \code{epoch}.}
+
+\item{quantile_levels}{A numeric vector of quantile levels, each in the open
+interval \verb{(0, 1)}, sorted and unique. Only used by \code{\link[=brulee_tab_icl]{brulee_tab_icl()}}
+regression fits. The default of \code{NULL} gives an ordinary numeric prediction;
+supplying levels additionally returns the predictive distribution. See the
+details.}
 }
 \value{
 A tibble with the same number of rows as \code{new_data}, with the prediction
@@ -70,6 +76,35 @@ when the forecast is being compared against a known future.
 In all cases the new columns are added to the front of \code{new_data}.
 \code{new_data} is validated by \code{\link[=predict]{predict()}}, so the same columns are required as
 for prediction.
+\subsection{Distributional predictions for \code{brulee_tab_icl()} regression fits}{
+
+The regression head of a \code{\link[=brulee_tab_icl]{brulee_tab_icl()}} model is a quantile regression
+head, so it always has a full predictive distribution available rather than
+just a point estimate. By default \code{augment()} ignores that and returns an
+ordinary numeric prediction, exactly like every other regression model:
+\code{.pred} and \code{.resid}.
+
+Setting \code{quantile_levels} asks for the distribution as well. The result then
+also has a \code{.pred_quantile} column (a \code{\link[hardhat:quantile_pred]{hardhat::quantile_pred()}} vector at
+the requested levels) and a \code{.pred_variance} column. These are further
+readouts of the same distribution as the mean, so they are added \emph{alongside}
+\code{.pred} rather than in place of it.
+
+Requesting the distribution also changes what \code{.resid} is measured against.
+\code{.pred} is still the mean, but the residual is taken against the
+distribution's \strong{median}: the head can return a skewed distribution, and
+for a skewed one the mean is pulled toward the long tail while the median
+stays with the bulk of the mass, which makes the median the more
+representative point estimate to measure residuals against. So \code{.resid} is
+\code{outcome - .pred} when \code{quantile_levels} is \code{NULL} and \code{outcome - median}
+when it is set. (\code{\link[=brulee_chronos]{brulee_chronos()}} defines \code{.pred} to be the median
+already, so its residuals are against the median in either case.)
+
+The median is read off \code{.pred_quantile} when \code{quantile_levels} includes
+\code{0.5}, and is otherwise requested on its own. That extra readout only
+happens when \code{new_data} actually carries the outcome column, so scoring data
+without an outcome costs nothing more.
+}
 }
 \examples{
 \dontshow{if (!brulee:::is_cran_check()) withAutoprint(\{ # examplesIf}
