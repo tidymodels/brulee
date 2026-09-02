@@ -1,3 +1,5 @@
+# brulee (development version)
+
 # brulee 1.2.0
 
 * `predict()` for regression `brulee_tab_icl()` models gained two new `type` values. `"quantile"` returns a `.pred_quantile` column (a `hardhat::quantile_pred()` vector) at the levels given by the new predict-time `quantile_levels` argument, which defaults to `(1:9) / 10`. `"variance"` returns the variance of the predictive distribution in a `.pred_variance` column. The TabICL regression head was already a quantile regression head internally, so this exposes a distribution the model was always computing; `type = "numeric"` is unchanged and remains the default. Unlike `brulee_chronos()`, the levels are not fixed when the model is created and any value in the open interval (0, 1) can be requested. See `?predict.brulee_tab_icl` for how ensemble members are pooled for each type.
