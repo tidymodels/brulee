@@ -75,11 +75,7 @@ predict_brulee_rln_bridge <- function(
     check_character_matrix(predictors, call = call)
   }
 
-  max_epoch <- length(model$estimates)
-  if (epoch > max_epoch) {
-    last_epoch_note(epoch, max_epoch, call = call)
-    epoch <- max_epoch
-  }
+  epoch <- clamp_epoch(epoch, model$estimates, call = call)
 
   predictions <- predict_brulee_rln_numeric(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)

@@ -4,6 +4,8 @@
 
 * The error thrown when `predict()` is given an unsupported `type` is now attributed to `predict()` rather than to brulee's internal helper.
 
+* `predict()` now clamps an `epoch` larger than the number of epochs actually fit, which is what its documentation and its warning have always promised. Previously it warned and then failed with a `subscript out of bounds` error, and an `epoch` exactly equal to `length(fit$estimates)` failed with no warning at all. Because early stopping makes the number of epochs fit vary by platform, a fixed `epoch` could work on one machine and fail on another. `coef()` was already correct and now shares the same check (#138).
+
 # brulee 1.1.1
 
 * Pretrained model weights (for `brulee_tab_icl()` and `brulee_chronos()`) are no longer downloaded automatically when the package is attached. When the weights are missing, both `brulee_tab_icl()` and `brulee_chronos()` now prompt to download them in an interactive session and error otherwise. TabICL weights can also be downloaded explicitly with `tab_icl_download_weights()` (#130).

@@ -253,9 +253,10 @@ test_that("predict call threading surfaces predict() not the bridge", {
     device = "cpu"
   )
 
-  cnd <- rlang::catch_cnd(predict(fit, x, epoch = 9999), classes = "warning")
-  expect_match(conditionMessage(cnd), "last epoch")
-  expect_no_match(deparse(conditionCall(cnd)), "bridge")
+  # The snapshot pins the `Warning in `predict()`:` attribution this test exists
+  # to check: the warning must not be blamed on the internal bridge.
+  expect_snapshot(pred <- predict(fit, x, epoch = 9999))
+  expect_equal(pred, predict(fit, x, epoch = length(fit$estimates) - 1L))
 })
 
 test_that("rln stores parameters correctly", {

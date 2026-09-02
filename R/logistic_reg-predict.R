@@ -86,8 +86,7 @@ predict_brulee_logistic_reg_bridge <- function(
 
   predict_function <- get_logistic_reg_predict_function(type)
 
-  max_epoch <- length(model$estimates)
-  last_epoch_note(epoch, max_epoch, call = call)
+  epoch <- clamp_epoch(epoch, model$estimates, call = call)
 
   predictions <- predict_function(model, predictors, epoch)
   hardhat::validate_prediction_size(predictions, predictors)

@@ -258,3 +258,11 @@
       Error in `brulee_mlp()`:
       ! `activation` must be a single value or a vector with the same length as `hidden_units`.
 
+# coef() returns the best (minimum-loss) epoch's parameters
+
+    Code
+      cf <- coef(fit, epoch = 10000)
+    Condition
+      Warning in `coef()`:
+      The model was fit for 8 epochs; the last epoch is used instead of epoch 10000.
+

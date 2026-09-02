@@ -414,13 +414,22 @@ to_probs <- function(x, model) {
   x
 }
 
-last_epoch_note <- function(epoch, max_epoch, call = rlang::caller_env()) {
+# Reduce an out-of-range `epoch` to the last one that was fit, warning when that
+# happens. Callers pass the `estimates` list itself rather than a length so that
+# the off-by-one below lives in exactly one place.
+clamp_epoch <- function(epoch, estimates, call = rlang::caller_env()) {
+  # All models prepend the initial pre-training parameters as the first element
+  # of `estimates` (epoch zero), so an epoch number is one less than its
+  # position in the list and the largest epoch that can be indexed is
+  # `length(estimates) - 1L`.
+  max_epoch <- length(estimates) - 1L
   if (epoch > max_epoch) {
     cli::cli_warn(
-      "The model fit only {max_epoch} epoch{?s}; predictions cannot be made at
-   epoch {epoch}, so last epoch is used.",
+      "The model was fit for {max_epoch} epoch{?s}; the last epoch is used
+       instead of epoch {epoch}.",
       call = call
     )
+    epoch <- max_epoch
   }
-  invisible(NULL)
+  epoch
 }
