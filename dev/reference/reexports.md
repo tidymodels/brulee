@@ -5,6 +5,7 @@ to see their documentation.
 
 - generics:
 
+  [`augment()`](https://generics.r-lib.org/reference/augment.html),
   [`tunable()`](https://generics.r-lib.org/reference/tunable.html)
 
 - ggplot2:

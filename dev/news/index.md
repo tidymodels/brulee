@@ -20,6 +20,25 @@
   [`?predict.brulee_tab_icl`](https://brulee.tidymodels.org/dev/reference/predict.brulee_tab_icl.md)
   for how ensemble members are pooled for each type.
 
+- Added [`augment()`](https://generics.r-lib.org/reference/augment.html)
+  methods for all brulee model fits.
+
+  - For regression models, `.pred` and `.resid` are added. For the
+    latter, it is computed when the outcome is present in the data. See
+    the exceptions below for foundational models.
+  - For classification, the hard class predictions and class probability
+    estimates are added.
+  - For
+    [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md)
+    models, the forecast columns are aligned to the rows of `new_data`
+    rather than to the internal per-series prediction order.
+  - For
+    [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+    regression models, quantile regression estimates and the prediction
+    variance can be obtained by setting the `quantile_levels` argument
+    to a non-null value. `.resid` is then measured against the median of
+    the predictive distribution.
+
 - The error thrown when
   [`predict()`](https://rdrr.io/r/stats/predict.html) is given an
   unsupported `type` is now attributed to
