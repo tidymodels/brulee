@@ -647,4 +647,9 @@ test_that("coef() returns the best (minimum-loss) epoch's parameters", {
 
   # `coef(epoch =)` must select the same parameters `predict(epoch =)` uses.
   expect_equal(coef(fit, epoch = 3), fit$estimates[[3 + 1]])
+
+  # `coef()` already clamped an out-of-range epoch before it shared
+  # `clamp_epoch()` with `predict()`; this pins the now-common warning (#138).
+  expect_snapshot(cf <- coef(fit, epoch = 1e4))
+  expect_equal(cf, fit$estimates[[length(fit$estimates)]])
 })
