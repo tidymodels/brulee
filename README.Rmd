@@ -59,7 +59,7 @@ library(brulee)
 library(yardstick)
 library(recipes)
 
-if (torch::torch_is_installed()) {
+if (!torch::torch_is_installed()) {
  torch::install_torch()
 }
 ```
