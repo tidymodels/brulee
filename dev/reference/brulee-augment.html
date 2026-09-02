@@ -190,8 +190,7 @@ without an outcome costs nothing more.</p>
 <span class="r-in"><span> <span class="co"># Without the outcome column, there are no residuals:</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment</a></span><span class="op">(</span><span class="va">reg_fit</span>, <span class="va">ames_test</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Longitude"</span>, <span class="st">"Latitude"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span> <span class="co"># Predictions from a specific epoch. Early stopping means the number of</span></span></span>
-<span class="r-in"><span> <span class="co"># epochs actually fit varies, so ask for one that is always there:</span></span></span>
+<span class="r-in"><span> <span class="co"># Predictions from a specific epoch:</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment</a></span><span class="op">(</span><span class="va">reg_fit</span>, <span class="va">ames_test</span>, epoch <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="co"># ---------------------------------------------------------------------------</span></span></span>

@@ -45,6 +45,17 @@
   [`predict()`](https://rdrr.io/r/stats/predict.html) rather than to
   brulee’s internal helper.
 
+- [`predict()`](https://rdrr.io/r/stats/predict.html) now clamps an
+  `epoch` larger than the number of epochs actually fit, which is what
+  its documentation and its warning have always promised. Previously it
+  warned and then failed with a `subscript out of bounds` error, and an
+  `epoch` exactly equal to `length(fit$estimates)` failed with no
+  warning at all. Because early stopping makes the number of epochs fit
+  vary by platform, a fixed `epoch` could work on one machine and fail
+  on another. [`coef()`](https://rdrr.io/r/stats/coef.html) was already
+  correct and now shares the same check
+  ([\#138](https://github.com/tidymodels/brulee/issues/138)).
+
 ## brulee 1.1.1
 
 CRAN release: 2026-07-13
