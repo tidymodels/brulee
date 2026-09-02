@@ -1,6 +1,6 @@
 #' @import torch
 #' @import rlang
-#' @importFrom stats complete.cases model.matrix terms
+#' @importFrom stats complete.cases model.matrix predict terms
 #' @importFrom utils globalVariables
 #'
 
@@ -11,6 +11,10 @@ ggplot2::autoplot
 #' @importFrom generics tunable
 #' @export
 generics::tunable
+
+#' @importFrom generics augment
+#' @export
+generics::augment
 
 #' @importFrom stats coef
 #' @export

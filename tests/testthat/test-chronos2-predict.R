@@ -1091,3 +1091,77 @@ test_that("chronos2_run_with_covariates handles past-only covariates (no future)
 
   expect_true(inherits(result$predictions, "torch_tensor"))
 })
+
+test_that("augment() aligns forecasts to the rows of new_data", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+  multi <- rbind(
+    transform(Chi, series_id = "A"),
+    transform(Chi, series_id = "B")
+  )
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = multi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  # `predict()` emits rows grouped by series and sorted by date within each
+  # series. `new_data` here is interleaved and so exercises the reordering: a
+  # plain `bind_cols()` would pair the "A" forecasts with the "B" rows.
+  future_dates <- seq(max(Chi$date) + 1, by = "day", length.out = 3)
+  new_df <- data.frame(
+    series_id = rep(c("B", "A"), times = 3),
+    date = rep(future_dates, each = 2),
+    Clark_Lake = rnorm(6)
+  )
+
+  out <- augment(mod, new_data = new_df, prediction_length = 3L)
+
+  expect_equal(nrow(out), nrow(new_df))
+  # The id column is not duplicated by the bind.
+  expect_equal(sum(names(out) == "series_id"), 1L)
+  expect_equal(out$series_id, new_df$series_id)
+  expect_equal(out$date, new_df$date)
+
+  # The stub returns `series * 100 + quantile * 10 + step`, so the median
+  # forecast is 1xx for series "A" and 2xx for series "B".
+  expect_equal(out$.pred, c(206, 106, 207, 107, 208, 108))
+})
+
+test_that("augment() rejects new_data it cannot align", {
+  skip_on_cran()
+  skip_if_not_installed("hardhat")
+  skip_if_not_installed("modeldata")
+  stub_chronos_loaders(also_mock_predict_core = TRUE)
+  Chi <- chicago_subset()
+
+  mod <- brulee_chronos(
+    ridership ~ Clark_Lake,
+    data = Chi,
+    id_column = "series_id",
+    timestamp_column = "date"
+  )
+
+  future_dates <- seq(max(Chi$date) + 1, by = "day", length.out = 3)
+  new_df <- data.frame(
+    series_id = "L",
+    date = future_dates,
+    Clark_Lake = rnorm(3)
+  )
+
+  expect_snapshot(augment(mod), error = TRUE)
+  expect_snapshot(augment(mod, new_data = "nope"), error = TRUE)
+
+  unknown <- new_df
+  unknown$series_id <- "not_a_series"
+  expect_snapshot(augment(mod, new_data = unknown), error = TRUE)
+
+  missing_id <- new_df
+  missing_id$series_id <- NA_character_
+  expect_snapshot(augment(mod, new_data = missing_id), error = TRUE)
+})
