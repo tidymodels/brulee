@@ -2,6 +2,8 @@
 
 ## brulee (development version)
 
+## brulee 1.2.0
+
 - [`predict()`](https://rdrr.io/r/stats/predict.html) for regression
   [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
   models gained two new `type` values. `"quantile"` returns a
