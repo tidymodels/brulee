@@ -186,8 +186,9 @@ brulee_augment <- function(x, new_data, ...) {
 #'  # Without the outcome column, there are no residuals:
 #'  augment(reg_fit, ames_test[, c("Longitude", "Latitude")])
 #'
-#'  # Predictions from a specific epoch:
-#'  augment(reg_fit, ames_test, epoch = 10)
+#'  # Predictions from a specific epoch. Early stopping means the number of
+#'  # epochs actually fit varies, so ask for one that is always there:
+#'  augment(reg_fit, ames_test, epoch = 1)
 #'
 #'  # ---------------------------------------------------------------------------
 #'  # classification
