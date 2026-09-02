@@ -2,6 +2,18 @@
 
 ## All functions
 
+- [`augment(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_linear_reg>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_resnet>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_rln>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_saint>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_auto_int>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_tab_icl>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  [`augment(`*`<brulee_chronos>`*`)`](https://brulee.tidymodels.org/reference/brulee-augment.md)
+  : Add model predictions to data
+
 - [`autoplot(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_logistic_reg>`*`)`](https://brulee.tidymodels.org/reference/brulee-autoplot.md)
   [`autoplot(`*`<brulee_multinomial_reg>`*`)`](https://brulee.tidymodels.org/reference/brulee-autoplot.md)

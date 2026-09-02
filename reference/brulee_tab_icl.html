@@ -19,7 +19,7 @@ classification and regression are supported."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -287,8 +287,10 @@ mean), but it is not required for the model to run.</p>
 <p>With <code>num_estimators &gt; 1</code>, several views of the data are created by permuting
 features and (for classification) shuffling class labels, each optionally with
 a different normalization. Class logits are averaged across members and
-converted to probabilities with a temperature softmax; regression means are
-averaged. <code>num_estimators = 1</code> uses a single deterministic member (no shuffles,
+converted to probabilities with a temperature softmax. For regression, each
+member contributes a full predictive distribution and the combination rule
+depends on which statistic is requested; see <code><a href="predict.brulee_tab_icl.html">predict.brulee_tab_icl()</a></code>.
+<code>num_estimators = 1</code> uses a single deterministic member (no shuffles,
 <code>"none"</code> normalization). Note that with more than one member the feature
 permutations are drawn with R's random number generator, so results are a
 faithful reproduction of the reference ensemble but not bit-for-bit identical

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,6 +31,19 @@
       <small>Source: <a href="https://github.com/tidymodels/brulee/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="brulee-120">brulee 1.2.0<a class="anchor" aria-label="anchor" href="#brulee-120"></a></h2>
+<ul><li><p><code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> for regression <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> models gained two new <code>type</code> values. <code>"quantile"</code> returns a <code>.pred_quantile</code> column (a <code><a href="https://hardhat.tidymodels.org/reference/quantile_pred.html" class="external-link">hardhat::quantile_pred()</a></code> vector) at the levels given by the new predict-time <code>quantile_levels</code> argument, which defaults to <code>(1:9) / 10</code>. <code>"variance"</code> returns the variance of the predictive distribution in a <code>.pred_variance</code> column. The TabICL regression head was already a quantile regression head internally, so this exposes a distribution the model was always computing; <code>type = "numeric"</code> is unchanged and remains the default. Unlike <code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code>, the levels are not fixed when the model is created and any value in the open interval (0, 1) can be requested. See <code><a href="../reference/predict.brulee_tab_icl.html">?predict.brulee_tab_icl</a></code> for how ensemble members are pooled for each type.</p></li>
+<li>
+<p>Added <code><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment()</a></code> methods for all brulee model fits.</p>
+<ul><li>For regression models, <code>.pred</code> and <code>.resid</code> are added. For the latter, it is computed when the outcome is present in the data. See the exceptions below for foundational models.</li>
+<li>For classification, the hard class predictions and class probability estimates are added.</li>
+<li>For <code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code> models, the forecast columns are aligned to the rows of <code>new_data</code> rather than to the internal per-series prediction order.</li>
+<li>For <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> regression models, quantile regression estimates and the prediction variance can be obtained by setting the <code>quantile_levels</code> argument to a non-null value. <code>.resid</code> is then measured against the median of the predictive distribution.</li>
+</ul></li>
+<li><p>The error thrown when <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> is given an unsupported <code>type</code> is now attributed to <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> rather than to brulee’s internal helper.</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> now clamps an <code>epoch</code> larger than the number of epochs actually fit, which is what its documentation and its warning have always promised. Previously it warned and then failed with a <code>subscript out of bounds</code> error, and an <code>epoch</code> exactly equal to <code>length(fit$estimates)</code> failed with no warning at all. Because early stopping makes the number of epochs fit vary by platform, a fixed <code>epoch</code> could work on one machine and fail on another. <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> was already correct and now shares the same check (<a href="https://github.com/tidymodels/brulee/issues/138" class="external-link">#138</a>).</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.1" id="brulee-111">brulee 1.1.1<a class="anchor" aria-label="anchor" href="#brulee-111"></a></h2><p class="text-muted">CRAN release: 2026-07-13</p>
 <ul><li><p>Pretrained model weights (for <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> and <code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code>) are no longer downloaded automatically when the package is attached. When the weights are missing, both <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> and <code><a href="../reference/brulee_chronos.html">brulee_chronos()</a></code> now prompt to download them in an interactive session and error otherwise. TabICL weights can also be downloaded explicitly with <code><a href="../reference/tab_icl_download_weights.html">tab_icl_download_weights()</a></code> (<a href="https://github.com/tidymodels/brulee/issues/130" class="external-link">#130</a>).</p></li>

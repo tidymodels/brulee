@@ -1,5 +1,61 @@
 # Changelog
 
+## brulee 1.2.0
+
+- [`predict()`](https://rdrr.io/r/stats/predict.html) for regression
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/reference/brulee_tab_icl.md)
+  models gained two new `type` values. `"quantile"` returns a
+  `.pred_quantile` column (a
+  [`hardhat::quantile_pred()`](https://hardhat.tidymodels.org/reference/quantile_pred.html)
+  vector) at the levels given by the new predict-time `quantile_levels`
+  argument, which defaults to `(1:9) / 10`. `"variance"` returns the
+  variance of the predictive distribution in a `.pred_variance` column.
+  The TabICL regression head was already a quantile regression head
+  internally, so this exposes a distribution the model was always
+  computing; `type = "numeric"` is unchanged and remains the default.
+  Unlike
+  [`brulee_chronos()`](https://brulee.tidymodels.org/reference/brulee_chronos.md),
+  the levels are not fixed when the model is created and any value in
+  the open interval (0, 1) can be requested. See
+  [`?predict.brulee_tab_icl`](https://brulee.tidymodels.org/reference/predict.brulee_tab_icl.md)
+  for how ensemble members are pooled for each type.
+
+- Added [`augment()`](https://generics.r-lib.org/reference/augment.html)
+  methods for all brulee model fits.
+
+  - For regression models, `.pred` and `.resid` are added. For the
+    latter, it is computed when the outcome is present in the data. See
+    the exceptions below for foundational models.
+  - For classification, the hard class predictions and class probability
+    estimates are added.
+  - For
+    [`brulee_chronos()`](https://brulee.tidymodels.org/reference/brulee_chronos.md)
+    models, the forecast columns are aligned to the rows of `new_data`
+    rather than to the internal per-series prediction order.
+  - For
+    [`brulee_tab_icl()`](https://brulee.tidymodels.org/reference/brulee_tab_icl.md)
+    regression models, quantile regression estimates and the prediction
+    variance can be obtained by setting the `quantile_levels` argument
+    to a non-null value. `.resid` is then measured against the median of
+    the predictive distribution.
+
+- The error thrown when
+  [`predict()`](https://rdrr.io/r/stats/predict.html) is given an
+  unsupported `type` is now attributed to
+  [`predict()`](https://rdrr.io/r/stats/predict.html) rather than to
+  brulee’s internal helper.
+
+- [`predict()`](https://rdrr.io/r/stats/predict.html) now clamps an
+  `epoch` larger than the number of epochs actually fit, which is what
+  its documentation and its warning have always promised. Previously it
+  warned and then failed with a `subscript out of bounds` error, and an
+  `epoch` exactly equal to `length(fit$estimates)` failed with no
+  warning at all. Because early stopping makes the number of epochs fit
+  vary by platform, a fixed `epoch` could work on one machine and fail
+  on another. [`coef()`](https://rdrr.io/r/stats/coef.html) was already
+  correct and now shares the same check
+  ([\#138](https://github.com/tidymodels/brulee/issues/138)).
+
 ## brulee 1.1.1
 
 CRAN release: 2026-07-13
