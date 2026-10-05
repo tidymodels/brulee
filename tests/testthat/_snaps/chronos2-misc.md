@@ -31,22 +31,3 @@
       Error in `brulee:::chronos2_resolve_revision()`:
       ! HuggingFace API did not return a SHA for revision "main".
 
-# chronos2_download_file errors after exhausting retries
-
-    Code
-      brulee:::chronos2_download_file("http://x", tmp, "test", max_attempts = 2L)
-    Message
-      i Downloading <http://x>
-      ! Attempt 1/2 for "test" failed; retrying.
-      i Downloading <http://x>
-      v Downloading <http://x> [TIME]
-      
-      i Downloading <http://x>
-    Condition
-      Error in `brulee:::chronos2_download_file()`:
-      ! Failed to download <http://x> after 2 attempts.
-      i If you keep hitting this, try a different network or proxy.
-    Message
-      x Downloading <http://x> [TIME]
-      
-

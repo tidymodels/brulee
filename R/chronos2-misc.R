@@ -1143,80 +1143,6 @@ chronos2_resolve_revision <- function(model_id, revision) {
   parsed$sha
 }
 
-# Fetch the Content-Length for a URL via a HEAD request, returning NA when
-# the server doesn't expose it (in which case we just skip size checking).
-chronos2_remote_size <- function(url) {
-  handle <- curl::new_handle()
-  curl::handle_setopt(handle, nobody = TRUE, followlocation = TRUE)
-  res <- tryCatch(
-    curl::curl_fetch_memory(url, handle = handle),
-    error = function(e) e
-  )
-  if (inherits(res, "error") || res$status_code >= 400L) {
-    return(NA_real_)
-  }
-  hdrs <- curl::parse_headers(res$headers)
-  cl <- grep("^content-length:", hdrs, ignore.case = TRUE, value = TRUE)
-  if (length(cl) == 0L) {
-    return(NA_real_)
-  }
-  as.numeric(sub("^[Cc]ontent-[Ll]ength:\\s*([0-9]+).*$", "\\1", cl[[1L]]))
-}
-
-# Download a single file with size validation and bounded retries. If the
-# destination already holds a complete file (size matches the remote
-# Content-Length, or HEAD didn't expose one), we keep it.
-chronos2_download_file <- function(url, dest, label, max_attempts = 3L) {
-  expected_size <- chronos2_remote_size(url)
-
-  if (
-    file.exists(dest) &&
-      (is.na(expected_size) || file.size(dest) == expected_size)
-  ) {
-    return(invisible(dest))
-  }
-
-  if (file.exists(dest)) {
-    cli::cli_alert_info(
-      "Cached {.file {label}} is incomplete (size {.val {file.size(dest)}} of {.val {expected_size}}); re-downloading."
-    )
-    file.remove(dest)
-  }
-
-  for (attempt in seq_len(max_attempts)) {
-    cli::cli_progress_step("Downloading {.url {url}}")
-    err <- tryCatch(
-      {
-        curl::curl_download(url, dest, mode = "wb", quiet = TRUE)
-        NULL
-      },
-      error = function(e) e
-    )
-
-    ok <-
-      is.null(err) &&
-      file.exists(dest) &&
-      (is.na(expected_size) || file.size(dest) == expected_size)
-    if (ok) {
-      return(invisible(dest))
-    }
-
-    if (file.exists(dest)) {
-      file.remove(dest)
-    }
-    if (attempt < max_attempts) {
-      cli::cli_alert_warning(
-        "Attempt {attempt}/{max_attempts} for {.val {label}} failed; retrying."
-      )
-    }
-  }
-
-  cli::cli_abort(c(
-    "Failed to download {.url {url}} after {max_attempts} attempts.",
-    "i" = "If you keep hitting this, try a different network or proxy."
-  ))
-}
-
 chronos2_download <- function(
   model_id = "amazon/chronos-2",
   revision = chronos2_default_revision(),
@@ -1261,7 +1187,7 @@ chronos2_download <- function(
       sha,
       f
     )
-    chronos2_download_file(url, file.path(model_dir, f), label = f)
+    brulee_download_file(url, file.path(model_dir, f), label = f)
   }
 
   list(model_dir = model_dir, sha = sha)

@@ -26,7 +26,9 @@ utils::globalVariables(
   c(
     "object",
     "iteration",
-    "loss"
+    "loss",
+    # torch's placeholder for the remaining dimensions in `[`.
+    ".."
   )
 )
 

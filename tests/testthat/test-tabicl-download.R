@@ -8,7 +8,7 @@ test_that("tab_icl_download_weights fetches both tasks into the cache layout", {
   requested <- character()
 
   testthat::local_mocked_bindings(
-    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+    brulee_download_file = function(url, dest, label, max_attempts = 3L) {
       requested[[length(requested) + 1L]] <<- url
       writeLines("stub", dest)
       invisible(dest)
@@ -65,7 +65,7 @@ test_that("tab_icl_download_weights can fetch a single task", {
   requested <- character()
 
   testthat::local_mocked_bindings(
-    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+    brulee_download_file = function(url, dest, label, max_attempts = 3L) {
       requested[[length(requested) + 1L]] <<- url
       writeLines("stub", dest)
       invisible(dest)
@@ -88,7 +88,7 @@ test_that("tab_icl_weights_available reflects the cache state", {
   expect_false(tab_icl_weights_available(cache_dir = cache))
 
   testthat::local_mocked_bindings(
-    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+    brulee_download_file = function(url, dest, label, max_attempts = 3L) {
       writeLines("stub", dest)
       invisible(dest)
     }
@@ -148,7 +148,7 @@ test_that("tabicl_cache_lookup downloads when the user accepts the prompt", {
     .package = "utils"
   )
   testthat::local_mocked_bindings(
-    chronos2_download_file = function(url, dest, label, max_attempts = 3L) {
+    brulee_download_file = function(url, dest, label, max_attempts = 3L) {
       writeLines("stub", dest)
       invisible(dest)
     }

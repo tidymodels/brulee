@@ -9,3 +9,8 @@ revdep
 Rplots.pdf
 # roborev snapshots
 /.roborev/
+
+# TabPFN development files that stay local
+dev/tabpfn/.venv/
+dev/tabpfn/checkpoints/
+__pycache__/

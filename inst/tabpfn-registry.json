@@ -1,0 +1,165 @@
+{
+  "reference": {
+    "tabpfn": "9.1.0",
+    "tag": "v9.1.0",
+    "commit": "0b1a081fe6bc693fb5d15448ba70a4524c53823e"
+  },
+  "default_version": "v3.5",
+  "auth": {
+    "gui_url": "https://ux.priorlabs.ai",
+    "api_url": "https://api.priorlabs.ai"
+  },
+  "versions": {
+    "v3": {
+      "tasks": {
+        "classification": {
+          "default": "tabpfn-v3-classifier-v3_default.ckpt",
+          "files": [
+            "tabpfn-v3-classifier-v3_default.ckpt",
+            "tabpfn-v3-classifier-v3_20260417_binary.ckpt",
+            "tabpfn-v3-classifier-v3_20260417_multiclass.ckpt",
+            "tabpfn-v3-classifier-v3_20260506_ood.ckpt"
+          ]
+        },
+        "regression": {
+          "default": "tabpfn-v3-regressor-v3_default.ckpt",
+          "files": [
+            "tabpfn-v3-regressor-v3_default.ckpt",
+            "tabpfn-v3-regressor-v3_20260417_mediumdata.ckpt",
+            "tabpfn-v3-regressor-v3_20260506_timeseries.ckpt",
+            "tabpfn-v3-regressor-v3_20260506_ood.ckpt"
+          ]
+        }
+      },
+      "repo_id": "Prior-Labs/tabpfn_3",
+      "architecture": "tabpfn_v3",
+      "license_repo": "tabpfn_3",
+      "limits": {
+        "rows": 1000000,
+        "rows_cpu": 5000,
+        "predictors": 2000,
+        "classes": 160
+      }
+    },
+    "v3.5": {
+      "tasks": {
+        "classification": {
+          "default": "tabpfn-v3.5-20260909.safetensors",
+          "files": [
+            "tabpfn-v3.5-20260909.safetensors",
+            "tabpfn-v3.5-20260909_multiclass.safetensors"
+          ]
+        },
+        "regression": {
+          "default": "tabpfn-v3.5-20260909.safetensors",
+          "files": [
+            "tabpfn-v3.5-20260909.safetensors",
+            "tabpfn-v3.5-20260909_multiclass.safetensors"
+          ]
+        }
+      },
+      "repo_id": "Prior-Labs/tabpfn_3_5",
+      "architecture": "tabpfn_v3_5",
+      "license_repo": "tabpfn_3_5",
+      "limits": {
+        "rows": 1000000,
+        "rows_cpu": 5000,
+        "predictors": 20000,
+        "classes": 160
+      }
+    },
+    "v3.5-fast": {
+      "tasks": {
+        "classification": {
+          "default": "tabpfn-v3.5-fast-20260909.safetensors",
+          "files": [
+            "tabpfn-v3.5-fast-20260909.safetensors"
+          ]
+        },
+        "regression": {
+          "default": "tabpfn-v3.5-fast-20260909.safetensors",
+          "files": [
+            "tabpfn-v3.5-fast-20260909.safetensors"
+          ]
+        }
+      },
+      "repo_id": "Prior-Labs/tabpfn_3_5",
+      "architecture": "tabpfn_v3_5",
+      "license_repo": "tabpfn_3_5",
+      "limits": {
+        "rows": 1000000,
+        "rows_cpu": 5000,
+        "predictors": 20000,
+        "classes": 160
+      }
+    }
+  },
+  "files": {
+    "tabpfn-v3-classifier-v3_20260417_binary.ckpt": {
+      "sha256": "1f9949fd52e20b6ed8ece20b3b37242d2abbbf337d14b461a4244f9318031a88",
+      "size": 212804803,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-classifier-v3_20260417_multiclass.ckpt": {
+      "sha256": "517c40ca21e0e1b1fa6629ded4b0412ffb7b2e577eb6cb96e5be5c487fadfb03",
+      "size": 212804803,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-classifier-v3_20260506_ood.ckpt": {
+      "sha256": "f973d994ece09f9e28e9319d644bcff3cb0bec9c3170e67e14e71f53df92d18b",
+      "size": 212815699,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-classifier-v3_default.ckpt": {
+      "sha256": "d0d865d54dfbc524f5703104be90620182dca7e5fb2c16de72e9959ea18f3988",
+      "size": 212804803,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-regressor-v3_20260417_mediumdata.ckpt": {
+      "sha256": "06a1daeebbc19f8d9478bd6fdf8753859c68abc9abfe53e8216b1067b7e0bc21",
+      "size": 233289807,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-regressor-v3_20260506_ood.ckpt": {
+      "sha256": "fe1a5aa90cdd7f06e8736a68015b1bb570a413bd302de2d1038364272a8c24d6",
+      "size": 233300137,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-regressor-v3_20260506_timeseries.ckpt": {
+      "sha256": "48ca82019fec74f08e15d56a157bbe728d6ec25c221f2ff2d4fd22fd4e09ec6e",
+      "size": 233289807,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3-regressor-v3_default.ckpt": {
+      "sha256": "311ce18d97e9533d8585eaadafe040fbdd8070533209ed8696641dadc97a7301",
+      "size": 233289807,
+      "format": "ckpt",
+      "architecture": "tabpfn_v3"
+    },
+    "tabpfn-v3.5-20260909.safetensors": {
+      "sha256": "ece4d67eadfea42eb0e610df5189bea60cb7f31073d81e9c7a019b76eacf0be3",
+      "size": 876027932,
+      "format": "safetensors",
+      "architecture": "tabpfn_v3_5"
+    },
+    "tabpfn-v3.5-20260909_multiclass.safetensors": {
+      "sha256": "4f1e155b09ae1c9860c75cd0a16f811b7431ddac4cb8022ee5e4498070f44149",
+      "size": 876028348,
+      "format": "safetensors",
+      "architecture": "tabpfn_v3_5"
+    },
+    "tabpfn-v3.5-fast-20260909.safetensors": {
+      "sha256": "14e0b81285bca7a6d1ef121169f27f651f76dff49cad6c0b8779d5c836018550",
+      "size": 334181708,
+      "format": "safetensors",
+      "architecture": "tabpfn_v3_5"
+    }
+  }
+}

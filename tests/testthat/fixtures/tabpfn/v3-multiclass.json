@@ -1,0 +1,652 @@
+{
+ "architecture": "tabpfn_v3",
+ "call_meta": {
+  "call.col_y_encoder.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.col_y_encoder.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.args": {
+   "length": 0,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.0.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.0.attention.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.0.attention.kwargs": {
+   "keys": [
+    "rope"
+   ],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.0.attention.kwargs.rope": {
+   "type": "RotaryEmbedding"
+  },
+  "call.column_aggregator.blocks.0.kwargs": {
+   "keys": [
+    "rope",
+    "save_peak_memory_factor"
+   ],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.0.kwargs.rope": {
+   "type": "RotaryEmbedding"
+  },
+  "call.column_aggregator.blocks.0.kwargs.save_peak_memory_factor": null,
+  "call.column_aggregator.blocks.0.layernorm.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.0.layernorm.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.0.layernorm_mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.0.layernorm_mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.0.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.0.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.1.layernorm.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.1.layernorm.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.1.layernorm_mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.1.layernorm_mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.blocks.1.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.blocks.1.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.column_aggregator.kwargs": {
+   "keys": [
+    "force_recompute_layer",
+    "save_peak_memory_factor",
+    "x_BRiCE"
+   ],
+   "type": "dict"
+  },
+  "call.column_aggregator.kwargs.force_recompute_layer": false,
+  "call.column_aggregator.kwargs.save_peak_memory_factor": null,
+  "call.column_aggregator.out_ln.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.column_aggregator.out_ln.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.args": {
+   "length": 0,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.kwargs": {
+   "keys": [
+    "cached_hidden",
+    "force_recompute_layer",
+    "num_train_rows",
+    "return_hidden",
+    "save_peak_memory_factor",
+    "x_BRiCE"
+   ],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.kwargs.cached_hidden": null,
+  "call.feature_distribution_embedder.kwargs.force_recompute_layer": false,
+  "call.feature_distribution_embedder.kwargs.num_train_rows": 14,
+  "call.feature_distribution_embedder.kwargs.return_hidden": false,
+  "call.feature_distribution_embedder.kwargs.save_peak_memory_factor": null,
+  "call.feature_distribution_embedder.layers.0.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.attn.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.attn.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.attn.softmax_scaling_layer.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.attn.softmax_scaling_layer.args.1": 14,
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.attn.softmax_scaling_layer.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.layernorm2.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.layernorm2.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.layernorm_kv.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.layernorm_kv.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.layernorm_q.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.layernorm_q.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block1.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.attn.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.attn.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.layernorm2.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.layernorm2.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.layernorm_kv.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.layernorm_kv.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.layernorm_q.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.layernorm_q.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.0.cross_attn_block2.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.kwargs": {
+   "keys": [
+    "cached_hidden",
+    "return_hidden",
+    "save_peak_memory_factor",
+    "single_eval_pos"
+   ],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.0.kwargs.cached_hidden": null,
+  "call.feature_distribution_embedder.layers.0.kwargs.return_hidden": false,
+  "call.feature_distribution_embedder.layers.0.kwargs.save_peak_memory_factor": null,
+  "call.feature_distribution_embedder.layers.0.kwargs.single_eval_pos": 14,
+  "call.feature_distribution_embedder.layers.0.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.feature_distribution_embedder.layers.0.out.1": null,
+  "call.feature_distribution_embedder.layers.1.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.attn.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.attn.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.attn.softmax_scaling_layer.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.attn.softmax_scaling_layer.args.1": 14,
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.attn.softmax_scaling_layer.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.layernorm2.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.layernorm2.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.layernorm_kv.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.layernorm_kv.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.layernorm_q.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.layernorm_q.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block1.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.attn.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.attn.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.layernorm2.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.layernorm2.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.layernorm_kv.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.layernorm_kv.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.layernorm_q.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.layernorm_q.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.layers.1.cross_attn_block2.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.kwargs": {
+   "keys": [
+    "cached_hidden",
+    "return_hidden",
+    "save_peak_memory_factor",
+    "single_eval_pos"
+   ],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.layers.1.kwargs.cached_hidden": null,
+  "call.feature_distribution_embedder.layers.1.kwargs.return_hidden": false,
+  "call.feature_distribution_embedder.layers.1.kwargs.save_peak_memory_factor": null,
+  "call.feature_distribution_embedder.layers.1.kwargs.single_eval_pos": 14,
+  "call.feature_distribution_embedder.layers.1.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.feature_distribution_embedder.layers.1.out.1": null,
+  "call.feature_distribution_embedder.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.feature_distribution_embedder.out.1": null,
+  "call.icl_blocks.0.args": {
+   "length": 3,
+   "type": "list"
+  },
+  "call.icl_blocks.0.args.1": 14,
+  "call.icl_blocks.0.args.2": null,
+  "call.icl_blocks.0.icl_attention.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.0.icl_attention.kwargs": {
+   "keys": [
+    "single_eval_pos"
+   ],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.icl_attention.kwargs.single_eval_pos": 14,
+  "call.icl_blocks.0.icl_attention.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.icl_blocks.0.icl_attention.out.1": null,
+  "call.icl_blocks.0.icl_attention.softmax_scaling_layer.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.icl_blocks.0.icl_attention.softmax_scaling_layer.args.1": 14,
+  "call.icl_blocks.0.icl_attention.softmax_scaling_layer.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.layernorm.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.0.layernorm.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.layernorm_mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.0.layernorm_mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.0.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.icl_blocks.0.out.1": null,
+  "call.icl_blocks.1.args": {
+   "length": 3,
+   "type": "list"
+  },
+  "call.icl_blocks.1.args.1": 14,
+  "call.icl_blocks.1.args.2": null,
+  "call.icl_blocks.1.icl_attention.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.1.icl_attention.kwargs": {
+   "keys": [
+    "single_eval_pos"
+   ],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.icl_attention.kwargs.single_eval_pos": 14,
+  "call.icl_blocks.1.icl_attention.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.icl_blocks.1.icl_attention.out.1": null,
+  "call.icl_blocks.1.icl_attention.softmax_scaling_layer.args": {
+   "length": 2,
+   "type": "list"
+  },
+  "call.icl_blocks.1.icl_attention.softmax_scaling_layer.args.1": 14,
+  "call.icl_blocks.1.icl_attention.softmax_scaling_layer.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.layernorm.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.1.layernorm.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.layernorm_mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.1.layernorm_mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.mlp.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_blocks.1.mlp.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.icl_blocks.1.out.1": null,
+  "call.icl_y_encoder.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.icl_y_encoder.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.many_class_decoder.args": {
+   "length": 3,
+   "type": "list"
+  },
+  "call.many_class_decoder.kwargs": {
+   "keys": [
+    "highest_target"
+   ],
+   "type": "dict"
+  },
+  "call.many_class_decoder.kwargs.highest_target": 2,
+  "call.output_norm.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.output_norm.kwargs": {
+   "keys": [],
+   "type": "dict"
+  }
+ },
+ "call_order": [
+  "col_y_encoder",
+  "feature_distribution_embedder.layers.0.cross_attn_block1.layernorm_q",
+  "feature_distribution_embedder.layers.0.cross_attn_block1.layernorm_kv",
+  "feature_distribution_embedder.layers.0.cross_attn_block1.attn.softmax_scaling_layer",
+  "feature_distribution_embedder.layers.0.cross_attn_block1.attn",
+  "feature_distribution_embedder.layers.0.cross_attn_block1.layernorm2",
+  "feature_distribution_embedder.layers.0.cross_attn_block1.mlp",
+  "feature_distribution_embedder.layers.0.cross_attn_block1",
+  "feature_distribution_embedder.layers.0.cross_attn_block2.layernorm_q",
+  "feature_distribution_embedder.layers.0.cross_attn_block2.layernorm_kv",
+  "feature_distribution_embedder.layers.0.cross_attn_block2.attn",
+  "feature_distribution_embedder.layers.0.cross_attn_block2.layernorm2",
+  "feature_distribution_embedder.layers.0.cross_attn_block2.mlp",
+  "feature_distribution_embedder.layers.0.cross_attn_block2",
+  "feature_distribution_embedder.layers.0",
+  "feature_distribution_embedder.layers.1.cross_attn_block1.layernorm_q",
+  "feature_distribution_embedder.layers.1.cross_attn_block1.layernorm_kv",
+  "feature_distribution_embedder.layers.1.cross_attn_block1.attn.softmax_scaling_layer",
+  "feature_distribution_embedder.layers.1.cross_attn_block1.attn",
+  "feature_distribution_embedder.layers.1.cross_attn_block1.layernorm2",
+  "feature_distribution_embedder.layers.1.cross_attn_block1.mlp",
+  "feature_distribution_embedder.layers.1.cross_attn_block1",
+  "feature_distribution_embedder.layers.1.cross_attn_block2.layernorm_q",
+  "feature_distribution_embedder.layers.1.cross_attn_block2.layernorm_kv",
+  "feature_distribution_embedder.layers.1.cross_attn_block2.attn",
+  "feature_distribution_embedder.layers.1.cross_attn_block2.layernorm2",
+  "feature_distribution_embedder.layers.1.cross_attn_block2.mlp",
+  "feature_distribution_embedder.layers.1.cross_attn_block2",
+  "feature_distribution_embedder.layers.1",
+  "feature_distribution_embedder",
+  "column_aggregator.blocks.0.layernorm",
+  "column_aggregator.blocks.0.attention",
+  "column_aggregator.blocks.0.layernorm_mlp",
+  "column_aggregator.blocks.0.mlp",
+  "column_aggregator.blocks.0",
+  "column_aggregator.blocks.1.layernorm",
+  "column_aggregator.blocks.1.layernorm_mlp",
+  "column_aggregator.blocks.1.mlp",
+  "column_aggregator.out_ln",
+  "column_aggregator",
+  "icl_y_encoder",
+  "icl_blocks.0.layernorm",
+  "icl_blocks.0.icl_attention.softmax_scaling_layer",
+  "icl_blocks.0.icl_attention",
+  "icl_blocks.0.layernorm_mlp",
+  "icl_blocks.0.mlp",
+  "icl_blocks.0",
+  "icl_blocks.1.layernorm",
+  "icl_blocks.1.icl_attention.softmax_scaling_layer",
+  "icl_blocks.1.icl_attention",
+  "icl_blocks.1.layernorm_mlp",
+  "icl_blocks.1.mlp",
+  "icl_blocks.1",
+  "output_norm",
+  "many_class_decoder"
+ ],
+ "config": {
+  "decoder_head_dim": 8,
+  "decoder_num_heads": 2,
+  "decoder_use_softmax_scaling": false,
+  "dist_embed_num_blocks": 2,
+  "dist_embed_num_heads": 2,
+  "dist_embed_num_inducing_points": 4,
+  "dropout": 0.0,
+  "embed_dim": 16,
+  "feat_agg_num_blocks": 2,
+  "feat_agg_num_cls_tokens": 2,
+  "feat_agg_num_heads": 2,
+  "feat_agg_rope_base": 100000,
+  "feature_group_size": 3,
+  "ff_factor": 2,
+  "icl_num_heads": 4,
+  "icl_num_kv_heads": null,
+  "icl_num_kv_heads_test": 1,
+  "inference_chunk_cells": 1572864,
+  "inference_col_chunk_size": 4,
+  "layernorm_elementwise_affine": true,
+  "max_batched_estimator_cells": 768000000,
+  "max_batched_estimator_rows": 32768,
+  "max_num_classes": 10,
+  "name": "TabPFN-v3",
+  "nlayers": 2,
+  "num_buckets": 32,
+  "softmax_scaling_mlp_hidden_dim": 8,
+  "use_nan_indicators": true,
+  "use_rope": true
+ },
+ "n_batch": 1,
+ "n_classes": 3,
+ "n_features": 5,
+ "n_test": 4,
+ "n_train": 14,
+ "name": "v3-multiclass",
+ "performance_options": {
+  "enable_torch_compile": false,
+  "force_recompute_layer": false,
+  "kv_cache_dtype": null,
+  "kv_cache_follows_attention_grid": false,
+  "save_peak_memory_factor": null,
+  "use_chunkwise_inference": true
+ },
+ "record": "all",
+ "seed": 41939,
+ "tabpfn_version": "9.1.0",
+ "task_type": "multiclass",
+ "torch_version": "2.14.1"
+}
