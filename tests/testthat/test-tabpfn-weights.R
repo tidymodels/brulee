@@ -244,7 +244,10 @@ local_fake_server <- function(
         if (is.null(token_ok)) {
           return(NULL)
         }
-        return(list(status = if (token_ok) 200 else 401, body = ""))
+        if (token_ok) {
+          return(list(status = 200, body = ""))
+        }
+        return(list(status = 401, body = ""))
       }
       if (grepl("/account/license/", url, fixed = TRUE)) {
         if (is.null(accepted)) {

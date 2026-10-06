@@ -76,10 +76,10 @@ tabpfn_v3_model <- torch::nn_module(
   "tabpfn_v3_model",
   initialize = function(config) {
     self$config <- config
-    self$task_type <- if (config$max_num_classes > 0) {
-      "multiclass"
+    if (config$max_num_classes > 0) {
+      self$task_type <- "multiclass"
     } else {
-      "regression"
+      self$task_type <- "regression"
     }
     e <- config$embed_dim
     d <- e * config$feat_agg_num_cls_tokens
@@ -89,10 +89,10 @@ tabpfn_v3_model <- torch::nn_module(
     classification <- self$task_type == "multiclass"
 
     self$x_embed <- torch::nn_linear(config$feature_group_size * 2, e)
-    self$col_y_encoder <- if (classification) {
-      tabpfn_class_embedding(config$max_num_classes, e)
+    if (classification) {
+      self$col_y_encoder <- tabpfn_class_embedding(config$max_num_classes, e)
     } else {
-      torch::nn_linear(1, e)
+      self$col_y_encoder <- torch::nn_linear(1, e)
     }
 
     scaling <- function(num_heads, head_dim) {
@@ -123,10 +123,10 @@ tabpfn_v3_model <- torch::nn_module(
       use_rope = isTRUE(config$use_rope),
       qk_norm = FALSE
     )
-    self$icl_y_encoder <- if (classification) {
-      tabpfn_class_embedding(config$max_num_classes, d)
+    if (classification) {
+      self$icl_y_encoder <- tabpfn_class_embedding(config$max_num_classes, d)
     } else {
-      torch::nn_linear(1, d)
+      self$icl_y_encoder <- torch::nn_linear(1, d)
     }
     self$icl_blocks <- torch::nn_module_list(lapply(
       seq_len(config$nlayers),
@@ -147,16 +147,19 @@ tabpfn_v3_model <- torch::nn_module(
     ))
     self$output_norm <- tabpfn_rms_norm(d)
     if (classification) {
+      decoder_scaling <- NULL
+      if (isTRUE(config$decoder_use_softmax_scaling)) {
+        decoder_scaling <- scaling(
+          config$decoder_num_heads,
+          config$decoder_head_dim
+        )
+      }
       self$many_class_decoder <- tabpfn_many_class_decoder(
         config$max_num_classes,
         d,
         config$decoder_head_dim,
         config$decoder_num_heads,
-        softmax_scaling_layer = if (
-          isTRUE(config$decoder_use_softmax_scaling)
-        ) {
-          scaling(config$decoder_num_heads, config$decoder_head_dim)
-        }
+        softmax_scaling_layer = decoder_scaling
       )
     } else {
       self$output_projection <- torch::nn_sequential(
@@ -206,7 +209,11 @@ tabpfn_v3_model <- torch::nn_module(
     test_emb <- x[, (num_train + 1):r]
     if (classification) {
       train_keys <- self$many_class_decoder$project_keys(x[, 1:num_train])
-      y_bn <- if (y$dim() == 2) y$transpose(1, 2) else y$unsqueeze(1)
+      if (y$dim() == 2) {
+        y_bn <- y$transpose(1, 2)
+      } else {
+        y_bn <- y$unsqueeze(1)
+      }
       out <- self$many_class_decoder(
         train_keys,
         test_emb,

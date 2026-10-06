@@ -175,7 +175,10 @@ tabpfn_python_cache_dir <- function() {
   }
   if (.Platform$OS.type == "windows") {
     appdata <- trimws(Sys.getenv("APPDATA"))
-    return(if (nzchar(appdata)) file.path(appdata, "tabpfn") else NA_character_)
+    if (nzchar(appdata)) {
+      return(file.path(appdata, "tabpfn"))
+    }
+    return(NA_character_)
   }
   if (Sys.info()[["sysname"]] == "Darwin") {
     return(file.path(path.expand("~"), "Library", "Caches", "tabpfn"))
@@ -403,7 +406,11 @@ tabpfn_checkpoint_infos <- function(version, task, files) {
   tasks <- tabpfn_registry()$versions[[version]]$tasks[task]
   infos <- list()
   for (t in names(tasks)) {
-    wanted <- if (files == "default") tasks[[t]]$default else tasks[[t]]$files
+    if (files == "default") {
+      wanted <- tasks[[t]]$default
+    } else {
+      wanted <- tasks[[t]]$files
+    }
     for (file in wanted) {
       infos[[file]] <- tabpfn_version_info(version, t, file)
     }
@@ -439,17 +446,21 @@ tab_pfn_clear_cache <- function(
   ask = rlang::is_interactive()
 ) {
   check_bool(ask)
-  versions <- if (is.null(version)) {
-    tab_pfn_versions()
+  if (is.null(version)) {
+    versions <- tab_pfn_versions()
   } else {
-    tabpfn_resolve_version(version)
+    versions <- tabpfn_resolve_version(version)
   }
   names <- unique(unlist(lapply(versions, function(v) {
     lapply(tabpfn_registry()$versions[[v]]$tasks, function(t) t$files)
   })))
   paths <- file.path(cache_dir, c(names, paste0(names, ".part")))
   paths <- paths[file.exists(paths)]
-  label <- if (is.null(version)) "TabPFN" else paste("TabPFN", versions)
+  if (is.null(version)) {
+    label <- "TabPFN"
+  } else {
+    label <- paste("TabPFN", versions)
+  }
   if (length(paths) == 0) {
     cli::cli_inform(c(i = "No cached {label} weights in {.path {cache_dir}}."))
     return(invisible(character()))
@@ -583,7 +594,10 @@ tabpfn_check_license_accepted <- function(token, api_url, license_name) {
 tabpfn_license_name <- function(license_repo, call = caller_env()) {
   url <- paste0("https://huggingface.co/api/models/Prior-Labs/", license_repo)
   hf_token <- Sys.getenv("HF_TOKEN")
-  res <- tabpfn_http_get(url, if (nzchar(hf_token)) hf_token)
+  if (!nzchar(hf_token)) {
+    hf_token <- NULL
+  }
+  res <- tabpfn_http_get(url, hf_token)
   if (is.null(res) || res$status != 200) {
     cli::cli_abort(
       c(

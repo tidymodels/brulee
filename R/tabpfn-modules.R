@@ -804,7 +804,11 @@ tabpfn_num_present_classes <- function(y, max_num_classes) {
 # for classification). Python `_prepare_y` / `_impute_target_nan_and_inf`.
 tabpfn_prepare_y <- function(y, num_train, task_type) {
   y <- y[1:num_train]
-  y_nb1 <- if (y$dim() == 1) y$view(c(num_train, 1, 1)) else y$unsqueeze(-1)
+  if (y$dim() == 1) {
+    y_nb1 <- y$view(c(num_train, 1, 1))
+  } else {
+    y_nb1 <- y$unsqueeze(-1)
+  }
   imputed <- tabpfn_impute_mean(y_nb1, num_train)
   y_nb1 <- imputed$x
   if (task_type == "multiclass") {

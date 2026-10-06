@@ -325,17 +325,20 @@ tabpfn_v3_5_model <- torch::nn_module(
       }
     ))
     self$output_norm <- tabpfn_rms_norm(d)
+    decoder_scaling <- NULL
+    if (isTRUE(config$decoder_use_softmax_scaling)) {
+      decoder_scaling <- scaling(
+        config$decoder_num_heads,
+        config$decoder_head_dim
+      )
+    }
     self$heads <- tabpfn_v3_5_multitask_heads(
       input_size = d,
       max_num_classes = config$max_num_classes,
       num_buckets = config$num_buckets,
       decoder_head_dim = config$decoder_head_dim,
       decoder_num_heads = config$decoder_num_heads,
-      decoder_softmax_scaling_layer = if (
-        isTRUE(config$decoder_use_softmax_scaling)
-      ) {
-        scaling(config$decoder_num_heads, config$decoder_head_dim)
-      },
+      decoder_softmax_scaling_layer = decoder_scaling,
       mlp_dim_feedforward = d * config$ff_factor
     )
   },
@@ -380,7 +383,11 @@ tabpfn_v3_5_model <- torch::nn_module(
     if (task_type == "multiclass") {
       train_keys <- self$heads$project_decoder_keys(train_emb)
     }
-    y_bn <- if (y$dim() == 2) y$transpose(1, 2) else y$unsqueeze(1)
+    if (y$dim() == 2) {
+      y_bn <- y$transpose(1, 2)
+    } else {
+      y_bn <- y$unsqueeze(1)
+    }
     out <- self$heads(
       train_keys,
       test_emb,

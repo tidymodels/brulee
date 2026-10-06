@@ -57,7 +57,11 @@ tabpfn_encode <- function(encoder, x, call = caller_env()) {
     out[, j] <- switch(
       info$type,
       categorical = {
-        key <- if (is.numeric(info$levels)) v else as.character(v)
+        if (is.numeric(info$levels)) {
+          key <- v
+        } else {
+          key <- as.character(v)
+        }
         code <- match(key, info$levels) - 1
         code[is.na(code) & !is.na(v)] <- -1
         code[is.na(v)] <- NaN
@@ -129,8 +133,10 @@ tabpfn_make_members <- function(
     numeric(1)
   )
   subsets <- tabpfn_feature_subsets(p, sizes, subsampling)
-  class_perms <- if (task_type == "multiclass") {
-    tabpfn_class_permutations(n_estimators, n_classes)
+  if (task_type == "multiclass") {
+    class_perms <- tabpfn_class_permutations(n_estimators, n_classes)
+  } else {
+    class_perms <- NULL
   }
   lapply(seq_len(n_estimators), function(i) {
     pre <- preprocessors[[plan$preprocessor[i]]]
@@ -164,14 +170,17 @@ tabpfn_make_members <- function(
 # member uses: every combination for an equal number of consecutive members,
 # the remainder taken from the front (Python `_balance`).
 tabpfn_member_plan <- function(n_estimators, n_preprocessors, task_type) {
-  combos <- if (task_type == "regression") {
-    expand.grid(
+  if (task_type == "regression") {
+    combos <- expand.grid(
       target = c("none", "safepower"),
       preprocessor = seq_len(n_preprocessors),
       stringsAsFactors = FALSE
     )
   } else {
-    data.frame(preprocessor = seq_len(n_preprocessors), target = "none")
+    combos <- data.frame(
+      preprocessor = seq_len(n_preprocessors),
+      target = "none"
+    )
   }
   k <- nrow(combos)
   idx <- c(
@@ -214,11 +223,15 @@ tabpfn_member_layout <- function(x_train, categorical, pre) {
   # Reshape: the GPU transform applies to the numeric columns, or to all
   # columns for the "numeric" categorical encoding.
   apply_to_cat <- identical(pre$categorical, "numeric")
-  transformed <- if (apply_to_cat) c(cats, nums) else nums
-  append <- if (identical(pre$append, "auto")) {
-    length(kept) < 500 && length(kept) <= pre$max_features / 2
+  if (apply_to_cat) {
+    transformed <- c(cats, nums)
   } else {
-    isTRUE(pre$append)
+    transformed <- nums
+  }
+  if (identical(pre$append, "auto")) {
+    append <- length(kept) < 500 && length(kept) <= pre$max_features / 2
+  } else {
+    append <- isTRUE(pre$append)
   }
   if (append) {
     columns <- c(kept, transformed)
@@ -324,10 +337,10 @@ tabpfn_feature_subsets <- function(p, sizes, method = "balanced") {
 # for an equal number of consecutive members, with the remainder drawn at
 # random (Python's "shuffle" class shift).
 tabpfn_class_permutations <- function(n_estimators, n_classes) {
-  draws <- if (n_classes == 1) {
-    matrix(0L, nrow = 3 * n_estimators)
+  if (n_classes == 1) {
+    draws <- matrix(0L, nrow = 3 * n_estimators)
   } else {
-    t(replicate(3 * n_estimators, sample.int(n_classes) - 1L))
+    draws <- t(replicate(3 * n_estimators, sample.int(n_classes) - 1L))
   }
   uniq <- unique(draws)
   uniq <- uniq[do.call(order, as.data.frame(uniq)), , drop = FALSE]
@@ -345,8 +358,10 @@ tabpfn_with_seed <- function(seed, code) {
   # `set.seed(NULL)` re-seeds at random, which would silently make fits
   # irreproducible.
   stopifnot(is.numeric(seed), length(seed) == 1, !is.na(seed))
-  old <- if (exists(".Random.seed", envir = globalenv())) {
-    get(".Random.seed", envir = globalenv())
+  if (exists(".Random.seed", envir = globalenv())) {
+    old <- get(".Random.seed", envir = globalenv())
+  } else {
+    old <- NULL
   }
   on.exit({
     if (is.null(old)) {
@@ -467,10 +482,10 @@ tabpfn_quantile_transform <- function(x, num_train, preset) {
     refs <- torch::torch_tensor(c(0, 1), dtype = f32)
     q <- torch::torch_stack(list(train[1], train[1]))
   } else {
-    n_q <- if (preset == "coarse") {
-      max(num_train %/% 10, 2)
+    if (preset == "coarse") {
+      n_q <- max(num_train %/% 10, 2)
     } else {
-      max(num_train %/% 5, 2)
+      n_q <- max(num_train %/% 5, 2)
     }
     n_q <- min(max(1, min(n_q, num_train, 20000)), num_train)
     refs <- torch::torch_linspace(0, 1, n_q, dtype = f32)
@@ -674,7 +689,11 @@ tabpfn_fingerprint <- function(x, num_train) {
     }
     key <- sprintf("%.17g", h_base)
     offset <- counter[[key]] %||% 0
-    h <- if (offset == 0) h_base else tabpfn_row_hash(row, salt + offset)
+    if (offset == 0) {
+      h <- h_base
+    } else {
+      h <- tabpfn_row_hash(row, salt + offset)
+    }
     all_nan <- all(is.nan(raw_x[i, ]))
     retries <- 0
     while (!is.null(seen[[sprintf("%.17g", h)]]) && !all_nan) {
@@ -759,15 +778,15 @@ tabpfn_yeo_johnson <- function(x, lambda) {
   out <- numeric(length(x))
   pos <- x >= 0
   eps <- .Machine$double.eps
-  out[pos] <- if (abs(lambda) < eps) {
-    log1p(x[pos])
+  if (abs(lambda) < eps) {
+    out[pos] <- log1p(x[pos])
   } else {
-    expm1(lambda * log1p(x[pos])) / lambda
+    out[pos] <- expm1(lambda * log1p(x[pos])) / lambda
   }
-  out[!pos] <- if (abs(lambda - 2) > eps) {
-    -expm1((2 - lambda) * log1p(-x[!pos])) / (2 - lambda)
+  if (abs(lambda - 2) > eps) {
+    out[!pos] <- -expm1((2 - lambda) * log1p(-x[!pos])) / (2 - lambda)
   } else {
-    -log1p(-x[!pos])
+    out[!pos] <- -log1p(-x[!pos])
   }
   out
 }
@@ -841,15 +860,15 @@ tabpfn_inverse_target_borders <- function(borders, transform) {
   out <- numeric(length(x))
   pos <- x >= 0
   eps <- .Machine$double.eps
-  out[pos] <- if (abs(lambda) < eps) {
-    expm1(clip(x[pos]))
+  if (abs(lambda) < eps) {
+    out[pos] <- expm1(clip(x[pos]))
   } else {
-    expm1(clip(log1p(x[pos] * lambda) / lambda))
+    out[pos] <- expm1(clip(log1p(x[pos] * lambda) / lambda))
   }
-  out[!pos] <- if (abs(lambda - 2) > eps) {
-    -expm1(clip(log1p(-(2 - lambda) * x[!pos]) / (2 - lambda)))
+  if (abs(lambda - 2) > eps) {
+    out[!pos] <- -expm1(clip(log1p(-(2 - lambda) * x[!pos]) / (2 - lambda)))
   } else {
-    -expm1(clip(-x[!pos]))
+    out[!pos] <- -expm1(clip(-x[!pos]))
   }
   # Round to float32, as numpy stores the result in a float32 array.
   out <- tabpfn_f32(out)

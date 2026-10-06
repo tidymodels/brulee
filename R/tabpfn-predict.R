@@ -134,13 +134,17 @@ tabpfn_predict_classification <- function(fit, x_new) {
   inputs <- tabpfn_model_inputs(fit, x_new, y_members)
   model <- tabpfn_fit_model(fit)
   out <- tabpfn_forward(model, inputs$x, inputs$y, fit$task_type, fit$device)
+  class_counts <- NULL
+  if (fit$balance_probabilities) {
+    class_counts <- fit$class_counts
+  }
   tabpfn_postprocess_classification(
     out,
     fit$members,
     length(fit$classes),
     temperature = fit$softmax_temperature,
     average_before_softmax = fit$average_before_softmax,
-    class_counts = if (fit$balance_probabilities) fit$class_counts
+    class_counts = class_counts
   )
 }
 
@@ -213,7 +217,10 @@ tabpfn_load <- function(info, device, call = caller_env()) {
 # TabPFN was not faster than on the CPU in our tests.
 tabpfn_resolve_device <- function(device = NULL, call = caller_env()) {
   if (is.null(device)) {
-    return(if (torch::cuda_is_available()) "cuda" else "cpu")
+    if (torch::cuda_is_available()) {
+      return("cuda")
+    }
+    return("cpu")
   }
   device <- arg_match(device, c("cpu", "cuda", "mps"), error_call = call)
   if (device == "cuda" && !torch::cuda_is_available()) {
@@ -332,7 +339,11 @@ tabpfn_postprocess_regression <- function(
     if (average_before_softmax) {
       probs <- probs$log()
     }
-    acc <- if (is.null(acc)) probs else acc + probs
+    if (is.null(acc)) {
+      acc <- probs
+    } else {
+      acc <- acc + probs
+    }
   }
   n <- length(members)
   if (average_before_softmax) {

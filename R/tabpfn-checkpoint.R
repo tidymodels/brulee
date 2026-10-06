@@ -44,9 +44,12 @@ tabpfn_read_ckpt_checkpoint <- function(path, call = caller_env()) {
 tabpfn_checkpoint <- function(tensors, fields, path, call) {
   required <- c("architecture_name", "config", "inference_config")
   missing <- setdiff(required, names(fields))
-  if (length(missing) > 0 || length(tensors) == 0) {
+  if (length(tensors) == 0) {
+    missing <- c(missing, "state_dict")
+  }
+  if (length(missing) > 0) {
     cli::cli_abort(
-      "{.file {basename(path)}} is missing {.field {c(missing, if (!length(tensors)) 'state_dict')}}.",
+      "{.file {basename(path)}} is missing {.field {missing}}.",
       call = call
     )
   }
@@ -281,12 +284,16 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
   pop_mark <- function() {
     m <- marks[length(marks)]
     marks <<- marks[-length(marks)]
-    items <- if (length(stack) > m) {
-      lapply(stack[(m + 1L):length(stack)], `[[`, 1)
+    if (length(stack) > m) {
+      items <- lapply(stack[(m + 1L):length(stack)], `[[`, 1)
     } else {
-      list()
+      items <- list()
     }
-    stack <<- if (m > 0L) stack[seq_len(m)] else list()
+    if (m > 0L) {
+      stack <<- stack[seq_len(m)]
+    } else {
+      stack <<- list()
+    }
     items
   }
   memo_put <- function(i) {
@@ -324,13 +331,20 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
       "4a" = {
         # BININT: 4-byte signed
         v <- read_uint(4L)
-        push(as.integer(if (v >= 2^31) v - 2^32 else v))
+        if (v >= 2^31) {
+          v <- v - 2^32
+        }
+        push(as.integer(v))
       },
       "47" = push(readBin(take(8L), "double", size = 8L, endian = "big")), # BINFLOAT
       "58" = {
         # BINUNICODE
         n <- read_uint(4L)
-        s <- if (n > 0) rawToChar(take(n)) else ""
+        if (n > 0) {
+          s <- rawToChar(take(n))
+        } else {
+          s <- ""
+        }
         Encoding(s) <- "UTF-8"
         push(s)
       },
@@ -671,12 +685,14 @@ tabpfn_categorical_encodings <- c(
 # it isn't supported.
 tabpfn_preprocessor <- function(tr) {
   name <- tr$name
-  gpu <- if (name %in% names(tabpfn_quantile_transforms)) {
-    "quantile"
+  if (name %in% names(tabpfn_quantile_transforms)) {
+    gpu <- "quantile"
   } else if (name %in% names(tabpfn_squashing_transforms)) {
-    "squash"
+    gpu <- "squash"
   } else if (identical(name, "none")) {
-    "none"
+    gpu <- "none"
+  } else {
+    gpu <- NULL
   }
   append <- tr$append_original
   ok <- !is.null(gpu) &&
@@ -689,11 +705,19 @@ tabpfn_preprocessor <- function(tr) {
   if (!ok) {
     return(NULL)
   }
+  quantile <- NULL
+  squash_max <- NULL
+  if (gpu == "quantile") {
+    quantile <- tabpfn_quantile_transforms[[name]]
+  }
+  if (gpu == "squash") {
+    squash_max <- tabpfn_squashing_transforms[[name]]
+  }
   list(
     name = name,
     gpu = gpu,
-    quantile = if (gpu == "quantile") tabpfn_quantile_transforms[[name]],
-    squash_max = if (gpu == "squash") tabpfn_squashing_transforms[[name]],
+    quantile = quantile,
+    squash_max = squash_max,
     categorical = tr$categorical_name,
     svd = identical(tr$global_transformer_name, "svd_quarter_components"),
     append = append,
@@ -770,10 +794,10 @@ tabpfn_resolve_inference <- function(
 
   outlier_std <- ic$OUTLIER_REMOVAL_STD
   if (identical(outlier_std, "auto")) {
-    outlier_std <- if (task == "classification") {
-      ic$`_CLASSIFICATION_DEFAULT_OUTLIER_REMOVAL_STD`
+    if (task == "classification") {
+      outlier_std <- ic$`_CLASSIFICATION_DEFAULT_OUTLIER_REMOVAL_STD`
     } else {
-      ic$`_REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD`
+      outlier_std <- ic$`_REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD`
     }
   }
   list(

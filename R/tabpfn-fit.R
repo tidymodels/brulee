@@ -393,10 +393,10 @@ tabpfn_sample_rows <- function(outcome, limit, seed) {
   if (n <= limit) {
     return(seq_len(n))
   }
-  strata <- if (is.factor(outcome)) {
-    outcome
+  if (is.factor(outcome)) {
+    strata <- outcome
   } else {
-    cut(
+    strata <- cut(
       outcome,
       unique(stats::quantile(outcome, 0:4 / 4)),
       include.lowest = TRUE
@@ -413,8 +413,16 @@ tabpfn_sample_rows <- function(outcome, limit, seed) {
 }
 
 tabpfn_impl <- function(x, y, options, version, call = caller_env()) {
-  task <- if (is.factor(y)) "classification" else "regression"
-  task_type <- if (task == "classification") "multiclass" else "regression"
+  if (is.factor(y)) {
+    task <- "classification"
+  } else {
+    task <- "regression"
+  }
+  if (task == "classification") {
+    task_type <- "multiclass"
+  } else {
+    task_type <- "regression"
+  }
   info <- tabpfn_version_info(version, task, call = call)
   device <- tabpfn_resolve_device(options$device, call = call)
   loaded <- tabpfn_load(info, device, call = call)
@@ -587,7 +595,11 @@ new_brulee_tab_pfn <- function(fit, blueprint) {
 
 #' @export
 print.brulee_tab_pfn <- function(x, ...) {
-  task <- if (is.null(x$levels)) "regression" else "classification"
+  if (is.null(x$levels)) {
+    task <- "regression"
+  } else {
+    task <- "classification"
+  }
   cli::cli_text("TabPFN {x$version} {task} model")
   cli::cli_text(
     "{x$training[1]} training rows, {x$training[2]} predictors,

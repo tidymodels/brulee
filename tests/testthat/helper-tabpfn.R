@@ -104,16 +104,19 @@ load_pipeline_fixture <- function(name) {
 # Python's member choices in brulee's member format.
 fixture_members <- function(fx, n_cols) {
   lapply(fx$meta$members, function(m) {
+    if (is.null(m$features)) {
+      features <- seq_len(n_cols)
+    } else {
+      features <- as.integer(unlist(m$features)) + 1L
+    }
+    class_permutation <- NULL
+    if (!is.null(m$class_permutation)) {
+      class_permutation <- as.integer(unlist(m$class_permutation))
+    }
     list(
       preprocessor = (m$preprocessor %||% 0L) + 1L,
-      features = if (is.null(m$features)) {
-        seq_len(n_cols)
-      } else {
-        as.integer(unlist(m$features)) + 1L
-      },
-      class_permutation = if (!is.null(m$class_permutation)) {
-        as.integer(unlist(m$class_permutation))
-      },
+      features = features,
+      class_permutation = class_permutation,
       category_maps = lapply(m$category_maps, function(v) {
         as.integer(unlist(v))
       }),
