@@ -88,7 +88,13 @@ load_pipeline_fixture <- function(name) {
   )
   meta <- jsonlite::read_json(fixture_path(name, ".json"))
   data <- as.data.frame(lapply(meta$data, function(v) {
-    unlist(lapply(v, function(e) if (is.null(e)) NA else e))
+    unlist(lapply(v, function(e) {
+      if (is.null(e)) {
+        NA
+      } else {
+        e
+      }
+    }))
   }))
   for (nm in unlist(meta$categorical_columns)) {
     data[[nm]] <- factor(data[[nm]])
@@ -152,7 +158,11 @@ local_tiny_checkpoint <- function(fx, env = parent.frame()) {
   name <- fx$meta$checkpoint
   path <- local_gunzip(
     test_path("fixtures", "tabpfn", "checkpoints", paste0(name, ".gz")),
-    if (grepl("\\.safetensors$", name)) ".safetensors" else ".ckpt",
+    if (grepl("\\.safetensors$", name)) {
+      ".safetensors"
+    } else {
+      ".ckpt"
+    },
     env = env
   )
   local_mocked_bindings(

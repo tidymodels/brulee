@@ -827,5 +827,9 @@ tabpfn_resolve_n_estimators <- function(
   }
   budget <- min(vapply(preprocessors, function(p) p$max_features, integer(1)))
   needed <- ceiling(n_columns / budget)
-  if (needed > 8) as.integer(min(needed, 32)) else 8L
+  if (needed > 8) {
+    as.integer(min(needed, 32))
+  } else {
+    8L
+  }
 }

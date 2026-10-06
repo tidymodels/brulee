@@ -87,7 +87,11 @@ tabpfn_v3_5_fourier_embedder <- torch::nn_module(
 )
 
 tabpfn_at_least_fp32 <- function(dtype) {
-  if (dtype == torch::torch_float64()) dtype else torch::torch_float32()
+  if (dtype == torch::torch_float64()) {
+    dtype
+  } else {
+    torch::torch_float32()
+  }
 }
 
 # Sin/cos features of ECDF values in [0, 1]: (...) -> (..., 2K).

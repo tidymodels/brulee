@@ -277,7 +277,11 @@ tabpfn_find_checkpoint <- function(info, cache_dir = tabpfn_cache_dir()) {
   dirs <- c(cache_dir, tabpfn_python_cache_dir())
   paths <- file.path(dirs[!is.na(dirs)], info$file)
   paths <- paths[file.exists(paths) & file.size(paths) == info$size]
-  if (length(paths) == 0) NULL else paths[[1]]
+  if (length(paths) == 0) {
+    NULL
+  } else {
+    paths[[1]]
+  }
 }
 
 # Path to the checkpoint described by `info`, downloading it into the
@@ -691,7 +695,11 @@ tabpfn_prompt_for_token <- function(gui_url, license_repo) {
   ))
   utils::browseURL(login_url)
   token <- trimws(readline("API key: "))
-  if (nzchar(token)) token else NULL
+  if (nzchar(token)) {
+    token
+  } else {
+    NULL
+  }
 }
 
 tabpfn_abort_no_token <- function(gui_url, call) {

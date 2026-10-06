@@ -306,7 +306,11 @@ tabpfn_feature_subsets <- function(p, sizes, method = "balanced") {
   }
   if (method == "random") {
     return(lapply(sizes, function(size) {
-      if (size >= p) seq_len(p) else sort(sample.int(p)[seq_len(size)])
+      if (size >= p) {
+        seq_len(p)
+      } else {
+        sort(sample.int(p)[seq_len(size)])
+      }
     }))
   }
   shuffled <- sample.int(p)
@@ -655,7 +659,11 @@ tabpfn_svd_features <- function(x, num_train, k) {
     seq_len(k),
     function(i) {
       s <- sign(vh_val[i, which.max(abs(vh_val[i, ]))])
-      if (s == 0) 1 else s
+      if (s == 0) {
+        1
+      } else {
+        s
+      }
     },
     numeric(1)
   )
