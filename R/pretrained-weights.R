@@ -44,7 +44,8 @@ brulee_remote_size <- function(url) {
 # name and renamed once complete, so an interrupted download never leaves a
 # partial file under the real name. When `sha256` is given, a complete
 # download with a different checksum is an error rather than a retry: the
-# upstream file has changed.
+# upstream file has changed. `verbose = FALSE` silences the progress and retry
+# messages, but not the errors.
 brulee_download_file <- function(
   url,
   dest,
@@ -52,6 +53,7 @@ brulee_download_file <- function(
   max_attempts = 3L,
   size = brulee_remote_size(url),
   sha256 = NULL,
+  verbose = TRUE,
   call = rlang::current_env()
 ) {
   if (file.exists(dest) && (is.na(size) || file.size(dest) == size)) {
@@ -59,9 +61,11 @@ brulee_download_file <- function(
   }
 
   if (file.exists(dest)) {
-    cli::cli_alert_info(
-      "Cached {.file {label}} is incomplete (size {.val {file.size(dest)}} of {.val {size}}); re-downloading."
-    )
+    if (verbose) {
+      cli::cli_alert_info(
+        "Cached {.file {label}} is incomplete (size {.val {file.size(dest)}} of {.val {size}}); re-downloading."
+      )
+    }
     file.remove(dest)
   }
 
@@ -73,7 +77,9 @@ brulee_download_file <- function(
   withr::local_options(timeout = max(3600L, getOption("timeout")))
 
   for (attempt in seq_len(max_attempts)) {
-    cli::cli_progress_step("Downloading {.url {url}}")
+    if (verbose) {
+      cli::cli_progress_step("Downloading {.url {url}}")
+    }
     err <- tryCatch(
       {
         curl::curl_download(url, part, mode = "wb", quiet = TRUE)
@@ -105,7 +111,7 @@ brulee_download_file <- function(
     if (file.exists(part)) {
       file.remove(part)
     }
-    if (attempt < max_attempts) {
+    if (verbose && attempt < max_attempts) {
       cli::cli_alert_warning(
         "Attempt {attempt}/{max_attempts} for {.val {label}} failed; retrying."
       )

@@ -60,6 +60,10 @@ has already downloaded (into its own cache, or the directory in the
 \code{TABPFN_MODEL_CACHE_DIR} environment variable) are used from there without
 copying, after their checksum is verified. Use \code{\link[=tab_pfn_clear_cache]{tab_pfn_clear_cache()}} to
 delete the weights brulee downloaded.
+
+Notes about where the weights come from (downloaded, already cached, or
+reused from the Python package) appear only in interactive sessions, at most
+once a day for each file.
 }
 
 \section{License}{

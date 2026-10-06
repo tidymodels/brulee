@@ -190,6 +190,28 @@ tabpfn_python_cache_dir <- function() {
   file.path(path.expand("~"), ".cache", "tabpfn")
 }
 
+# Notes about where the weights come from (downloaded now, already cached, or
+# reused from the Python package) are shown only in interactive sessions, and
+# at most once a day for each `key`. The date a note was last shown is kept in
+# `.notes/` in the cache directory, so the limit holds across sessions.
+# Returns whether to show the note now, and records it when so.
+tabpfn_note_due <- function(key, cache_dir = tabpfn_cache_dir()) {
+  if (!is_interactive()) {
+    return(FALSE)
+  }
+  stamp <- file.path(cache_dir, ".notes", key)
+  today <- format(Sys.Date())
+  if (file.exists(stamp)) {
+    shown <- readLines(stamp, n = 1L, warn = FALSE)
+    if (identical(shown, today)) {
+      return(FALSE)
+    }
+  }
+  dir.create(dirname(stamp), recursive = TRUE, showWarnings = FALSE)
+  try(writeLines(today, stamp), silent = TRUE)
+  TRUE
+}
+
 tabpfn_hf_url <- function(repo_id, file) {
   paste0("https://huggingface.co/", repo_id, "/resolve/main/", file)
 }
@@ -270,7 +292,9 @@ tabpfn_checkpoint_path <- function(
   if (!is.null(found)) {
     from_python <- normalizePath(dirname(found)) !=
       normalizePath(cache_dir, mustWork = FALSE)
-    if (from_python && !found %in% tabpfn_env$verified) {
+    if (
+      from_python && tabpfn_note_due(paste0("python-", info$file), cache_dir)
+    ) {
       cli::cli_inform(c(
         i = "Using the TabPFN {info$version} weights downloaded by the Python
              {.pkg tabpfn} package: {.file {found}}."
@@ -287,24 +311,30 @@ tabpfn_checkpoint_path <- function(
     tabpfn_confirm_download(info, call = call)
   }
   tabpfn_ensure_license(info$license_repo, call = call)
-  cli::cli_inform(c(
-    i = "Downloading the TabPFN {info$version} weights ({.file {info$file}},
-         {format_bytes(info$size)}) from {.url https://huggingface.co/{info$repo_id}}
-         into {.path {cache_dir}}."
-  ))
+  note <- tabpfn_note_due(paste0("download-", info$file), cache_dir)
+  if (note) {
+    cli::cli_inform(c(
+      i = "Downloading the TabPFN {info$version} weights ({.file {info$file}},
+           {format_bytes(info$size)}) from {.url https://huggingface.co/{info$repo_id}}
+           into {.path {cache_dir}}."
+    ))
+  }
   brulee_download_file(
     tabpfn_hf_url(info$repo_id, info$file),
     path,
     label = info$file,
     size = info$size,
     sha256 = info$sha256,
+    verbose = is_interactive(),
     call = call
   )
   tabpfn_count_download(info$repo_id)
   tabpfn_env$verified <- c(tabpfn_env$verified, path)
-  cli::cli_inform(c(
-    v = "Saved the TabPFN {info$version} weights to {.file {path}}."
-  ))
+  if (note) {
+    cli::cli_inform(c(
+      v = "Saved the TabPFN {info$version} weights to {.file {path}}."
+    ))
+  }
   path
 }
 
@@ -332,6 +362,10 @@ tabpfn_checkpoint_path <- function(
 #' `TABPFN_MODEL_CACHE_DIR` environment variable) are used from there without
 #' copying, after their checksum is verified. Use [tab_pfn_clear_cache()] to
 #' delete the weights brulee downloaded.
+#'
+#' Notes about where the weights come from (downloaded, already cached, or
+#' reused from the Python package) appear only in interactive sessions, at most
+#' once a day for each file.
 #'
 #' @section License:
 #' The weights are released by Prior Labs under a non-commercial license that
@@ -371,7 +405,10 @@ tab_pfn_download_weights <- function(
     infos,
     function(info) {
       found <- tabpfn_find_checkpoint(info, cache_dir)
-      if (!is.null(found)) {
+      if (
+        !is.null(found) &&
+          tabpfn_note_due(paste0("cached-", info$file), cache_dir)
+      ) {
         cli::cli_inform(c(
           v = "The TabPFN {info$version} weights ({.file {info$file}}) are
                already cached: {.file {found}}."

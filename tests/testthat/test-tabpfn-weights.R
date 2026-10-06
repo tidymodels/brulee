@@ -116,7 +116,10 @@ test_that("cached checkpoints are checked, and missing ones need consent", {
 test_that("downloading checks the license first", {
   remote <- local_fake_file()
   cache <- withr::local_tempdir()
-  withr::local_options(brulee.tabpfn_cache_dir = cache)
+  withr::local_options(
+    brulee.tabpfn_cache_dir = cache,
+    rlang_interactive = TRUE
+  )
   withr::local_envvar(TABPFN_MODEL_CACHE_DIR = withr::local_tempdir())
   info <- fake_info(remote)
   calls <- character()
@@ -147,6 +150,7 @@ test_that("weights cached by Python are used in place", {
   info <- fake_info(remote)
   file.copy(sub("^file://", "", remote$url), file.path(python_cache, info$file))
   tabpfn_env$verified <- character()
+  withr::local_options(rlang_interactive = TRUE)
   expect_snapshot(
     path <- tabpfn_checkpoint_path(info, cache_dir = cache),
     transform = function(x) {
@@ -155,6 +159,30 @@ test_that("weights cached by Python are used in place", {
   )
   expect_identical(path, file.path(python_cache, info$file))
   expect_length(list.files(cache), 0)
+})
+
+test_that("notes about the weights are interactive only, once a day", {
+  remote <- local_fake_file()
+  python_cache <- withr::local_tempdir()
+  withr::local_envvar(TABPFN_MODEL_CACHE_DIR = python_cache)
+  cache <- withr::local_tempdir()
+  info <- fake_info(remote)
+  file.copy(sub("^file://", "", remote$url), file.path(python_cache, info$file))
+
+  withr::local_options(rlang_interactive = FALSE)
+  expect_silent(tabpfn_checkpoint_path(info, cache_dir = cache))
+  expect_false(dir.exists(file.path(cache, ".notes")))
+
+  withr::local_options(rlang_interactive = TRUE)
+  expect_message(tabpfn_checkpoint_path(info, cache_dir = cache), "Python")
+  expect_silent(tabpfn_checkpoint_path(info, cache_dir = cache))
+
+  # A note last shown on an earlier day is shown again.
+  writeLines(
+    "2000-01-01",
+    file.path(cache, ".notes", paste0("python-", info$file))
+  )
+  expect_message(tabpfn_checkpoint_path(info, cache_dir = cache), "Python")
 })
 
 test_that("cached weights are found in either cache", {
