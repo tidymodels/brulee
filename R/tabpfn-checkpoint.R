@@ -131,16 +131,20 @@ tabpfn_load_state <- function(model, tensors, call = caller_env()) {
 # differently fails loudly instead of being misread. Adding support for
 # something new is a deliberate change to the tables below.
 
-pkl_globals <- c(
-  "collections.OrderedDict",
-  "torch._utils._rebuild_tensor_v2",
-  "torch.FloatStorage"
-)
+pkl_globals <- function() {
+  c(
+    "collections.OrderedDict",
+    "torch._utils._rebuild_tensor_v2",
+    "torch.FloatStorage"
+  )
+}
 
 # Storage types and how to read them.
-pkl_storage_types <- list(
-  "torch.FloatStorage" = list(what = "double", size = 4L, dtype = "float32")
-)
+pkl_storage_types <- function() {
+  list(
+    "torch.FloatStorage" = list(what = "double", size = 4L, dtype = "float32")
+  )
+}
 
 tabpfn_read_ckpt <- function(path, call = caller_env()) {
   entries <- utils::unzip(path, list = TRUE)$Name
@@ -166,7 +170,7 @@ tabpfn_read_ckpt <- function(path, call = caller_env()) {
   storages <- new.env(parent = emptyenv())
   load_storage <- function(key, type, numel) {
     if (is.null(storages[[key]])) {
-      spec <- pkl_storage_types[[type]]
+      spec <- pkl_storage_types()[[type]]
       values <- tabpfn_read_zip_entry(
         path,
         paste0(prefix, "data/", key),
@@ -225,7 +229,9 @@ pkl_list <- function() {
 
 pkl_tuple <- function(values) structure(values, class = "pkl_tuple")
 
-pkl_none <- structure(list(), class = "pkl_none")
+pkl_none <- function() {
+  structure(list(), class = "pkl_none")
+}
 
 pkl_global <- function(module, name) {
   structure(list(name = paste0(module, ".", name)), class = "pkl_global")
@@ -322,7 +328,7 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
       "5d" = push(pkl_list()), # EMPTY_LIST
       "29" = push(pkl_tuple(list())), # EMPTY_TUPLE
       "28" = marks <- c(marks, length(stack)), # MARK
-      "4e" = push(pkl_none), # NONE
+      "4e" = push(pkl_none()), # NONE
       "88" = push(TRUE), # NEWTRUE
       "89" = push(FALSE), # NEWFALSE
       "4b" = push(as.integer(read_uint(1L))), # BININT1
@@ -354,7 +360,7 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
       "63" = {
         # GLOBAL
         g <- pkl_global(read_line(), read_line())
-        if (!g$name %in% pkl_globals) {
+        if (!g$name %in% pkl_globals()) {
           bad(paste0("the object type \"", g$name, "\" is not supported."))
         }
         push(g)
@@ -419,7 +425,7 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
           bad("unsupported persistent id.")
         }
         type <- pid[[2]]$name
-        if (is.null(pkl_storage_types[[type]])) {
+        if (is.null(pkl_storage_types()[[type]])) {
           bad(paste0("the storage type \"", type, "\" is not supported."))
         }
         push(list(storage = load_storage(pid[[3]], type, pid[[5]])))
@@ -615,78 +621,88 @@ tabpfn_parse_config <- function(
 # preprocessed differently than Python would.
 
 # `PREPROCESS_TRANSFORMS` has no default; every checkpoint sets it.
-tabpfn_inference_defaults <- list(
-  PREPROCESS_TRANSFORMS = NULL,
-  MAX_UNIQUE_FOR_CATEGORICAL_FEATURES = 30L,
-  MIN_UNIQUE_FOR_NUMERICAL_FEATURES = 4L,
-  MIN_NUMBER_SAMPLES_FOR_CATEGORICAL_INFERENCE = 100L,
-  MIN_CARDINALITY_FOR_TEXT = 30L,
-  SOFTMAX_TEMPERATURE = 0.9,
-  N_ESTIMATORS = "auto",
-  TRANSFORM_DATES = FALSE,
-  TRANSFORM_TEXT = FALSE,
-  TEXT_N_COMPONENTS = 30L,
-  OUTLIER_REMOVAL_STD = "auto",
-  FEATURE_SHIFT_METHOD = "shuffle",
-  CLASS_SHIFT_METHOD = "shuffle",
-  FINGERPRINT_FEATURE = TRUE,
-  POLYNOMIAL_FEATURES = "no",
-  SUBSAMPLE_SAMPLES = NULL,
-  SAMPLE_SUBSAMPLING_METHOD = "auto",
-  ENABLE_GPU_PREPROCESSING = FALSE,
-  FEATURE_SUBSAMPLING_METHOD = "balanced",
-  FEATURE_SUBSAMPLING_CONSTANT_FEATURE_COUNT = 50L,
-  FEATURE_SUBSAMPLING_IMPORTANCE_TOP_K_COUNT = "auto",
-  REGRESSION_Y_PREPROCESS_TRANSFORMS = list(NULL, "safepower"),
-  USE_SKLEARN_16_DECIMAL_PRECISION = FALSE,
-  MAX_NUMBER_OF_CLASSES = 10L,
-  MAX_NUMBER_OF_FEATURES = 500L,
-  MAX_NUMBER_OF_SAMPLES = 10000L,
-  MAX_CPU_SAMPLES = 1000L,
-  FIX_NAN_BORDERS_AFTER_TARGET_TRANSFORM = TRUE,
-  PASSTHROUGH_INF = FALSE,
-  `_REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD` = NULL,
-  `_CLASSIFICATION_DEFAULT_OUTLIER_REMOVAL_STD` = 12
-)
+tabpfn_inference_defaults <- function() {
+  list(
+    PREPROCESS_TRANSFORMS = NULL,
+    MAX_UNIQUE_FOR_CATEGORICAL_FEATURES = 30L,
+    MIN_UNIQUE_FOR_NUMERICAL_FEATURES = 4L,
+    MIN_NUMBER_SAMPLES_FOR_CATEGORICAL_INFERENCE = 100L,
+    MIN_CARDINALITY_FOR_TEXT = 30L,
+    SOFTMAX_TEMPERATURE = 0.9,
+    N_ESTIMATORS = "auto",
+    TRANSFORM_DATES = FALSE,
+    TRANSFORM_TEXT = FALSE,
+    TEXT_N_COMPONENTS = 30L,
+    OUTLIER_REMOVAL_STD = "auto",
+    FEATURE_SHIFT_METHOD = "shuffle",
+    CLASS_SHIFT_METHOD = "shuffle",
+    FINGERPRINT_FEATURE = TRUE,
+    POLYNOMIAL_FEATURES = "no",
+    SUBSAMPLE_SAMPLES = NULL,
+    SAMPLE_SUBSAMPLING_METHOD = "auto",
+    ENABLE_GPU_PREPROCESSING = FALSE,
+    FEATURE_SUBSAMPLING_METHOD = "balanced",
+    FEATURE_SUBSAMPLING_CONSTANT_FEATURE_COUNT = 50L,
+    FEATURE_SUBSAMPLING_IMPORTANCE_TOP_K_COUNT = "auto",
+    REGRESSION_Y_PREPROCESS_TRANSFORMS = list(NULL, "safepower"),
+    USE_SKLEARN_16_DECIMAL_PRECISION = FALSE,
+    MAX_NUMBER_OF_CLASSES = 10L,
+    MAX_NUMBER_OF_FEATURES = 500L,
+    MAX_NUMBER_OF_SAMPLES = 10000L,
+    MAX_CPU_SAMPLES = 1000L,
+    FIX_NAN_BORDERS_AFTER_TARGET_TRANSFORM = TRUE,
+    PASSTHROUGH_INF = FALSE,
+    `_REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD` = NULL,
+    `_CLASSIFICATION_DEFAULT_OUTLIER_REMOVAL_STD` = 12
+  )
+}
 
 # Settings that select pipeline behavior, and the values the R pipeline
 # implements.
-tabpfn_inference_supported <- list(
-  FEATURE_SHIFT_METHOD = "shuffle",
-  CLASS_SHIFT_METHOD = "shuffle",
-  FINGERPRINT_FEATURE = TRUE,
-  POLYNOMIAL_FEATURES = "no",
-  SUBSAMPLE_SAMPLES = NULL,
-  ENABLE_GPU_PREPROCESSING = TRUE,
-  USE_SKLEARN_16_DECIMAL_PRECISION = FALSE,
-  FIX_NAN_BORDERS_AFTER_TARGET_TRANSFORM = TRUE,
-  PASSTHROUGH_INF = FALSE
-)
+tabpfn_inference_supported <- function() {
+  list(
+    FEATURE_SHIFT_METHOD = "shuffle",
+    CLASS_SHIFT_METHOD = "shuffle",
+    FINGERPRINT_FEATURE = TRUE,
+    POLYNOMIAL_FEATURES = "no",
+    SUBSAMPLE_SAMPLES = NULL,
+    ENABLE_GPU_PREPROCESSING = TRUE,
+    USE_SKLEARN_16_DECIMAL_PRECISION = FALSE,
+    FIX_NAN_BORDERS_AFTER_TARGET_TRANSFORM = TRUE,
+    PASSTHROUGH_INF = FALSE
+  )
+}
 
 # Feature transforms the R pipeline implements. With GPU preprocessing on,
 # Python runs these in torch (`preprocessing/torch/`).
-tabpfn_quantile_transforms <- c(
-  quantile_uni = "uni",
-  quantile_uni_coarse = "coarse",
-  quantile_uni_extrapolate = "extrapolate"
-)
-tabpfn_squashing_transforms <- c(
-  squashing_scaler_default = 3,
-  squashing_scaler_max10 = 10
-)
-tabpfn_categorical_encodings <- c(
-  "ordinal_shuffled",
-  "ordinal_very_common_categories_shuffled",
-  "numeric"
-)
+tabpfn_quantile_transforms <- function() {
+  c(
+    quantile_uni = "uni",
+    quantile_uni_coarse = "coarse",
+    quantile_uni_extrapolate = "extrapolate"
+  )
+}
+tabpfn_squashing_transforms <- function() {
+  c(
+    squashing_scaler_default = 3,
+    squashing_scaler_max10 = 10
+  )
+}
+tabpfn_categorical_encodings <- function() {
+  c(
+    "ordinal_shuffled",
+    "ordinal_very_common_categories_shuffled",
+    "numeric"
+  )
+}
 
 # One entry of PREPROCESS_TRANSFORMS as the R pipeline uses it, or NULL when
 # it isn't supported.
 tabpfn_preprocessor <- function(tr) {
   name <- tr$name
-  if (name %in% names(tabpfn_quantile_transforms)) {
+  if (name %in% names(tabpfn_quantile_transforms())) {
     gpu <- "quantile"
-  } else if (name %in% names(tabpfn_squashing_transforms)) {
+  } else if (name %in% names(tabpfn_squashing_transforms())) {
     gpu <- "squash"
   } else if (identical(name, "none")) {
     gpu <- "none"
@@ -695,7 +711,7 @@ tabpfn_preprocessor <- function(tr) {
   }
   append <- tr$append_original
   ok <- !is.null(gpu) &&
-    isTRUE(tr$categorical_name %in% tabpfn_categorical_encodings) &&
+    isTRUE(tr$categorical_name %in% tabpfn_categorical_encodings()) &&
     (is.null(tr$global_transformer_name) ||
       identical(tr$global_transformer_name, "svd_quarter_components")) &&
     (isFALSE(append) || isTRUE(append) || identical(append, "auto")) &&
@@ -707,10 +723,10 @@ tabpfn_preprocessor <- function(tr) {
   quantile <- NULL
   squash_max <- NULL
   if (gpu == "quantile") {
-    quantile <- tabpfn_quantile_transforms[[name]]
+    quantile <- tabpfn_quantile_transforms()[[name]]
   }
   if (gpu == "squash") {
-    squash_max <- tabpfn_squashing_transforms[[name]]
+    squash_max <- tabpfn_squashing_transforms()[[name]]
   }
   list(
     name = name,
@@ -730,7 +746,10 @@ tabpfn_resolve_inference <- function(
   version,
   call = caller_env()
 ) {
-  unknown <- setdiff(names(inference_config), names(tabpfn_inference_defaults))
+  unknown <- setdiff(
+    names(inference_config),
+    names(tabpfn_inference_defaults())
+  )
   if (length(unknown) > 0) {
     cli::cli_abort(
       c(
@@ -741,14 +760,14 @@ tabpfn_resolve_inference <- function(
       call = call
     )
   }
-  ic <- tabpfn_inference_defaults
+  ic <- tabpfn_inference_defaults()
   for (key in names(inference_config)) {
     ic[key] <- list(inference_config[[key]])
   }
 
   unsupported <- character()
-  for (key in names(tabpfn_inference_supported)) {
-    if (!identical(ic[[key]], tabpfn_inference_supported[[key]])) {
+  for (key in names(tabpfn_inference_supported())) {
+    if (!identical(ic[[key]], tabpfn_inference_supported()[[key]])) {
       unsupported <- c(unsupported, key)
     }
   }

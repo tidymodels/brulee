@@ -103,7 +103,7 @@ test_that("cached checkpoints are checked, and missing ones need consent", {
 
   bad_sha <- info
   bad_sha$sha256 <- strrep("0", 64)
-  tabpfn_env$verified <- character()
+  tabpfn_forget_verified()
   expect_snapshot(
     tabpfn_checkpoint_path(bad_sha),
     error = TRUE,
@@ -149,7 +149,7 @@ test_that("weights cached by Python are used in place", {
   cache <- withr::local_tempdir()
   info <- fake_info(remote)
   file.copy(sub("^file://", "", remote$url), file.path(python_cache, info$file))
-  tabpfn_env$verified <- character()
+  tabpfn_forget_verified()
   withr::local_options(rlang_interactive = TRUE)
   expect_snapshot(
     path <- tabpfn_checkpoint_path(info, cache_dir = cache),
@@ -297,8 +297,8 @@ local_token_files <- function(env = parent.frame()) {
   files <- file.path(dir, c("cache/auth_token", "client/token"))
   local_mocked_bindings(tabpfn_token_files = function() files, .env = env)
   withr::local_envvar(TABPFN_TOKEN = NA, .local_envir = env)
-  tabpfn_env$accepted_repos <- character()
-  withr::defer(tabpfn_env$accepted_repos <- character(), envir = env)
+  tabpfn_forget_licenses()
+  withr::defer(tabpfn_forget_licenses(), envir = env)
   files
 }
 
@@ -328,7 +328,7 @@ test_that("an accepted license with a valid token passes", {
   local_fake_server()
   withr::local_envvar(TABPFN_TOKEN = "abc")
   expect_true(tabpfn_ensure_license("tabpfn_3_5"))
-  expect_identical(tabpfn_env$accepted_repos, "tabpfn_3_5")
+  expect_true(tabpfn_license_accepted("tabpfn_3_5"))
 })
 
 test_that("license problems give informative errors", {

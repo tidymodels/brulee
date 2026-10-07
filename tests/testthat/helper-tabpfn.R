@@ -170,8 +170,8 @@ local_tiny_checkpoint <- function(fx, env = parent.frame()) {
     .env = env
   )
   # A model loaded from another checkpoint must not be reused.
-  tabpfn_env$models <- new.env(parent = emptyenv())
-  withr::defer(tabpfn_env$models <- new.env(parent = emptyenv()), envir = env)
+  tabpfn_forget_models()
+  withr::defer(tabpfn_forget_models(), envir = env)
   path
 }
 

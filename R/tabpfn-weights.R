@@ -11,12 +11,64 @@
 # an architecture is only a registry entry; a new architecture also needs its
 # own `R/tabpfn-<architecture>.R` file. Nothing in this file changes.
 
-# Session state: the parsed registry, licenses confirmed in this session,
-# checkpoints whose checksum was verified, and loaded models.
+# ------------------------------------------------------------------------------
+# Session state
+
+# State kept for the R session: the parsed registry, licenses confirmed,
+# checkpoints whose checksum was verified, and loaded models. It is only read
+# and changed through the functions below.
 tabpfn_env <- new.env(parent = emptyenv())
-tabpfn_env$accepted_repos <- character()
-tabpfn_env$verified <- character()
-tabpfn_env$models <- new.env(parent = emptyenv())
+
+tabpfn_license_accepted <- function(license_repo) {
+  license_repo %in% tabpfn_env$accepted_repos
+}
+
+tabpfn_mark_license_accepted <- function(license_repo) {
+  tabpfn_env$accepted_repos <- union(tabpfn_env$accepted_repos, license_repo)
+  invisible()
+}
+
+tabpfn_forget_licenses <- function() {
+  tabpfn_env$accepted_repos <- NULL
+  invisible()
+}
+
+tabpfn_is_verified <- function(path) {
+  path %in% tabpfn_env$verified
+}
+
+tabpfn_mark_verified <- function(path) {
+  tabpfn_env$verified <- union(tabpfn_env$verified, path)
+  invisible()
+}
+
+# Forget the given checkpoints, or all of them.
+tabpfn_forget_verified <- function(paths = NULL) {
+  if (is.null(paths)) {
+    tabpfn_env$verified <- NULL
+  } else {
+    tabpfn_env$verified <- setdiff(tabpfn_env$verified, paths)
+  }
+  invisible()
+}
+
+# Loaded models, keyed by checkpoint path and device.
+tabpfn_cached_model <- function(key) {
+  tabpfn_env$models[[key]]
+}
+
+tabpfn_cache_model <- function(key, entry) {
+  if (is.null(tabpfn_env$models)) {
+    tabpfn_env$models <- new.env(parent = emptyenv())
+  }
+  tabpfn_env$models[[key]] <- entry
+  invisible(entry)
+}
+
+tabpfn_forget_models <- function() {
+  tabpfn_env$models <- NULL
+  invisible()
+}
 
 # ------------------------------------------------------------------------------
 # Registry
@@ -238,7 +290,7 @@ tabpfn_verify_cached <- function(path, info, call = caller_env()) {
       call = call
     )
   }
-  if (!path %in% tabpfn_env$verified) {
+  if (!tabpfn_is_verified(path)) {
     if (!identical(cli::hash_file_sha256(path), info$sha256)) {
       cli::cli_abort(
         c(
@@ -250,7 +302,7 @@ tabpfn_verify_cached <- function(path, info, call = caller_env()) {
         call = call
       )
     }
-    tabpfn_env$verified <- c(tabpfn_env$verified, path)
+    tabpfn_mark_verified(path)
   }
   invisible(path)
 }
@@ -333,7 +385,7 @@ tabpfn_checkpoint_path <- function(
     call = call
   )
   tabpfn_count_download(info$repo_id)
-  tabpfn_env$verified <- c(tabpfn_env$verified, path)
+  tabpfn_mark_verified(path)
   if (note) {
     cli::cli_inform(c(
       v = "Saved the TabPFN {info$version} weights to {.file {path}}."
@@ -517,8 +569,8 @@ tab_pfn_clear_cache <- function(
     }
   }
   unlink(paths)
-  tabpfn_env$models <- new.env(parent = emptyenv())
-  tabpfn_env$verified <- setdiff(tabpfn_env$verified, paths)
+  tabpfn_forget_models()
+  tabpfn_forget_verified(paths)
   cli::cli_inform(c(
     v = "Deleted {length(paths)} cached {label} weight
          {cli::qty(length(paths))}file{?s} ({size}) from {.path {cache_dir}}."
@@ -720,7 +772,7 @@ tabpfn_abort_no_token <- function(gui_url, call) {
 # "tabpfn_3_5"). Called before downloading weights; loading weights that are
 # already cached needs no license check, as in Python.
 tabpfn_ensure_license <- function(license_repo, call = caller_env()) {
-  if (license_repo %in% tabpfn_env$accepted_repos) {
+  if (tabpfn_license_accepted(license_repo)) {
     return(invisible(TRUE))
   }
   urls <- tabpfn_auth_urls()
@@ -742,7 +794,7 @@ tabpfn_ensure_license <- function(license_repo, call = caller_env()) {
         tabpfn_abort_unreachable(call)
       }
       if (accepted) {
-        tabpfn_env$accepted_repos <- c(tabpfn_env$accepted_repos, license_repo)
+        tabpfn_mark_license_accepted(license_repo)
         return(invisible(TRUE))
       }
     } else if (cached$source == "env") {
@@ -784,7 +836,7 @@ tabpfn_ensure_license <- function(license_repo, call = caller_env()) {
       call = call
     )
   }
-  tabpfn_env$accepted_repos <- c(tabpfn_env$accepted_repos, license_repo)
+  tabpfn_mark_license_accepted(license_repo)
   invisible(TRUE)
 }
 

@@ -198,7 +198,7 @@ tabpfn_classification_tibble <- function(probs, levels, classes) {
 tabpfn_load <- function(info, device, call = caller_env()) {
   path <- tabpfn_checkpoint_path(info, call = call)
   key <- paste(path, device, sep = "|")
-  entry <- tabpfn_env$models[[key]]
+  entry <- tabpfn_cached_model(key)
   if (is.null(entry)) {
     checkpoint <- tabpfn_read_checkpoint(path, call = call)
     model <- tabpfn_build_model(checkpoint, info$architecture, call = call)
@@ -208,7 +208,7 @@ tabpfn_load <- function(info, device, call = caller_env()) {
       inference_config = checkpoint$inference_config,
       path = path
     )
-    tabpfn_env$models[[key]] <- entry
+    tabpfn_cache_model(key, entry)
   }
   entry
 }

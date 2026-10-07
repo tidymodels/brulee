@@ -1,55 +1,59 @@
 # Defaults of Python `TabPFNV3p5Config` (tabpfn 9.1.0).
-tabpfn_v3_5_config_defaults <- list(
-  max_num_classes = -1L,
-  num_buckets = -1L,
-  name = "TabPFN-v3.5",
-  embed_dim = 128L,
-  dist_embed_num_blocks = 3L,
-  dist_embed_num_heads = 8L,
-  dist_embed_num_inducing_points = 128L,
-  feature_group_size = 3L,
-  feat_agg_num_blocks = 3L,
-  feat_agg_num_heads = 8L,
-  feat_agg_num_cls_tokens = 8L,
-  feat_agg_rope_base = 100000,
-  nlayers = 24L,
-  icl_num_heads = 16L,
-  icl_num_kv_heads = NULL,
-  icl_num_kv_heads_test = 1L,
-  decoder_head_dim = 64L,
-  decoder_num_heads = 6L,
-  decoder_use_softmax_scaling = TRUE,
-  ff_factor = 2L,
-  softmax_scaling_mlp_hidden_dim = 64L,
-  fourier_encoding_num_frequencies = 32L,
-  cell_ecdf_num_frequencies = 4L,
-  cell_ecdf_num_buckets = 8192L,
-  cell_embed_row_chunk_size = 2048L,
-  inference_chunk_cells = 1572864L,
-  max_batched_estimator_rows = 32768L,
-  max_batched_estimator_cells = 768000000L,
-  inference_col_chunk_size = 4L
-)
+tabpfn_v3_5_config_defaults <- function() {
+  list(
+    max_num_classes = -1L,
+    num_buckets = -1L,
+    name = "TabPFN-v3.5",
+    embed_dim = 128L,
+    dist_embed_num_blocks = 3L,
+    dist_embed_num_heads = 8L,
+    dist_embed_num_inducing_points = 128L,
+    feature_group_size = 3L,
+    feat_agg_num_blocks = 3L,
+    feat_agg_num_heads = 8L,
+    feat_agg_num_cls_tokens = 8L,
+    feat_agg_rope_base = 100000,
+    nlayers = 24L,
+    icl_num_heads = 16L,
+    icl_num_kv_heads = NULL,
+    icl_num_kv_heads_test = 1L,
+    decoder_head_dim = 64L,
+    decoder_num_heads = 6L,
+    decoder_use_softmax_scaling = TRUE,
+    ff_factor = 2L,
+    softmax_scaling_mlp_hidden_dim = 64L,
+    fourier_encoding_num_frequencies = 32L,
+    cell_ecdf_num_frequencies = 4L,
+    cell_ecdf_num_buckets = 8192L,
+    cell_embed_row_chunk_size = 2048L,
+    inference_chunk_cells = 1572864L,
+    max_batched_estimator_rows = 32768L,
+    max_batched_estimator_cells = 768000000L,
+    inference_col_chunk_size = 4L
+  )
+}
 
 # Keys in the v3.5 checkpoints that the Python architecture ignores because
 # the behavior is hard-coded.
-tabpfn_v3_5_config_fixed <- list(
-  feat_agg_use_softmax_scaling = FALSE,
-  icl_bf16 = FALSE,
-  layernorm_elementwise_affine = TRUE,
-  use_fourier_cell_embedding = TRUE,
-  use_mlp_heads = TRUE,
-  use_nan_indicators = TRUE,
-  use_qk_norm = TRUE,
-  use_rope = TRUE,
-  y_encoder_layernorm = TRUE
-)
+tabpfn_v3_5_config_fixed <- function() {
+  list(
+    feat_agg_use_softmax_scaling = FALSE,
+    icl_bf16 = FALSE,
+    layernorm_elementwise_affine = TRUE,
+    use_fourier_cell_embedding = TRUE,
+    use_mlp_heads = TRUE,
+    use_nan_indicators = TRUE,
+    use_qk_norm = TRUE,
+    use_rope = TRUE,
+    y_encoder_layernorm = TRUE
+  )
+}
 
 tabpfn_v3_5_parse_config <- function(config, call = caller_env()) {
   tabpfn_parse_config(
     config,
-    defaults = tabpfn_v3_5_config_defaults,
-    fixed = tabpfn_v3_5_config_fixed,
+    defaults = tabpfn_v3_5_config_defaults(),
+    fixed = tabpfn_v3_5_config_fixed(),
     free = "inference_row_chunk_size",
     architecture = "tabpfn_v3_5",
     call = call
