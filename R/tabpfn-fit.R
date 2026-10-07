@@ -404,7 +404,7 @@ tabpfn_sample_rows <- function(outcome, limit, seed) {
   }
   tabpfn_with_seed(seed, {
     idx <- split(seq_len(n), strata, drop = TRUE)
-    taken <- lapply(idx, function(i) {
+    taken <- purrr::map(idx, function(i) {
       size <- ceiling(length(i) / n * limit)
       i[sample.int(length(i), min(size, length(i)))]
     })

@@ -30,7 +30,7 @@ tabpfn_read_safetensors <- function(path, call = caller_env()) {
       call = call
     )
   }
-  fields <- lapply(meta, jsonlite::fromJSON, simplifyVector = FALSE)
+  fields <- purrr::map(meta, \(m) jsonlite::fromJSON(m, simplifyVector = FALSE))
   tabpfn_checkpoint(unclass(tensors), fields, path, call)
 }
 
@@ -53,7 +53,7 @@ tabpfn_checkpoint <- function(tensors, fields, path, call) {
       call = call
     )
   }
-  is_tensor <- vapply(tensors, inherits, logical(1), what = "torch_tensor")
+  is_tensor <- purrr::map_lgl(tensors, \(t) inherits(t, "torch_tensor"))
   if (!all(is_tensor)) {
     cli::cli_abort(
       "{.file {basename(path)}} has non-tensor weights: {.val {names(tensors)[!is_tensor]}}.",
@@ -97,10 +97,9 @@ tabpfn_load_state <- function(model, tensors, call = caller_env()) {
     )
   }
   mismatch <- names(state)[
-    !vapply(
+    !purrr::map_lgl(
       names(state),
-      function(k) identical(dim(state[[k]]), dim(tensors[[k]])),
-      logical(1)
+      function(k) identical(dim(state[[k]]), dim(tensors[[k]]))
     )
   ]
   if (length(mismatch) > 0) {
@@ -285,7 +284,7 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
     m <- marks[length(marks)]
     marks <<- marks[-length(marks)]
     if (length(stack) > m) {
-      items <- lapply(stack[(m + 1L):length(stack)], `[[`, 1)
+      items <- purrr::map(stack[(m + 1L):length(stack)], \(s) s[[1]])
     } else {
       items <- list()
     }
@@ -377,7 +376,7 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
         }
         idx <- seq(1L, length(items), by = 2L)
         d$env$keys <- c(d$env$keys, items[idx])
-        d$env$values <- c(d$env$values, lapply(items[idx + 1L], list))
+        d$env$values <- c(d$env$values, purrr::map(items[idx + 1L], list))
       },
       "73" = {
         # SETITEM
@@ -406,7 +405,7 @@ pkl_unpickle <- function(bytes, load_storage, path, call) {
         if (!inherits(l, "pkl_list")) {
           bad("APPENDS on a non-list.")
         }
-        l$env$values <- c(l$env$values, lapply(items, list))
+        l$env$values <- c(l$env$values, purrr::map(items, list))
       },
       "51" = {
         # BINPERSID: ('storage', storage type, key, location, numel)
@@ -476,18 +475,18 @@ pkl_reduce <- function(name, args, bad) {
 pkl_to_r <- function(x, call) {
   if (inherits(x, "pkl_dict")) {
     keys <- x$env$keys
-    if (!all(vapply(keys, is_string, logical(1)))) {
+    if (!all(purrr::map_lgl(keys, is_string))) {
       cli::cli_abort("Checkpoint dict with non-string keys.", call = call)
     }
-    out <- lapply(x$env$values, function(v) pkl_to_r(v[[1]], call))
+    out <- purrr::map(x$env$values, function(v) pkl_to_r(v[[1]], call))
     names(out) <- unlist(keys)
     return(out)
   }
   if (inherits(x, "pkl_list")) {
-    return(lapply(x$env$values, function(v) pkl_to_r(v[[1]], call)))
+    return(purrr::map(x$env$values, function(v) pkl_to_r(v[[1]], call)))
   }
   if (inherits(x, "pkl_tuple")) {
-    return(lapply(unclass(x), pkl_to_r, call = call))
+    return(purrr::map(unclass(x), \(v) pkl_to_r(v, call)))
   }
   if (inherits(x, "pkl_none")) {
     return(NULL)
@@ -753,17 +752,17 @@ tabpfn_resolve_inference <- function(
       unsupported <- c(unsupported, key)
     }
   }
-  preprocessors <- lapply(ic$PREPROCESS_TRANSFORMS, tabpfn_preprocessor)
+  preprocessors <- purrr::map(ic$PREPROCESS_TRANSFORMS, tabpfn_preprocessor)
   if (
     length(preprocessors) == 0 ||
-      any(vapply(preprocessors, is.null, logical(1)))
+      any(purrr::map_lgl(preprocessors, is.null))
   ) {
     unsupported <- c(unsupported, "PREPROCESS_TRANSFORMS")
   }
   y_transforms <- ic$REGRESSION_Y_PREPROCESS_TRANSFORMS
   if (
     !identical(
-      lapply(y_transforms, function(x) x %||% "none"),
+      purrr::map(y_transforms, function(x) x %||% "none"),
       list("none", "safepower")
     )
   ) {
@@ -825,7 +824,7 @@ tabpfn_resolve_n_estimators <- function(
   if (is.numeric(n_estimators)) {
     return(as.integer(n_estimators))
   }
-  budget <- min(vapply(preprocessors, function(p) p$max_features, integer(1)))
+  budget <- min(purrr::map_int(preprocessors, function(p) p$max_features))
   needed <- ceiling(n_columns / budget)
   if (needed > 8) {
     as.integer(min(needed, 32))

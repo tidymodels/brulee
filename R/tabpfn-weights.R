@@ -405,7 +405,7 @@ tab_pfn_download_weights <- function(
   task <- arg_match(task, multiple = TRUE)
   files <- arg_match(files)
   infos <- tabpfn_checkpoint_infos(version, task, files)
-  paths <- vapply(
+  paths <- purrr::map_chr(
     infos,
     function(info) {
       found <- tabpfn_find_checkpoint(info, cache_dir)
@@ -419,8 +419,7 @@ tab_pfn_download_weights <- function(
         ))
       }
       tabpfn_checkpoint_path(info, ask = FALSE, cache_dir = cache_dir)
-    },
-    character(1)
+    }
   )
   invisible(unname(paths))
 }
@@ -435,10 +434,9 @@ tab_pfn_weights_available <- function(
   version <- tabpfn_resolve_version(version)
   task <- arg_match(task, multiple = TRUE)
   infos <- tabpfn_checkpoint_infos(version, task, "default")
-  all(vapply(
+  all(purrr::map_lgl(
     infos,
-    function(info) !is.null(tabpfn_find_checkpoint(info, cache_dir)),
-    logical(1)
+    function(info) !is.null(tabpfn_find_checkpoint(info, cache_dir))
   ))
 }
 
@@ -492,8 +490,8 @@ tab_pfn_clear_cache <- function(
   } else {
     versions <- tabpfn_resolve_version(version)
   }
-  names <- unique(unlist(lapply(versions, function(v) {
-    lapply(tabpfn_registry()$versions[[v]]$tasks, function(t) t$files)
+  names <- unique(unlist(purrr::map(versions, function(v) {
+    purrr::map(tabpfn_registry()$versions[[v]]$tasks, function(t) t$files)
   })))
   paths <- file.path(cache_dir, c(names, paste0(names, ".part")))
   paths <- paths[file.exists(paths)]
@@ -831,18 +829,16 @@ tabpfn_abbreviate_count <- function(x) {
 }
 
 tabpfn_limits_table_md <- function() {
-  rows <- vapply(
+  rows <- purrr::map_chr(
     tab_pfn_versions(),
     function(version) {
       limits <- tabpfn_limits(version)
-      counts <- vapply(
+      counts <- purrr::map_chr(
         limits[c("rows", "rows_cpu", "predictors", "classes")],
-        tabpfn_abbreviate_count,
-        character(1)
+        tabpfn_abbreviate_count
       )
       paste0("| `\"", version, "\"` | ", paste(counts, collapse = " | "), " |")
-    },
-    character(1)
+    }
   )
   c(
     "@section Data size limits:",

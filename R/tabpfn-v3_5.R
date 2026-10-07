@@ -141,7 +141,7 @@ tabpfn_v3_5_cell_embedder <- torch::nn_module(
       return(self$embed(x))
     }
     starts <- seq(1, rows, by = chunk)
-    parts <- lapply(starts, function(s) {
+    parts <- purrr::map(starts, function(s) {
       out <- self$embed(x$narrow(2, s, min(chunk, rows - s + 1)))
       tabpfn_release()
       out
@@ -312,7 +312,7 @@ tabpfn_v3_5_model <- torch::nn_module(
       regression = torch::nn_linear(1, d)
     ))
     self$icl_y_layernorm <- torch::nn_layer_norm(d)
-    self$icl_blocks <- torch::nn_module_list(lapply(
+    self$icl_blocks <- torch::nn_module_list(purrr::map(
       seq_len(config$nlayers),
       function(i) {
         tabpfn_icl_block(

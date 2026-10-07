@@ -128,7 +128,7 @@ tabpfn_model_inputs <- function(fit, x_new, y_members) {
 }
 
 tabpfn_predict_classification <- function(fit, x_new) {
-  y_members <- lapply(fit$members, function(m) {
+  y_members <- purrr::map(fit$members, function(m) {
     m$class_permutation[fit$y_train + 1L]
   })
   inputs <- tabpfn_model_inputs(fit, x_new, y_members)
@@ -156,7 +156,7 @@ tabpfn_predict_regression <- function(fit, x_new, quantile_levels = NULL) {
       quantiles = matrix(fit$constant, n_new, length(quantile_levels))
     ))
   }
-  y_members <- lapply(fit$members, function(m) {
+  y_members <- purrr::map(fit$members, function(m) {
     tabpfn_apply_target_transform(fit$y_train, m$target_transform)
   })
   inputs <- tabpfn_model_inputs(fit, x_new, y_members)
@@ -238,7 +238,7 @@ tabpfn_resolve_device <- function(device = NULL, call = caller_env()) {
 # per forward pass (Python `EstimatorBatchBudget` uses 32768 rows). Returns
 # (test rows, members, outputs) on the CPU, in member order.
 tabpfn_forward <- function(model, xs, y, task_type, device) {
-  widths <- vapply(xs, function(x) x$size(2), numeric(1))
+  widths <- purrr::map_dbl(xs, function(x) x$size(2))
   rows <- xs[[1]]$size(1)
   budget <- getOption("brulee.tabpfn_rows_per_pass", 32768)
   outs <- vector("list", length(xs))
@@ -283,7 +283,7 @@ tabpfn_postprocess_classification <- function(
 ) {
   long <- torch::torch_long()
   logits <- torch::torch_stack(
-    lapply(seq_along(members), function(b) {
+    purrr::map(seq_along(members), function(b) {
       perm <- members[[b]]$class_permutation %||% (seq_len(n_classes) - 1L)
       out[, b, ]$index_select(2, torch::torch_tensor(perm + 1L, dtype = long))
     })
@@ -370,14 +370,16 @@ tabpfn_decode_regression <- function(
     median = to_raw(tabpfn_bar_icdf(log_probs, borders, 0.5))
   )
   if (length(quantiles) > 0) {
-    out$quantiles <- vapply(
+    # One column per quantile level.
+    cols <- purrr::map(
       quantiles,
-      function(q) to_raw(tabpfn_bar_icdf(log_probs, borders, q)),
-      numeric(log_probs$size(1))
+      \(q) to_raw(tabpfn_bar_icdf(log_probs, borders, q))
     )
-    if (!is.matrix(out$quantiles)) {
-      out$quantiles <- matrix(out$quantiles, ncol = length(quantiles))
-    }
+    out$quantiles <- matrix(
+      unlist(cols),
+      nrow = log_probs$size(1),
+      ncol = length(quantiles)
+    )
   }
   out
 }

@@ -115,7 +115,7 @@ tabpfn_sdpa_chunked <- function(q, k, v) {
   if (chunk >= n_q) {
     return(torch::torch_scaled_dot_product_attention(q, k, v))
   }
-  parts <- lapply(seq(1, n_q, by = chunk), function(start) {
+  parts <- purrr::map(seq(1, n_q, by = chunk), function(start) {
     rows <- q$narrow(3, start, min(chunk, n_q - start + 1))
     out <- torch::torch_scaled_dot_product_attention(rows, k, v)
     tabpfn_release()
@@ -543,7 +543,7 @@ tabpfn_feature_distribution_embedder <- torch::nn_module(
     softmax_scaling_factory,
     qk_norm = TRUE
   ) {
-    self$layers <- torch::nn_module_list(lapply(
+    self$layers <- torch::nn_module_list(purrr::map(
       seq_len(num_layers),
       function(i) {
         tabpfn_isab(
@@ -576,7 +576,7 @@ tabpfn_feature_distribution_embedder <- torch::nn_module(
     nc <- x_train$size(3)
     e <- x_train$size(4)
     n_layers <- length(self$layers)
-    per_chunk <- lapply(seq(1, nc, by = col_chunk), function(start) {
+    per_chunk <- purrr::map(seq(1, nc, by = col_chunk), function(start) {
       cols <- start:min(start + col_chunk - 1, nc)
       x_flat <- x_train$narrow(3, start, length(cols))$transpose(
         2,
@@ -598,8 +598,8 @@ tabpfn_feature_distribution_embedder <- torch::nn_module(
       }
       hidden
     })
-    lapply(seq_len(n_layers), function(i) {
-      h <- torch::torch_cat(lapply(per_chunk, `[[`, i), dim = 2)
+    purrr::map(seq_len(n_layers), function(i) {
+      h <- torch::torch_cat(purrr::map(per_chunk, \(chunk) chunk[[i]]), dim = 2)
       h$reshape(c(b * nc, h$size(3), e))
     })
   }
@@ -621,7 +621,7 @@ tabpfn_column_aggregator <- torch::nn_module(
     qk_norm = TRUE
   ) {
     self$num_cls_tokens <- num_cls_tokens
-    self$blocks <- torch::nn_module_list(lapply(
+    self$blocks <- torch::nn_module_list(purrr::map(
       seq_len(num_layers),
       function(i) {
         tabpfn_transformer_block(
@@ -846,9 +846,11 @@ tabpfn_impute_mean <- function(x, num_train) {
 # along the last dimension.
 tabpfn_group_features <- function(tensors, group_size) {
   shifts <- -(2^(seq_len(group_size) - 1))
-  stacked <- lapply(tensors, function(t) {
+  stacked <- purrr::map(tensors, function(t) {
     torch::torch_stack(
-      lapply(shifts, function(s) torch::torch_roll(t, shifts = s, dims = 3)),
+      purrr::map(shifts, function(s) {
+        torch::torch_roll(t, shifts = s, dims = 3)
+      }),
       dim = -1
     )
   })
@@ -909,7 +911,7 @@ tabpfn_stages_1_2 <- function(
   }
   hidden <- fde$inducing_hidden(embed(1, num_train), col_chunk)
   starts <- seq(1, rows, by = chunk)
-  parts <- lapply(starts, function(start) {
+  parts <- purrr::map(starts, function(start) {
     end <- min(start + chunk - 1, rows)
     emb <- fde(embed(start, end), num_train, hidden = hidden)
     out <- model$column_aggregator(emb)

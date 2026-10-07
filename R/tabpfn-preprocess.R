@@ -20,17 +20,23 @@ tabpfn_fit_encoder <- function(
   call = caller_env()
 ) {
   n <- nrow(x)
-  cols <- lapply(names(x), function(nm) {
+  # Checked before the per-column work so that the error isn't wrapped in
+  # purrr's iteration context.
+  supported <- purrr::map_lgl(x, function(v) {
+    is.factor(v) || is.character(v) || is.logical(v) || is.numeric(v)
+  })
+  if (!all(supported)) {
+    nm <- names(x)[!supported][1]
+    cli::cli_abort(
+      "Column {.field {nm}} has an unsupported type ({.cls {class(x[[nm]])}}).",
+      call = call
+    )
+  }
+  cols <- purrr::map(names(x), function(nm) {
     v <- x[[nm]]
     if (is.factor(v) || is.character(v) || is.logical(v)) {
       levels <- sort(unique(as.character(v[!is.na(v)])), method = "radix")
       return(list(type = "categorical", levels = levels))
-    }
-    if (!is.numeric(v)) {
-      cli::cli_abort(
-        "Column {.field {nm}} has an unsupported type ({.cls {class(v)}}).",
-        call = call
-      )
     }
     n_unique <- length(unique(v))
     if (n_unique <= 1) {
@@ -86,10 +92,9 @@ tabpfn_encode <- function(encoder, x, call = caller_env()) {
 }
 
 tabpfn_categorical_columns <- function(encoder) {
-  unname(vapply(
+  unname(purrr::map_lgl(
     encoder$columns,
-    function(x) x$type == "categorical",
-    logical(1)
+    function(x) x$type == "categorical"
   ))
 }
 
@@ -127,10 +132,9 @@ tabpfn_make_members <- function(
   p <- ncol(x_train)
   n_train <- nrow(x_train)
   plan <- tabpfn_member_plan(n_estimators, length(preprocessors), task_type)
-  sizes <- vapply(
+  sizes <- purrr::map_dbl(
     plan$preprocessor,
-    function(i) min(p, preprocessors[[i]]$max_features),
-    numeric(1)
+    function(i) min(p, preprocessors[[i]]$max_features)
   )
   subsets <- tabpfn_feature_subsets(p, sizes, subsampling)
   if (task_type == "multiclass") {
@@ -138,7 +142,7 @@ tabpfn_make_members <- function(
   } else {
     class_perms <- NULL
   }
-  lapply(seq_len(n_estimators), function(i) {
+  purrr::map(seq_len(n_estimators), function(i) {
     pre <- preprocessors[[plan$preprocessor[i]]]
     features <- subsets[[i]]
     layout <- tabpfn_member_layout(
@@ -153,7 +157,7 @@ tabpfn_make_members <- function(
       preprocessor = plan$preprocessor[i],
       features = features,
       class_permutation = class_perms[[i]],
-      category_maps = lapply(layout$category_sizes, function(k) {
+      category_maps = purrr::map(layout$category_sizes, function(k) {
         sample.int(k) - 1L
       }),
       shuffle = sample.int(width) - 1L,
@@ -203,15 +207,14 @@ tabpfn_member_plan <- function(n_estimators, n_preprocessors, task_type) {
 #   category_sizes  their numbers of code slots
 tabpfn_member_layout <- function(x_train, categorical, pre) {
   n_train <- nrow(x_train)
-  keep <- vapply(
+  keep <- purrr::map_lgl(
     seq_len(ncol(x_train)),
     function(j) {
       v <- x_train[, j]
       same <- v[1] == v
       same[is.na(same)] <- FALSE
       !all(is.nan(v)) && mean(same) < 1
-    },
-    logical(1)
+    }
   )
   if (!any(keep)) {
     cli::cli_abort("All predictors are constant in the training data.")
@@ -257,24 +260,22 @@ tabpfn_member_layout <- function(x_train, categorical, pre) {
   } else if (
     identical(pre$categorical, "ordinal_very_common_categories_shuffled")
   ) {
-    encoded <- which(is_cat)[vapply(
+    encoded <- which(is_cat)[purrr::map_lgl(
       which(is_cat),
       function(j) {
         counts <- table(x_train[, columns[j]], useNA = "ifany")
         min(counts) >= 10 && length(counts) < n_train %/% 10
-      },
-      logical(1)
+      }
     )]
     is_cat[setdiff(which(is_cat), encoded)] <- FALSE
   }
   ord <- c(encoded, setdiff(seq_along(columns), encoded))
-  sizes <- vapply(
+  sizes <- purrr::map_int(
     columns[encoded],
     function(j) {
       v <- x_train[, j]
       length(unique(v[!is.nan(v)])) + any(is.nan(v))
-    },
-    integer(1)
+    }
   )
   list(
     columns = columns[ord],
@@ -305,7 +306,7 @@ tabpfn_feature_subsets <- function(p, sizes, method = "balanced") {
     return(rep(list(seq_len(p)), length(sizes)))
   }
   if (method == "random") {
-    return(lapply(sizes, function(size) {
+    return(purrr::map(sizes, function(size) {
       if (size >= p) {
         seq_len(p)
       } else {
@@ -315,7 +316,7 @@ tabpfn_feature_subsets <- function(p, sizes, method = "balanced") {
   }
   shuffled <- sample.int(p)
   pool <- integer()
-  lapply(sizes, function(budget) {
+  purrr::map(sizes, function(budget) {
     if (budget >= p) {
       return(seq_len(p))
     }
@@ -354,7 +355,7 @@ tabpfn_class_permutations <- function(n_estimators, n_classes) {
   if (rest > 0) {
     idx <- c(idx, sample.int(nrow(uniq), rest, replace = TRUE))
   }
-  lapply(idx, function(i) uniq[i, ])
+  purrr::map(idx, function(i) uniq[i, ])
 }
 
 # Run `code` with R's RNG seeded by `seed`, restoring the caller's RNG state.
@@ -456,7 +457,7 @@ tabpfn_member_inputs <- function(
   categorical,
   n_sigma
 ) {
-  xs <- lapply(members, function(m) {
+  xs <- purrr::map(members, function(m) {
     pre <- preprocessors[[m$preprocessor]]
     x_train <- x_all[seq_len(num_train), m$features, drop = FALSE]
     layout <- tabpfn_member_layout(x_train, categorical[m$features], pre)
@@ -655,7 +656,7 @@ tabpfn_svd_features <- function(x, num_train, k) {
   # Make the largest-magnitude entry of each component positive (leftmost on
   # ties), as Python `_svd_flip_stable`.
   vh_val <- as.matrix(torch::as_array(vh))
-  signs <- vapply(
+  signs <- purrr::map_dbl(
     seq_len(k),
     function(i) {
       s <- sign(vh_val[i, which.max(abs(vh_val[i, ]))])
@@ -664,8 +665,7 @@ tabpfn_svd_features <- function(x, num_train, k) {
       } else {
         s
       }
-    },
-    numeric(1)
+    }
   )
   vh <- (vh * torch::torch_tensor(signs, dtype = vh$dtype)$unsqueeze(2))$to(
     device = x$device

@@ -128,7 +128,7 @@ tabpfn_v3_model <- torch::nn_module(
     } else {
       self$icl_y_encoder <- torch::nn_linear(1, d)
     }
-    self$icl_blocks <- torch::nn_module_list(lapply(
+    self$icl_blocks <- torch::nn_module_list(purrr::map(
       seq_len(config$nlayers),
       function(i) {
         tabpfn_icl_block(
