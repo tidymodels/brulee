@@ -135,6 +135,23 @@ test_that("unsupported storage types are rejected", {
   )
 })
 
+test_that("self-referencing or deeply nested metadata is rejected", {
+  # PROTO 2, EMPTY_LIST, BINPUT 0, BINGET 0, APPEND, STOP: a list that
+  # contains itself.
+  bytes <- as.raw(c(0x80, 0x02, 0x5d, 0x71, 0x00, 0x68, 0x00, 0x61, 0x2e))
+  obj <- pkl_unpickle(bytes, load_storage = NULL, path = "cycle", call = NULL)
+  expect_snapshot(pkl_to_r(obj, call = NULL), error = TRUE)
+
+  nested <- NULL
+  for (i in seq_len(pkl_max_depth() + 1)) {
+    nested <- pkl_tuple(list(nested))
+  }
+  expect_snapshot(pkl_to_r(nested, call = NULL), error = TRUE)
+
+  shallow <- pkl_tuple(list(pkl_tuple(list(1, "a")), pkl_none()))
+  expect_identical(pkl_to_r(shallow, call = NULL), list(list(1, "a"), NULL))
+})
+
 test_that("files that aren't torch zip checkpoints are rejected", {
   path <- withr::local_tempfile(fileext = ".zip")
   withr::with_dir(tempdir(), {

@@ -478,21 +478,49 @@ pkl_reduce <- function(name, args, bad) {
   out$clone()
 }
 
-pkl_to_r <- function(x, call) {
+# The memo lets a pickle refer to a container from inside itself, so a
+# corrupt or crafted file could hold a cycle or nest deeply enough to overflow
+# the stack. The released checkpoints nest 4 levels deep; anything past
+# `pkl_max_depth()` is an error.
+pkl_max_depth <- function() {
+  32L
+}
+
+# A plain loop rather than purrr::map(), which would wrap an error at each
+# level of the recursion in its own "In index" context. NULL results are kept.
+pkl_map <- function(xs, f) {
+  out <- vector("list", length(xs))
+  for (i in seq_along(xs)) {
+    out[i] <- list(f(xs[[i]]))
+  }
+  out
+}
+
+pkl_to_r <- function(x, call, depth = 0L) {
+  if (depth > pkl_max_depth()) {
+    cli::cli_abort(
+      c(
+        "The checkpoint's metadata is nested more than {pkl_max_depth()}
+         levels deep.",
+        i = "The file may be corrupted or not a TabPFN checkpoint."
+      ),
+      call = call
+    )
+  }
   if (inherits(x, "pkl_dict")) {
     keys <- x$env$keys
     if (!all(purrr::map_lgl(keys, is_string))) {
       cli::cli_abort("Checkpoint dict with non-string keys.", call = call)
     }
-    out <- purrr::map(x$env$values, function(v) pkl_to_r(v[[1]], call))
+    out <- pkl_map(x$env$values, \(v) pkl_to_r(v[[1]], call, depth + 1L))
     names(out) <- unlist(keys)
     return(out)
   }
   if (inherits(x, "pkl_list")) {
-    return(purrr::map(x$env$values, function(v) pkl_to_r(v[[1]], call)))
+    return(pkl_map(x$env$values, \(v) pkl_to_r(v[[1]], call, depth + 1L)))
   }
   if (inherits(x, "pkl_tuple")) {
-    return(purrr::map(unclass(x), \(v) pkl_to_r(v, call)))
+    return(pkl_map(unclass(x), \(v) pkl_to_r(v, call, depth + 1L)))
   }
   if (inherits(x, "pkl_none")) {
     return(NULL)

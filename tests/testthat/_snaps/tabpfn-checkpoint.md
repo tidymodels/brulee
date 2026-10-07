@@ -42,6 +42,24 @@
       ! Can't read '<tempfile>.ckpt': the object type "torch.LongStorage" is not supported.
       i brulee reads only the checkpoint format used by the TabPFN v3 releases.
 
+# self-referencing or deeply nested metadata is rejected
+
+    Code
+      pkl_to_r(obj, call = NULL)
+    Condition
+      Error:
+      ! The checkpoint's metadata is nested more than 32 levels deep.
+      i The file may be corrupted or not a TabPFN checkpoint.
+
+---
+
+    Code
+      pkl_to_r(nested, call = NULL)
+    Condition
+      Error:
+      ! The checkpoint's metadata is nested more than 32 levels deep.
+      i The file may be corrupted or not a TabPFN checkpoint.
+
 # files that aren't torch zip checkpoints are rejected
 
     Code
