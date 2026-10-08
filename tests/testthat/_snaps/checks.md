@@ -200,3 +200,51 @@
       ! The outcome has a single value (3), so there is nothing to predict.
       i A numeric outcome needs at least two distinct values.
 
+# softmax temperatures must be positive and finite
+
+    Code
+      check_softmax_temperature(temp, call = NULL)
+    Condition
+      Error:
+      ! `temp` must be greater than 0, not 0.
+
+---
+
+    Code
+      check_softmax_temperature(temp, call = NULL)
+    Condition
+      Error:
+      ! `temp` must be greater than 0, not -1.
+
+---
+
+    Code
+      check_softmax_temperature(temp, call = NULL)
+    Condition
+      Error:
+      ! `temp` must be a number, not `Inf`.
+
+---
+
+    Code
+      check_softmax_temperature(NULL, call = NULL)
+    Condition
+      Error:
+      ! `NULL` must be a number, not `NULL`.
+
+# the foundation models check the softmax temperature
+
+    Code
+      brulee_tab_icl(mpg ~ ., data = mtcars, softmax_temperature = 0)
+    Condition
+      Error in `brulee_tab_icl()`:
+      ! `softmax_temperature` must be greater than 0, not 0.
+
+---
+
+    Code
+      brulee_tab_pfn(mpg ~ ., data = mtcars, softmax_temperature = 0)
+    Condition
+      Error in `brulee_tab_pfn()`:
+      ! `softmax_temperature` must be greater than 0, not 0.
+

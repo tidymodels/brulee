@@ -93,8 +93,9 @@ default), the model version's recommended size is used (8 for v3.5 and v3,
 4 for v3.5-fast; v3 uses more for data with many predictors).}
 
 \item{softmax_temperature}{An adjustment factor that is a divisor in the
-exponents of the softmax function. When \code{NULL} (the default), the model
-version's recommended value is used (1 for v3.5, 0.9 for v3).}
+exponents of the softmax function; it must be greater than 0. When \code{NULL}
+(the default), the model version's recommended value is used (1 for v3.5,
+0.9 for v3).}
 
 \item{balance_probabilities}{A logical to adjust the prior probabilities in
 cases where there is a class imbalance. Default is \code{FALSE}. Classification

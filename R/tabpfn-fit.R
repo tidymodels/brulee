@@ -33,8 +33,9 @@
 #' 4 for v3.5-fast; v3 uses more for data with many predictors).
 #'
 #' @param softmax_temperature An adjustment factor that is a divisor in the
-#' exponents of the softmax function. When `NULL` (the default), the model
-#' version's recommended value is used (1 for v3.5, 0.9 for v3).
+#' exponents of the softmax function; it must be greater than 0. When `NULL`
+#' (the default), the model version's recommended value is used (1 for v3.5,
+#' 0.9 for v3).
 #'
 #' @param balance_probabilities A logical to adjust the prior probabilities in
 #' cases where there is a class imbalance. Default is `FALSE`. Classification
@@ -322,12 +323,7 @@ tabpfn_fit_options <- function(
   call = caller_env()
 ) {
   check_number_whole(num_estimators, min = 1, allow_null = TRUE, call = call)
-  check_number_decimal(
-    softmax_temperature,
-    min = 0,
-    allow_null = TRUE,
-    call = call
-  )
+  check_softmax_temperature(softmax_temperature, allow_null = TRUE, call = call)
   check_bool(balance_probabilities, call = call)
   check_bool(average_before_softmax, call = call)
   check_number_whole(

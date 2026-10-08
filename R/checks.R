@@ -21,6 +21,30 @@ check_outcome_varies <- function(outcome, call = rlang::caller_env()) {
   invisible(outcome)
 }
 
+# A softmax temperature divides the logits, so it must be positive and
+# finite; 0 would give infinite logits and NaN predictions.
+check_softmax_temperature <- function(
+  x,
+  allow_null = FALSE,
+  arg = rlang::caller_arg(x),
+  call = rlang::caller_env()
+) {
+  check_number_decimal(
+    x,
+    allow_infinite = FALSE,
+    allow_null = allow_null,
+    arg = arg,
+    call = call
+  )
+  if (!is.null(x) && x <= 0) {
+    cli::cli_abort(
+      "{.arg {arg}} must be greater than 0, not {.val {x}}.",
+      call = call
+    )
+  }
+  invisible(x)
+}
+
 check_number_whole_vec <- function(
   x,
   call = rlang::caller_env(),

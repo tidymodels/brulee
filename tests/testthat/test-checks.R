@@ -132,3 +132,30 @@ test_that("models with a numeric outcome reject a constant one", {
   expect_snapshot(brulee_tab_icl(y ~ x, data = d), error = TRUE)
   expect_snapshot(brulee_tab_pfn(y ~ x, data = d), error = TRUE)
 })
+
+# ------------------------------------------------------------------------------
+# check_softmax_temperature()
+
+test_that("softmax temperatures must be positive and finite", {
+  expect_silent(check_softmax_temperature(0.9))
+  expect_silent(check_softmax_temperature(NULL, allow_null = TRUE))
+  temp <- 0
+  expect_snapshot(check_softmax_temperature(temp, call = NULL), error = TRUE)
+  temp <- -1
+  expect_snapshot(check_softmax_temperature(temp, call = NULL), error = TRUE)
+  temp <- Inf
+  expect_snapshot(check_softmax_temperature(temp, call = NULL), error = TRUE)
+  expect_snapshot(check_softmax_temperature(NULL, call = NULL), error = TRUE)
+})
+
+test_that("the foundation models check the softmax temperature", {
+  skip_if_not(torch::torch_is_installed())
+  expect_snapshot(
+    brulee_tab_icl(mpg ~ ., data = mtcars, softmax_temperature = 0),
+    error = TRUE
+  )
+  expect_snapshot(
+    brulee_tab_pfn(mpg ~ ., data = mtcars, softmax_temperature = 0),
+    error = TRUE
+  )
+})

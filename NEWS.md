@@ -2,6 +2,8 @@
 
 * `brulee_tab_pfn()` makes the TabPFN tabular foundation models (versions 3, 3.5, and 3.5-fast) available, running them in R torch without Python. The model weights are released by Prior Labs under non-commercial licenses: `?brulee_tab_pfn` explains the one-time setup, `tab_pfn_download_weights()` downloads them, `tab_pfn_weights_available()` checks for them, `tab_pfn_clear_cache()` removes them, and `tab_pfn_versions()` lists the supported versions. Weights already downloaded by the Python `tabpfn` package are reused.
 
+* `brulee_tab_icl()` and `brulee_tab_pfn()` now require `softmax_temperature` to be a finite number greater than 0; a temperature of 0 used to produce `NaN` predictions.
+
 * Models with a numeric outcome (`brulee_linear_reg()`, `brulee_mlp()`, `brulee_resnet()`, `brulee_rln()`, `brulee_saint()`, `brulee_auto_int()`, `brulee_tab_icl()`, and `brulee_tab_pfn()`) now error informatively when the outcome has a single distinct value.
 
 * `brulee_tab_icl()` and `brulee_tab_pfn()` now check that the outcome is a single numeric or factor column, and drop rows with a missing outcome with a warning; previously a missing outcome could make the fit fail or produce invalid predictions.

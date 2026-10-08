@@ -145,8 +145,8 @@ tabicl_make_members <- function(
 #' @param normalization A character vector of per-member normalization methods.
 #'   Currently `"none"` (standardize only) and `"YeoJohnson"` (Yeo-Johnson
 #'   power transform on top of standardization) are supported.
-#' @param softmax_temperature A number for the temperature applied to the
-#'   classification softmax. Only used for classification.
+#' @param softmax_temperature A number greater than 0 for the temperature
+#'   applied to the classification softmax. Only used for classification.
 #' @param training_set_limit A single number giving the maximum number of
 #'   training rows kept as in-context examples. When the training data has
 #'   more rows than this, a subsample of exactly `training_set_limit` rows
@@ -471,6 +471,7 @@ tabicl_bridge <- function(
       call = call
     )
   }
+  check_softmax_temperature(softmax_temperature, call = call)
   device <- tabicl_resolve_device(device, call = call)
 
   data <- brulee_foundation_data(processed, call = call)
