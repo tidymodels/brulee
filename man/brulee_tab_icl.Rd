@@ -7,7 +7,7 @@
 \alias{brulee_tab_icl.matrix}
 \alias{brulee_tab_icl.formula}
 \alias{brulee_tab_icl.recipe}
-\title{Fit a TabICL tabular foundation model}
+\title{Use a TabICL tabular foundation model}
 \usage{
 brulee_tab_icl(x, ...)
 

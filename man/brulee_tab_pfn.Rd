@@ -7,7 +7,7 @@
 \alias{brulee_tab_pfn.matrix}
 \alias{brulee_tab_pfn.formula}
 \alias{brulee_tab_pfn.recipe}
-\title{Fit a TabPFN model}
+\title{Use a TabPFN tabular foundation model}
 \usage{
 brulee_tab_pfn(x, ...)
 

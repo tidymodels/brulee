@@ -6,7 +6,7 @@
 \alias{brulee_chronos.data.frame}
 \alias{brulee_chronos.formula}
 \alias{brulee_chronos.recipe}
-\title{Chronos-2 pretrained forecasting model}
+\title{Use a Chronos-2 tabular foundation model}
 \usage{
 brulee_chronos(x, ...)
 

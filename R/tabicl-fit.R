@@ -1,4 +1,4 @@
-# User-facing fit for the TabICL tabular foundation model.
+# Use a TabICL tabular foundation model
 #
 # TabICL is an in-context learner: there is no training. `brulee_tab_icl()`
 # validates and stores the (encoded) training data; the model runs at predict
@@ -127,7 +127,7 @@ tabicl_make_members <- function(
 # ------------------------------------------------------------------------------
 # Fit methods
 
-#' Fit a TabICL tabular foundation model
+#' Use a TabICL tabular foundation model
 #'
 #' `brulee_tab_icl()` prepares the pre-trained TabICL (Tabular In-Context
 #' Learning) foundation model from Qu _et al_ (2025) for prediction. TabICL is a
