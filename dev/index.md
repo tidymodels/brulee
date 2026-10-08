@@ -20,10 +20,15 @@ use the `torch` package infrastructure, such as:
   (Saint)](https://brulee.tidymodels.org/reference/brulee_saint.html)
 - [Chronos2](https://brulee.tidymodels.org/reference/brulee_chronos.html)
   foundational model for forecasting
-- Transformer-based foundation model TabICL
+- Transformer-based foundation models
+  [TabICL](https://brulee.tidymodels.org/reference/brulee_tab_icl.html)
+  and
+  [TabPFN](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.html)
 
-Chronos2 and TabICL are pretrained models, requiring a one-time download
-of about 500MB and 400MB, respectively.
+Chronos2, TabICL, and TabPFN are pretrained models that need a one-time
+download of their weights: about 480MB for Chronos2, 225MB for TabICL
+(both tasks), and, for TabPFN, 880MB for the default version 3.5 (330MB
+for 3.5-fast and 450MB for 3).
 
 ## Installation
 
@@ -101,7 +106,7 @@ predict(nn_rec_biv, bivariate_test, type = "prob") |>
 #> # A tibble: 1 × 3
 #>   .metric .estimator .estimate
 #>   <chr>   <chr>          <dbl>
-#> 1 roc_auc binary         0.866
+#> 1 roc_auc binary         0.867
 ```
 
 ## Code of Conduct

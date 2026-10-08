@@ -110,16 +110,16 @@ brulee_tab_icl(
 
 - softmax_temperature:
 
-  A number for the temperature applied to the classification softmax.
-  Only used for classification.
+  A number greater than 0 for the temperature applied to the
+  classification softmax. Only used for classification.
 
 - training_set_limit:
 
   A single number giving the maximum number of training rows kept as
   in-context examples. When the training data has more rows than this, a
   subsample of exactly `training_set_limit` rows is drawn (stratified by
-  the outcome for classification, simple random for regression). The
-  default is `Inf`, which keeps every row. Useful for capping memory and
+  class for classification and by quartile for regression). The default
+  is `Inf`, which keeps every row. Useful for capping memory and
   prediction time on large training sets, since the entire (kept)
   training set is stored on the fitted object and re-sent through the
   network on every call to

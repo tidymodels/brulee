@@ -39,6 +39,9 @@ augment(x, new_data, quantile_levels = NULL, ...)
 
 # S3 method for class 'brulee_chronos'
 augment(x, new_data = NULL, ...)
+
+# S3 method for class 'brulee_tab_pfn'
+augment(x, new_data, quantile_levels = NULL, ...)
 ```
 
 ## Arguments

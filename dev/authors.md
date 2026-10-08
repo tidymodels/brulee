@@ -10,6 +10,10 @@
 - **[![Posit](https://www.tidyverse.org/posit-logo.svg)](https://www.posit.co)**.
   Copyright holder, funder.
 
+- **Prior Labs GmbH**. Copyright holder.  
+  TabPFN code ported from the Python 'tabpfn' package; see
+  inst/COPYRIGHTS
+
 ## Citation
 
 Source:

@@ -34,7 +34,7 @@ package."><meta property="og:image" content="https://brulee.tidymodels.org/logo.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Add model predictions to data</h1>
-      <small class="dont-index">Source: <a href="https://github.com/tidymodels/brulee/blob/main/R/augment.R" class="external-link"><code>R/augment.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/tidymodels/brulee/blob/main/R/augment.R" class="external-link"><code>R/augment.R</code></a>, <a href="https://github.com/tidymodels/brulee/blob/main/R/tabpfn-predict.R" class="external-link"><code>R/tabpfn-predict.R</code></a></small>
       <div class="d-none name"><code>brulee-augment.Rd</code></div>
     </div>
 
@@ -75,7 +75,10 @@ package.</p>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">new_data</span>, quantile_levels <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'brulee_chronos'</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment</a></span><span class="op">(</span><span class="va">x</span>, new_data <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment</a></span><span class="op">(</span><span class="va">x</span>, new_data <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'brulee_tab_pfn'</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">new_data</span>, quantile_levels <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">

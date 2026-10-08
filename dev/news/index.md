@@ -2,7 +2,83 @@
 
 ## brulee (development version)
 
+- [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  makes the TabPFN tabular foundation models (versions 3, 3.5, and
+  3.5-fast) available, running them in R torch without Python. The model
+  weights are released by Prior Labs under non-commercial licenses:
+  [`?brulee_tab_pfn`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  explains the one-time setup,
+  [`tab_pfn_download_weights()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_download_weights.md)
+  downloads them,
+  [`tab_pfn_weights_available()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_download_weights.md)
+  checks for them,
+  [`tab_pfn_clear_cache()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_clear_cache.md)
+  removes them, and
+  [`tab_pfn_versions()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_versions.md)
+  lists the supported versions. Weights already downloaded by the Python
+  `tabpfn` package are reused.
+
+- [`predict()`](https://rdrr.io/r/stats/predict.html) and
+  [`augment()`](https://generics.r-lib.org/reference/augment.html) for
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  return zero-row results for zero-row `new_data` without running the
+  model;
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  classification previously failed.
+
+- [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  now require `softmax_temperature` to be a finite number greater than
+  0; a temperature of 0 used to produce `NaN` predictions.
+
+- Models with a numeric outcome
+  ([`brulee_linear_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_linear_reg.md),
+  [`brulee_mlp()`](https://brulee.tidymodels.org/dev/reference/brulee_mlp.md),
+  [`brulee_resnet()`](https://brulee.tidymodels.org/dev/reference/brulee_resnet.md),
+  [`brulee_rln()`](https://brulee.tidymodels.org/dev/reference/brulee_rln.md),
+  [`brulee_saint()`](https://brulee.tidymodels.org/dev/reference/brulee_saint.md),
+  [`brulee_auto_int()`](https://brulee.tidymodels.org/dev/reference/brulee_auto_int.md),
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md),
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md))
+  now error informatively when the outcome has a single distinct value.
+
+- [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  now check that the outcome is a single numeric or factor column, and
+  drop rows with a missing outcome with a warning; previously a missing
+  outcome could make the fit fail or produce invalid predictions.
+
+- [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  share one way of sampling the training set down to
+  `training_set_limit` rows. For
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md),
+  numeric outcomes are now sampled within quartiles rather than at
+  random, and outcome levels with no rows no longer count as classes, so
+  exactly `training_set_limit` rows are kept. The rows kept for a given
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) differ from earlier
+  versions.
+
+- The weight downloads of
+  [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md),
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md),
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  share one downloader, which now writes to a temporary file and renames
+  it when complete, so an interrupted download no longer leaves a
+  partial file under the real name. If the completed file can’t be moved
+  into place, it is copied, and failing that, the download errors with
+  advice instead of reporting success.
+
 ## brulee 1.2.0
+
+CRAN release: 2026-09-02
 
 - [`predict()`](https://rdrr.io/r/stats/predict.html) for regression
   [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)

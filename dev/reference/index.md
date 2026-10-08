@@ -12,6 +12,7 @@
   [`augment(`*`<brulee_auto_int>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-augment.md)
   [`augment(`*`<brulee_tab_icl>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-augment.md)
   [`augment(`*`<brulee_chronos>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-augment.md)
+  [`augment(`*`<brulee_tab_pfn>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-augment.md)
   : Add model predictions to data
 
 - [`autoplot(`*`<brulee_mlp>`*`)`](https://brulee.tidymodels.org/dev/reference/brulee-autoplot.md)
@@ -66,6 +67,9 @@
 - [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
   : Fit a TabICL tabular foundation model
 
+- [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  : Fit a TabPFN model
+
 - [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
   : Convert data to torch format
 
@@ -119,6 +123,11 @@
 
   Predict from a `brulee_tab_icl`
 
+- [`predict(`*`<brulee_tab_pfn>`*`)`](https://brulee.tidymodels.org/dev/reference/predict.brulee_tab_pfn.md)
+  :
+
+  Predict from a `brulee_tab_pfn`
+
 - [`schedule_decay_time()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_decay_expo()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
   [`schedule_step()`](https://brulee.tidymodels.org/dev/reference/schedule_decay_time.md)
@@ -136,6 +145,16 @@
 - [`tab_icl_download_weights()`](https://brulee.tidymodels.org/dev/reference/tab_icl_download_weights.md)
   [`tab_icl_weights_available()`](https://brulee.tidymodels.org/dev/reference/tab_icl_download_weights.md)
   : Download and cache pretrained TabICL weights
+
+- [`tab_pfn_clear_cache()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_clear_cache.md)
+  : Remove cached TabPFN weights
+
+- [`tab_pfn_download_weights()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_download_weights.md)
+  [`tab_pfn_weights_available()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_download_weights.md)
+  : Download and cache pretrained TabPFN weights
+
+- [`tab_pfn_versions()`](https://brulee.tidymodels.org/dev/reference/tab_pfn_versions.md)
+  : List available TabPFN model versions
 
 - [`training_efficiency`](https://brulee.tidymodels.org/dev/reference/training_efficiency.md)
   : Training Efficiency
