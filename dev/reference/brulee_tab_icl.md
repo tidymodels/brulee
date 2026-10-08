@@ -1,4 +1,4 @@
-# Fit a TabICL tabular foundation model
+# Use a TabICL tabular foundation model
 
 `brulee_tab_icl()` prepares the pre-trained TabICL (Tabular In-Context
 Learning) foundation model from Qu *et al* (2025) for prediction. TabICL

@@ -1,4 +1,4 @@
-# Fit a TabPFN model
+# Use a TabPFN tabular foundation model
 
 `brulee_tab_pfn()` applies data to the pre-trained TabPFN tabular
 foundation model of Hollmann *et al* (2025), which emulates Bayesian

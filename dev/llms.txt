@@ -158,7 +158,7 @@ By contributing to this project, you agree to abide by its terms.
   : Fit AutoInt models for tabular data
 
 - [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md)
-  : Chronos-2 pretrained forecasting model
+  : Use a Chronos-2 tabular foundation model
 
 - [`brulee_linear_reg()`](https://brulee.tidymodels.org/dev/reference/brulee_linear_reg.md)
   : Fit a linear regression model
@@ -183,10 +183,10 @@ By contributing to this project, you agree to abide by its terms.
   : Fit SAINT models for tabular data
 
 - [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
-  : Fit a TabICL tabular foundation model
+  : Use a TabICL tabular foundation model
 
 - [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
-  : Fit a TabPFN model
+  : Use a TabPFN tabular foundation model
 
 - [`matrix_to_dataset()`](https://brulee.tidymodels.org/dev/reference/matrix_to_dataset.md)
   : Convert data to torch format
