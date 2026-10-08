@@ -738,14 +738,22 @@ tabpfn_preprocessor <- function(tr) {
     gpu <- NULL
   }
   append <- tr$append_original
-  ok <- !is.null(gpu) &&
-    isTRUE(tr$categorical_name %in% tabpfn_categorical_encodings()) &&
-    (is.null(tr$global_transformer_name) ||
-      identical(tr$global_transformer_name, "svd_quarter_components")) &&
-    (isFALSE(append) || isTRUE(append) || identical(append, "auto")) &&
-    is.null(tr$max_onehot_cardinality) &&
-    isFALSE(tr$differentiable %||% FALSE)
-  if (!ok) {
+  # Each setting must take a value that the R pipeline implements.
+  global <- tr$global_transformer_name
+  supported <- c(
+    transform = !is.null(gpu),
+    categorical = isTRUE(
+      tr$categorical_name %in% tabpfn_categorical_encodings()
+    ),
+    global_transformer = is.null(global) ||
+      identical(global, "svd_quarter_components"),
+    append_original = isFALSE(append) ||
+      isTRUE(append) ||
+      identical(append, "auto"),
+    max_onehot_cardinality = is.null(tr$max_onehot_cardinality),
+    differentiable = isFALSE(tr$differentiable %||% FALSE)
+  )
+  if (!all(supported)) {
     return(NULL)
   }
   quantile <- NULL
