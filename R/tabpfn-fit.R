@@ -413,14 +413,12 @@ tabpfn_sample_rows <- function(outcome, limit, seed) {
 }
 
 tabpfn_impl <- function(x, y, options, version, call = caller_env()) {
+  # `task` picks the checkpoint; `task_type` is the model's name for it.
   if (is.factor(y)) {
     task <- "classification"
-  } else {
-    task <- "regression"
-  }
-  if (task == "classification") {
     task_type <- "multiclass"
   } else {
+    task <- "regression"
     task_type <- "regression"
   }
   info <- tabpfn_version_info(version, task, call = call)
