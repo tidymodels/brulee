@@ -107,3 +107,28 @@ test_that("check_double validates doubles with exclusive bounds", {
     )
   )
 })
+
+# ------------------------------------------------------------------------------
+# check_outcome_varies()
+
+test_that("check_outcome_varies() rejects a numeric outcome with one value", {
+  expect_snapshot(
+    check_outcome_varies(c(3, 3, NA, 3), call = NULL),
+    error = TRUE
+  )
+  expect_silent(check_outcome_varies(c(3, 4, NA)))
+  expect_silent(check_outcome_varies(factor(c("a", "a"))))
+})
+
+test_that("models with a numeric outcome reject a constant one", {
+  skip_if_not(torch::torch_is_installed())
+  d <- data.frame(x = 1:10, y = 3)
+  expect_snapshot(brulee_linear_reg(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_mlp(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_resnet(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_rln(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_saint(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_auto_int(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_tab_icl(y ~ x, data = d), error = TRUE)
+  expect_snapshot(brulee_tab_pfn(y ~ x, data = d), error = TRUE)
+})

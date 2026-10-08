@@ -473,7 +473,9 @@ tabicl_bridge <- function(
   }
   device <- tabicl_resolve_device(device, call = call)
 
-  outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
+  data <- brulee_foundation_data(processed, call = call)
+  processed$predictors <- data$predictors
+  outcome <- data$outcome
   classification <- is.factor(outcome)
 
   keep <- brulee_subsample_rows(outcome, training_set_limit, call = call)

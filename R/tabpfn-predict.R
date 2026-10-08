@@ -149,13 +149,6 @@ tabpfn_predict_classification <- function(fit, x_new) {
 }
 
 tabpfn_predict_regression <- function(fit, x_new, quantile_levels = NULL) {
-  n_new <- nrow(x_new)
-  if (!is.null(fit$constant)) {
-    return(list(
-      mean = rep(fit$constant, n_new),
-      quantiles = matrix(fit$constant, n_new, length(quantile_levels))
-    ))
-  }
   y_members <- purrr::map(fit$members, function(m) {
     tabpfn_apply_target_transform(fit$y_train, m$target_transform)
   })

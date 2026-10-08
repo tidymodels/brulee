@@ -119,3 +119,84 @@
       Error:
       ! `x` must be in the range [0, 1).
 
+# check_outcome_varies() rejects a numeric outcome with one value
+
+    Code
+      check_outcome_varies(c(3, 3, NA, 3), call = NULL)
+    Condition
+      Error:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+# models with a numeric outcome reject a constant one
+
+    Code
+      brulee_linear_reg(y ~ x, data = d)
+    Condition
+      Error in `brulee_linear_reg()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_mlp(y ~ x, data = d)
+    Condition
+      Error in `brulee_mlp()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_resnet(y ~ x, data = d)
+    Condition
+      Error in `brulee_resnet()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_rln(y ~ x, data = d)
+    Condition
+      Error in `brulee_rln()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_saint(y ~ x, data = d)
+    Condition
+      Error in `brulee_saint()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_auto_int(y ~ x, data = d)
+    Condition
+      Error in `brulee_auto_int()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_tab_icl(y ~ x, data = d)
+    Condition
+      Error in `brulee_tab_icl()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+
+---
+
+    Code
+      brulee_tab_pfn(y ~ x, data = d)
+    Condition
+      Error in `brulee_tab_pfn()`:
+      ! The outcome has a single value (3), so there is nothing to predict.
+      i A numeric outcome needs at least two distinct values.
+

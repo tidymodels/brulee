@@ -535,6 +535,7 @@ brulee_resnet_bridge <- function(
 
   # Validate outcome (ResNet accepts both numeric and factor)
   outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
+  check_outcome_varies(outcome, call = call)
 
   # ------------------------------------------------------------------------------
 

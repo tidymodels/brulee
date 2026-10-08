@@ -51,12 +51,6 @@ test_that("the same seed gives the same fit", {
   expect_identical(fit_1$fit$seed, fit_2$fit$seed)
 })
 
-test_that("a constant outcome predicts the constant", {
-  skip_if_no_weights()
-  d <- data.frame(x = 1:10, y = 3)
-  fit <- brulee_tab_pfn(y ~ x, data = d, device = "cpu")
-  expect_identical(predict(fit, d[1:2, ])$.pred, c(3, 3))
-})
 
 test_that("bad arguments are rejected", {
   expect_snapshot(

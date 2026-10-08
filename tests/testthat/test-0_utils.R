@@ -108,3 +108,37 @@ test_that("brulee_subsample_rows() can't drop a class", {
   four <- factor(rep(c("a", "b", "c", "d"), 10))
   expect_snapshot(brulee_subsample_rows(four, 3, call = NULL), error = TRUE)
 })
+
+# ------------------------------------------------------------------------------
+# brulee_foundation_data() (R/0_utils.R)
+
+test_that("brulee_foundation_data() needs one numeric or factor outcome", {
+  two <- hardhat::mold(
+    cbind(mpg, wt) ~ cyl,
+    mtcars,
+    blueprint = hardhat::default_formula_blueprint(indicators = "none")
+  )
+  expect_snapshot(brulee_foundation_data(two, call = NULL), error = TRUE)
+
+  # hardhat rejects most other types itself; this one gets past it.
+  dates <- list(
+    predictors = tibble::tibble(x = 1:3),
+    outcomes = tibble::tibble(y = Sys.Date() + 1:3)
+  )
+  expect_snapshot(brulee_foundation_data(dates, call = NULL), error = TRUE)
+})
+
+test_that("brulee_foundation_data() drops rows with a missing outcome", {
+  d <- data.frame(x = 1:5, y = c(1, NA, 3, NaN, 5))
+  processed <- hardhat::mold(y ~ x, d)
+  expect_snapshot(res <- brulee_foundation_data(processed, call = NULL))
+  expect_identical(res$outcome, c(1, 3, 5))
+  expect_identical(res$predictors$x, c(1, 3, 5))
+
+  complete <- hardhat::mold(y ~ x, data.frame(x = 1:3, y = c(2, 4, 6)))
+  expect_silent(res <- brulee_foundation_data(complete, call = NULL))
+  expect_identical(res$outcome, c(2, 4, 6))
+
+  none <- hardhat::mold(y ~ x, data.frame(x = 1:2, y = c(NA_real_, NA_real_)))
+  expect_snapshot(brulee_foundation_data(none, call = NULL), error = TRUE)
+})

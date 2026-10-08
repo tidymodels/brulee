@@ -1,5 +1,26 @@
 # Additional type checkers designed for testing argument values.
 
+# A numeric outcome with a single distinct value (ignoring missing values)
+# leaves nothing to learn, and the models' outcome scaling divides by its
+# spread. Factor outcomes are left to the classification checks.
+check_outcome_varies <- function(outcome, call = rlang::caller_env()) {
+  if (!is.numeric(outcome)) {
+    return(invisible(outcome))
+  }
+  values <- unique(outcome[!is.na(outcome)])
+  if (length(values) == 1) {
+    cli::cli_abort(
+      c(
+        "The outcome has a single value ({.val {values}}), so there is
+         nothing to predict.",
+        i = "A numeric outcome needs at least two distinct values."
+      ),
+      call = call
+    )
+  }
+  invisible(outcome)
+}
+
 check_number_whole_vec <- function(
   x,
   call = rlang::caller_env(),

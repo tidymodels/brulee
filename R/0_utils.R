@@ -34,6 +34,42 @@ brulee_stratum_sizes <- function(counts, limit) {
   alloc
 }
 
+# The training data of a foundation model fit, after checking the outcome:
+# one numeric or factor column. Rows with a missing outcome are dropped with a
+# warning; the models handle missing predictors but not missing outcomes.
+brulee_foundation_data <- function(processed, call = rlang::caller_env()) {
+  outcomes <- processed$outcomes
+  if (ncol(outcomes) != 1) {
+    cli::cli_abort(
+      "The outcome must be a single column, not {ncol(outcomes)} columns.",
+      call = call
+    )
+  }
+  outcome <- outcomes[[1]]
+  if (!is.factor(outcome) && !is.numeric(outcome)) {
+    cli::cli_abort(
+      "The outcome must be a factor (classification) or numeric
+       (regression), not {obj_type_friendly(outcome)}.",
+      call = call
+    )
+  }
+  predictors <- processed$predictors
+  missing <- is.na(outcome)
+  if (all(missing)) {
+    cli::cli_abort("Every value of the outcome is missing.", call = call)
+  }
+  if (any(missing)) {
+    cli::cli_warn(
+      "Removed {sum(missing)} row{?s} with a missing outcome.",
+      call = call
+    )
+    outcome <- outcome[!missing]
+    predictors <- predictors[!missing, , drop = FALSE]
+  }
+  check_outcome_varies(outcome, call = call)
+  list(predictors = predictors, outcome = outcome)
+}
+
 # Rows kept by `training_set_limit`: all of them when there are at most
 # `limit`, otherwise exactly `limit`, stratified by class (classification) or
 # by quartile (regression). Uses R's random number generator; callers that

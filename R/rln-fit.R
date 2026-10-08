@@ -412,6 +412,7 @@ brulee_rln_bridge <- function(
   }
 
   outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
+  check_outcome_varies(outcome, call = call)
   if (is.factor(outcome)) {
     cli::cli_abort(
       "{.fn brulee_rln} only supports numeric outcomes.

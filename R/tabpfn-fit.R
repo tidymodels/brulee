@@ -364,18 +364,12 @@ tabpfn_bridge <- function(
     )
   }
   version <- tabpfn_resolve_version(version, arg = "version", call = call)
-  outcome <- processed$outcomes[[1]]
-  if (!is.factor(outcome) && !is.numeric(outcome)) {
-    cli::cli_abort(
-      "The outcome must be a factor (classification) or numeric
-       (regression), not {obj_type_friendly(outcome)}.",
-      call = call
-    )
-  }
+  data <- brulee_foundation_data(processed, call = call)
+  outcome <- data$outcome
   # The ensemble members' random choices use their own seed, drawn from R's
   # random number generator so that `set.seed()` makes a fit reproducible.
   options$seed <- sample.int(.Machine$integer.max, 1)
-  predictors <- as.data.frame(processed$predictors)
+  predictors <- as.data.frame(data$predictors)
   keep <- tabpfn_with_seed(
     options$seed,
     brulee_subsample_rows(outcome, options$training_set_limit, call = call)
@@ -474,9 +468,6 @@ tabpfn_impl <- function(x, y, options, version, call = caller_env()) {
     )
   } else {
     y <- as.double(y)
-    if (length(unique(y)) == 1) {
-      fit$constant <- y[1]
-    }
     fit$y_scale <- tabpfn_znorm_fit(y)
     fit$y_train <- (y - fit$y_scale$mean) / fit$y_scale$std
     fit$members <- tabpfn_with_seed(

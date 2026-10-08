@@ -30,3 +30,35 @@
       Error:
       ! `training_set_limit` (3) is smaller than the number of outcome classes (4); cannot keep at least one row per class.
 
+# brulee_foundation_data() needs one numeric or factor outcome
+
+    Code
+      brulee_foundation_data(two, call = NULL)
+    Condition
+      Error:
+      ! The outcome must be a single column, not 2 columns.
+
+---
+
+    Code
+      brulee_foundation_data(dates, call = NULL)
+    Condition
+      Error:
+      ! The outcome must be a factor (classification) or numeric (regression), not a <Date> object.
+
+# brulee_foundation_data() drops rows with a missing outcome
+
+    Code
+      res <- brulee_foundation_data(processed, call = NULL)
+    Condition
+      Warning:
+      Removed 2 rows with a missing outcome.
+
+---
+
+    Code
+      brulee_foundation_data(none, call = NULL)
+    Condition
+      Error:
+      ! Every value of the outcome is missing.
+
