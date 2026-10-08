@@ -156,31 +156,40 @@ predict.brulee_tab_icl <- function(
     check_quantile_levels(quantile_levels, call = call)
   }
 
-  loaded <- tabicl_load_model(
-    object$path,
-    task = object$task,
-    device = object$device
-  )
   x_test <- tabicl_encode_transform(object$encoders, forged$predictors)
+  # With no rows to predict, the model isn't run (it can't take an empty test
+  # set); empty results give correctly typed, zero-row predictions.
+  n_new <- nrow(x_test)
+  if (n_new > 0) {
+    loaded <- tabicl_load_model(
+      object$path,
+      task = object$task,
+      device = object$device
+    )
+  }
 
   if (object$task == "classification") {
     n_classes <- length(object$levels)
-    members <- tabicl_make_members(
-      object$num_estimators,
-      ncol(object$train_x),
-      n_classes,
-      object$normalization,
-      classification = TRUE
-    )
-    proba <- tabicl_classifier_proba(
-      loaded,
-      object$train_x,
-      object$train_y,
-      x_test,
-      members,
-      temperature = object$softmax_temperature,
-      device = object$device
-    )
+    if (n_new == 0) {
+      proba <- matrix(numeric(), nrow = 0, ncol = n_classes)
+    } else {
+      members <- tabicl_make_members(
+        object$num_estimators,
+        ncol(object$train_x),
+        n_classes,
+        object$normalization,
+        classification = TRUE
+      )
+      proba <- tabicl_classifier_proba(
+        loaded,
+        object$train_x,
+        object$train_y,
+        x_test,
+        members,
+        temperature = object$softmax_temperature,
+        device = object$device
+      )
+    }
     predictions <- switch(
       type,
       prob = hardhat::spruce_prob(object$levels, proba),
@@ -190,29 +199,41 @@ predict.brulee_tab_icl <- function(
       ))
     )
   } else {
-    members <- tabicl_make_members(
-      object$num_estimators,
-      ncol(object$train_x),
-      n_classes = 0L,
-      object$normalization,
-      classification = FALSE
-    )
-    est <- tabicl_regressor_stats(
-      loaded,
-      object$train_x,
-      object$train_y,
-      x_test,
-      members,
-      output_type = switch(
-        type,
-        numeric = "mean",
-        quantile = "quantiles",
-        variance = "variance"
-      ),
-      alphas = if (type == "quantile") quantile_levels else NULL,
-      device = object$device,
-      call = call
-    )
+    if (n_new == 0) {
+      est <- list(
+        mean = numeric(),
+        quantiles = matrix(numeric(), nrow = 0, ncol = length(quantile_levels)),
+        variance = numeric()
+      )
+    } else {
+      members <- tabicl_make_members(
+        object$num_estimators,
+        ncol(object$train_x),
+        n_classes = 0L,
+        object$normalization,
+        classification = FALSE
+      )
+      alphas <- NULL
+      if (type == "quantile") {
+        alphas <- quantile_levels
+      }
+      est <- tabicl_regressor_stats(
+        loaded,
+        object$train_x,
+        object$train_y,
+        x_test,
+        members,
+        output_type = switch(
+          type,
+          numeric = "mean",
+          quantile = "quantiles",
+          variance = "variance"
+        ),
+        alphas = alphas,
+        device = object$device,
+        call = call
+      )
+    }
     predictions <- switch(
       type,
       numeric = hardhat::spruce_numeric(est$mean),

@@ -72,11 +72,25 @@ tabpfn_predict <- function(object, new_data, quantile_levels = NULL) {
   forged <- hardhat::forge(new_data, object$blueprint)$predictors
   fit <- object$fit
   x_new <- tabpfn_encode(fit$encoder, as.data.frame(forged))
+  # With no rows to predict, the model isn't run (it can't take an empty test
+  # set); empty results give correctly typed, zero-row predictions.
+  n_new <- nrow(x_new)
   if (!is.null(object$levels)) {
-    probs <- tabpfn_predict_classification(fit, x_new)
+    if (n_new == 0) {
+      probs <- matrix(numeric(), nrow = 0, ncol = length(fit$classes))
+    } else {
+      probs <- tabpfn_predict_classification(fit, x_new)
+    }
     return(tabpfn_classification_tibble(probs, object$levels, fit$classes))
   }
-  res <- tabpfn_predict_regression(fit, x_new, quantile_levels)
+  if (n_new == 0) {
+    res <- list(
+      mean = numeric(),
+      quantiles = matrix(numeric(), nrow = 0, ncol = length(quantile_levels))
+    )
+  } else {
+    res <- tabpfn_predict_regression(fit, x_new, quantile_levels)
+  }
   out <- tibble::tibble(.pred = res$mean)
   if (!is.null(quantile_levels)) {
     out$.pred_quantile <- hardhat::quantile_pred(

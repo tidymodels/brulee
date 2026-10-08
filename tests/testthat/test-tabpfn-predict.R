@@ -103,6 +103,36 @@ test_that("edge cases: one new row, one member, one predictor", {
   expect_true(is.finite(pred$.pred))
 })
 
+test_that("zero rows of new data give zero-row predictions of every type", {
+  for (name in c("pipeline-classification", "pipeline-regression")) {
+    skip_if_no_fixture(name)
+    fx <- load_pipeline_fixture(name)
+    fit <- fit_with_python_members(fx)
+    # The model isn't run for an empty test set.
+    local_mocked_bindings(
+      tabpfn_forward = function(...) stop("the model shouldn't run")
+    )
+    none <- fx$data[0, ]
+    if (name == "pipeline-classification") {
+      levels <- fit$levels
+      probs <- predict(fit, none, type = "prob")
+      expect_named(probs, paste0(".pred_", levels))
+      expect_identical(nrow(probs), 0L)
+      expect_identical(
+        predict(fit, none)$.pred_class,
+        factor(character(), levels)
+      )
+    } else {
+      expect_identical(predict(fit, none), tibble::tibble(.pred = numeric()))
+      q <- predict(fit, none, type = "quantile", quantile_levels = c(0.1, 0.9))
+      expect_identical(nrow(q), 0L)
+      expect_s3_class(q$.pred_quantile, "quantile_pred")
+      aug <- augment(fit, none, quantile_levels = c(0.1, 0.9))
+      expect_identical(nrow(aug), 0L)
+    }
+  }
+})
+
 test_that("MPS predictions match the CPU", {
   skip_if_no_weights()
   skip_if_not(torch::backends_mps_is_available(), "MPS is not available")

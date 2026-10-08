@@ -201,3 +201,42 @@ test_that("a classification fit rejects the regression-only types", {
   expect_snapshot(error = TRUE, predict(fit, x_test, type = "quantile"))
   expect_snapshot(error = TRUE, predict(fit, x_test, type = "variance"))
 })
+
+test_that("zero rows of new data give zero-row predictions of every type", {
+  skip_if_no_tabicl_fixtures("engine_reg")
+  skip_if_no_tabicl_fixtures("engine_clf")
+  # The model isn't run for an empty test set.
+  local_mocked_bindings(
+    tabicl_load_model = function(...) stop("the model shouldn't be loaded")
+  )
+
+  f <- tabicl_load_fixture("engine_reg")
+  tabicl_local_cache(f, tabicl_fixture_meta("engine_reg"))
+  d <- tabicl_reg_data(f)
+  fit <- brulee_tab_icl(d$x_train, d$y_train, num_estimators = 1L)
+  none <- d$x_test[0, , drop = FALSE]
+  expect_identical(predict(fit, none), tibble::tibble(.pred = numeric()))
+  q <- predict(fit, none, type = "quantile", quantile_levels = c(0.1, 0.9))
+  expect_identical(nrow(q), 0L)
+  expect_s3_class(q$.pred_quantile, "quantile_pred")
+  expect_identical(
+    hardhat::extract_quantile_levels(q$.pred_quantile),
+    c(0.1, 0.9)
+  )
+  expect_identical(
+    predict(fit, none, type = "variance"),
+    tibble::tibble(.pred_variance = numeric())
+  )
+
+  f <- tabicl_load_fixture("engine_clf")
+  tabicl_local_cache(f, tabicl_fixture_meta("engine_clf"))
+  x_train <- as.data.frame(as.matrix(as.array(f$X_train)))
+  y_train <- factor(as.integer(as.numeric(as.array(f$y_train))))
+  fit <- brulee_tab_icl(x_train, y_train, num_estimators = 1L)
+  none <- x_train[0, , drop = FALSE]
+  probs <- predict(fit, none, type = "prob")
+  expect_named(probs, paste0(".pred_", levels(y_train)))
+  expect_identical(nrow(probs), 0L)
+  cls <- predict(fit, none)
+  expect_identical(cls$.pred_class, factor(character(), levels(y_train)))
+})
