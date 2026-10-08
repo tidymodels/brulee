@@ -44,9 +44,11 @@
 #' `num_estimators > 1`, should the average be done before using the softmax
 #' function or after? Default is `FALSE`.
 #'
-#' @param training_set_limit An integer greater than 2L, or `Inf` (the default)
-#' to use every row. Anything smaller samples the training set down to that many
-#' rows, stratified by class for classification and by quartile for regression.
+#' @param training_set_limit An integer of at least 2, or `Inf` (the default)
+#' to use every row. When the training set is larger, it is sampled down to
+#' exactly that many rows, stratified by class for classification and by
+#' quartile for regression. For classification, it must be at least the number
+#' of classes, so that every class keeps a row.
 #'
 #' @param version The model version, such as `"v3.5"`. A bare number works
 #' too: `3.5`, `"3.5"`, and `"v3.5"` are equivalent. See [tab_pfn_versions()]
@@ -374,42 +376,15 @@ tabpfn_bridge <- function(
   # random number generator so that `set.seed()` makes a fit reproducible.
   options$seed <- sample.int(.Machine$integer.max, 1)
   predictors <- as.data.frame(processed$predictors)
-  keep <- tabpfn_sample_rows(
-    outcome,
-    options$training_set_limit,
-    options$seed
+  keep <- tabpfn_with_seed(
+    options$seed,
+    brulee_subsample_rows(outcome, options$training_set_limit, call = call)
   )
   predictors <- predictors[keep, , drop = FALSE]
   outcome <- outcome[keep]
 
   fit <- tabpfn_impl(predictors, outcome, options, version, call = call)
   new_brulee_tab_pfn(fit, processed$blueprint)
-}
-
-# Rows kept by `training_set_limit`, stratified by class (classification)
-# or by quartile (regression).
-tabpfn_sample_rows <- function(outcome, limit, seed) {
-  n <- length(outcome)
-  if (n <= limit) {
-    return(seq_len(n))
-  }
-  if (is.factor(outcome)) {
-    strata <- outcome
-  } else {
-    strata <- cut(
-      outcome,
-      unique(stats::quantile(outcome, 0:4 / 4)),
-      include.lowest = TRUE
-    )
-  }
-  tabpfn_with_seed(seed, {
-    idx <- split(seq_len(n), strata, drop = TRUE)
-    taken <- purrr::map(idx, function(i) {
-      size <- ceiling(length(i) / n * limit)
-      i[sample.int(length(i), min(size, length(i)))]
-    })
-    sort(unlist(taken, use.names = FALSE))
-  })
 }
 
 tabpfn_impl <- function(x, y, options, version, call = caller_env()) {

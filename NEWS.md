@@ -2,6 +2,8 @@
 
 * `brulee_tab_pfn()` makes the TabPFN tabular foundation models (versions 3, 3.5, and 3.5-fast) available, running them in R torch without Python. The model weights are released by Prior Labs under non-commercial licenses: `?brulee_tab_pfn` explains the one-time setup, `tab_pfn_download_weights()` downloads them, `tab_pfn_weights_available()` checks for them, `tab_pfn_clear_cache()` removes them, and `tab_pfn_versions()` lists the supported versions. Weights already downloaded by the Python `tabpfn` package are reused.
 
+* `brulee_tab_icl()` and `brulee_tab_pfn()` share one way of sampling the training set down to `training_set_limit` rows. For `brulee_tab_icl()`, numeric outcomes are now sampled within quartiles rather than at random, and outcome levels with no rows no longer count as classes, so exactly `training_set_limit` rows are kept. The rows kept for a given `set.seed()` differ from earlier versions.
+
 * The weight downloads of `brulee_chronos()`, `brulee_tab_icl()`, and `brulee_tab_pfn()` share one downloader, which now writes to a temporary file and renames it when complete, so an interrupted download no longer leaves a partial file under the real name.
 
 # brulee 1.2.0

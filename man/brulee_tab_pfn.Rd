@@ -104,9 +104,11 @@ only.}
 \code{num_estimators > 1}, should the average be done before using the softmax
 function or after? Default is \code{FALSE}.}
 
-\item{training_set_limit}{An integer greater than 2L, or \code{Inf} (the default)
-to use every row. Anything smaller samples the training set down to that many
-rows, stratified by class for classification and by quartile for regression.}
+\item{training_set_limit}{An integer of at least 2, or \code{Inf} (the default)
+to use every row. When the training set is larger, it is sampled down to
+exactly that many rows, stratified by class for classification and by
+quartile for regression. For classification, it must be at least the number
+of classes, so that every class keeps a row.}
 
 \item{version}{The model version, such as \code{"v3.5"}. A bare number works
 too: \code{3.5}, \code{"3.5"}, and \code{"v3.5"} are equivalent. See \code{\link[=tab_pfn_versions]{tab_pfn_versions()}}

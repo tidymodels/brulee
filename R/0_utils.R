@@ -6,6 +6,73 @@ format_epoch_labels <- function(x) {
 }
 
 # ------------------------------------------------------------------------------
+# Training-set subsampling for the foundation models (TabICL, TabPFN)
+
+# The number of rows to keep from each stratum so that exactly `limit` rows
+# are kept in total: proportional to the stratum sizes `counts`, at least one
+# per stratum, with the rounding error moved one row at a time to or from the
+# largest strata. Needs `limit` >= the number of strata with rows.
+brulee_stratum_sizes <- function(counts, limit) {
+  alloc <- pmax(1L, as.integer(round(limit * counts / sum(counts))))
+  drift <- limit - sum(alloc)
+  while (drift != 0L) {
+    if (drift > 0L) {
+      cand <- which(alloc < counts)
+      if (length(cand) == 0L) {
+        break
+      }
+      j <- cand[which.max(counts[cand])]
+      alloc[j] <- alloc[j] + 1L
+      drift <- drift - 1L
+    } else {
+      cand <- which(alloc > 1L)
+      j <- cand[which.max(counts[cand])]
+      alloc[j] <- alloc[j] - 1L
+      drift <- drift + 1L
+    }
+  }
+  alloc
+}
+
+# Rows kept by `training_set_limit`: all of them when there are at most
+# `limit`, otherwise exactly `limit`, stratified by class (classification) or
+# by quartile (regression). Uses R's random number generator; callers that
+# need a particular seed set it around the call.
+brulee_subsample_rows <- function(outcome, limit, call = rlang::caller_env()) {
+  n <- length(outcome)
+  if (n <= limit) {
+    return(seq_len(n))
+  }
+  limit <- as.integer(limit)
+  if (is.factor(outcome)) {
+    strata <- droplevels(outcome)
+    if (limit < nlevels(strata)) {
+      cli::cli_abort(
+        "{.arg training_set_limit} ({limit}) is smaller than the number of
+         outcome classes ({nlevels(strata)}); cannot keep at least one row
+         per class.",
+        call = call
+      )
+    }
+  } else {
+    # Quartiles, or fewer strata when the limit is below 4. A constant or
+    # nearly constant outcome can have fewer distinct breaks.
+    n_strata <- min(4L, limit)
+    probs <- seq(0, 1, length.out = n_strata + 1)
+    breaks <- unique(stats::quantile(outcome, probs))
+    if (length(breaks) < 2) {
+      strata <- factor(rep(1L, n))
+    } else {
+      strata <- cut(outcome, breaks, include.lowest = TRUE)
+    }
+  }
+  idx <- split(seq_len(n), strata, drop = TRUE)
+  sizes <- brulee_stratum_sizes(lengths(idx), limit)
+  taken <- purrr::map2(idx, sizes, \(i, size) i[sample.int(length(i), size)])
+  sort(unlist(taken, use.names = FALSE))
+}
+
+# ------------------------------------------------------------------------------
 # used in print methods
 
 brulee_print <- function(x, ...) {
