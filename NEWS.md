@@ -12,7 +12,7 @@
 
 * `brulee_tab_icl()` and `brulee_tab_pfn()` share one way of sampling the training set down to `training_set_limit` rows. For `brulee_tab_icl()`, numeric outcomes are now sampled within quartiles rather than at random, and outcome levels with no rows no longer count as classes, so exactly `training_set_limit` rows are kept. The rows kept for a given `set.seed()` differ from earlier versions.
 
-* The weight downloads of `brulee_chronos()`, `brulee_tab_icl()`, and `brulee_tab_pfn()` share one downloader, which now writes to a temporary file and renames it when complete, so an interrupted download no longer leaves a partial file under the real name.
+* The weight downloads of `brulee_chronos()`, `brulee_tab_icl()`, and `brulee_tab_pfn()` share one downloader, which now writes to a temporary file and renames it when complete, so an interrupted download no longer leaves a partial file under the real name. If the completed file can't be moved into place, it is copied, and failing that, the download errors with advice instead of reporting success.
 
 # brulee 1.2.0
 

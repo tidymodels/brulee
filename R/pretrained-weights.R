@@ -104,7 +104,7 @@ brulee_download_file <- function(
           call = call
         )
       }
-      file.rename(part, dest)
+      brulee_install_file(part, dest, size = size, call = call)
       return(invisible(dest))
     }
 
@@ -125,6 +125,34 @@ brulee_download_file <- function(
     ),
     call = call
   )
+}
+
+# Move a completed download into place. A rename can fail, for example across
+# file systems or, on Windows, when the destination exists or is open in
+# another program; then the file is copied instead. Either way, the
+# destination must end up complete.
+brulee_install_file <- function(
+  part,
+  dest,
+  size = NA,
+  call = rlang::caller_env()
+) {
+  # Base R's warnings are replaced by the error below.
+  if (!suppressWarnings(file.rename(part, dest))) {
+    suppressWarnings(file.copy(part, dest, overwrite = TRUE))
+  }
+  complete <- file.exists(dest) && (is.na(size) || file.size(dest) == size)
+  if (!complete) {
+    cli::cli_abort(
+      c(
+        "The downloaded file could not be saved as {.file {dest}}.",
+        "i" = "Check that {.path {dirname(dest)}} is writable and that the
+               file isn't open in another program, then try again."
+      ),
+      call = call
+    )
+  }
+  invisible(dest)
 }
 
 # ------------------------------------------------------------------------------

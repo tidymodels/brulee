@@ -48,3 +48,12 @@
       ! The downloaded file 'model.safetensors' does not have the expected checksum.
       i The upstream file may have changed; please report this at <https://github.com/tidymodels/brulee/issues>.
 
+# brulee_install_file errors when the file can't be saved
+
+    Code
+      brulee_install_file(part, dest, size = 10, call = NULL)
+    Condition
+      Error:
+      ! The downloaded file could not be saved as '<dir>/model.bin'.
+      i Check that '<dir>' is writable and that the file isn't open in another program, then try again.
+

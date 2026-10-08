@@ -401,3 +401,34 @@ test_that("brulee_download_file rejects a download with the wrong checksum", {
   expect_false(file.exists(dest))
   expect_false(file.exists(paste0(dest, ".part")))
 })
+
+# ------------------------------------------------------------------------------
+# brulee_install_file
+
+test_that("brulee_install_file moves a download into place", {
+  dir <- withr::local_tempdir()
+  part <- file.path(dir, "model.bin.part")
+  dest <- file.path(dir, "model.bin")
+  writeBin(as.raw(1:10), part)
+  expect_identical(brulee_install_file(part, dest, size = 10), dest)
+  expect_identical(readBin(dest, "raw", 20), as.raw(1:10))
+  expect_false(file.exists(part))
+})
+
+test_that("brulee_install_file errors when the file can't be saved", {
+  skip_on_os("windows")
+  # Permissions don't apply to root.
+  skip_if(identical(unname(Sys.info()[["user"]]), "root"))
+  src <- withr::local_tempdir()
+  part <- file.path(src, "model.bin.part")
+  writeBin(as.raw(1:10), part)
+  locked <- withr::local_tempdir()
+  Sys.chmod(locked, "0555")
+  withr::defer(Sys.chmod(locked, "0755"))
+  dest <- file.path(locked, "model.bin")
+  expect_snapshot(
+    brulee_install_file(part, dest, size = 10, call = NULL),
+    error = TRUE,
+    transform = function(x) gsub(locked, "<dir>", x, fixed = TRUE)
+  )
+})
