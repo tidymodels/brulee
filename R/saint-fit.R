@@ -628,6 +628,7 @@ brulee_saint_bridge <- function(
   ## ---------------------------------------------------------------------------
 
   outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
+  check_outcome_varies(outcome, call = call)
 
   # ----------------------------------------------------------------------------
 

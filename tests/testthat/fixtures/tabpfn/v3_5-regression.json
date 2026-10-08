@@ -1,0 +1,161 @@
+{
+ "architecture": "tabpfn_v3_5",
+ "call_meta": {
+  "call.column_aggregator.args": {
+   "length": 0,
+   "type": "list"
+  },
+  "call.column_aggregator.kwargs": {
+   "keys": [
+    "force_recompute_layer",
+    "save_peak_memory_factor",
+    "x_BRiCE"
+   ],
+   "type": "dict"
+  },
+  "call.column_aggregator.kwargs.force_recompute_layer": false,
+  "call.column_aggregator.kwargs.save_peak_memory_factor": null,
+  "call.feature_distribution_embedder.args": {
+   "length": 0,
+   "type": "list"
+  },
+  "call.feature_distribution_embedder.kwargs": {
+   "keys": [
+    "cached_hidden",
+    "force_recompute_layer",
+    "num_train_rows",
+    "return_hidden",
+    "save_peak_memory_factor",
+    "x_BRiCE"
+   ],
+   "type": "dict"
+  },
+  "call.feature_distribution_embedder.kwargs.cached_hidden": null,
+  "call.feature_distribution_embedder.kwargs.force_recompute_layer": false,
+  "call.feature_distribution_embedder.kwargs.num_train_rows": 14,
+  "call.feature_distribution_embedder.kwargs.return_hidden": false,
+  "call.feature_distribution_embedder.kwargs.save_peak_memory_factor": null,
+  "call.feature_distribution_embedder.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.feature_distribution_embedder.out.1": null,
+  "call.heads.args": {
+   "length": 3,
+   "type": "list"
+  },
+  "call.heads.args.0": null,
+  "call.heads.kwargs": {
+   "keys": [
+    "num_present_classes",
+    "task_type"
+   ],
+   "type": "dict"
+  },
+  "call.heads.kwargs.num_present_classes": null,
+  "call.heads.kwargs.task_type": "regression",
+  "call.icl_blocks.0.args": {
+   "length": 3,
+   "type": "list"
+  },
+  "call.icl_blocks.0.args.1": 14,
+  "call.icl_blocks.0.args.2": null,
+  "call.icl_blocks.0.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.0.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.icl_blocks.0.out.1": null,
+  "call.icl_blocks.1.args": {
+   "length": 3,
+   "type": "list"
+  },
+  "call.icl_blocks.1.args.1": 14,
+  "call.icl_blocks.1.args.2": null,
+  "call.icl_blocks.1.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.icl_blocks.1.out": {
+   "length": 2,
+   "type": "tuple"
+  },
+  "call.icl_blocks.1.out.1": null,
+  "call.output_norm.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.output_norm.kwargs": {
+   "keys": [],
+   "type": "dict"
+  },
+  "call.x_embed.args": {
+   "length": 1,
+   "type": "list"
+  },
+  "call.x_embed.kwargs": {
+   "keys": [],
+   "type": "dict"
+  }
+ },
+ "call_order": [
+  "x_embed",
+  "feature_distribution_embedder",
+  "column_aggregator",
+  "icl_blocks.0",
+  "icl_blocks.1",
+  "output_norm",
+  "heads"
+ ],
+ "config": {
+  "cell_ecdf_num_buckets": 8192,
+  "cell_ecdf_num_frequencies": 2,
+  "cell_embed_row_chunk_size": 2048,
+  "decoder_head_dim": 8,
+  "decoder_num_heads": 2,
+  "decoder_use_softmax_scaling": true,
+  "dist_embed_num_blocks": 2,
+  "dist_embed_num_heads": 2,
+  "dist_embed_num_inducing_points": 4,
+  "embed_dim": 16,
+  "feat_agg_num_blocks": 2,
+  "feat_agg_num_cls_tokens": 2,
+  "feat_agg_num_heads": 2,
+  "feat_agg_rope_base": 100000,
+  "feature_group_size": 3,
+  "ff_factor": 2,
+  "fourier_encoding_num_frequencies": 4,
+  "icl_num_heads": 4,
+  "icl_num_kv_heads": null,
+  "icl_num_kv_heads_test": 1,
+  "inference_chunk_cells": 1572864,
+  "inference_col_chunk_size": 4,
+  "max_batched_estimator_cells": 768000000,
+  "max_batched_estimator_rows": 32768,
+  "max_num_classes": 10,
+  "name": "TabPFN-v3.5",
+  "nlayers": 2,
+  "num_buckets": 32,
+  "softmax_scaling_mlp_hidden_dim": 8
+ },
+ "n_batch": 1,
+ "n_features": 5,
+ "n_test": 4,
+ "n_train": 14,
+ "name": "v3_5-regression",
+ "performance_options": {
+  "enable_torch_compile": false,
+  "force_recompute_layer": false,
+  "kv_cache_dtype": null,
+  "kv_cache_follows_attention_grid": false,
+  "save_peak_memory_factor": null,
+  "use_chunkwise_inference": true
+ },
+ "seed": 74203,
+ "tabpfn_version": "9.1.0",
+ "task_type": "regression",
+ "torch_version": "2.14.1"
+}

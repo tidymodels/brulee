@@ -375,6 +375,7 @@ brulee_linear_reg_bridge <- function(
 
   # Validate outcome
   outcome <- validate_numeric_outcome(processed$outcomes[[1]], call = call)
+  check_outcome_varies(outcome, call = call)
 
   ## -----------------------------------------------------------------------------
 

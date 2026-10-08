@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides high-level modeling functions to define and train models using the 'torch' R package. Models include linear, logistic, and multinomial regression as well as multilayer perceptrons.
+Provides high-level modeling functions to define and train models using the 'torch' R package. Models include linear, logistic, and multinomial regression, multilayer perceptrons, modern neural neural networks, and the pretrained tabular foundational models such as 'TabICL' and 'TabPFN'.
 }
 \seealso{
 Useful links:
@@ -31,6 +31,7 @@ Authors:
 Other contributors:
 \itemize{
   \item Posit Software, PBC [copyright holder, funder]
+  \item Prior Labs GmbH (TabPFN code ported from the Python 'tabpfn' package; see inst/COPYRIGHTS) [copyright holder]
 }
 
 }

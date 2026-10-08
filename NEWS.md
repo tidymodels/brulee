@@ -1,5 +1,19 @@
 # brulee (development version)
 
+* `brulee_tab_pfn()` makes the TabPFN tabular foundation models (versions 3, 3.5, and 3.5-fast) available, running them in R torch without Python. The model weights are released by Prior Labs under non-commercial licenses: `?brulee_tab_pfn` explains the one-time setup, `tab_pfn_download_weights()` downloads them, `tab_pfn_weights_available()` checks for them, `tab_pfn_clear_cache()` removes them, and `tab_pfn_versions()` lists the supported versions. Weights already downloaded by the Python `tabpfn` package are reused.
+
+* `predict()` and `augment()` for `brulee_tab_icl()` and `brulee_tab_pfn()` return zero-row results for zero-row `new_data` without running the model; `brulee_tab_icl()` classification previously failed.
+
+* `brulee_tab_icl()` and `brulee_tab_pfn()` now require `softmax_temperature` to be a finite number greater than 0; a temperature of 0 used to produce `NaN` predictions.
+
+* Models with a numeric outcome (`brulee_linear_reg()`, `brulee_mlp()`, `brulee_resnet()`, `brulee_rln()`, `brulee_saint()`, `brulee_auto_int()`, `brulee_tab_icl()`, and `brulee_tab_pfn()`) now error informatively when the outcome has a single distinct value.
+
+* `brulee_tab_icl()` and `brulee_tab_pfn()` now check that the outcome is a single numeric or factor column, and drop rows with a missing outcome with a warning; previously a missing outcome could make the fit fail or produce invalid predictions.
+
+* `brulee_tab_icl()` and `brulee_tab_pfn()` share one way of sampling the training set down to `training_set_limit` rows. For `brulee_tab_icl()`, numeric outcomes are now sampled within quartiles rather than at random, and outcome levels with no rows no longer count as classes, so exactly `training_set_limit` rows are kept. The rows kept for a given `set.seed()` differ from earlier versions.
+
+* The weight downloads of `brulee_chronos()`, `brulee_tab_icl()`, and `brulee_tab_pfn()` share one downloader, which now writes to a temporary file and renames it when complete, so an interrupted download no longer leaves a partial file under the real name. If the completed file can't be moved into place, it is copied, and failing that, the download errors with advice instead of reporting success.
+
 # brulee 1.2.0
 
 * `predict()` for regression `brulee_tab_icl()` models gained two new `type` values. `"quantile"` returns a `.pred_quantile` column (a `hardhat::quantile_pred()` vector) at the levels given by the new predict-time `quantile_levels` argument, which defaults to `(1:9) / 10`. `"variance"` returns the variance of the predictive distribution in a `.pred_variance` column. The TabICL regression head was already a quantile regression head internally, so this exposes a distribution the model was always computing; `type = "numeric"` is unchanged and remains the default. Unlike `brulee_chronos()`, the levels are not fixed when the model is created and any value in the open interval (0, 1) can be requested. See `?predict.brulee_tab_icl` for how ensemble members are pooled for each type.

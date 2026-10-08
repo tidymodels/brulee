@@ -83,63 +83,6 @@ tabicl_encode_transform <- function(encoders, predictors) {
 }
 
 # ------------------------------------------------------------------------------
-# Training-set subsampling
-
-# Pick row indices for a (possibly stratified) subsample of size `limit`. For
-# a factor outcome we draw proportionally from each class so no class is
-# dropped from the in-context training set. Returns NULL when no subsampling
-# is needed (limit is Inf or n <= limit).
-tabicl_subsample_indices <- function(
-  outcome,
-  limit,
-  call = rlang::caller_env()
-) {
-  n <- length(outcome)
-  if (!is.finite(limit) || n <= limit) {
-    return(NULL)
-  }
-  limit <- as.integer(limit)
-
-  if (is.factor(outcome)) {
-    lvls <- levels(outcome)
-    n_classes <- length(lvls)
-    if (limit < n_classes) {
-      cli::cli_abort(
-        "{.arg training_set_limit} ({limit}) is smaller than the number of
-         outcome classes ({n_classes}); cannot keep at least one row per class.",
-        call = call
-      )
-    }
-    counts <- tabulate(as.integer(outcome), nbins = n_classes)
-    alloc <- pmax(1L, as.integer(round(limit * counts / sum(counts))))
-    drift <- limit - sum(alloc)
-    while (drift != 0L) {
-      if (drift > 0L) {
-        cand <- which(alloc < counts)
-        if (length(cand) == 0L) {
-          break
-        }
-        j <- cand[which.max(counts[cand])]
-        alloc[j] <- alloc[j] + 1L
-        drift <- drift - 1L
-      } else {
-        cand <- which(alloc > 1L)
-        j <- cand[which.max(counts[cand])]
-        alloc[j] <- alloc[j] - 1L
-        drift <- drift + 1L
-      }
-    }
-    idx <- unlist(purrr::map(seq_len(n_classes), \(j) {
-      pool <- which(as.integer(outcome) == j)
-      sample(pool, size = min(alloc[j], length(pool)))
-    }))
-  } else {
-    idx <- sample.int(n, size = limit)
-  }
-  idx
-}
-
-# ------------------------------------------------------------------------------
 # Ensemble member configuration
 
 # Build the ensemble member configs. num_estimators = 1 yields the single
@@ -202,13 +145,13 @@ tabicl_make_members <- function(
 #' @param normalization A character vector of per-member normalization methods.
 #'   Currently `"none"` (standardize only) and `"YeoJohnson"` (Yeo-Johnson
 #'   power transform on top of standardization) are supported.
-#' @param softmax_temperature A number for the temperature applied to the
-#'   classification softmax. Only used for classification.
+#' @param softmax_temperature A number greater than 0 for the temperature
+#'   applied to the classification softmax. Only used for classification.
 #' @param training_set_limit A single number giving the maximum number of
 #'   training rows kept as in-context examples. When the training data has
 #'   more rows than this, a subsample of exactly `training_set_limit` rows
-#'   is drawn (stratified by the outcome for classification, simple random
-#'   for regression). The default is `Inf`, which keeps every row. Useful
+#'   is drawn (stratified by class for classification and by quartile for
+#'   regression). The default is `Inf`, which keeps every row. Useful
 #'   for capping memory and prediction time on large training sets, since
 #'   the entire (kept) training set is stored on the fitted object and
 #'   re-sent through the network on every call to `predict()`.
@@ -528,15 +471,18 @@ tabicl_bridge <- function(
       call = call
     )
   }
+  check_softmax_temperature(softmax_temperature, call = call)
   device <- tabicl_resolve_device(device, call = call)
 
-  outcome <- validate_mlp_outcome(processed$outcomes[[1]], call = call)
+  data <- brulee_foundation_data(processed, call = call)
+  processed$predictors <- data$predictors
+  outcome <- data$outcome
   classification <- is.factor(outcome)
 
-  sub_idx <- tabicl_subsample_indices(outcome, training_set_limit, call = call)
-  if (!is.null(sub_idx)) {
-    processed$predictors <- processed$predictors[sub_idx, , drop = FALSE]
-    outcome <- outcome[sub_idx]
+  keep <- brulee_subsample_rows(outcome, training_set_limit, call = call)
+  if (length(keep) < length(outcome)) {
+    processed$predictors <- processed$predictors[keep, , drop = FALSE]
+    outcome <- outcome[keep]
   }
 
   # Locate the cached checkpoint for the task (errors if none is cached).

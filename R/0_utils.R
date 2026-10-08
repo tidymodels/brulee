@@ -6,49 +6,106 @@ format_epoch_labels <- function(x) {
 }
 
 # ------------------------------------------------------------------------------
-# Shared weight-download confirmation gate (TabICL, Chronos)
+# Training-set subsampling for the foundation models (TabICL, TabPFN)
 
-# brulee never downloads large pretrained weights silently. When they are
-# missing, prompt for confirmation in an interactive session and error
-# otherwise. `label` names what's missing (e.g. "amazon/chronos-2" or
-# "Classification weights for TabICL"), highlighted in both messages; `size` is
-# a human string like "500MB"; `fn` is the calling user-facing function,
-# referenced when the prompt is declined; `root` is the cache directory that
-# was checked, reported only in the non-interactive error (not the prompt);
-# `hint` is the non-interactive error's "i" bullet, since the two callers point
-# users at different next steps (an explicit downloader for TabICL, simply
-# re-running interactively for Chronos).
-brulee_confirm_download <- function(
-  label,
-  size,
-  fn,
-  root,
-  hint,
-  call = rlang::caller_env()
-) {
-  if (!rlang::is_interactive()) {
+# The number of rows to keep from each stratum so that exactly `limit` rows
+# are kept in total: proportional to the stratum sizes `counts`, at least one
+# per stratum, with the rounding error moved one row at a time to or from the
+# largest strata. Needs `limit` >= the number of strata with rows.
+brulee_stratum_sizes <- function(counts, limit) {
+  alloc <- pmax(1L, as.integer(round(limit * counts / sum(counts))))
+  drift <- limit - sum(alloc)
+  while (drift != 0L) {
+    if (drift > 0L) {
+      cand <- which(alloc < counts)
+      if (length(cand) == 0L) {
+        break
+      }
+      j <- cand[which.max(counts[cand])]
+      alloc[j] <- alloc[j] + 1L
+      drift <- drift - 1L
+    } else {
+      cand <- which(alloc > 1L)
+      j <- cand[which.max(counts[cand])]
+      alloc[j] <- alloc[j] - 1L
+      drift <- drift + 1L
+    }
+  }
+  alloc
+}
+
+# The training data of a foundation model fit, after checking the outcome:
+# one numeric or factor column. Rows with a missing outcome are dropped with a
+# warning; the models handle missing predictors but not missing outcomes.
+brulee_foundation_data <- function(processed, call = rlang::caller_env()) {
+  outcomes <- processed$outcomes
+  if (ncol(outcomes) != 1) {
     cli::cli_abort(
-      c(
-        "No cached {.field {label}} weights found in {.path {root}}.",
-        "i" = hint
-      ),
+      "The outcome must be a single column, not {ncol(outcomes)} columns.",
       call = call
     )
   }
-
-  cli::cli_inform("The weights for {.field {label}} are not found locally.")
-  choice <- utils::menu(
-    c("Yes", "No"),
-    title = paste0("Download now (~", size, ")?")
-  )
-  if (choice != 1L) {
+  outcome <- outcomes[[1]]
+  if (!is.factor(outcome) && !is.numeric(outcome)) {
     cli::cli_abort(
-      "Download declined; {.fn {fn}} needs the weights to continue.",
+      "The outcome must be a factor (classification) or numeric
+       (regression), not {obj_type_friendly(outcome)}.",
       call = call
     )
   }
+  predictors <- processed$predictors
+  missing <- is.na(outcome)
+  if (all(missing)) {
+    cli::cli_abort("Every value of the outcome is missing.", call = call)
+  }
+  if (any(missing)) {
+    cli::cli_warn(
+      "Removed {sum(missing)} row{?s} with a missing outcome.",
+      call = call
+    )
+    outcome <- outcome[!missing]
+    predictors <- predictors[!missing, , drop = FALSE]
+  }
+  check_outcome_varies(outcome, call = call)
+  list(predictors = predictors, outcome = outcome)
+}
 
-  invisible(TRUE)
+# Rows kept by `training_set_limit`: all of them when there are at most
+# `limit`, otherwise exactly `limit`, stratified by class (classification) or
+# by quartile (regression). Uses R's random number generator; callers that
+# need a particular seed set it around the call.
+brulee_subsample_rows <- function(outcome, limit, call = rlang::caller_env()) {
+  n <- length(outcome)
+  if (n <= limit) {
+    return(seq_len(n))
+  }
+  limit <- as.integer(limit)
+  if (is.factor(outcome)) {
+    strata <- droplevels(outcome)
+    if (limit < nlevels(strata)) {
+      cli::cli_abort(
+        "{.arg training_set_limit} ({limit}) is smaller than the number of
+         outcome classes ({nlevels(strata)}); cannot keep at least one row
+         per class.",
+        call = call
+      )
+    }
+  } else {
+    # Quartiles, or fewer strata when the limit is below 4. A constant or
+    # nearly constant outcome can have fewer distinct breaks.
+    n_strata <- min(4L, limit)
+    probs <- seq(0, 1, length.out = n_strata + 1)
+    breaks <- unique(stats::quantile(outcome, probs))
+    if (length(breaks) < 2) {
+      strata <- factor(rep(1L, n))
+    } else {
+      strata <- cut(outcome, breaks, include.lowest = TRUE)
+    }
+  }
+  idx <- split(seq_len(n), strata, drop = TRUE)
+  sizes <- brulee_stratum_sizes(lengths(idx), limit)
+  taken <- purrr::map2(idx, sizes, \(i, size) i[sample.int(length(i), size)])
+  sort(unlist(taken, use.names = FALSE))
 }
 
 # ------------------------------------------------------------------------------

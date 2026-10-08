@@ -52,7 +52,7 @@ tabicl_asset_url <- function(
 tabicl_cache_dir <- function() {
   getOption(
     "brulee.tabicl_cache_dir",
-    default = tools::R_user_dir("brulee", which = "cache")
+    default = brulee_cache_dir()
   )
 }
 
@@ -166,7 +166,7 @@ tab_icl_download_weights <- function(
     dir.create(dest, recursive = TRUE, showWarnings = FALSE)
     for (f in c(files$config, files$weights)) {
       url <- tabicl_asset_url(f, version, date, repo = repo)
-      chronos2_download_file(url, file.path(dest, f), label = f)
+      brulee_download_file(url, file.path(dest, f), label = f)
     }
   }
   cli::cli_inform(
