@@ -207,15 +207,9 @@ tabpfn_member_plan <- function(n_estimators, n_preprocessors, task_type) {
 #   category_sizes  their numbers of code slots
 tabpfn_member_layout <- function(x_train, categorical, pre) {
   n_train <- nrow(x_train)
-  keep <- purrr::map_lgl(
-    seq_len(ncol(x_train)),
-    function(j) {
-      v <- x_train[, j]
-      same <- v[1] == v
-      same[is.na(same)] <- FALSE
-      !all(is.nan(v)) && mean(same) < 1
-    }
-  )
+  keep <- brulee_varying_columns(x_train)
+  # The fit checks this for the full training matrix (`check_predictors_vary()`),
+  # so this only guards a member whose feature subset is all constant.
   if (!any(keep)) {
     cli::cli_abort("All predictors are constant in the training data.")
   }

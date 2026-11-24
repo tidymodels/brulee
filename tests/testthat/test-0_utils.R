@@ -142,3 +142,38 @@ test_that("brulee_foundation_data() drops rows with a missing outcome", {
   none <- hardhat::mold(y ~ x, data.frame(x = 1:2, y = c(NA_real_, NA_real_)))
   expect_snapshot(brulee_foundation_data(none, call = NULL), error = TRUE)
 })
+
+# ------------------------------------------------------------------------------
+# Shared TabICL/TabPFN helpers for constant predictors (#145)
+
+test_that("brulee_varying_columns() finds the columns that vary", {
+  x <- cbind(
+    num = c(1, 2, 3),
+    con = c(5, 5, 5),
+    all_nan = c(NaN, NaN, NaN),
+    value_and_nan = c(1, NaN, 1),
+    nan_first = c(NaN, 1, 1)
+  )
+  expect_identical(
+    brulee_varying_columns(x),
+    c(TRUE, FALSE, FALSE, TRUE, TRUE)
+  )
+  expect_identical(brulee_varying_columns(x[1, , drop = FALSE]), rep(FALSE, 5))
+  expect_identical(brulee_varying_columns(x[, 0]), logical(0))
+})
+
+test_that("brulee_subsample_data() keeps rows aligned and flags sampling", {
+  predictors <- data.frame(x = 1:20, z = 21:40)
+  outcome <- as.numeric(1:20)
+
+  all_rows <- brulee_subsample_data(predictors, outcome, Inf)
+  expect_identical(all_rows$predictors, predictors)
+  expect_identical(all_rows$outcome, outcome)
+  expect_false(all_rows$subsampled)
+
+  set.seed(1)
+  some <- brulee_subsample_data(predictors, outcome, 8)
+  expect_true(some$subsampled)
+  expect_identical(nrow(some$predictors), 8L)
+  expect_identical(as.numeric(some$predictors$x), some$outcome)
+})

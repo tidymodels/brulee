@@ -161,6 +161,10 @@ predict.brulee_tab_icl <- function(
   # set); empty results give correctly typed, zero-row predictions.
   n_new <- nrow(x_test)
   if (n_new > 0) {
+    # The ensemble drops predictors that are constant in the training rows
+    # (`tabicl_unique_filter()`), so the members' feature permutations are
+    # over the columns that remain.
+    n_features <- sum(tabicl_unique_filter(object$train_x))
     loaded <- tabicl_load_model(
       object$path,
       task = object$task,
@@ -175,7 +179,7 @@ predict.brulee_tab_icl <- function(
     } else {
       members <- tabicl_make_members(
         object$num_estimators,
-        ncol(object$train_x),
+        n_features,
         n_classes,
         object$normalization,
         classification = TRUE
@@ -208,7 +212,7 @@ predict.brulee_tab_icl <- function(
     } else {
       members <- tabicl_make_members(
         object$num_estimators,
-        ncol(object$train_x),
+        n_features,
         n_classes = 0L,
         object$normalization,
         classification = FALSE

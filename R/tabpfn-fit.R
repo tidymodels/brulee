@@ -365,15 +365,24 @@ tabpfn_bridge <- function(
   # The ensemble members' random choices use their own seed, drawn from R's
   # random number generator so that `set.seed()` makes a fit reproducible.
   options$seed <- sample.int(.Machine$integer.max, 1)
-  predictors <- as.data.frame(data$predictors)
-  keep <- tabpfn_with_seed(
+  sampled <- tabpfn_with_seed(
     options$seed,
-    brulee_subsample_rows(outcome, options$training_set_limit, call = call)
+    brulee_subsample_data(
+      as.data.frame(data$predictors),
+      outcome,
+      options$training_set_limit,
+      call = call
+    )
   )
-  predictors <- predictors[keep, , drop = FALSE]
-  outcome <- outcome[keep]
+  options$subsampled <- sampled$subsampled
 
-  fit <- tabpfn_impl(predictors, outcome, options, version, call = call)
+  fit <- tabpfn_impl(
+    sampled$predictors,
+    sampled$outcome,
+    options,
+    version,
+    call = call
+  )
   new_brulee_tab_pfn(fit, processed$blueprint)
 }
 
@@ -412,6 +421,7 @@ tabpfn_impl <- function(x, y, options, version, call = caller_env()) {
     call = call
   )
   x_train <- tabpfn_encode(encoder, x, call = call)
+  check_predictors_vary(x_train, isTRUE(options$subsampled), call = call)
   categorical <- tabpfn_categorical_columns(encoder)
   n_estimators <- options$num_estimators %||%
     tabpfn_resolve_n_estimators(

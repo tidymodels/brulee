@@ -475,15 +475,15 @@ tabicl_bridge <- function(
   device <- tabicl_resolve_device(device, call = call)
 
   data <- brulee_foundation_data(processed, call = call)
-  processed$predictors <- data$predictors
-  outcome <- data$outcome
+  sampled <- brulee_subsample_data(
+    data$predictors,
+    data$outcome,
+    training_set_limit,
+    call = call
+  )
+  processed$predictors <- sampled$predictors
+  outcome <- sampled$outcome
   classification <- is.factor(outcome)
-
-  keep <- brulee_subsample_rows(outcome, training_set_limit, call = call)
-  if (length(keep) < length(outcome)) {
-    processed$predictors <- processed$predictors[keep, , drop = FALSE]
-    outcome <- outcome[keep]
-  }
 
   # Locate the cached checkpoint for the task (errors if none is cached).
   if (classification) {
@@ -511,6 +511,7 @@ tabicl_bridge <- function(
 
   encoders <- tabicl_encode_fit(processed$predictors)
   train_x <- tabicl_encode_transform(encoders, processed$predictors)
+  check_predictors_vary(train_x, sampled$subsampled, call = call)
 
   if (classification) {
     levels <- levels(outcome)
