@@ -65,6 +65,23 @@
   [`set.seed()`](https://rdrr.io/r/base/Random.html) differ from earlier
   versions.
 
+- [`predict()`](https://rdrr.io/r/stats/predict.html) for
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  no longer fails with `subscript out of bounds` when a predictor is
+  constant in the training rows, which `training_set_limit` can cause by
+  sampling away the few rows where a rare indicator is non-zero
+  ([\#145](https://github.com/tidymodels/brulee/issues/145)). Both
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  now drop constant predictors with the same rule. If every predictor is
+  constant, they error at fit time and, when `training_set_limit`
+  sampled the rows, suggest a larger limit. Before this change
+  [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md)
+  failed only at prediction, and
+  [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
+  gave an error that was attributed to an internal function.
+
 - The weight downloads of
   [`brulee_chronos()`](https://brulee.tidymodels.org/dev/reference/brulee_chronos.md),
   [`brulee_tab_icl()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_icl.md),
