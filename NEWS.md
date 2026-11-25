@@ -1,4 +1,4 @@
-# brulee (development version)
+# brulee 1.3.0
 
 * `brulee_tab_pfn()` makes the TabPFN tabular foundation models (versions 3, 3.5, and 3.5-fast) available, running them in R torch without Python. The model weights are released by Prior Labs under non-commercial licenses: `?brulee_tab_pfn` explains the one-time setup, `tab_pfn_download_weights()` downloads them, `tab_pfn_weights_available()` checks for them, `tab_pfn_clear_cache()` removes them, and `tab_pfn_versions()` lists the supported versions. Weights already downloaded by the Python `tabpfn` package are reused.
 
