@@ -162,7 +162,7 @@ covers \code{"v3.5"} (the default) and \code{"v3.5-fast"}; \code{"v3"} needs the
 license.
 \subsection{One-time setup}{
 \enumerate{
-\item Create a free account at \url{https://ux.priorlabs.ai}.
+\item Create a free account at \url{https://platform.priorlabs.ai/}.
 \item On the \strong{Licenses} tab, accept the license for each model version you
 plan to use (TabPFN-3.5 and/or TabPFN-3).
 \item On your account page, copy your \strong{API key}. Treat it like a password.
