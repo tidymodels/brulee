@@ -12,6 +12,8 @@
 
 * `brulee_tab_icl()` and `brulee_tab_pfn()` share one way of sampling the training set down to `training_set_limit` rows. For `brulee_tab_icl()`, numeric outcomes are now sampled within quartiles rather than at random, and outcome levels with no rows no longer count as classes, so exactly `training_set_limit` rows are kept. The rows kept for a given `set.seed()` differ from earlier versions.
 
+* `predict()` for `brulee_tab_icl()` no longer fails with `subscript out of bounds` when a predictor is constant in the training rows, which `training_set_limit` can cause by sampling away the few rows where a rare indicator is non-zero (#145). Both `brulee_tab_icl()` and `brulee_tab_pfn()` now drop constant predictors with the same rule. If every predictor is constant, they error at fit time and, when `training_set_limit` sampled the rows, suggest a larger limit. Before this change `brulee_tab_icl()` failed only at prediction, and `brulee_tab_pfn()` gave an error that was attributed to an internal function.
+
 * The weight downloads of `brulee_chronos()`, `brulee_tab_icl()`, and `brulee_tab_pfn()` share one downloader, which now writes to a temporary file and renames it when complete, so an interrupted download no longer leaves a partial file under the real name. If the completed file can't be moved into place, it is copied, and failing that, the download errors with advice instead of reporting success.
 
 # brulee 1.2.0

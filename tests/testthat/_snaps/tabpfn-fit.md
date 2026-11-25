@@ -98,3 +98,20 @@
       Running on the CPU with more than 1000 training rows may be slow.
       i A CUDA GPU is much faster; see `device`.
 
+# a fit with no varying predictor is refused
+
+    Code
+      brulee_tab_pfn(y ~ ., data = con)
+    Condition
+      Error in `brulee_tab_pfn()`:
+      ! Every predictor has a single value in the training data, so there is nothing to learn from.
+
+---
+
+    Code
+      brulee_tab_pfn(y ~ ., data = rare, training_set_limit = 50)
+    Condition
+      Error in `brulee_tab_pfn()`:
+      ! Every predictor has a single value in the training data, so there is nothing to learn from.
+      i The rows kept by `training_set_limit` may have removed their variation; a larger limit can keep it.
+

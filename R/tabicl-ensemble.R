@@ -15,12 +15,13 @@
 # fully deterministic and matches Python exactly; multi-member ensembles here
 # are a faithful reimplementation of the same algorithm, not bit-identical.
 
-# Features with more than one unique value in the training set (UniqueFeatureFilter).
-tabicl_unique_filter <- function(x_train, threshold = 1L) {
-  if (nrow(x_train) <= threshold) {
+# Features with more than one unique value in the training set
+# (UniqueFeatureFilter). As in sklearn, nothing is dropped from a single row.
+tabicl_unique_filter <- function(x_train) {
+  if (nrow(x_train) <= 1L) {
     return(rep(TRUE, ncol(x_train)))
   }
-  apply(x_train, 2, function(col) length(unique(col)) > threshold)
+  brulee_varying_columns(x_train)
 }
 
 # Row-wise temperature softmax of a logit matrix (n, n_classes).

@@ -108,6 +108,34 @@ brulee_subsample_rows <- function(outcome, limit, call = rlang::caller_env()) {
   sort(unlist(taken, use.names = FALSE))
 }
 
+# Apply `training_set_limit` to a foundation model's training data. Returns the
+# kept `predictors` and `outcome`, and whether any rows were dropped (used to
+# explain errors that the sampling can cause).
+brulee_subsample_data <- function(
+  predictors,
+  outcome,
+  limit,
+  call = rlang::caller_env()
+) {
+  keep <- brulee_subsample_rows(outcome, limit, call = call)
+  subsampled <- length(keep) < length(outcome)
+  if (subsampled) {
+    predictors <- predictors[keep, , drop = FALSE]
+    outcome <- outcome[keep]
+  }
+  list(predictors = predictors, outcome = outcome, subsampled = subsampled)
+}
+
+# Which columns of an encoded predictor matrix vary across its rows: more than
+# one distinct value, with NaN counted as a value. Constant columns carry no
+# information for an in-context learner, and both TabICL
+# (`UniqueFeatureFilter`) and TabPFN (`RemoveConstantFeaturesStep`) drop them.
+# A column that is entirely missing is constant; one mixing a value with NaN is
+# not.
+brulee_varying_columns <- function(x) {
+  purrr::map_lgl(seq_len(ncol(x)), \(j) length(unique(x[, j])) > 1L)
+}
+
 # ------------------------------------------------------------------------------
 # used in print methods
 

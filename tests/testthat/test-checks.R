@@ -159,3 +159,14 @@ test_that("the foundation models check the softmax temperature", {
     error = TRUE
   )
 })
+
+test_that("check_predictors_vary() needs at least one varying predictor", {
+  expect_silent(check_predictors_vary(cbind(c(1, 1), c(1, 2))))
+
+  con <- cbind(c(1, 1), c(NaN, NaN))
+  expect_snapshot(check_predictors_vary(con, call = NULL), error = TRUE)
+  expect_snapshot(
+    check_predictors_vary(con, subsampled = TRUE, call = NULL),
+    error = TRUE
+  )
+})

@@ -106,3 +106,55 @@ test_that("the CPU row limit applies on the CPU only, with a warning", {
     tabpfn_check_limits(medium, y[1:2000], ic, "v3", "cpu", FALSE, call = NULL)
   )
 })
+
+# ------------------------------------------------------------------------------
+# Predictors that are constant in the training rows (#145)
+
+test_that("training_set_limit can make a rare predictor constant (#145)", {
+  skip_if_no_weights()
+  set.seed(321)
+  n <- 300
+  d <- data.frame(
+    y = rnorm(n, 100, 10),
+    x1 = rnorm(n),
+    x2 = rnorm(n),
+    rare = factor(c(1, rep(0, n - 1)))
+  )
+
+  # These seeds drop the only row with `rare = 1`.
+  set.seed(2)
+  fit <- brulee_tab_pfn(
+    y ~ .,
+    data = d,
+    num_estimators = 2,
+    training_set_limit = 50
+  )
+  expect_identical(fit$fit$encoder$columns$rare$levels, "0")
+  expect_identical(nrow(predict(fit, d[1:5, ])), 5L)
+
+  d$y <- factor(rep(c("a", "b"), length.out = n))
+  set.seed(1)
+  fit <- brulee_tab_pfn(
+    y ~ .,
+    data = d,
+    num_estimators = 2,
+    training_set_limit = 50
+  )
+  expect_identical(fit$fit$encoder$columns$rare$levels, "0")
+  expect_identical(nrow(predict(fit, d[1:5, ], type = "prob")), 5L)
+})
+
+test_that("a fit with no varying predictor is refused", {
+  skip_if_no_weights()
+  set.seed(1)
+  n <- 300
+  con <- data.frame(y = rnorm(n), con = 3)
+  expect_snapshot(error = TRUE, brulee_tab_pfn(y ~ ., data = con))
+
+  rare <- data.frame(y = rnorm(n), rare = c(1, rep(0, n - 1)))
+  set.seed(1)
+  expect_snapshot(
+    error = TRUE,
+    brulee_tab_pfn(y ~ ., data = rare, training_set_limit = 50)
+  )
+})

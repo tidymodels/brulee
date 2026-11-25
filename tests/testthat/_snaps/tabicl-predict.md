@@ -86,3 +86,20 @@
       Error in `predict()`:
       ! Outcome is factor and the prediction type is "variance".
 
+# a fit with no varying predictor is refused
+
+    Code
+      brulee_tab_icl(con, d$y_train)
+    Condition
+      Error in `brulee_tab_icl()`:
+      ! Every predictor has a single value in the training data, so there is nothing to learn from.
+
+---
+
+    Code
+      brulee_tab_icl(rare, d$y_train, training_set_limit = 10)
+    Condition
+      Error in `brulee_tab_icl()`:
+      ! Every predictor has a single value in the training data, so there is nothing to learn from.
+      i The rows kept by `training_set_limit` may have removed their variation; a larger limit can keep it.
+

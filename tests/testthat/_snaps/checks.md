@@ -248,3 +248,20 @@
       Error in `brulee_tab_pfn()`:
       ! `softmax_temperature` must be greater than 0, not 0.
 
+# check_predictors_vary() needs at least one varying predictor
+
+    Code
+      check_predictors_vary(con, call = NULL)
+    Condition
+      Error:
+      ! Every predictor has a single value in the training data, so there is nothing to learn from.
+
+---
+
+    Code
+      check_predictors_vary(con, subsampled = TRUE, call = NULL)
+    Condition
+      Error:
+      ! Every predictor has a single value in the training data, so there is nothing to learn from.
+      i The rows kept by `training_set_limit` may have removed their variation; a larger limit can keep it.
+

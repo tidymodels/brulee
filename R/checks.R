@@ -1,5 +1,35 @@
 # Additional type checkers designed for testing argument values.
 
+# A foundation model drops predictors that are constant in its training rows
+# (see `brulee_varying_columns()`), so if none varies there is nothing left to
+# condition on. `x` is the encoded predictor matrix. When `training_set_limit`
+# dropped rows, the sample may be what removed the variation.
+check_predictors_vary <- function(
+  x,
+  subsampled = FALSE,
+  call = rlang::caller_env()
+) {
+  if (any(brulee_varying_columns(x))) {
+    return(invisible(x))
+  }
+  if (subsampled) {
+    hint <- c(
+      i = "The rows kept by {.arg training_set_limit} may have removed their
+           variation; a larger limit can keep it."
+    )
+  } else {
+    hint <- character(0)
+  }
+  cli::cli_abort(
+    c(
+      "Every predictor has a single value in the training data, so there is
+       nothing to learn from.",
+      hint
+    ),
+    call = call
+  )
+}
+
 # A numeric outcome with a single distinct value (ignoring missing values)
 # leaves nothing to learn, and the models' outcome scaling divides by its
 # spread. Factor outcomes are left to the classification checks.
