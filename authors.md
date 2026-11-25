@@ -10,19 +10,23 @@
 - **[![Posit](https://www.tidyverse.org/posit-logo.svg)](https://www.posit.co)**.
   Copyright holder, funder.
 
+- **Prior Labs GmbH**. Copyright holder.  
+  TabPFN code ported from the Python 'tabpfn' package; see
+  inst/COPYRIGHTS
+
 ## Citation
 
 Source:
 [`DESCRIPTION`](https://github.com/tidymodels/brulee/blob/main/DESCRIPTION)
 
 Kuhn M, Falbel D (2026). *brulee: High-Level Modeling Functions with
-'torch'*. R package version 1.2.0,
+'torch'*. R package version 1.3.0,
 <https://github.com/tidymodels/brulee>.
 
     @Manual{,
       title = {brulee: High-Level Modeling Functions with 'torch'},
       author = {Max Kuhn and Daniel Falbel},
       year = {2026},
-      note = {R package version 1.2.0},
+      note = {R package version 1.3.0},
       url = {https://github.com/tidymodels/brulee},
     }

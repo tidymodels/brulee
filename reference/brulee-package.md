@@ -2,7 +2,9 @@
 
 Provides high-level modeling functions to define and train models using
 the 'torch' R package. Models include linear, logistic, and multinomial
-regression as well as multilayer perceptrons.
+regression, multilayer perceptrons, modern neural neural networks, and
+the pretrained tabular foundational models such as 'TabICL' and
+'TabPFN'.
 
 ## See also
 
@@ -29,3 +31,6 @@ Authors:
 Other contributors:
 
 - Posit Software, PBC \[copyright holder, funder\]
+
+- Prior Labs GmbH (TabPFN code ported from the Python 'tabpfn' package;
+  see inst/COPYRIGHTS) \[copyright holder\]

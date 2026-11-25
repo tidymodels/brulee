@@ -1,4 +1,4 @@
-# Chronos-2 pretrained forecasting model
+# Use a Chronos-2 tabular foundation model
 
 `brulee_chronos()` loads a pretrained Chronos-2 time series forecasting
 quantile regression model from HuggingFace and ingests historical
