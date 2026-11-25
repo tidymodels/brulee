@@ -191,7 +191,7 @@ TabPFN-3 license.
 
 #### One-time setup
 
-1.  Create a free account at <https://ux.priorlabs.ai>.
+1.  Create a free account at <https://platform.priorlabs.ai/>.
 
 2.  On the **Licenses** tab, accept the license for each model version
     you plan to use (TabPFN-3.5 and/or TabPFN-3).

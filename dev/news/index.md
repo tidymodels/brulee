@@ -2,6 +2,10 @@
 
 ## brulee (development version)
 
+## brulee 1.3.0
+
+CRAN release: 2026-11-25
+
 - [`brulee_tab_pfn()`](https://brulee.tidymodels.org/dev/reference/brulee_tab_pfn.md)
   makes the TabPFN tabular foundation models (versions 3, 3.5, and
   3.5-fast) available, running them in R torch without Python. The model

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">brulee</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.2.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="brulee-development-version">brulee (development version)<a class="anchor" aria-label="anchor" href="#brulee-development-version"></a></h2>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.3.0" id="brulee-130">brulee 1.3.0<a class="anchor" aria-label="anchor" href="#brulee-130"></a></h2><p class="text-muted">CRAN release: 2026-11-25</p>
 <ul><li><p><code><a href="../reference/brulee_tab_pfn.html">brulee_tab_pfn()</a></code> makes the TabPFN tabular foundation models (versions 3, 3.5, and 3.5-fast) available, running them in R torch without Python. The model weights are released by Prior Labs under non-commercial licenses: <code><a href="../reference/brulee_tab_pfn.html">?brulee_tab_pfn</a></code> explains the one-time setup, <code><a href="../reference/tab_pfn_download_weights.html">tab_pfn_download_weights()</a></code> downloads them, <code><a href="../reference/tab_pfn_download_weights.html">tab_pfn_weights_available()</a></code> checks for them, <code><a href="../reference/tab_pfn_clear_cache.html">tab_pfn_clear_cache()</a></code> removes them, and <code><a href="../reference/tab_pfn_versions.html">tab_pfn_versions()</a></code> lists the supported versions. Weights already downloaded by the Python <code>tabpfn</code> package are reused.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> and <code><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment()</a></code> for <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> and <code><a href="../reference/brulee_tab_pfn.html">brulee_tab_pfn()</a></code> return zero-row results for zero-row <code>new_data</code> without running the model; <code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> classification previously failed.</p></li>
 <li><p><code><a href="../reference/brulee_tab_icl.html">brulee_tab_icl()</a></code> and <code><a href="../reference/brulee_tab_pfn.html">brulee_tab_pfn()</a></code> now require <code>softmax_temperature</code> to be a finite number greater than 0; a temperature of 0 used to produce <code>NaN</code> predictions.</p></li>
