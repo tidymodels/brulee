@@ -789,7 +789,7 @@ chronos2_model <- nn_module(
     if (self$config$use_reg_token) {
       reg_input_ids <- torch_full(
         c(batch_size, 1L),
-        fill_value = self$config$reg_token_id,
+        fill_value = self$config$reg_token_id + 1L,
         dtype = torch_long(),
         device = input_embeds$device
       )

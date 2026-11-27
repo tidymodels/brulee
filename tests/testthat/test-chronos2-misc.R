@@ -801,6 +801,54 @@ test_that("chronos2_model encode produces encoder hidden states", {
   expect_equal(enc$hidden_states$size(3), 32L)
 })
 
+test_that("chronos2_model reads the [REG] row (1-based) of shared", {
+  skip_if_not(torch::torch_is_installed())
+
+  config <- list(
+    d_model = 16L,
+    d_ff = 32L,
+    d_kv = 8L,
+    num_heads = 2L,
+    num_layers = 1L,
+    dropout_rate = 0.0,
+    layer_norm_epsilon = 1e-6,
+    rope_theta = 10000,
+    vocab_size = 2L,
+    pad_token_id = 0L,
+    reg_token_id = 1L,
+    context_length = 32L,
+    input_patch_size = 4L,
+    input_patch_stride = 4L,
+    output_patch_size = 4L,
+    max_output_patches = 2L,
+    quantiles = c(0.1, 0.5, 0.9),
+    use_arcsinh = FALSE,
+    use_reg_token = TRUE,
+    time_encoding_scale = 1.0
+  )
+
+  torch::torch_manual_seed(42)
+  model <- brulee:::chronos2_model(config)
+  model$eval()
+  context <- torch::torch_randn(1, 8)
+
+  torch::with_no_grad({
+    model$shared$weight[1, ]$fill_(0)
+    model$shared$weight[2, ]$fill_(0)
+    out_zero <- as.array(model(context, num_output_patches = 1L))
+
+    model$shared$weight[2, ]$fill_(10)
+    out_reg <- as.array(model(context, num_output_patches = 1L))
+
+    model$shared$weight[2, ]$fill_(0)
+    model$shared$weight[1, ]$fill_(10)
+    out_pad <- as.array(model(context, num_output_patches = 1L))
+  })
+
+  expect_gt(max(abs(out_reg - out_zero)), 0)
+  expect_equal(out_pad, out_zero)
+})
+
 # ------------------------------------------------------------------------------
 # load_chronos2_weights (smoke test with tiny model)
 
